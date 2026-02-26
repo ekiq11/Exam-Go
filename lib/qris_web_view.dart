@@ -1,518 +1,274 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:async';
-import 'package:examgo/app_colors.dart';
+import 'package:examgo/qr_payload.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-double _responsiveFontSize(double baseSize, BuildContext context) {
-  final shortestSide = MediaQuery.of(context).size.shortestSide;
-  final scale = (shortestSide / 360.0).clamp(0.85, 1.25);
-  return baseSize * scale;
-}
+import 'app_colors.dart';
+import 'app_config.dart';
+import 'responsive.dart';
+import 'security_service.dart';
 
-double _responsivePadding(double baseValue, BuildContext context) {
-  return _responsiveFontSize(baseValue, context);
-}
-
-double _responsiveIconSize(double baseSize, BuildContext context) {
-  return _responsiveFontSize(baseSize, context);
-}
-
-class QRWebViewScreen extends StatefulWidget {
+class ExamWebViewScreen extends StatefulWidget {
   final String url;
+  final String title;
 
-  const QRWebViewScreen({super.key, required this.url});
+  const ExamWebViewScreen({super.key, required this.url, this.title = ''});
 
   @override
-  State<QRWebViewScreen> createState() => _QRWebViewScreenState();
+  State<ExamWebViewScreen> createState() => _ExamWebViewScreenState();
 }
 
-class _QRWebViewScreenState extends State<QRWebViewScreen> with WidgetsBindingObserver {
-  late final WebViewController _webViewController;
-  bool _isLoading = true;
-  String _currentUrl = '';
-  double _loadingProgress = 0.0;
-  bool _isLockTaskModeActive = false;
-  Timer? _uiMonitoringTimer;
-  Timer? _lifecycleMonitoringTimer;
-  int _minimizeAttempts = 0;
-  
-  // Method Channel untuk Native Lock Task
-  static const platform = MethodChannel('com.examgo/locktask');
-  
-  // Exit security variables
-  int _exitPressCount = 0;
+class _ExamWebViewScreenState extends State<ExamWebViewScreen>
+    with WidgetsBindingObserver {
+  late final WebViewController _wvc;
+  late final String _resolvedUrl;
+  late String _examTitle;
+
+  bool _loading = true;
+  double _progress = 0;
+  int _minimizeCount = 0;
+  int _exitCount = 0;
   Timer? _exitTimer;
-  bool _showExitWarning = false;
-  static const int REQUIRED_PRESS_COUNT = 5;
-  static const int PRESS_DURATION_SECONDS = 3;
+  bool _showExitBar = false;
+  Timer? _uiTimer;
+  bool _disposed = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _currentUrl = widget.url;
-    _initializeWebView();
-    _enableLockTaskMode();
+
+    final resolved = _resolveInput(widget.url);
+    _resolvedUrl = resolved.url;
+    _examTitle = widget.title.isNotEmpty
+        ? widget.title
+        : resolved.title.isNotEmpty
+        ? resolved.title
+        : Uri.tryParse(resolved.url)?.host ?? 'Ujian';
+
+    _initWebView();
+    _activateSecurity();
   }
 
-  /// ==================== LOCK TASK MODE ====================
-  
-  Future<void> _enableLockTaskMode() async {
+  ({String url, String title}) _resolveInput(String raw) {
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      return (url: raw, title: '');
+    }
     try {
-      // STEP 1: Enable Immersive Mode
-      await SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.immersiveSticky,
-        overlays: [],
+      final payload = QRPayloadService.validate(raw);
+      if (payload != null) return (url: payload.url, title: payload.title);
+    } catch (_) {}
+    try {
+      final withScheme = 'https://$raw';
+      final uri = Uri.parse(withScheme);
+      if (uri.host.isNotEmpty) return (url: withScheme, title: '');
+    } catch (_) {}
+    return (url: raw, title: '');
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _exitTimer?.cancel();
+    _uiTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    SecurityService.instance.disable();
+    super.dispose();
+  }
+
+  // ─── Security ─────────────────────────────────────────────────
+
+  Future<void> _activateSecurity() async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (_disposed) return;
+    await SecurityService.instance.enable();
+    if (!_disposed && mounted) {
+      _uiTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+        if (!_disposed) SecurityService.instance.reapply();
+      });
+      _showSnack(
+        '🔒 Ujian dimulai — mode kunci aktif',
+        color: Colors.red.shade700,
+        duration: 4,
       );
-      
-      // STEP 2: Lock Orientation
-      await SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-      ]);
-      
-      // STEP 3: Hide System UI
-       SystemChrome.setSystemUIOverlayStyle(
-        const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          systemNavigationBarColor: Colors.transparent,
-        ),
-      );
-      
-      // STEP 4: Start Native Lock Task (akan mencoba, jika gagal tetap lanjut)
-      try {
-        final result = await platform.invokeMethod('startLockTask');
-        print('🔒 Native Lock Task: $result');
-      } catch (e) {
-        print('⚠️ Native Lock Task not available (normal tanpa Device Admin): $e');
-      }
-      
-      setState(() => _isLockTaskModeActive = true);
-      
-      // STEP 5: Start aggressive monitoring
-      _startUIMonitoring();
-      _startLifecycleMonitoring();
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.lock, color: Colors.white, size: 20),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    '🔒 Mode Kunci Aktif - Aplikasi terkunci!',
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 3),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: EdgeInsets.only(bottom: 80, left: 16, right: 16),
-          ),
-        );
-      }
-      
-      print('✅ Lock Task Mode Enabled (Multi-layer protection)');
-    } catch (e) {
-      print('❌ Error enabling lock task mode: $e');
     }
   }
 
-  Future<void> _disableLockTaskMode() async {
-    try {
-      // Stop monitoring first
-      _stopUIMonitoring();
-      _stopLifecycleMonitoring();
-      
-      // Try to stop native lock task
-      try {
-        await platform.invokeMethod('stopLockTask');
-      } catch (e) {
-        print('Native lock task stop: $e');
-      }
-      
-      // Restore system UI
-      await SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.edgeToEdge,
-        overlays: SystemUiOverlay.values,
-      );
-      
-      // Unlock orientation
-      await SystemChrome.setPreferredOrientations([]);
-      
-      setState(() => _isLockTaskModeActive = false);
-      
-      print('✅ Lock Task Mode Disabled');
-    } catch (e) {
-      print('❌ Error disabling lock task mode: $e');
-    }
-  }
-
-  /// ==================== AGGRESSIVE MONITORING ====================
-  
-  /// Monitor UI visibility every 200ms (FAST)
-  void _startUIMonitoring() {
-    _uiMonitoringTimer = Timer.periodic(Duration(milliseconds: 200), (_) {
-      if (_isLockTaskModeActive) {
-        // Aggressively re-apply immersive mode
-        SystemChrome.setEnabledSystemUIMode(
-          SystemUiMode.immersiveSticky,
-          overlays: [],
-        );
-      }
-    });
-  }
-
-  void _stopUIMonitoring() {
-    _uiMonitoringTimer?.cancel();
-    _uiMonitoringTimer = null;
-  }
-
-  /// Monitor app lifecycle every 300ms (DETECT minimize attempts)
-  void _startLifecycleMonitoring() {
-    _lifecycleMonitoringTimer = Timer.periodic(Duration(milliseconds: 300), (_) {
-      // This will be caught by didChangeAppLifecycleState
-      // Just keep monitoring to ensure app stays in foreground
-    });
-  }
-
-  void _stopLifecycleMonitoring() {
-    _lifecycleMonitoringTimer?.cancel();
-    _lifecycleMonitoringTimer = null;
-  }
-
-  /// ==================== APP LIFECYCLE DETECTION ====================
-  
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    
-    print('📱 App Lifecycle: $state');
-    
-    if (state == AppLifecycleState.paused) {
-      // APP IS BEING MINIMIZED OR SWITCHED!
-      if (_isLockTaskModeActive) {
-        _minimizeAttempts++;
-        print('🚨 MINIMIZE ATTEMPT DETECTED! Count: $_minimizeAttempts');
-        
-        HapticFeedback.heavyImpact();
-        
-        // Show strong warning
-        _showMinimizeWarning();
-        
-        // Force app back to foreground (try)
-        _bringAppToForeground();
-      }
-    } else if (state == AppLifecycleState.inactive) {
-      // Transitioning state - also block
-      if (_isLockTaskModeActive) {
-        print('⚠️ App going inactive - attempting to restore');
-        _bringAppToForeground();
-      }
-    } else if (state == AppLifecycleState.resumed) {
-      // App came back to foreground
-      print('✅ App resumed');
-      if (_isLockTaskModeActive) {
-        // Re-apply all protections
-        _enableLockTaskMode();
-      }
-    }
-  }
-
-  /// Force bring app to foreground
-  Future<void> _bringAppToForeground() async {
-    try {
-      // Re-apply immersive mode
-      await SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.immersiveSticky,
-        overlays: [],
-      );
-      
-      // Try native method to bring to front
-      try {
-        await platform.invokeMethod('bringToForeground');
-      } catch (e) {
-        print('Native bring to foreground not available: $e');
-      }
-    } catch (e) {
-      print('Error bringing app to foreground: $e');
+    if (_disposed) return;
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+        if (SecurityService.instance.isLockActive) {
+          _minimizeCount++;
+          HapticFeedback.heavyImpact();
+          _showMinimizeWarning();
+        }
+        break;
+      case AppLifecycleState.resumed:
+        if (SecurityService.instance.isLockActive) {
+          SecurityService.instance.reapply();
+        }
+        break;
+      default:
+        break;
     }
   }
 
   void _showMinimizeWarning() {
     if (!mounted) return;
-    
-    // Cancel previous warnings
     ScaffoldMessenger.of(context).clearSnackBars();
-    
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+        content: Row(
           children: [
-            Row(
-              children: [
-                Icon(Icons.warning_amber_rounded, color: Colors.white, size: 28),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '🚨 PERINGATAN!',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        'Tidak boleh keluar dari aplikasi saat ujian!',
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
+            const Icon(Icons.warning_amber_rounded, color: Colors.white),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                '⚠️ Dilarang keluar saat ujian! ($_minimizeCount× terdeteksi)',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                 ),
-              ],
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Percobaan minimize: $_minimizeAttempts kali',
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                color: Colors.white70,
               ),
             ),
           ],
         ),
         backgroundColor: Colors.red.shade700,
         behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: 5),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        margin: EdgeInsets.only(bottom: 80, left: 16, right: 16),
+        duration: const Duration(seconds: 4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
       ),
     );
   }
 
-  /// ==================== WEBVIEW SETUP ====================
-  
-  void _initializeWebView() {
-    _webViewController = WebViewController()
+  // ─── WebView ──────────────────────────────────────────────────
+
+  void _initWebView() {
+    _wvc = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.white)
       ..setNavigationDelegate(
         NavigationDelegate(
-          onProgress: (progress) {
-            setState(() => _loadingProgress = progress / 100);
+          onProgress: (p) {
+            if (!_disposed && mounted) setState(() => _progress = p / 100);
           },
-          onPageStarted: (url) {
-            setState(() {
-              _isLoading = true;
-              _currentUrl = url;
-            });
+          onPageStarted: (_) {
+            if (!_disposed && mounted) setState(() => _loading = true);
           },
           onPageFinished: (_) {
-            setState(() => _isLoading = false);
-            // Inject JavaScript to disable right-click & text selection
-            _webViewController.runJavaScript('''
-              document.addEventListener('contextmenu', event => event.preventDefault());
-              document.addEventListener('selectstart', event => event.preventDefault());
-              document.body.style.webkitUserSelect = 'none';
-              document.body.style.userSelect = 'none';
-              
-              // Prevent opening links in new window/tab
-              window.open = function() { return null; };
-            ''');
+            if (!_disposed && mounted) setState(() => _loading = false);
+            _injectSecurityJS();
           },
-          onWebResourceError: (error) {
-            _showErrorDialog(error.description ?? 'Terjadi kesalahan jaringan.');
+          onWebResourceError: (e) {
+            if (!_disposed && mounted)
+              _showLoadError(e.description ?? 'Network error');
           },
         ),
       )
-      ..loadRequest(Uri.parse(widget.url));
+      ..loadRequest(Uri.parse(_resolvedUrl));
   }
 
-  void _showErrorDialog(String message) {
-    if (!mounted) return;
+  void _injectSecurityJS() {
+    _wvc
+        .runJavaScript('''
+      (function(){
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('selectstart', e => e.preventDefault());
+        try { document.body.style.webkitUserSelect = 'none'; } catch(_){}
+        try { document.body.style.userSelect = 'none'; } catch(_){}
+        window.open = function(){ return null; };
+      })();
+    ''')
+        .catchError((_) {});
+  }
+
+  void _showLoadError(String msg) {
+    if (!mounted || _disposed) return;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(Icons.error_outline, color: Colors.red, size: _responsiveIconSize(20, context)),
-            SizedBox(width: _responsivePadding(8, context)),
-            Expanded(
-              child: Text(
-                'Error Memuat Halaman',
-                style: GoogleFonts.poppins(
-                  fontSize: _responsiveFontSize(16, context),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Text(message, style: GoogleFonts.poppins(fontSize: _responsiveFontSize(14, context))),
-        actions: [
-          TextButton(
-            onPressed: Navigator.of(context).pop,
-            child: Text('Tutup', style: GoogleFonts.poppins(fontSize: _responsiveFontSize(14, context))),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _webViewController.reload();
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen),
-            child: Text('Muat Ulang', style: GoogleFonts.poppins(fontSize: _responsiveFontSize(14, context))),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// ==================== EXIT HANDLING ====================
-  
-  void _handleExitPress() {
-    _exitPressCount++;
-    _exitTimer?.cancel();
-    HapticFeedback.mediumImpact();
-    
-    setState(() => _showExitWarning = true);
-    
-    if (_exitPressCount >= REQUIRED_PRESS_COUNT) {
-      HapticFeedback.heavyImpact();
-      _showExitConfirmationDialog();
-    } else {
-      _exitTimer = Timer(Duration(seconds: PRESS_DURATION_SECONDS), () {
-        setState(() {
-          _exitPressCount = 0;
-          _showExitWarning = false;
-        });
-      });
-    }
-  }
-
-  void _showExitConfirmationDialog() {
-    if (!mounted) return;
-    
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
-          padding: EdgeInsets.all(_responsivePadding(24, context)),
+          padding: EdgeInsets.all(context.rs(24)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: EdgeInsets.all(_responsivePadding(16, context)),
+                padding: EdgeInsets.all(context.rs(14)),
                 decoration: BoxDecoration(
                   color: Colors.red.shade50,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.exit_to_app, 
-                  size: _responsiveIconSize(48, context), 
-                  color: Colors.red
+                  Icons.cloud_off_rounded,
+                  color: Colors.red,
+                  size: context.rs(36),
                 ),
               ),
-              SizedBox(height: _responsivePadding(20, context)),
+              SizedBox(height: context.rs(14)),
               Text(
-                'Keluar dari Ujian?',
+                'Gagal Memuat',
                 style: GoogleFonts.poppins(
-                  fontSize: _responsiveFontSize(18, context),
+                  fontSize: context.rs(16),
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: _responsivePadding(12, context)),
+              SizedBox(height: context.rs(8)),
               Text(
-                'Anda yakin ingin keluar dari ujian?\n\nData yang belum disimpan akan hilang.',
-                textAlign: TextAlign.center,
+                msg,
                 style: GoogleFonts.poppins(
-                  fontSize: _responsiveFontSize(14, context),
+                  fontSize: context.rs(12),
                   color: Colors.grey[600],
                 ),
+                textAlign: TextAlign.center,
               ),
-              if (_minimizeAttempts > 0) ...[
-                SizedBox(height: _responsivePadding(12, context)),
-                Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '⚠️ Terdeteksi $_minimizeAttempts percobaan minimize',
-                    style: GoogleFonts.poppins(
-                      fontSize: _responsiveFontSize(12, context),
-                      color: Colors.orange.shade700,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-              SizedBox(height: _responsivePadding(24, context)),
+              SizedBox(height: context.rs(22)),
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        setState(() {
-                          _exitPressCount = 0;
-                          _showExitWarning = false;
-                        });
-                      },
+                      onPressed: () => Navigator.of(ctx).pop(),
                       style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: _responsivePadding(12, context)),
+                        padding: EdgeInsets.symmetric(vertical: context.rs(12)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: Text(
-                        'Lanjutkan',
-                        style: GoogleFonts.poppins(fontSize: _responsiveFontSize(14, context)),
+                        'Tutup',
+                        style: GoogleFonts.poppins(fontSize: context.rs(13)),
                       ),
                     ),
                   ),
-                  SizedBox(width: _responsivePadding(12, context)),
+                  SizedBox(width: context.rs(10)),
                   Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        Navigator.of(context).pop();
-                        await _disableLockTaskMode();
-                        Navigator.of(context).pop();
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        _wvc.reload();
                       },
+                      icon: const Icon(Icons.refresh_rounded, size: 16),
+                      label: Text(
+                        'Muat Ulang',
+                        style: GoogleFonts.poppins(
+                          fontSize: context.rs(13),
+                          color: Colors.white,
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: EdgeInsets.symmetric(vertical: _responsivePadding(12, context)),
+                        backgroundColor: AppColors.primaryGreen,
+                        padding: EdgeInsets.symmetric(vertical: context.rs(12)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                      ),
-                      child: Text(
-                        'Ya, Keluar',
-                        style: GoogleFonts.poppins(fontSize: _responsiveFontSize(14, context)),
                       ),
                     ),
                   ),
@@ -525,288 +281,308 @@ class _QRWebViewScreenState extends State<QRWebViewScreen> with WidgetsBindingOb
     );
   }
 
-  void _handleRefresh() {
-    HapticFeedback.lightImpact();
-    _webViewController.reload();
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation(Colors.white),
+  // ─── Exit ─────────────────────────────────────────────────────
+
+  void _onExitPress() {
+    if (_disposed) return;
+    _exitCount++;
+    HapticFeedback.mediumImpact();
+    _exitTimer?.cancel();
+    if (!_disposed && mounted) setState(() => _showExitBar = true);
+    if (_exitCount >= AppConfig.exitPressRequired) {
+      _showExitDialog();
+    } else {
+      _exitTimer = Timer(
+        Duration(seconds: AppConfig.exitPressWindowSeconds),
+        () {
+          if (!_disposed && mounted) {
+            setState(() {
+              _exitCount = 0;
+              _showExitBar = false;
+            });
+          }
+        },
+      );
+    }
+  }
+
+  void _showExitDialog() {
+    if (!mounted || _disposed) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: EdgeInsets.all(context.rs(24)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ── Icon ──────────────────────────────────────────
+              Container(
+                padding: EdgeInsets.all(context.rs(16)),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.red.shade600, Colors.red.shade400],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withOpacity(0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.logout_rounded,
+                  color: Colors.white,
+                  size: context.rs(30),
+                ),
               ),
-            ),
-            SizedBox(width: _responsivePadding(12, context)),
-            Text(
-              'Memuat ulang halaman...',
-              style: GoogleFonts.poppins(fontSize: _responsiveFontSize(12, context)),
-            ),
-          ],
-        ),
-        backgroundColor: AppColors.primaryGreen,
-        behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: 2),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        margin: EdgeInsets.only(
-          bottom: 80,
-          left: 16,
-          right: 16,
+              SizedBox(height: context.rs(16)),
+
+              Text(
+                'Keluar dari Ujian?',
+                style: GoogleFonts.poppins(
+                  fontSize: context.rs(18),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: context.rs(10)),
+
+              // ── Nama ujian ────────────────────────────────────
+              if (_examTitle.isNotEmpty)
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.rs(14),
+                    vertical: context.rs(10),
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.paleGreen,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.school,
+                        color: AppColors.primaryGreen,
+                        size: 15,
+                      ),
+                      SizedBox(width: context.rs(7)),
+                      Flexible(
+                        child: Text(
+                          _examTitle,
+                          style: GoogleFonts.poppins(
+                            fontSize: context.rs(13),
+                            color: AppColors.primaryGreen,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              SizedBox(height: context.rs(12)),
+
+              // ── Peringatan ────────────────────────────────────
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(context.rs(12)),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Anda yakin ingin keluar?\nProgress yang belum tersimpan akan hilang.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: context.rs(12),
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    if (_minimizeCount > 0) ...[
+                      SizedBox(height: context.rs(10)),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: context.rs(12),
+                          vertical: context.rs(7),
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.orange.shade200),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              size: 14,
+                              color: Colors.orange.shade700,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '$_minimizeCount× percobaan keluar terdeteksi',
+                              style: GoogleFonts.poppins(
+                                fontSize: context.rs(11),
+                                color: Colors.orange.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              SizedBox(height: context.rs(20)),
+
+              // ── Buttons ───────────────────────────────────────
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        if (!_disposed && mounted) {
+                          setState(() {
+                            _exitCount = 0;
+                            _showExitBar = false;
+                          });
+                        }
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: context.rs(13)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        'Lanjutkan',
+                        style: GoogleFonts.poppins(fontSize: context.rs(14)),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: context.rs(12)),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Navigator.of(ctx).pop();
+                        await SecurityService.instance.disable();
+                        if (mounted && !_disposed) Navigator.of(context).pop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        padding: EdgeInsets.symmetric(vertical: context.rs(13)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        elevation: 2,
+                      ),
+                      child: Text(
+                        'Ya, Keluar',
+                        style: GoogleFonts.poppins(
+                          fontSize: context.rs(14),
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _exitTimer?.cancel();
-    _disableLockTaskMode();
-    super.dispose();
+  void _onRefresh() {
+    HapticFeedback.lightImpact();
+    _wvc.reload();
+    _showSnack('Memuat ulang…', color: AppColors.primaryGreen, duration: 2);
   }
 
-  /// ==================== UI BUILD ====================
+  void _showSnack(String msg, {required Color color, int duration = 3}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg, style: GoogleFonts.poppins(fontSize: 13)),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: duration),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+      ),
+    );
+  }
+
+  // ─── Build ────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (_isLockTaskModeActive) {
+    return PopScope(
+      canPop: !SecurityService.instance.isLockActive,
+      onPopInvoked: (didPop) {
+        if (!didPop && SecurityService.instance.isLockActive)
           _showMinimizeWarning();
-          return false;
-        }
-        return true;
       },
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
           child: Column(
             children: [
-              if (_isLoading)
+              _buildHeader(),
+              if (_loading)
                 LinearProgressIndicator(
-                  value: _loadingProgress,
-                  backgroundColor: Colors.grey[200],
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+                  value: _progress,
+                  backgroundColor: Colors.grey.shade100,
+                  valueColor: const AlwaysStoppedAnimation(
+                    AppColors.primaryGreen,
+                  ),
+                  minHeight: 3,
                 ),
-              
               Expanded(
                 child: Stack(
                   children: [
-                    WebViewWidget(controller: _webViewController),
-                    
-                    // Exit Warning Overlay
-                    if (_showExitWarning)
+                    WebViewWidget(controller: _wvc),
+                    if (_showExitBar)
                       Positioned(
-                        top: 16,
-                        left: 16,
-                        right: 16,
-                        child: Container(
-                          padding: EdgeInsets.all(_responsivePadding(16, context)),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Colors.orange.shade700, Colors.red.shade600],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 10,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.warning_amber_rounded, 
-                                    color: Colors.white, 
-                                    size: _responsiveIconSize(28, context)
-                                  ),
-                                  SizedBox(width: _responsivePadding(12, context)),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'PERINGATAN KELUAR',
-                                          style: GoogleFonts.poppins(
-                                            color: Colors.white,
-                                            fontSize: _responsiveFontSize(14, context),
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        SizedBox(height: 4),
-                                        Text(
-                                          'Tekan ${REQUIRED_PRESS_COUNT - _exitPressCount}x lagi dalam ${PRESS_DURATION_SECONDS} detik',
-                                          style: GoogleFonts.poppins(
-                                            color: Colors.white,
-                                            fontSize: _responsiveFontSize(12, context),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: _responsivePadding(12, context)),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: LinearProgressIndicator(
-                                  value: _exitPressCount / REQUIRED_PRESS_COUNT,
-                                  backgroundColor: Colors.white30,
-                                  valueColor: AlwaysStoppedAnimation(Colors.white),
-                                  minHeight: 6,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        top: 12,
+                        left: 12,
+                        right: 12,
+                        child: _buildExitBar(),
                       ),
-                    
-                    // Lock Task Mode Active Indicator
-                    if (_isLockTaskModeActive)
+                    if (SecurityService.instance.isLockActive)
                       Positioned(
-                        bottom: 16,
-                        left: 16,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.red.shade600,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 8,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.lock,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                              SizedBox(width: 6),
-                              Text(
-                                'TERKUNCI',
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        bottom: 12,
+                        left: 12,
+                        child: _buildLockBadge(),
                       ),
-                    
-                    // Minimize Attempts Counter
-                    if (_minimizeAttempts > 0)
+                    if (_minimizeCount > 0)
                       Positioned(
-                        top: 16,
-                        right: 16,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.shade600,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 8,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.warning_amber_rounded,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                              SizedBox(width: 6),
-                              Text(
-                                '$_minimizeAttempts',
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        top: _showExitBar ? null : 12,
+                        bottom: _showExitBar ? 12 : null,
+                        right: 12,
+                        child: _buildMinimizeBadge(),
                       ),
                   ],
                 ),
               ),
-              
-              // Bottom Navigation
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: _responsivePadding(24, context), 
-                      vertical: _responsivePadding(16, context)
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Expanded(
-                          child: _buildBottomButton(
-                            context: context,
-                            icon: Icons.refresh_rounded,
-                            label: 'Refresh',
-                            color: AppColors.primaryGreen,
-                            onTap: _handleRefresh,
-                          ),
-                        ),
-                        SizedBox(width: _responsivePadding(16, context)),
-                        Expanded(
-                          child: _buildBottomButton(
-                            context: context,
-                            icon: Icons.exit_to_app_rounded,
-                            label: 'Keluar',
-                            color: Colors.red,
-                            onTap: _handleExitPress,
-                            showWarning: true,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              _buildBottomBar(),
             ],
           ),
         ),
@@ -814,61 +590,438 @@ class _QRWebViewScreenState extends State<QRWebViewScreen> with WidgetsBindingOb
     );
   }
 
-  Widget _buildBottomButton({
-    required BuildContext context,
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-    bool showWarning = false,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: _responsivePadding(14, context)),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [color, color.withOpacity(0.8)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+  // ── Header — serasi dengan SliverAppBar home ───────────────────
+  Widget _buildHeader() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF1B5E20), AppColors.primaryGreen],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Dekorasi bubble kanan
+          Positioned(
+            top: -20,
+            right: -20,
+            child: Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.06),
+              ),
             ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.3),
-                blurRadius: 8,
-                offset: Offset(0, 4),
+          ),
+          // Dot grid kiri
+          Positioned(
+            left: 8,
+            bottom: 4,
+            child: Opacity(
+              opacity: 0.12,
+              child: SizedBox(
+                width: 56,
+                height: 36,
+                child: CustomPaint(painter: _MiniDotGrid()),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: context.rs(16),
+              vertical: context.rs(13),
+            ),
+            child: Row(
+              children: [
+                // Lock icon box — mirip dengan icon box di home expanded
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.18),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.22),
+                      width: 1,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.lock_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+                SizedBox(width: context.rs(12)),
+
+                // Title + subtitle
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _examTitle,
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: context.rs(14),
+                          fontWeight: FontWeight.w700,
+                          height: 1.2,
+                          letterSpacing: -0.2,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Ujian sedang berlangsung',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white.withOpacity(0.7),
+                          fontSize: context.rs(10),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Minimize count badge + status pill
+                if (_minimizeCount > 0) ...[
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.rs(8),
+                      vertical: context.rs(4),
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade600,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.warning_amber_rounded,
+                          color: Colors.white,
+                          size: 11,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          '$_minimizeCount×',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: context.rs(6)),
+                ],
+
+                // Online pill (sama seperti collapsed appbar home)
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.rs(9),
+                    vertical: context.rs(4),
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.18),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.25),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFA5D6A7),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Live',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: context.rs(10),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Exit warning bar ───────────────────────────────────────────
+  Widget _buildExitBar() {
+    return Container(
+      padding: EdgeInsets.all(context.rs(14)),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.orange.shade700, Colors.red.shade600],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'PERINGATAN KELUAR',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: context.rs(12),
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    Text(
+                      'Tekan ${AppConfig.exitPressRequired - _exitCount}× lagi '
+                      'dalam ${AppConfig.exitPressWindowSeconds} detik',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: context.rs(11),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
+          SizedBox(height: context.rs(8)),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: _exitCount / AppConfig.exitPressRequired,
+              backgroundColor: Colors.white30,
+              valueColor: const AlwaysStoppedAnimation(Colors.white),
+              minHeight: 5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLockBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B5E20).withOpacity(0.85),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2)),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.lock_rounded, color: Colors.white, size: 12),
+          const SizedBox(width: 4),
+          Text(
+            'TERKUNCI',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMinimizeBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade600,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2)),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.white,
+            size: 12,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '$_minimizeCount×',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Bottom bar — kartu putih dengan shadow seperti card di home ─
+  Widget _buildBottomBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.07),
+            blurRadius: 12,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: context.rs(20),
+            vertical: context.rs(12),
+          ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Colors.white, size: _responsiveIconSize(24, context)),
-              SizedBox(width: _responsivePadding(8, context)),
-              Text(
-                label,
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontSize: _responsiveFontSize(16, context),
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: _BottomBtn(
+                  icon: Icons.refresh_rounded,
+                  label: 'Refresh',
+                  color: AppColors.primaryGreen,
+                  onTap: _onRefresh,
                 ),
               ),
-              if (showWarning) ...[
-                SizedBox(width: _responsivePadding(4, context)),
-                Icon(
-                  Icons.warning_amber_rounded, 
-                  color: Colors.white, 
-                  size: _responsiveIconSize(16, context)
+              SizedBox(width: context.rs(12)),
+              Expanded(
+                child: _BottomBtn(
+                  icon: Icons.logout_rounded,
+                  label: 'Keluar',
+                  color: Colors.red,
+                  onTap: _onExitPress,
+                  trailingIcon: Icons.warning_amber_rounded,
                 ),
-              ],
+              ),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+// ─── Bottom button ─────────────────────────────────────────────────
+
+class _BottomBtn extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  final IconData? trailingIcon;
+
+  const _BottomBtn({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+    this.trailingIcon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: context.rs(13)),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color, color.withOpacity(0.82)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: context.rs(20)),
+            SizedBox(width: context.rs(7)),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: context.rs(14),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            if (trailingIcon != null) ...[
+              SizedBox(width: context.rs(4)),
+              Icon(trailingIcon!, color: Colors.white, size: context.rs(13)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Mini dot grid painter (sama seperti di home header) ──────────
+
+class _MiniDotGrid extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    const spacing = 10.0;
+    const radius = 1.4;
+    final paint = Paint()..color = Colors.white;
+    for (double x = 0; x <= size.width; x += spacing) {
+      for (double y = 0; y <= size.height; y += spacing) {
+        canvas.drawCircle(Offset(x, y), radius, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

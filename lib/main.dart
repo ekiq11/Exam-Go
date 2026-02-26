@@ -1,44 +1,44 @@
-import 'package:examgo/app_colors.dart';
-import 'package:examgo/exam_browser.dart';
-import 'package:examgo/home_screen.dart';
-import 'package:examgo/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'app_colors.dart';
+import 'home_screen.dart';
+import 'splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Lock orientation to portrait
+
+  // Start in portrait; exam session will also enforce this
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
   ]);
-  
-  runApp(const ExamSecureApp());
+
+  runApp(const ExamGoApp());
 }
 
-class ExamSecureApp extends StatelessWidget {
-  const ExamSecureApp({super.key});
+class ExamGoApp extends StatelessWidget {
+  const ExamGoApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ExamSecure - Kemenag',
+      title: 'ExamGO',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        useMaterial3: false,
         primarySwatch: Colors.green,
         primaryColor: AppColors.primaryGreen,
         scaffoldBackgroundColor: Colors.white,
-        textTheme: GoogleFonts.poppinsTextTheme(
-          Theme.of(context).textTheme,
-        ),
+        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
         appBarTheme: AppBarTheme(
           backgroundColor: AppColors.primaryGreen,
           elevation: 0,
           centerTitle: true,
+          iconTheme: const IconThemeData(color: Colors.white),
           titleTextStyle: GoogleFonts.poppins(
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
@@ -48,18 +48,21 @@ class ExamSecureApp extends StatelessWidget {
             backgroundColor: AppColors.primaryGreen,
             foregroundColor: Colors.white,
             elevation: 2,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
           ),
         ),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primaryGreen,
+          primary: AppColors.primaryGreen,
+        ),
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) =>  SplashScreen(),
-        '/home': (context) => HomeScreen(), // ← Hapus const
-        '/exam': (context) => QRScannerScreen(), // ← Hapus const
+        '/': (_) => const SplashScreen(),
+        '/home': (_) => const HomeScreen(),
       },
     );
   }

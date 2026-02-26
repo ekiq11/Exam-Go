@@ -45,5 +45,15 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Diperlukan untuk memindai QR Code ujian.</string>
+
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Diperlukan untuk membaca QR Code dari galeri foto.</string>
+
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+	<string>UIInterfaceOrientationPortrait</string>
+	</array>
 </dict>
 </plist>
