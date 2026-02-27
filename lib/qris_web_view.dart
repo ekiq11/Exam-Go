@@ -76,12 +76,28 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     _uiTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     SecurityService.instance.disable();
+    // Kembalikan status bar ke default saat keluar
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+    );
     super.dispose();
   }
 
   // ─── Security ─────────────────────────────────────────────────
 
   Future<void> _activateSecurity() async {
+    // Pastikan status bar icons putih (kontras dengan header hijau)
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+    );
     await Future.delayed(const Duration(milliseconds: 400));
     if (_disposed) return;
     await SecurityService.instance.enable();
@@ -542,49 +558,44 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              if (_loading)
-                LinearProgressIndicator(
-                  value: _progress,
-                  backgroundColor: Colors.grey.shade100,
-                  valueColor: const AlwaysStoppedAnimation(
-                    AppColors.primaryGreen,
-                  ),
-                  minHeight: 3,
+        // Gradient header harus menyentuh tepi atas layar (di balik status bar)
+        body: Column(
+          children: [
+            _buildHeader(),
+            if (_loading)
+              LinearProgressIndicator(
+                value: _progress,
+                backgroundColor: Colors.grey.shade100,
+                valueColor: const AlwaysStoppedAnimation(
+                  AppColors.primaryGreen,
                 ),
-              Expanded(
-                child: Stack(
-                  children: [
-                    WebViewWidget(controller: _wvc),
-                    if (_showExitBar)
-                      Positioned(
-                        top: 12,
-                        left: 12,
-                        right: 12,
-                        child: _buildExitBar(),
-                      ),
-                    if (SecurityService.instance.isLockActive)
-                      Positioned(
-                        bottom: 12,
-                        left: 12,
-                        child: _buildLockBadge(),
-                      ),
-                    if (_minimizeCount > 0)
-                      Positioned(
-                        top: _showExitBar ? null : 12,
-                        bottom: _showExitBar ? 12 : null,
-                        right: 12,
-                        child: _buildMinimizeBadge(),
-                      ),
-                  ],
-                ),
+                minHeight: 3,
               ),
-              _buildBottomBar(),
-            ],
-          ),
+            Expanded(
+              child: Stack(
+                children: [
+                  WebViewWidget(controller: _wvc),
+                  if (_showExitBar)
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      right: 12,
+                      child: _buildExitBar(),
+                    ),
+                  if (SecurityService.instance.isLockActive)
+                    Positioned(bottom: 12, left: 12, child: _buildLockBadge()),
+                  if (_minimizeCount > 0)
+                    Positioned(
+                      top: _showExitBar ? null : 12,
+                      bottom: _showExitBar ? 12 : null,
+                      right: 12,
+                      child: _buildMinimizeBadge(),
+                    ),
+                ],
+              ),
+            ),
+            _buildBottomBar(),
+          ],
         ),
       ),
     );
@@ -629,9 +640,11 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             ),
           ),
           Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: context.rs(16),
-              vertical: context.rs(13),
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + context.rs(10),
+              bottom: context.rs(13),
+              left: context.rs(16),
+              right: context.rs(16),
             ),
             child: Row(
               children: [
