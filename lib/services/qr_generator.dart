@@ -2,7 +2,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
-import 'package:examgo/qr_payload.dart';
+import 'package:examgo/services/qr_payload.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -12,9 +12,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
-import 'app_colors.dart';
-import 'app_config.dart';
-import 'responsive.dart';
+import '../constant/app_colors.dart';
+import '../constant/app_config.dart';
+import '../constant/responsive.dart';
 
 class QRGeneratorScreen extends StatefulWidget {
   const QRGeneratorScreen({super.key});

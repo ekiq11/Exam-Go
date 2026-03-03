@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "607855529793",
+    "project_id": "examgo-31b5b",
+    "storage_bucket": "examgo-31b5b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607855529793:android:37314c7f5520763f0c1bc0",
+        "android_client_info": {
+          "package_name": "com.kemenag.examgo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-Qt24TtXQ5siKKkATzBKUG3PPW58JfaM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

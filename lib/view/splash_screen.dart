@@ -1,8 +1,10 @@
+// lib/splash_screen.dart
 // ignore_for_file: deprecated_member_use
+import 'package:examgo/constant/app_colors.dart';
+import 'package:examgo/constant/app_config.dart';
+import 'package:examgo/view/onboardong_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'app_colors.dart';
-import 'app_config.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -34,8 +36,16 @@ class _SplashScreenState extends State<SplashScreen>
     ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack));
     _ctrl.forward();
 
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) Navigator.of(context).pushReplacementNamed('/home');
+    // ── PERBAIKAN: cek onboarding setelah splash ──────────────
+    Future.delayed(const Duration(seconds: 3), () async {
+      if (!mounted) return;
+      final done = await isOnboardingDone();
+      if (!mounted) return;
+      if (done) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      } else {
+        Navigator.of(context).pushReplacementNamed('/onboarding');
+      }
     });
   }
 

@@ -1,7 +1,7 @@
 name: examgo
 description: "ExamGO — Secure Exam Browser for Android & iOS"
 publish_to: 'none'
-version: 2.0.0+3
+version: 2.0.0+4
 
 environment:
   sdk: ^3.9.2
@@ -45,6 +45,10 @@ dependencies:
   # Save QR image to temp + share
   path_provider: ^2.1.4
   share_plus: ^10.1.4
+
+  #firebase
+  firebase_core: ^3.6.0
+  firebase_analytics: ^11.3.3
 
 dev_dependencies:
   flutter_test:

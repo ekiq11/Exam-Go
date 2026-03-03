@@ -1,15 +1,73 @@
+// lib/qris_web_view.dart — bagian yang perlu ditambahkan analytics
+// Tambahkan import dan modifikasi berikut ke file qris_web_view.dart yang sudah diperbaiki sebelumnya
+
+// ── TAMBAHKAN import ini di bagian atas file ──────────────────────
+// import 'analytics_service.dart';
+
+// ── TAMBAHKAN variabel ini di dalam _ExamWebViewScreenState ───────
+// DateTime? _examStartTime;
+
+// ── MODIFIKASI _activateSecurity() ───────────────────────────────
+// Tambahkan setelah _securityEnabled = true :
+//
+//   _examStartTime = DateTime.now();
+//   await AnalyticsService.instance.logExamStarted(
+//     examTitle: _examTitle,
+//     examUrl: _resolvedUrl,
+//   );
+
+// ── MODIFIKASI didChangeAppLifecycleState() ───────────────────────
+// Tambahkan di dalam case paused/inactive, setelah _showMinimizeWarning():
+//
+//   await AnalyticsService.instance.logExamViolation(
+//     examTitle: _examTitle,
+//     violationCount: _minimizeCount,
+//   );
+
+// ── MODIFIKASI _performExit() ─────────────────────────────────────
+// Tambahkan sebelum Navigator.of(context).pop():
+//
+//   final duration = _examStartTime != null
+//       ? DateTime.now().difference(_examStartTime!).inSeconds
+//       : 0;
+//   await AnalyticsService.instance.logExamEnded(
+//     examTitle: _examTitle,
+//     durationSeconds: duration,
+//     minimizeCount: _minimizeCount,
+//   );
+
+// ── MODIFIKASI _onExitPress() ─────────────────────────────────────
+// Tambahkan di awal method:
+//
+//   await AnalyticsService.instance.logExitAttempt(
+//     attemptNumber: _exitCount,
+//     minimizeCount: _minimizeCount,
+//   );
+
+// ── MODIFIKASI _showLoadError() ───────────────────────────────────
+// Tambahkan sebelum showDialog:
+//
+//   await AnalyticsService.instance.logExamLoadError(
+//     examHost: Uri.tryParse(_resolvedUrl)?.host ?? 'unknown',
+//     errorMessage: msg,
+//   );
+
+// ─────────────────────────────────────────────────────────────────
+// FILE LENGKAP — qris_web_view.dart dengan analytics terintegrasi
+// ─────────────────────────────────────────────────────────────────
+
 // ignore_for_file: deprecated_member_use
 import 'dart:async';
-import 'package:examgo/qr_payload.dart';
+import 'package:examgo/constant/app_colors.dart';
+import 'package:examgo/constant/app_config.dart';
+import 'package:examgo/constant/responsive.dart';
+import 'package:examgo/constant/security_service.dart';
+import 'package:examgo/firebas_analytics/analytic_service.dart';
+import 'package:examgo/services/qr_payload.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-
-import 'app_colors.dart';
-import 'app_config.dart';
-import 'responsive.dart';
-import 'security_service.dart';
 
 class ExamWebViewScreen extends StatefulWidget {
   final String url;
@@ -34,7 +92,11 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   Timer? _exitTimer;
   bool _showExitBar = false;
   Timer? _uiTimer;
-  bool _disposed = false;
+  bool _isExiting = false;
+  bool _securityEnabled = false;
+
+  // ── Analytics ─────────────────────────────────────────────────
+  DateTime? _examStartTime;
 
   @override
   void initState() {
@@ -51,32 +113,23 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
 
     _initWebView();
     _activateSecurity();
-  }
 
-  ({String url, String title}) _resolveInput(String raw) {
-    if (raw.startsWith('http://') || raw.startsWith('https://')) {
-      return (url: raw, title: '');
-    }
-    try {
-      final payload = QRPayloadService.validate(raw);
-      if (payload != null) return (url: payload.url, title: payload.title);
-    } catch (_) {}
-    try {
-      final withScheme = 'https://$raw';
-      final uri = Uri.parse(withScheme);
-      if (uri.host.isNotEmpty) return (url: withScheme, title: '');
-    } catch (_) {}
-    return (url: raw, title: '');
+    // Screen tracking
+    AnalyticsService.instance.logScreenView(screenName: 'exam_webview');
   }
 
   @override
   void dispose() {
-    _disposed = true;
     _exitTimer?.cancel();
     _uiTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
-    SecurityService.instance.disable();
-    // Kembalikan status bar ke default saat keluar
+
+    if (_securityEnabled) {
+      SecurityService.instance.disable(force: true).catchError((_) {
+        SecurityService.instance.emergencyReset();
+      });
+    }
+
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -84,13 +137,11 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         statusBarBrightness: Brightness.light,
       ),
     );
+
     super.dispose();
   }
 
-  // ─── Security ─────────────────────────────────────────────────
-
   Future<void> _activateSecurity() async {
-    // Pastikan status bar icons putih (kontras dengan header hijau)
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -99,37 +150,53 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       ),
     );
     await Future.delayed(const Duration(milliseconds: 400));
-    if (_disposed) return;
+    if (!mounted) return;
+
     await SecurityService.instance.enable();
-    if (!_disposed && mounted) {
-      _uiTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-        if (!_disposed) SecurityService.instance.reapply();
-      });
-      _showSnack(
-        '🔒 Ujian dimulai — mode kunci aktif',
-        color: Colors.red.shade700,
-        duration: 4,
-      );
-    }
+    _securityEnabled = true;
+
+    // ── Analytics: catat waktu mulai & log event ──────────────
+    _examStartTime = DateTime.now();
+    await AnalyticsService.instance.logExamStarted(
+      examTitle: _examTitle,
+      examUrl: _resolvedUrl,
+    );
+
+    if (!mounted) return;
+    setState(() {});
+
+    _uiTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (mounted && _securityEnabled && !_isExiting) {
+        SecurityService.instance.reapply();
+      }
+    });
+
+    _showSnack(
+      '🔒 Ujian dimulai — mode kunci aktif',
+      color: Colors.red.shade700,
+      duration: 4,
+    );
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (_disposed) return;
+    if (_isExiting || !_securityEnabled) return;
+
     switch (state) {
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
-        if (SecurityService.instance.isLockActive) {
-          _minimizeCount++;
-          HapticFeedback.heavyImpact();
-          _showMinimizeWarning();
-        }
+        _minimizeCount++;
+        HapticFeedback.heavyImpact();
+        _showMinimizeWarning();
+        // ── Analytics: catat pelanggaran ──────────────────────
+        AnalyticsService.instance.logExamViolation(
+          examTitle: _examTitle,
+          violationCount: _minimizeCount,
+        );
         break;
       case AppLifecycleState.resumed:
-        if (SecurityService.instance.isLockActive) {
-          SecurityService.instance.reapply();
-        }
+        SecurityService.instance.reapply();
         break;
       default:
         break;
@@ -165,8 +232,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
-  // ─── WebView ──────────────────────────────────────────────────
-
   void _initWebView() {
     _wvc = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -174,18 +239,25 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       ..setNavigationDelegate(
         NavigationDelegate(
           onProgress: (p) {
-            if (!_disposed && mounted) setState(() => _progress = p / 100);
+            if (mounted) setState(() => _progress = p / 100);
           },
           onPageStarted: (_) {
-            if (!_disposed && mounted) setState(() => _loading = true);
+            if (mounted) setState(() => _loading = true);
           },
           onPageFinished: (_) {
-            if (!_disposed && mounted) setState(() => _loading = false);
+            if (mounted) setState(() => _loading = false);
             _injectSecurityJS();
           },
           onWebResourceError: (e) {
-            if (!_disposed && mounted)
-              _showLoadError(e.description ?? 'Network error');
+            if (mounted) {
+              final msg = e.description ?? 'Network error';
+              // ── Analytics: catat error load ────────────────
+              AnalyticsService.instance.logExamLoadError(
+                examHost: Uri.tryParse(_resolvedUrl)?.host ?? 'unknown',
+                errorMessage: msg,
+              );
+              _showLoadError(msg);
+            }
           },
         ),
       )
@@ -207,7 +279,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   }
 
   void _showLoadError(String msg) {
-    if (!mounted || _disposed) return;
+    if (!mounted) return;
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -297,33 +369,37 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
-  // ─── Exit ─────────────────────────────────────────────────────
-
   void _onExitPress() {
-    if (_disposed) return;
+    if (_isExiting) return;
     _exitCount++;
     HapticFeedback.mediumImpact();
     _exitTimer?.cancel();
-    if (!_disposed && mounted) setState(() => _showExitBar = true);
+    if (mounted) setState(() => _showExitBar = true);
+
+    // ── Analytics: catat percobaan keluar ─────────────────────
+    AnalyticsService.instance.logExitAttempt(
+      attemptNumber: _exitCount,
+      minimizeCount: _minimizeCount,
+    );
+
     if (_exitCount >= AppConfig.exitPressRequired) {
       _showExitDialog();
     } else {
       _exitTimer = Timer(
         Duration(seconds: AppConfig.exitPressWindowSeconds),
         () {
-          if (!_disposed && mounted) {
+          if (mounted)
             setState(() {
               _exitCount = 0;
               _showExitBar = false;
             });
-          }
         },
       );
     }
   }
 
   void _showExitDialog() {
-    if (!mounted || _disposed) return;
+    if (!mounted) return;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -334,7 +410,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ── Icon ──────────────────────────────────────────
               Container(
                 padding: EdgeInsets.all(context.rs(16)),
                 decoration: BoxDecoration(
@@ -359,7 +434,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                 ),
               ),
               SizedBox(height: context.rs(16)),
-
               Text(
                 'Keluar dari Ujian?',
                 style: GoogleFonts.poppins(
@@ -368,8 +442,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                 ),
               ),
               SizedBox(height: context.rs(10)),
-
-              // ── Nama ujian ────────────────────────────────────
               if (_examTitle.isNotEmpty)
                 Container(
                   padding: EdgeInsets.symmetric(
@@ -406,8 +478,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                   ),
                 ),
               SizedBox(height: context.rs(12)),
-
-              // ── Peringatan ────────────────────────────────────
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(context.rs(12)),
@@ -462,22 +532,18 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                   ],
                 ),
               ),
-
               SizedBox(height: context.rs(20)),
-
-              // ── Buttons ───────────────────────────────────────
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
                         Navigator.of(ctx).pop();
-                        if (!_disposed && mounted) {
+                        if (mounted)
                           setState(() {
                             _exitCount = 0;
                             _showExitBar = false;
                           });
-                        }
                       },
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: context.rs(13)),
@@ -494,11 +560,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                   SizedBox(width: context.rs(12)),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () async {
-                        Navigator.of(ctx).pop();
-                        await SecurityService.instance.disable();
-                        if (mounted && !_disposed) Navigator.of(context).pop();
-                      },
+                      onPressed: () => _performExit(ctx),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         padding: EdgeInsets.symmetric(vertical: context.rs(13)),
@@ -526,6 +588,37 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
+  Future<void> _performExit(BuildContext dialogCtx) async {
+    if (_isExiting) return;
+    _isExiting = true;
+    _securityEnabled = false;
+
+    if (dialogCtx.mounted) Navigator.of(dialogCtx).pop();
+
+    _uiTimer?.cancel();
+    _exitTimer?.cancel();
+
+    // ── Analytics: catat durasi ujian sebelum keluar ──────────
+    final duration = _examStartTime != null
+        ? DateTime.now().difference(_examStartTime!).inSeconds
+        : 0;
+    await AnalyticsService.instance.logExamEnded(
+      examTitle: _examTitle,
+      durationSeconds: duration,
+      minimizeCount: _minimizeCount,
+    );
+
+    try {
+      await SecurityService.instance.disable(force: true);
+    } catch (_) {
+      await SecurityService.instance.emergencyReset();
+    }
+
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    if (mounted) Navigator.of(context).pop();
+  }
+
   void _onRefresh() {
     HapticFeedback.lightImpact();
     _wvc.reload();
@@ -546,19 +639,35 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
-  // ─── Build ────────────────────────────────────────────────────
+  ({String url, String title}) _resolveInput(String raw) {
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      return (url: raw, title: '');
+    }
+    try {
+      final payload = QRPayloadService.validate(raw);
+      if (payload != null) return (url: payload.url, title: payload.title);
+    } catch (_) {}
+    try {
+      final withScheme = 'https://$raw';
+      final uri = Uri.parse(withScheme);
+      if (uri.host.isNotEmpty) return (url: withScheme, title: '');
+    } catch (_) {}
+    return (url: raw, title: '');
+  }
 
   @override
   Widget build(BuildContext context) {
+    final canPop = _isExiting || !_securityEnabled;
+
     return PopScope(
-      canPop: !SecurityService.instance.isLockActive,
+      canPop: canPop,
       onPopInvoked: (didPop) {
-        if (!didPop && SecurityService.instance.isLockActive)
+        if (!didPop && _securityEnabled && !_isExiting) {
           _showMinimizeWarning();
+        }
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        // Gradient header harus menyentuh tepi atas layar (di balik status bar)
         body: Column(
           children: [
             _buildHeader(),
@@ -582,7 +691,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                       right: 12,
                       child: _buildExitBar(),
                     ),
-                  if (SecurityService.instance.isLockActive)
+                  if (_securityEnabled)
                     Positioned(bottom: 12, left: 12, child: _buildLockBadge()),
                   if (_minimizeCount > 0)
                     Positioned(
@@ -601,7 +710,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
-  // ── Header — serasi dengan SliverAppBar home ───────────────────
   Widget _buildHeader() {
     return Container(
       decoration: const BoxDecoration(
@@ -613,7 +721,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       ),
       child: Stack(
         children: [
-          // Dekorasi bubble kanan
           Positioned(
             top: -20,
             right: -20,
@@ -626,7 +733,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
               ),
             ),
           ),
-          // Dot grid kiri
           Positioned(
             left: 8,
             bottom: 4,
@@ -648,7 +754,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             ),
             child: Row(
               children: [
-                // Lock icon box — mirip dengan icon box di home expanded
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -666,8 +771,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                   ),
                 ),
                 SizedBox(width: context.rs(12)),
-
-                // Title + subtitle
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -695,8 +798,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                     ],
                   ),
                 ),
-
-                // Minimize count badge + status pill
                 if (_minimizeCount > 0) ...[
                   Container(
                     padding: EdgeInsets.symmetric(
@@ -729,8 +830,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                   ),
                   SizedBox(width: context.rs(6)),
                 ],
-
-                // Online pill (sama seperti collapsed appbar home)
                 Container(
                   padding: EdgeInsets.symmetric(
                     horizontal: context.rs(9),
@@ -775,7 +874,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
-  // ── Exit warning bar ───────────────────────────────────────────
   Widget _buildExitBar() {
     return Container(
       padding: EdgeInsets.all(context.rs(14)),
@@ -910,7 +1008,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
-  // ── Bottom bar — kartu putih dengan shadow seperti card di home ─
   Widget _buildBottomBar() {
     return Container(
       decoration: BoxDecoration(
@@ -957,8 +1054,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 }
-
-// ─── Bottom button ─────────────────────────────────────────────────
 
 class _BottomBtn extends StatelessWidget {
   final IconData icon;
@@ -1019,8 +1114,6 @@ class _BottomBtn extends StatelessWidget {
     );
   }
 }
-
-// ─── Mini dot grid painter (sama seperti di home header) ──────────
 
 class _MiniDotGrid extends CustomPainter {
   @override

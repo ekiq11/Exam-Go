@@ -1,15 +1,20 @@
+// lib/main.dart
+import 'package:examgo/constant/app_colors.dart';
+import 'package:examgo/firebas_analytics/analytic_service.dart';
+import 'package:examgo/firebas_analytics/firebase_options.dart';
+import 'package:examgo/view/home_screen.dart';
+import 'package:examgo/view/onboardong_screen.dart';
+import 'package:examgo/view/splash_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'app_colors.dart';
-import 'home_screen.dart';
-import 'splash_screen.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Start in portrait; exam session will also enforce this
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -26,6 +31,7 @@ class ExamGoApp extends StatelessWidget {
     return MaterialApp(
       title: 'ExamGO',
       debugShowCheckedModeBanner: false,
+      navigatorObservers: [AnalyticsService.instance.observer],
       theme: ThemeData(
         useMaterial3: false,
         primarySwatch: Colors.green,
@@ -59,9 +65,12 @@ class ExamGoApp extends StatelessWidget {
           primary: AppColors.primaryGreen,
         ),
       ),
+      // ── Gunakan SplashScreen sebagai entry point ──────────────
+      // SplashScreen akan cek onboarding sebelum redirect
       initialRoute: '/',
       routes: {
         '/': (_) => const SplashScreen(),
+        '/onboarding': (_) => const OnboardingScreen(),
         '/home': (_) => const HomeScreen(),
       },
     );

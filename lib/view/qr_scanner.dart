@@ -1,6 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:async';
-import 'package:examgo/qr_payload.dart';
+import 'package:examgo/services/qr_payload.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,9 +9,9 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'app_colors.dart';
-import 'app_config.dart';
-import 'responsive.dart';
+import '../constant/app_colors.dart';
+import '../constant/app_config.dart';
+import '../constant/responsive.dart';
 
 // ─────────────────────────────────────────────────────────────────
 // ScanResult — wrapper hasil scan yang SELALU bersih (tidak pernah

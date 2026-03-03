@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
-import 'app_config.dart';
+import '../constant/app_config.dart';
 
 /// Decoded & validated ExamGO QR payload.
 class ExamQRPayload {

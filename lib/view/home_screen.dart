@@ -1,16 +1,16 @@
 // ignore_for_file: deprecated_member_use
-import 'package:examgo/qr_generator.dart';
-import 'package:examgo/qr_scanner.dart';
-import 'package:examgo/qris_web_view.dart';
+import 'package:examgo/services/qr_generator.dart';
+import 'package:examgo/view/qr_scanner.dart';
+import 'package:examgo/view/qris_web_view.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
-import 'app_colors.dart';
-import 'app_config.dart';
-import 'responsive.dart';
+import '../constant/app_colors.dart';
+import '../constant/app_config.dart';
+import '../constant/responsive.dart';
 
 // ─────────────────────────────────────────────────────────────────
 // _HistoryItem
@@ -233,6 +233,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     final go = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
@@ -240,6 +241,7 @@ class _HomeScreenState extends State<HomeScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // ── Icon ──────────────────────────────────────────
               Container(
                 padding: EdgeInsets.all(context.rs(16)),
                 decoration: BoxDecoration(
@@ -264,6 +266,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               SizedBox(height: context.rs(16)),
+
               Text(
                 'Mulai Ujian?',
                 style: GoogleFonts.poppins(
@@ -272,6 +275,8 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               SizedBox(height: context.rs(10)),
+
+              // ── Nama ujian ────────────────────────────────────
               Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: context.rs(16),
@@ -306,7 +311,9 @@ class _HomeScreenState extends State<HomeScreen>
                   ],
                 ),
               ),
-              SizedBox(height: context.rs(16)),
+              SizedBox(height: context.rs(14)),
+
+              // ── Keamanan aktif ────────────────────────────────
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(context.rs(14)),
@@ -372,7 +379,103 @@ class _HomeScreenState extends State<HomeScreen>
                   ],
                 ),
               ),
+              SizedBox(height: context.rs(12)),
+
+              // ── DISCLAIMER — tanggung jawab server ────────────
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(context.rs(12)),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFDE7), // kuning sangat muda
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFFFE082)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.info_outline,
+                          color: Color(0xFFF9A825),
+                          size: 15,
+                        ),
+                        SizedBox(width: context.rs(6)),
+                        Text(
+                          'Informasi Penting',
+                          style: GoogleFonts.poppins(
+                            fontSize: context.rs(11),
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFFF57F17),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: context.rs(6)),
+                    Text(
+                      'ExamGO hanya berperan sebagai penghubung antara '
+                      'perangkat Anda dengan server ujian. Seluruh proses '
+                      'ujian — termasuk soal, jawaban, dan penyimpanan data — '
+                      'dikelola sepenuhnya oleh server penyelenggara.',
+                      style: GoogleFonts.poppins(
+                        fontSize: context.rs(11),
+                        color: const Color(0xFF6D4C00),
+                        height: 1.5,
+                      ),
+                    ),
+                    SizedBox(height: context.rs(8)),
+                    // Garis pemisah tipis
+                    Divider(
+                      height: 1,
+                      color: const Color(0xFFFFE082).withOpacity(0.8),
+                    ),
+                    SizedBox(height: context.rs(8)),
+                    // Poin-poin disclaimer
+                    ...[
+                      (
+                        Icons.cloud_off_outlined,
+                        'Gangguan, hang, atau lag pada server bukan tanggung jawab ExamGO',
+                      ),
+                      (
+                        Icons.wifi_off_rounded,
+                        'Pastikan koneksi internet stabil sebelum memulai',
+                      ),
+                      (
+                        Icons.support_agent_outlined,
+                        'Masalah teknis server hubungi penyelenggara ujian',
+                      ),
+                    ].map(
+                      (item) => Padding(
+                        padding: EdgeInsets.only(bottom: context.rs(5)),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              item.$1,
+                              size: 13,
+                              color: const Color(0xFFF9A825),
+                            ),
+                            SizedBox(width: context.rs(6)),
+                            Expanded(
+                              child: Text(
+                                item.$2,
+                                style: GoogleFonts.poppins(
+                                  fontSize: context.rs(10),
+                                  color: const Color(0xFF6D4C00),
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               SizedBox(height: context.rs(20)),
+
+              // ── Tombol ────────────────────────────────────────
               Row(
                 children: [
                   Expanded(
