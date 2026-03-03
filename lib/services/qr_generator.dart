@@ -59,7 +59,8 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
       setState(() => _errorText = 'URL tidak valid');
       return;
     }
-    final signed = QRPayloadService.generate(url);
+    final title = _titleController.text.trim();
+    final signed = QRPayloadService.generate(url, title: title);
     setState(() {
       _qrData = signed;
       _errorText = null;
@@ -141,11 +142,19 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg, style: GoogleFonts.poppins(fontSize: 13)),
+        content: Text(
+          msg,
+          style: GoogleFonts.poppins(fontSize: context.rs(13)),
+        ),
         backgroundColor: isError ? Colors.red : AppColors.primaryGreen,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+        margin: EdgeInsets.fromLTRB(
+          context.rs(16),
+          0,
+          context.rs(16),
+          context.rs(20),
+        ),
       ),
     );
   }
@@ -157,24 +166,28 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F5),
       body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         slivers: [
           _buildAppBar(),
           SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: context.rs(20)),
+            padding: EdgeInsets.symmetric(
+              horizontal: context.horizontalPadding,
+            ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 SizedBox(height: context.rs(20)),
-                _buildInfoBanner(),
+                MaxWidthBox(child: _buildInfoBanner()),
                 SizedBox(height: context.rs(16)),
-                _buildInputCard(),
+                MaxWidthBox(child: _buildInputCard()),
                 SizedBox(height: context.rs(14)),
-                if (!_generated) _buildGenerateBtn(),
+                if (!_generated) MaxWidthBox(child: _buildGenerateBtn()),
                 if (_generated && _qrData != null) ...[
                   SizedBox(height: context.rs(6)),
-                  _buildQRCard(),
+                  MaxWidthBox(child: _buildQRCard()),
                   SizedBox(height: context.rs(14)),
-                  _buildActionRow(),
+                  MaxWidthBox(child: _buildActionRow()),
                 ],
                 SizedBox(height: context.rs(48)),
               ]),
@@ -185,7 +198,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     );
   }
 
-  // ── AppBar — serasi dengan home (gradient + dekorasi bubble) ───
+  // ── AppBar ─────────────────────────────────────────────────────
   Widget _buildAppBar() {
     return SliverAppBar(
       pinned: true,
@@ -224,7 +237,6 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                 ),
               ),
             ),
-            // Bubble dekoratif
             Positioned(
               top: -30,
               right: -30,
@@ -279,7 +291,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     );
   }
 
-  // ── Info banner — mirip guide card di home ─────────────────────
+  // ── Info banner ────────────────────────────────────────────────
   Widget _buildInfoBanner() {
     return Container(
       padding: EdgeInsets.all(context.rs(14)),
@@ -341,7 +353,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     );
   }
 
-  // ── Input card — serasi dengan kartu di home ───────────────────
+  // ── Input card ─────────────────────────────────────────────────
   Widget _buildInputCard() {
     return Container(
       padding: EdgeInsets.all(context.rs(18)),
@@ -359,7 +371,6 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section label — mirip section label history di home
           Row(
             children: [
               Container(
@@ -395,6 +406,9 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
           TextField(
             controller: _titleController,
             enabled: !_generated,
+            // iOS: menggunakan iOS-style keyboard appearance
+            keyboardAppearance: Brightness.light,
+            textInputAction: TextInputAction.next,
             decoration: InputDecoration(
               hintText: 'mis. UTS Matematika Kelas X',
               hintStyle: GoogleFonts.poppins(
@@ -443,6 +457,11 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
           TextField(
             controller: _urlController,
             keyboardType: TextInputType.url,
+            keyboardAppearance: Brightness.light,
+            textInputAction: TextInputAction.done,
+            autocorrect: false,
+            // iOS: nonaktifkan autocapitalization untuk URL
+            textCapitalization: TextCapitalization.none,
             enabled: !_generated,
             decoration: InputDecoration(
               hintText: 'https://ujian.sekolah.sch.id/...',
@@ -484,7 +503,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     );
   }
 
-  // ── Generate button — sama persis dengan scan card di home ─────
+  // ── Generate button ────────────────────────────────────────────
   Widget _buildGenerateBtn() {
     return GestureDetector(
       onTap: _generate,
@@ -561,12 +580,15 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     );
   }
 
-  // ── QR Result card ─────────────────────────────────────────────
+  // ── QR Card ────────────────────────────────────────────────────
   Widget _buildQRCard() {
     final title = _titleController.text.trim();
     final displayUrl = _urlController.text.trim().startsWith('http')
         ? _urlController.text.trim()
         : 'https://${_urlController.text.trim()}';
+
+    // QR size: di tablet lebih besar, tapi tetap punya batas max
+    final qrSize = (context.rs(230)).clamp(180.0, 300.0);
 
     return Container(
       decoration: BoxDecoration(
@@ -587,7 +609,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
       ),
       child: Column(
         children: [
-          // Header strip — sama seperti header webview
+          // Header
           Container(
             padding: EdgeInsets.symmetric(
               horizontal: context.rs(18),
@@ -603,7 +625,6 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
             ),
             child: Stack(
               children: [
-                // Bubble dekoratif kecil
                 Positioned(
                   right: -10,
                   top: -10,
@@ -645,7 +666,6 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                               color: Colors.white,
                               fontSize: context.rs(13),
                               fontWeight: FontWeight.w700,
-                              letterSpacing: -0.2,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -688,7 +708,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
             ),
           ),
 
-          // QR Code area
+          // QR image
           Padding(
             padding: EdgeInsets.all(context.rs(22)),
             child: RepaintBoundary(
@@ -708,7 +728,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                     QrImageView(
                       data: _qrData!,
                       version: QrVersions.auto,
-                      size: context.rs(230),
+                      size: qrSize,
                       backgroundColor: Colors.white,
                       eyeStyle: const QrEyeStyle(
                         eyeShape: QrEyeShape.square,
@@ -785,7 +805,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
             ),
           ),
 
-          // Footer note
+          // Footer
           Padding(
             padding: EdgeInsets.fromLTRB(
               context.rs(20),
@@ -812,7 +832,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   Widget _buildActionRow() {
     return Column(
       children: [
-        // Share — style sama dengan scan button di home
+        // Share button
         GestureDetector(
           onTap: _saving ? null : _saveToGallery,
           child: AnimatedContainer(
@@ -893,7 +913,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
 
         SizedBox(height: context.rs(10)),
 
-        // Buat baru + Salin — style kartu outline seperti generator button di home
+        // Buat baru + Salin
         Row(
           children: [
             Expanded(

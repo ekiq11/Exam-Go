@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:examgo/services/qr_payload.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -10,29 +11,18 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../constant/app_colors.dart';
-import '../constant/app_config.dart';
 import '../constant/responsive.dart';
+import '../services/qr_payload.dart';
 
-// ─────────────────────────────────────────────────────────────────
-// ScanResult — wrapper hasil scan yang SELALU bersih (tidak pernah
-// berisi raw JSON / payload mentah).
-// Pemisah \x00 (null char) dipilih karena tidak mungkin ada di
-// judul ujian maupun URL yang valid.
-// ─────────────────────────────────────────────────────────────────
 class ScanResult {
   final String url;
   final String title;
-
   const ScanResult({required this.url, required this.title});
-
   String encode() => '$title\x00$url';
-
   static ScanResult decode(String raw) {
     final idx = raw.indexOf('\x00');
-    if (idx == -1) {
-      // Legacy / plain URL tanpa separator
+    if (idx == -1)
       return ScanResult(url: raw, title: Uri.tryParse(raw)?.host ?? raw);
-    }
     return ScanResult(
       url: raw.substring(idx + 1),
       title: raw.substring(0, idx),
@@ -40,11 +30,8 @@ class ScanResult {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────
-
 class QRScannerScreen extends StatefulWidget {
   const QRScannerScreen({super.key});
-
   @override
   State<QRScannerScreen> createState() => _QRScannerScreenState();
 }
@@ -52,14 +39,13 @@ class QRScannerScreen extends StatefulWidget {
 class _QRScannerScreenState extends State<QRScannerScreen>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   late final MobileScannerController _controller;
-
   bool _scanned = false;
   bool _flashOn = false;
   bool _hasPermission = false;
   bool _permissionDenied = false;
+  bool _permissionPermanentlyDenied = false;
   bool _processing = false;
   bool _disposed = false;
-
   late final AnimationController _lineAnim;
   final ImagePicker _picker = ImagePicker();
 
@@ -88,7 +74,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     super.dispose();
   }
 
-  // ─── Permission ───────────────────────────────────────────────
+  // ── Permission ────────────────────────────────────────────────
 
   Future<void> _requestPermission() async {
     if (kIsWeb) {
@@ -99,17 +85,32 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     if (!mounted) return;
     if (status.isGranted) {
       _setPermission(true);
+    } else if (status.isPermanentlyDenied) {
+      setState(() {
+        _permissionDenied = true;
+        _permissionPermanentlyDenied = true;
+      });
     } else {
       setState(() => _permissionDenied = true);
     }
   }
 
-  void _setPermission(bool granted) {
+  void _setPermission(bool v) {
     if (!mounted) return;
-    setState(() => _hasPermission = granted);
+    setState(() => _hasPermission = v);
   }
 
-  // ─── Detection ───────────────────────────────────────────────
+  // Re-check saat kembali dari Settings (iOS & Android)
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        _permissionDenied &&
+        !_hasPermission) {
+      _requestPermission();
+    }
+  }
+
+  // ── Detection ─────────────────────────────────────────────────
 
   void _onDetect(BarcodeCapture capture) {
     if (_scanned || _processing || _disposed) return;
@@ -123,42 +124,33 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     }
   }
 
-  // Titik masuk TUNGGAL untuk semua raw QR string.
-  // TIDAK ADA raw JSON / payload mentah yang boleh keluar dari sini.
   void _handleRaw(String raw) {
     if (_scanned || _disposed) return;
     setState(() => _scanned = true);
     _controller.stop();
-
-    // 1. Coba decode sebagai ExamGO signed QR
     try {
-      final payload = QRPayloadService.validate(raw);
-      if (payload != null) {
-        final title = payload.title.trim().isNotEmpty
-            ? payload.title.trim()
-            : Uri.tryParse(payload.url)?.host ?? payload.url;
-        _popResult(ScanResult(url: payload.url, title: title));
+      final p = QRPayloadService.validate(raw);
+      if (p != null) {
+        final t = p.title.trim().isNotEmpty
+            ? p.title.trim()
+            : Uri.tryParse(p.url)?.host ?? p.url;
+        _popResult(ScanResult(url: p.url, title: t));
         return;
       }
     } catch (_) {}
-
-    // 2. Plain https/http URL
     if (raw.startsWith('http://') || raw.startsWith('https://')) {
       _showPlainUrlDialog(raw);
       return;
     }
-
-    // 3. Tidak valid sama sekali
     _showInvalidDialog();
   }
 
-  // Satu-satunya tempat Navigator.pop dipanggil dengan hasil scan.
-  void _popResult(ScanResult result) {
+  void _popResult(ScanResult r) {
     if (!mounted) return;
-    Navigator.of(context).pop(result.encode());
+    Navigator.of(context).pop(r.encode());
   }
 
-  // ─── Gallery picker ──────────────────────────────────────────
+  // ── Gallery picker ────────────────────────────────────────────
 
   Future<void> _pickGallery() async {
     if (_processing || _disposed) return;
@@ -173,7 +165,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
         return;
       }
       _showLoadingOverlay();
-      final BarcodeCapture? result = await _controller.analyzeImage(file.path);
+      final result = await _controller.analyzeImage(file.path);
       if (mounted) Navigator.of(context).pop();
       if (result != null && result.barcodes.isNotEmpty) {
         final raw = result.barcodes.first.rawValue ?? '';
@@ -219,12 +211,11 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     );
   }
 
-  // ─── Dialogs ─────────────────────────────────────────────────
+  // ── Dialogs ───────────────────────────────────────────────────
 
   void _showPlainUrlDialog(String url) {
     if (!mounted) return;
     final host = Uri.tryParse(url)?.host ?? url;
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -308,36 +299,6 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: context.rs(8)),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.rs(12),
-                  vertical: context.rs(8),
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 14,
-                      color: Colors.red.shade400,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'Lanjutkan hanya jika Anda yakin URL ini aman.',
-                        style: GoogleFonts.poppins(
-                          fontSize: context.rs(11),
-                          color: Colors.red.shade700,
-                        ),
-                      ),
                     ),
                   ],
                 ),
@@ -475,7 +436,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     _controller.switchCamera();
   }
 
-  // ─── Build ───────────────────────────────────────────────────
+  // ── Build ─────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -510,7 +471,10 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                 padding: const EdgeInsets.all(24),
                 child: Text(
                   'Kamera tidak dapat diakses:\n${error.errorDetails?.message ?? error.errorCode.toString()}',
-                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: context.rs(14),
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -658,6 +622,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   }
 
   Widget _buildPermissionView() {
+    final isIOS = !kIsWeb && Platform.isIOS;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -674,7 +639,9 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                 ),
                 SizedBox(height: context.rs(24)),
                 Text(
-                  'Izin Kamera Diperlukan',
+                  _permissionPermanentlyDenied
+                      ? 'Akses Kamera Diblokir'
+                      : 'Izin Kamera Diperlukan',
                   style: GoogleFonts.poppins(
                     fontSize: context.rs(20),
                     fontWeight: FontWeight.bold,
@@ -683,7 +650,11 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                 ),
                 SizedBox(height: context.rs(12)),
                 Text(
-                  'Aplikasi memerlukan akses kamera untuk memindai QR Code ujian.',
+                  _permissionPermanentlyDenied && isIOS
+                      ? 'Buka Pengaturan → ExamGO → Kamera, lalu aktifkan izin kamera.'
+                      : _permissionPermanentlyDenied
+                      ? 'Buka Pengaturan → Aplikasi → ExamGO → Izin → Kamera, lalu aktifkan.'
+                      : 'Aplikasi memerlukan akses kamera untuk memindai QR Code ujian.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
                     fontSize: context.rs(14),
@@ -697,7 +668,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
                     onPressed: () async => openAppSettings(),
                     icon: const Icon(Icons.settings),
                     label: Text(
-                      'Buka Pengaturan',
+                      isIOS ? 'Buka Pengaturan iPhone' : 'Buka Pengaturan',
                       style: GoogleFonts.poppins(fontSize: context.rs(15)),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -737,15 +708,14 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   }
 }
 
-// ─── Scan line ────────────────────────────────────────────────────
+// ─── Scan line ─────────────────────────────────────────────────────
 
 class _ScanLine extends StatelessWidget {
   final AnimationController animation;
   const _ScanLine({required this.animation});
-
   @override
   Widget build(BuildContext context) {
-    final scanSize = MediaQuery.of(context).size.width * 0.7;
+    final scanSize = MediaQuery.of(context).size.shortestSide * 0.7;
     final top = (MediaQuery.of(context).size.height - scanSize) / 2;
     return AnimatedBuilder(
       animation: animation,
@@ -776,12 +746,13 @@ class _ScanLine extends StatelessWidget {
   }
 }
 
-// ─── Scanner overlay ──────────────────────────────────────────────
+// ─── Scanner overlay ───────────────────────────────────────────────
 
 class _ScannerOverlay extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final scanSize = size.width * 0.7;
+    // Gunakan shortestSide × 0.7 agar pas di tablet/landscape
+    final scanSize = size.shortestSide * 0.7;
     final scanRect = Rect.fromCenter(
       center: Offset(size.width / 2, size.height / 2),
       width: scanSize,
@@ -842,7 +813,7 @@ class _ScannerOverlay extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter old) => false;
 }
 
-// ─── Reusable dialog widgets ──────────────────────────────────────
+// ─── Reusable dialog widgets ────────────────────────────────────────
 
 class _BaseDialog extends StatelessWidget {
   final IconData icon;
@@ -850,7 +821,6 @@ class _BaseDialog extends StatelessWidget {
   final String title;
   final String body;
   final List<Widget> actions;
-
   const _BaseDialog({
     required this.icon,
     required this.iconColor,
@@ -858,7 +828,6 @@ class _BaseDialog extends StatelessWidget {
     required this.body,
     required this.actions,
   });
-
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -912,14 +881,12 @@ class _DialogBtn extends StatelessWidget {
   final VoidCallback onTap;
   final Color? bgColor;
   final bool outlined;
-
   const _DialogBtn({
     required this.label,
     required this.onTap,
     this.bgColor,
     this.outlined = false,
   });
-
   @override
   Widget build(BuildContext context) {
     if (outlined) {

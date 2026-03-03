@@ -1,103 +1,131 @@
 // ignore_for_file: avoid_print
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart' show Colors;
 import 'package:flutter/services.dart';
 
-/// Cross-platform security wrapper — compatible with all Android vendors.
+/// Cross-platform security wrapper — Android & iOS, semua vendor.
 ///
-/// Perbaikan untuk:
-/// - Samsung OneUI (A-series, S-series)
-/// - Xiaomi MIUI / HyperOS
-/// - Oppo ColorOS / Realme UI
-/// - Vivo FuntouchOS
-/// - Android Go (low-end)
-/// - x86 / x86_64 emulator & tablet
+/// Android: Lock Task (kiosk) + Immersive mode
+/// iOS    : immersiveSticky (sembunyikan status/home bar)
+///          Lock Task tidak tersedia — gunakan Guided Access secara manual
 class SecurityService {
   SecurityService._();
   static final SecurityService instance = SecurityService._();
 
   static const _channel = MethodChannel('com.examgo/locktask');
-  static const _kTimeoutMs = 2000; // Lebih pendek agar tidak hang
+  static const _kTimeoutMs = 2000;
 
   bool _lockActive = false;
-  bool _nativeLockActive = false; // Pisah tracking native vs flutter lock
+  bool _nativeLockActive = false;
 
   bool get isLockActive => _lockActive;
 
-  // ─── Enable ──────────────────────────────────────────────────
+  static bool get _isIOS => !kIsWeb && Platform.isIOS;
+  static bool get _isAndroid => !kIsWeb && Platform.isAndroid;
+
+  // ─── Enable ───────────────────────────────────────────────────
 
   Future<void> enable() async {
     if (kIsWeb) return;
     try {
-      // Urutan: orientation → immersive → native (best-effort)
       await _lockOrientation();
-      await _applyImmersiveMode();
-      await _tryNativeLock(); // Tidak blocking jika gagal
+      if (_isAndroid) {
+        await _applyImmersiveMode();
+        await _tryNativeLock();
+      } else if (_isIOS) {
+        await _applyIOSFullScreen();
+      }
       _lockActive = true;
-      print('✅ SecurityService: enabled (nativeLock=$_nativeLockActive)');
+      print(
+        '✅ SecurityService: enabled (${_isIOS ? "iOS" : "Android"}, native=$_nativeLockActive)',
+      );
     } catch (e) {
-      // Tetap set _lockActive supaya UI security tetap jalan
       _lockActive = true;
-      print('⚠️ SecurityService.enable error (partially active): $e');
+      print('⚠️ SecurityService.enable partially active: $e');
     }
   }
 
-  // ─── Disable ─────────────────────────────────────────────────
+  // ─── Disable ──────────────────────────────────────────────────
 
-  /// [force] = true → paksa unlock meski state tidak sinkron (pakai di exit dialog)
   Future<void> disable({bool force = false}) async {
     if (kIsWeb) {
       _lockActive = false;
       return;
     }
-
-    // Set flag lebih awal supaya PopScope tidak block navigation
     _lockActive = false;
-
     try {
-      // 1. Lepas native lock dulu
-      if (_nativeLockActive || force) {
-        await _tryNativeUnlock();
+      if (_isAndroid) {
+        if (_nativeLockActive || force) await _tryNativeUnlock();
+        await _restoreAndroidUI();
+      } else if (_isIOS) {
+        await _restoreIOSUI();
       }
-
-      // 2. Restore sistem UI — pakai multiple fallback
-      await _restoreSystemUI();
-
-      // 3. Kembalikan orientasi
       await _restoreOrientation();
-
       print('✅ SecurityService: disabled');
     } catch (e) {
       print('⚠️ SecurityService.disable error: $e');
-      // Paksa restore walaupun error
       await _forceRestoreUI();
     }
   }
 
-  // ─── Reapply ─────────────────────────────────────────────────
+  // ─── Reapply (setiap 3 detik saat ujian) ──────────────────────
 
   Future<void> reapply() async {
     if (!_lockActive || kIsWeb) return;
     try {
-      await _applyImmersiveMode();
+      if (_isAndroid) {
+        await _applyImmersiveMode();
+      } else if (_isIOS) {
+        await _applyIOSFullScreen();
+      }
     } catch (_) {}
   }
 
-  // ─── Emergency Reset ─────────────────────────────────────────
-  /// Panggil ini jika aplikasi stuck — tidak peduli state apapun.
+  // ─── Emergency Reset ──────────────────────────────────────────
 
   Future<void> emergencyReset() async {
     _lockActive = false;
     _nativeLockActive = false;
     await _forceRestoreUI();
-    print('🚨 SecurityService: emergencyReset called');
+    print('🚨 SecurityService: emergencyReset');
   }
 
-  // ─── Privates ────────────────────────────────────────────────
+  // ─── iOS ──────────────────────────────────────────────────────
+
+  Future<void> _applyIOSFullScreen() async {
+    await SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+      overlays: [],
+    );
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
+  }
+
+  Future<void> _restoreIOSUI() async {
+    await SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+      overlays: SystemUiOverlay.values,
+    );
+    await Future.delayed(const Duration(milliseconds: 150));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
+  }
+
+  // ─── Android ──────────────────────────────────────────────────
 
   Future<void> _applyImmersiveMode() async {
-    // immersiveSticky paling kompatibel untuk exam mode
     await SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.immersiveSticky,
       overlays: [],
@@ -111,25 +139,12 @@ class SecurityService {
     );
   }
 
-  Future<void> _lockOrientation() =>
-      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
-  Future<void> _restoreOrientation() => SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
-  Future<void> _restoreSystemUI() async {
-    // Step 1: edgeToEdge dengan semua overlay
+  Future<void> _restoreAndroidUI() async {
     await SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.edgeToEdge,
       overlays: SystemUiOverlay.values,
     );
-
-    // Step 2: tunggu frame render
     await Future.delayed(const Duration(milliseconds: 150));
-
-    // Step 3: Set ulang overlay style ke light (normal)
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -139,46 +154,49 @@ class SecurityService {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
     );
-
-    // Step 4: Delay lagi untuk vendor-specific rendering
     await Future.delayed(const Duration(milliseconds: 100));
   }
 
-  /// Last resort — pakai manual channel jika method biasa gagal
+  // ─── Shared ───────────────────────────────────────────────────
+
+  Future<void> _lockOrientation() =>
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+  Future<void> _restoreOrientation() => SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   Future<void> _forceRestoreUI() async {
-    try {
-      await SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.manual,
-        overlays: SystemUiOverlay.values,
-      );
-    } catch (_) {}
-    try {
-      await SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.edgeToEdge,
-        overlays: SystemUiOverlay.values,
-      );
-    } catch (_) {}
+    for (final mode in [SystemUiMode.manual, SystemUiMode.edgeToEdge]) {
+      try {
+        await SystemChrome.setEnabledSystemUIMode(
+          mode,
+          overlays: SystemUiOverlay.values,
+        );
+      } catch (_) {}
+    }
     try {
       await SystemChrome.setPreferredOrientations([]);
     } catch (_) {}
-    // Vendor-specific unlock
-    try {
-      await _channel
-          .invokeMethod('stopLockTask')
-          .timeout(const Duration(milliseconds: 500));
-    } catch (_) {}
+    if (_isAndroid) {
+      try {
+        await _channel
+            .invokeMethod('stopLockTask')
+            .timeout(const Duration(milliseconds: 500));
+      } catch (_) {}
+    }
   }
 
   Future<void> _tryNativeLock() async {
     try {
-      final result = await _channel
+      final r = await _channel
           .invokeMethod('startLockTask')
           .timeout(Duration(milliseconds: _kTimeoutMs));
-      _nativeLockActive = result == true || result == null;
+      _nativeLockActive = r == true || r == null;
     } catch (e) {
       _nativeLockActive = false;
-      // Bukan error fatal — Samsung/Xiaomi sering tidak support tanpa Device Admin
-      print('ℹ️ Native lock not available (expected on most devices): $e');
+      print('ℹ️ Native lock not available (normal on most devices): $e');
     }
   }
 

@@ -54,7 +54,6 @@ class _HomeScreenState extends State<HomeScreen>
   static const _historyKey = 'scan_history_v3';
   StreamSubscription<List<ConnectivityResult>>? _connectSub;
 
-  // Pulse animation untuk tombol scan
   late AnimationController _pulseController;
   late Animation<double> _pulseAnim;
 
@@ -99,13 +98,8 @@ class _HomeScreenState extends State<HomeScreen>
       if (!mounted) return;
       final nowConnected = !result.contains(ConnectivityResult.none);
       final wasOffline = !_connected;
-
       setState(() => _connected = nowConnected);
-
-      // Auto-notif: koneksi pulih
-      if (wasOffline && nowConnected) {
-        _showReconnectSnack();
-      }
+      if (wasOffline && nowConnected) _showReconnectSnack();
     });
   }
 
@@ -121,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen>
             Text(
               'Internet tersambung kembali!',
               style: GoogleFonts.poppins(
-                fontSize: 13,
+                fontSize: context.rs(13),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -131,7 +125,12 @@ class _HomeScreenState extends State<HomeScreen>
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 3),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+        margin: EdgeInsets.fromLTRB(
+          context.rs(16),
+          0,
+          context.rs(16),
+          context.rs(20),
+        ),
       ),
     );
   }
@@ -151,12 +150,12 @@ class _HomeScreenState extends State<HomeScreen>
     try {
       final prefs = await SharedPreferences.getInstance();
       final current = prefs.getStringList(_historyKey) ?? [];
-      final deduplicated = current
+      final dedup = current
           .where((e) => _HistoryItem.fromStorage(e).url != item.url)
           .toList();
       final updated = [
         item.toStorage(),
-        ...deduplicated,
+        ...dedup,
       ].take(AppConfig.maxScanHistory).toList();
       await prefs.setStringList(_historyKey, updated);
       if (!mounted) return;
@@ -175,7 +174,10 @@ class _HomeScreenState extends State<HomeScreen>
         ),
         content: Text(
           'Semua riwayat scan akan dihapus.',
-          style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[600]),
+          style: GoogleFonts.poppins(
+            fontSize: context.rs(13),
+            color: Colors.grey[600],
+          ),
         ),
         actions: [
           TextButton(
@@ -236,128 +238,128 @@ class _HomeScreenState extends State<HomeScreen>
       barrierDismissible: false,
       builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Padding(
-          padding: EdgeInsets.all(context.rs(24)),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ── Icon ──────────────────────────────────────────
-              Container(
-                padding: EdgeInsets.all(context.rs(16)),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primaryGreen, Color(0xFF43A047)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primaryGreen.withOpacity(0.35),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
+        // Batasi lebar dialog di tablet
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: EdgeInsets.all(context.rs(24)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(context.rs(16)),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primaryGreen, Color(0xFF43A047)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  ],
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryGreen.withOpacity(0.35),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.play_circle_outline,
+                    color: Colors.white,
+                    size: context.rs(32),
+                  ),
                 ),
-                child: Icon(
-                  Icons.play_circle_outline,
-                  color: Colors.white,
-                  size: context.rs(32),
+                SizedBox(height: context.rs(16)),
+                Text(
+                  'Mulai Ujian?',
+                  style: GoogleFonts.poppins(
+                    fontSize: context.rs(18),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              SizedBox(height: context.rs(16)),
-
-              Text(
-                'Mulai Ujian?',
-                style: GoogleFonts.poppins(
-                  fontSize: context.rs(18),
-                  fontWeight: FontWeight.bold,
+                SizedBox(height: context.rs(10)),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.rs(16),
+                    vertical: context.rs(10),
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.paleGreen,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.school,
+                        color: AppColors.primaryGreen,
+                        size: 16,
+                      ),
+                      SizedBox(width: context.rs(8)),
+                      Flexible(
+                        child: Text(
+                          displayTitle,
+                          style: GoogleFonts.poppins(
+                            fontSize: context.rs(13),
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryGreen,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(height: context.rs(10)),
-
-              // ── Nama ujian ────────────────────────────────────
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: context.rs(16),
-                  vertical: context.rs(10),
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.paleGreen,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                SizedBox(height: context.rs(22)),
+                Row(
                   children: [
-                    const Icon(
-                      Icons.school,
-                      color: AppColors.primaryGreen,
-                      size: 16,
-                    ),
-                    SizedBox(width: context.rs(8)),
-                    Flexible(
-                      child: Text(
-                        displayTitle,
-                        style: GoogleFonts.poppins(
-                          fontSize: context.rs(13),
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primaryGreen,
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                            vertical: context.rs(13),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        child: Text(
+                          'Batal',
+                          style: GoogleFonts.poppins(fontSize: context.rs(14)),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: context.rs(12)),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryGreen,
+                          padding: EdgeInsets.symmetric(
+                            vertical: context.rs(13),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 2,
+                        ),
+                        child: Text(
+                          'Mulai Ujian',
+                          style: GoogleFonts.poppins(
+                            fontSize: context.rs(14),
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              SizedBox(height: context.rs(14)),
-
-              SizedBox(height: context.rs(12)),
-
-              // ── Tombol ────────────────────────────────────────
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(ctx).pop(false),
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: context.rs(13)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: Text(
-                        'Batal',
-                        style: GoogleFonts.poppins(fontSize: context.rs(14)),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: context.rs(12)),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.of(ctx).pop(true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryGreen,
-                        padding: EdgeInsets.symmetric(vertical: context.rs(13)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        elevation: 2,
-                      ),
-                      child: Text(
-                        'Mulai Ujian',
-                        style: GoogleFonts.poppins(
-                          fontSize: context.rs(14),
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -418,25 +420,32 @@ class _HomeScreenState extends State<HomeScreen>
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F5),
       body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
+        // BouncingScrollPhysics terasa native di iOS & smooth di Android
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         slivers: [
           _buildSliverAppBar(),
           SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: context.rs(20)),
+            // Gunakan horizontalPadding: lebih lebar di tablet
+            padding: EdgeInsets.symmetric(
+              horizontal: context.horizontalPadding,
+            ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 SizedBox(height: context.rs(20)),
-                _buildConnectionBanner(),
+                // MaxWidthBox: batasi lebar konten di tablet
+                MaxWidthBox(child: _buildConnectionBanner()),
                 SizedBox(height: context.rs(20)),
-                _buildScanCard(),
+                MaxWidthBox(child: _buildScanCard()),
                 SizedBox(height: context.rs(12)),
-                _buildGeneratorCard(),
+                MaxWidthBox(child: _buildGeneratorCard()),
                 if (_history.isNotEmpty) ...[
                   SizedBox(height: context.rs(28)),
-                  _buildHistorySection(),
+                  MaxWidthBox(child: _buildHistorySection()),
                 ],
                 SizedBox(height: context.rs(28)),
-                _buildGuide(),
+                MaxWidthBox(child: _buildGuide()),
                 SizedBox(height: context.rs(48)),
               ]),
             ),
@@ -447,11 +456,12 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // ── Sliver App Bar ─────────────────────────────────────────────
-  // Solusi double-title: TIDAK pakai FlexibleSpaceBar.title sama sekali.
-  // Seluruh konten (expanded + collapsed) dirender manual di dalam
-  // background menggunakan LayoutBuilder + scroll offset.
   Widget _buildSliverAppBar() {
-    final expandedHeight = context.rs(170.0);
+    // Tablet: expandedHeight sedikit lebih besar
+    final expandedHeight = context.isTablet
+        ? context.rs(200.0)
+        : context.rs(170.0);
+
     return SliverAppBar(
       expandedHeight: expandedHeight,
       collapsedHeight: kToolbarHeight,
@@ -460,10 +470,8 @@ class _HomeScreenState extends State<HomeScreen>
       backgroundColor: const Color(0xFF1B5E20),
       elevation: 0,
       automaticallyImplyLeading: false,
-      // ── Tidak ada title di sini — mencegah Flutter render ganda ──
       flexibleSpace: LayoutBuilder(
         builder: (context, constraints) {
-          // Hitung seberapa "collapsed" appbar saat ini (0.0 = full expanded, 1.0 = fully collapsed)
           final minH = kToolbarHeight + MediaQuery.of(context).padding.top;
           final maxH = expandedHeight + MediaQuery.of(context).padding.top;
           final collapseRatio = ((maxH - constraints.maxHeight) / (maxH - minH))
@@ -473,7 +481,7 @@ class _HomeScreenState extends State<HomeScreen>
           return Stack(
             fit: StackFit.expand,
             children: [
-              // ── Gradient background ──────────────────────────────
+              // Gradient background
               Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
@@ -487,16 +495,15 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
               ),
-
-              // ── Dekoratif: lingkaran transparan ──────────────────
+              // Dekoratif lingkaran
               Positioned(
                 top: -50 * expandRatio,
                 right: -40,
                 child: Opacity(
                   opacity: expandRatio * 0.9,
                   child: Container(
-                    width: 200,
-                    height: 200,
+                    width: context.isTablet ? 280 : 200,
+                    height: context.isTablet ? 280 : 200,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white.withOpacity(0.08),
@@ -519,7 +526,6 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
               ),
-              // Grid dots pattern (kanan bawah)
               Positioned(
                 right: 16,
                 bottom: 30 * expandRatio + 12,
@@ -533,7 +539,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
 
-              // ── EXPANDED content (fade out saat collapse) ────────
+              // EXPANDED content
               Positioned(
                 left: 0,
                 right: 0,
@@ -552,7 +558,6 @@ class _HomeScreenState extends State<HomeScreen>
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          // App icon box
                           Container(
                             padding: EdgeInsets.all(context.rs(11)),
                             decoration: BoxDecoration(
@@ -570,7 +575,6 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                           ),
                           SizedBox(width: context.rs(14)),
-                          // Teks nama + subtitle
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -591,13 +595,11 @@ class _HomeScreenState extends State<HomeScreen>
                                   style: GoogleFonts.poppins(
                                     color: Colors.white.withOpacity(0.72),
                                     fontSize: context.rs(11),
-                                    fontWeight: FontWeight.w400,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          // Version badge
                           Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: context.rs(10),
@@ -627,7 +629,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
 
-              // ── COLLAPSED content (fade in saat collapse) ────────
+              // COLLAPSED content
               Positioned(
                 left: 0,
                 right: 0,
@@ -641,7 +643,6 @@ class _HomeScreenState extends State<HomeScreen>
                       padding: EdgeInsets.symmetric(horizontal: context.rs(16)),
                       child: Row(
                         children: [
-                          // Icon kecil
                           Container(
                             padding: const EdgeInsets.all(7),
                             decoration: BoxDecoration(
@@ -665,7 +666,6 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                           ),
                           const Spacer(),
-                          // Status pill di collapsed
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
@@ -779,7 +779,6 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
           ),
-          // Online pill
           Container(
             padding: EdgeInsets.symmetric(
               horizontal: context.rs(10),
@@ -866,7 +865,6 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
           ),
-          // Auto-checking spinner
           SizedBox(
             width: 20,
             height: 20,
@@ -880,7 +878,7 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // ── Scan Card (main CTA) ───────────────────────────────────────
+  // ── Scan Card ─────────────────────────────────────────────────
   Widget _buildScanCard() {
     return ScaleTransition(
       scale: _connected ? _pulseAnim : const AlwaysStoppedAnimation(1.0),
@@ -1125,7 +1123,6 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 child: Row(
                   children: [
-                    // Badge nomor / terbaru
                     Container(
                       width: context.rs(36),
                       height: context.rs(36),
@@ -1260,7 +1257,6 @@ class _HomeScreenState extends State<HomeScreen>
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Timeline column
                 Column(
                   children: [
                     Container(
@@ -1337,7 +1333,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 }
 
-// ─── Dot grid dekoratif untuk header ─────────────────────────────
+// ─── Dot grid ─────────────────────────────────────────────────────
 class _DotGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

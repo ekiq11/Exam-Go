@@ -1,6 +1,4 @@
-// lib/onboarding_screen.dart
 // ignore_for_file: deprecated_member_use
-
 import 'dart:math' as math;
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/constant/responsive.dart';
@@ -9,28 +7,24 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// ─── Key untuk SharedPreferences ─────────────────────────────────
 const _kOnboardingDone = 'onboarding_done_v1';
 
-/// Cek apakah onboarding sudah pernah ditampilkan
 Future<bool> isOnboardingDone() async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getBool(_kOnboardingDone) ?? false;
 }
 
-/// Tandai onboarding sudah selesai
 Future<void> markOnboardingDone() async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setBool(_kOnboardingDone, true);
 }
 
-// ─── Data tiap halaman onboarding ────────────────────────────────
 class _OnboardPage {
   final String title;
   final String subtitle;
   final String description;
   final IconData icon;
-  final bool isDark; // true = hijau, false = putih
+  final bool isDark;
   final List<String> bulletPoints;
 
   const _OnboardPage({
@@ -44,7 +38,6 @@ class _OnboardPage {
 }
 
 const _pages = [
-  // ── Halaman 1 — HIJAU ──────────────────────────────────────────
   _OnboardPage(
     isDark: true,
     icon: Icons.school_rounded,
@@ -58,7 +51,6 @@ const _pages = [
       'Dikembangkan untuk sekolah & madrasah',
     ],
   ),
-  // ── Halaman 2 — PUTIH ─────────────────────────────────────────
   _OnboardPage(
     isDark: false,
     icon: Icons.qr_code_scanner_rounded,
@@ -72,7 +64,6 @@ const _pages = [
       'Tidak perlu input URL manual',
     ],
   ),
-  // ── Halaman 3 — HIJAU ─────────────────────────────────────────
   _OnboardPage(
     isDark: true,
     icon: Icons.lock_rounded,
@@ -86,7 +77,6 @@ const _pages = [
       'Klik kanan & seleksi diblokir',
     ],
   ),
-  // ── Halaman 4 — PUTIH ─────────────────────────────────────────
   _OnboardPage(
     isDark: false,
     icon: Icons.verified_user_rounded,
@@ -102,10 +92,6 @@ const _pages = [
   ),
 ];
 
-// ─────────────────────────────────────────────────────────────────
-// OnboardingScreen
-// ─────────────────────────────────────────────────────────────────
-
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -118,14 +104,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   final _pageController = PageController();
   int _currentPage = 0;
 
-  // Animasi per-halaman
   late final List<AnimationController> _fadeControllers;
   late final List<AnimationController> _slideControllers;
 
   @override
   void initState() {
     super.initState();
-
     _fadeControllers = List.generate(
       _pages.length,
       (_) => AnimationController(
@@ -140,20 +124,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         duration: const Duration(milliseconds: 700),
       ),
     );
-
-    // Animasikan halaman pertama langsung
     _animatePage(0);
   }
 
   @override
   void dispose() {
     _pageController.dispose();
-    for (final c in _fadeControllers) {
-      c.dispose();
-    }
-    for (final c in _slideControllers) {
-      c.dispose();
-    }
+    for (final c in _fadeControllers) c.dispose();
+    for (final c in _slideControllers) c.dispose();
     super.dispose();
   }
 
@@ -189,19 +167,21 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Status bar icons menyesuaikan warna halaman
     final isDark = _pages[_currentPage].isDark;
+
+    // Status bar menyesuaikan warna halaman, berlaku di iOS & Android
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        // iOS-specific
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
       ),
     );
 
     return Scaffold(
       body: Stack(
         children: [
-          // ── PageView utama ───────────────────────────────────
           PageView.builder(
             controller: _pageController,
             onPageChanged: _onPageChanged,
@@ -209,54 +189,48 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             itemBuilder: (_, i) => _buildPage(i),
           ),
 
-          // ── Skip button (kanan atas) ─────────────────────────
+          // Skip button
           if (_currentPage < _pages.length - 1)
             Positioned(
               top: MediaQuery.of(context).padding.top + context.rs(16),
               right: context.rs(20),
-              child: AnimatedOpacity(
-                opacity: _currentPage < _pages.length - 1 ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 300),
-                child: GestureDetector(
-                  onTap: _skip,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.rs(16),
-                      vertical: context.rs(8),
-                    ),
-                    decoration: BoxDecoration(
+              child: GestureDetector(
+                onTap: _skip,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.rs(16),
+                    vertical: context.rs(8),
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.2)
+                        : Colors.black.withOpacity(0.07),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
                       color: isDark
-                          ? Colors.white.withOpacity(0.2)
-                          : Colors.black.withOpacity(0.07),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.3)
-                            : Colors.black.withOpacity(0.1),
-                        width: 1,
-                      ),
+                          ? Colors.white.withOpacity(0.3)
+                          : Colors.black.withOpacity(0.1),
+                      width: 1,
                     ),
-                    child: Text(
-                      'Lewati',
-                      style: GoogleFonts.poppins(
-                        fontSize: context.rs(12),
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white : AppColors.textSecondary,
-                      ),
+                  ),
+                  child: Text(
+                    'Lewati',
+                    style: GoogleFonts.poppins(
+                      fontSize: context.rs(12),
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : AppColors.textSecondary,
                     ),
                   ),
                 ),
               ),
             ),
 
-          // ── Bottom navigation area ───────────────────────────
           Positioned(bottom: 0, left: 0, right: 0, child: _buildBottomNav()),
         ],
       ),
     );
   }
 
-  // ── Halaman individual ────────────────────────────────────────
   Widget _buildPage(int index) {
     final page = _pages[index];
     final fadeAnim = CurvedAnimation(
@@ -267,13 +241,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       parent: _slideControllers[index],
       curve: Curves.easeOutCubic,
     );
-
     return page.isDark
         ? _buildDarkPage(page, index, fadeAnim, slideAnim)
         : _buildLightPage(page, index, fadeAnim, slideAnim);
   }
 
-  // ── DARK page (hijau) ─────────────────────────────────────────
+  // ── DARK page ─────────────────────────────────────────────────
   Widget _buildDarkPage(
     _OnboardPage page,
     int index,
@@ -290,135 +263,55 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       ),
       child: Stack(
         children: [
-          // Dekorasi background
           ..._buildDarkDecorations(),
-
-          // Konten
           SafeArea(
             bottom: false,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: context.rs(28)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: context.rs(60)),
-
-                  // ── Icon ──────────────────────────────────────
-                  FadeTransition(
-                    opacity: fade,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0, 0.3),
-                        end: Offset.zero,
-                      ).animate(slide),
-                      child: _buildIconBox(page.icon, isDark: true),
+            child: SingleChildScrollView(
+              // SingleChildScrollView mencegah overflow di layar mungil
+              physics: const NeverScrollableScrollPhysics(),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.horizontalPadding,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: context.rs(60)),
+                    _animatedIcon(
+                      page.icon,
+                      isDark: true,
+                      fade: fade,
+                      slide: slide,
                     ),
-                  ),
-                  SizedBox(height: context.rs(36)),
-
-                  // ── Title ─────────────────────────────────────
-                  FadeTransition(
-                    opacity: fade,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0, 0.2),
-                        end: Offset.zero,
-                      ).animate(slide),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            page.title,
-                            style: GoogleFonts.poppins(
-                              color: Colors.white.withOpacity(0.75),
-                              fontSize: context.rs(18),
-                              fontWeight: FontWeight.w400,
-                              height: 1.2,
-                            ),
-                          ),
-                          Text(
-                            page.subtitle,
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: context.rs(36),
-                              fontWeight: FontWeight.w800,
-                              height: 1.1,
-                              letterSpacing: -1,
-                            ),
-                          ),
-                        ],
-                      ),
+                    SizedBox(height: context.rs(36)),
+                    _animatedTitle(
+                      page,
+                      isDark: true,
+                      fade: fade,
+                      slide: slide,
                     ),
-                  ),
-                  SizedBox(height: context.rs(20)),
-
-                  // ── Description ───────────────────────────────
-                  FadeTransition(
-                    opacity: fade,
-                    child: Text(
-                      page.description,
-                      style: GoogleFonts.poppins(
-                        color: Colors.white.withOpacity(0.78),
-                        fontSize: context.rs(13),
-                        height: 1.7,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: context.rs(28)),
-
-                  // ── Bullet points ─────────────────────────────
-                  ...page.bulletPoints.asMap().entries.map((e) {
-                    return FadeTransition(
+                    SizedBox(height: context.rs(20)),
+                    FadeTransition(
                       opacity: fade,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: Offset(0, 0.1 * (e.key + 1)),
-                          end: Offset.zero,
-                        ).animate(slide),
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: context.rs(12)),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: context.rs(28),
-                                height: context.rs(28),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.15),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white.withOpacity(0.3),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Icon(
-                                    Icons.check_rounded,
-                                    color: Colors.white,
-                                    size: context.rs(14),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: context.rs(12)),
-                              Expanded(
-                                child: Text(
-                                  e.value,
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white.withOpacity(0.88),
-                                    fontSize: context.rs(13),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                      child: Text(
+                        page.description,
+                        style: GoogleFonts.poppins(
+                          color: Colors.white.withOpacity(0.78),
+                          fontSize: context.rs(13),
+                          height: 1.7,
                         ),
                       ),
-                    );
-                  }),
-
-                  // Spacer untuk bottom nav
-                  SizedBox(height: context.rs(140)),
-                ],
+                    ),
+                    SizedBox(height: context.rs(28)),
+                    ..._buildBullets(
+                      page.bulletPoints,
+                      isDark: true,
+                      fade: fade,
+                      slide: slide,
+                    ),
+                    SizedBox(height: context.rs(140)),
+                  ],
+                ),
               ),
             ),
           ),
@@ -427,7 +320,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  // ── LIGHT page (putih) ────────────────────────────────────────
+  // ── LIGHT page ────────────────────────────────────────────────
   Widget _buildLightPage(
     _OnboardPage page,
     int index,
@@ -438,135 +331,54 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       color: Colors.white,
       child: Stack(
         children: [
-          // Dekorasi background putih
           ..._buildLightDecorations(),
-
           SafeArea(
             bottom: false,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: context.rs(28)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: context.rs(60)),
-
-                  // ── Icon ──────────────────────────────────────
-                  FadeTransition(
-                    opacity: fade,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0, 0.3),
-                        end: Offset.zero,
-                      ).animate(slide),
-                      child: _buildIconBox(page.icon, isDark: false),
+            child: SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.horizontalPadding,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: context.rs(60)),
+                    _animatedIcon(
+                      page.icon,
+                      isDark: false,
+                      fade: fade,
+                      slide: slide,
                     ),
-                  ),
-                  SizedBox(height: context.rs(36)),
-
-                  // ── Title ─────────────────────────────────────
-                  FadeTransition(
-                    opacity: fade,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0, 0.2),
-                        end: Offset.zero,
-                      ).animate(slide),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            page.title,
-                            style: GoogleFonts.poppins(
-                              color: AppColors.textSecondary,
-                              fontSize: context.rs(18),
-                              fontWeight: FontWeight.w400,
-                              height: 1.2,
-                            ),
-                          ),
-                          Text(
-                            page.subtitle,
-                            style: GoogleFonts.poppins(
-                              color: AppColors.primaryGreen,
-                              fontSize: context.rs(36),
-                              fontWeight: FontWeight.w800,
-                              height: 1.1,
-                              letterSpacing: -1,
-                            ),
-                          ),
-                        ],
-                      ),
+                    SizedBox(height: context.rs(36)),
+                    _animatedTitle(
+                      page,
+                      isDark: false,
+                      fade: fade,
+                      slide: slide,
                     ),
-                  ),
-                  SizedBox(height: context.rs(20)),
-
-                  // ── Description ───────────────────────────────
-                  FadeTransition(
-                    opacity: fade,
-                    child: Text(
-                      page.description,
-                      style: GoogleFonts.poppins(
-                        color: AppColors.textSecondary,
-                        fontSize: context.rs(13),
-                        height: 1.7,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: context.rs(28)),
-
-                  // ── Bullet points ─────────────────────────────
-                  ...page.bulletPoints.asMap().entries.map((e) {
-                    return FadeTransition(
+                    SizedBox(height: context.rs(20)),
+                    FadeTransition(
                       opacity: fade,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: Offset(0, 0.1 * (e.key + 1)),
-                          end: Offset.zero,
-                        ).animate(slide),
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: context.rs(12)),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: context.rs(28),
-                                height: context.rs(28),
-                                decoration: BoxDecoration(
-                                  color: AppColors.paleGreen,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: AppColors.primaryGreen.withOpacity(
-                                      0.25,
-                                    ),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Icon(
-                                    Icons.check_rounded,
-                                    color: AppColors.primaryGreen,
-                                    size: context.rs(14),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: context.rs(12)),
-                              Expanded(
-                                child: Text(
-                                  e.value,
-                                  style: GoogleFonts.poppins(
-                                    color: AppColors.textPrimary,
-                                    fontSize: context.rs(13),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                      child: Text(
+                        page.description,
+                        style: GoogleFonts.poppins(
+                          color: AppColors.textSecondary,
+                          fontSize: context.rs(13),
+                          height: 1.7,
                         ),
                       ),
-                    );
-                  }),
-
-                  SizedBox(height: context.rs(140)),
-                ],
+                    ),
+                    SizedBox(height: context.rs(28)),
+                    ..._buildBullets(
+                      page.bulletPoints,
+                      isDark: false,
+                      fade: fade,
+                      slide: slide,
+                    ),
+                    SizedBox(height: context.rs(140)),
+                  ],
+                ),
               ),
             ),
           ),
@@ -575,7 +387,131 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  // ── Icon box ──────────────────────────────────────────────────
+  // ── Shared animated widgets ────────────────────────────────────
+
+  Widget _animatedIcon(
+    IconData icon, {
+    required bool isDark,
+    required Animation<double> fade,
+    required Animation<double> slide,
+  }) {
+    return FadeTransition(
+      opacity: fade,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.3),
+          end: Offset.zero,
+        ).animate(slide),
+        child: _buildIconBox(icon, isDark: isDark),
+      ),
+    );
+  }
+
+  Widget _animatedTitle(
+    _OnboardPage page, {
+    required bool isDark,
+    required Animation<double> fade,
+    required Animation<double> slide,
+  }) {
+    return FadeTransition(
+      opacity: fade,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.2),
+          end: Offset.zero,
+        ).animate(slide),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              page.title,
+              style: GoogleFonts.poppins(
+                color: isDark
+                    ? Colors.white.withOpacity(0.75)
+                    : AppColors.textSecondary,
+                fontSize: context.rs(18),
+                fontWeight: FontWeight.w400,
+                height: 1.2,
+              ),
+            ),
+            Text(
+              page.subtitle,
+              style: GoogleFonts.poppins(
+                color: isDark ? Colors.white : AppColors.primaryGreen,
+                fontSize: context.rs(36),
+                fontWeight: FontWeight.w800,
+                height: 1.1,
+                letterSpacing: -1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildBullets(
+    List<String> bullets, {
+    required bool isDark,
+    required Animation<double> fade,
+    required Animation<double> slide,
+  }) {
+    return bullets.asMap().entries.map((e) {
+      return FadeTransition(
+        opacity: fade,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: Offset(0, 0.1 * (e.key + 1)),
+            end: Offset.zero,
+          ).animate(slide),
+          child: Padding(
+            padding: EdgeInsets.only(bottom: context.rs(12)),
+            child: Row(
+              children: [
+                Container(
+                  width: context.rs(28),
+                  height: context.rs(28),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.15)
+                        : AppColors.paleGreen,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.3)
+                          : AppColors.primaryGreen.withOpacity(0.25),
+                      width: 1,
+                    ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.check_rounded,
+                      color: isDark ? Colors.white : AppColors.primaryGreen,
+                      size: context.rs(14),
+                    ),
+                  ),
+                ),
+                SizedBox(width: context.rs(12)),
+                Expanded(
+                  child: Text(
+                    e.value,
+                    style: GoogleFonts.poppins(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.88)
+                          : AppColors.textPrimary,
+                      fontSize: context.rs(13),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }).toList();
+  }
+
   Widget _buildIconBox(IconData icon, {required bool isDark}) {
     return Container(
       width: context.rs(80),
@@ -611,7 +547,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  // ── Bottom navigation ─────────────────────────────────────────
+  // ── Bottom nav ─────────────────────────────────────────────────
   Widget _buildBottomNav() {
     final page = _pages[_currentPage];
     final isDark = page.isDark;
@@ -632,14 +568,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               ),
       ),
       padding: EdgeInsets.fromLTRB(
-        context.rs(28),
+        context.horizontalPadding,
         context.rs(32),
-        context.rs(28),
+        context.horizontalPadding,
         MediaQuery.of(context).padding.bottom + context.rs(28),
       ),
       child: Row(
         children: [
-          // ── Dot indicators ──────────────────────────────────
+          // Dot indicators
           Row(
             children: List.generate(_pages.length, (i) {
               final isActive = i == _currentPage;
@@ -660,10 +596,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               );
             }),
           ),
-
           const Spacer(),
 
-          // ── Next / Mulai button ──────────────────────────────
+          // Next / Mulai button
           GestureDetector(
             onTap: _nextPage,
             child: AnimatedContainer(
@@ -688,13 +623,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (isLast)
+                  if (isLast) ...[
                     Icon(
                       Icons.rocket_launch_rounded,
                       color: isDark ? AppColors.primaryGreen : Colors.white,
                       size: context.rs(18),
                     ),
-                  if (isLast) SizedBox(width: context.rs(8)),
+                    SizedBox(width: context.rs(8)),
+                  ],
                   Text(
                     isLast ? 'Mulai Sekarang' : 'Selanjutnya',
                     style: GoogleFonts.poppins(
@@ -720,128 +656,110 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  // ── Dekorasi background HIJAU ─────────────────────────────────
-  List<Widget> _buildDarkDecorations() {
-    return [
-      // Lingkaran besar kanan atas
-      Positioned(
-        top: -80,
-        right: -60,
-        child: Container(
-          width: 260,
-          height: 260,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.05),
-          ),
+  // ── Background decorations ─────────────────────────────────────
+  List<Widget> _buildDarkDecorations() => [
+    Positioned(
+      top: -80,
+      right: -60,
+      child: Container(
+        width: 260,
+        height: 260,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white.withOpacity(0.05),
         ),
       ),
-      // Lingkaran sedang kiri bawah
-      Positioned(
-        bottom: 80,
-        left: -40,
-        child: Container(
-          width: 180,
-          height: 180,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.04),
-          ),
+    ),
+    Positioned(
+      bottom: 80,
+      left: -40,
+      child: Container(
+        width: 180,
+        height: 180,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white.withOpacity(0.04),
         ),
       ),
-      // Dot grid kanan bawah
-      Positioned(
-        right: 20,
-        bottom: 160,
-        child: Opacity(
-          opacity: 0.15,
-          child: SizedBox(
-            width: 100,
-            height: 100,
-            child: CustomPaint(painter: _DotGridPainter(color: Colors.white)),
-          ),
+    ),
+    Positioned(
+      right: 20,
+      bottom: 160,
+      child: Opacity(
+        opacity: 0.15,
+        child: SizedBox(
+          width: 100,
+          height: 100,
+          child: CustomPaint(painter: _DotGridPainter(color: Colors.white)),
         ),
       ),
-      // Garis diagonal dekoratif
-      Positioned(
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        child: CustomPaint(
-          painter: _DiagonalLinePainter(color: Colors.white.withOpacity(0.04)),
-        ),
+    ),
+    Positioned.fill(
+      child: CustomPaint(
+        painter: _DiagonalLinePainter(color: Colors.white.withOpacity(0.04)),
       ),
-    ];
-  }
+    ),
+  ];
 
-  // ── Dekorasi background PUTIH ─────────────────────────────────
-  List<Widget> _buildLightDecorations() {
-    return [
-      // Arc hijau kanan atas
-      Positioned(
-        top: -100,
-        right: -80,
-        child: Container(
-          width: 280,
-          height: 280,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.primaryGreen.withOpacity(0.06),
+  List<Widget> _buildLightDecorations() => [
+    Positioned(
+      top: -100,
+      right: -80,
+      child: Container(
+        width: 280,
+        height: 280,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.primaryGreen.withOpacity(0.06),
+        ),
+      ),
+    ),
+    Positioned(
+      bottom: 60,
+      left: -50,
+      child: Container(
+        width: 200,
+        height: 200,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.primaryGreen.withOpacity(0.05),
+        ),
+      ),
+    ),
+    Positioned(
+      right: 20,
+      bottom: 160,
+      child: Opacity(
+        opacity: 0.12,
+        child: SizedBox(
+          width: 100,
+          height: 100,
+          child: CustomPaint(
+            painter: _DotGridPainter(color: AppColors.primaryGreen),
           ),
         ),
       ),
-      // Arc hijau kiri bawah
-      Positioned(
-        bottom: 60,
-        left: -50,
-        child: Container(
-          width: 200,
-          height: 200,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.primaryGreen.withOpacity(0.05),
+    ),
+    Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        height: 4,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.primaryGreen, Color(0xFF81C784)],
           ),
         ),
       ),
-      // Dot grid
-      Positioned(
-        right: 20,
-        bottom: 160,
-        child: Opacity(
-          opacity: 0.12,
-          child: SizedBox(
-            width: 100,
-            height: 100,
-            child: CustomPaint(
-              painter: _DotGridPainter(color: AppColors.primaryGreen),
-            ),
-          ),
-        ),
-      ),
-      // Stripe atas
-      Positioned(
-        top: 0,
-        left: 0,
-        right: 0,
-        child: Container(
-          height: 4,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.primaryGreen, Color(0xFF81C784)],
-            ),
-          ),
-        ),
-      ),
-    ];
-  }
+    ),
+  ];
 }
 
-// ─── Dot grid painter ─────────────────────────────────────────────
+// ─── Painters ─────────────────────────────────────────────────────
 class _DotGridPainter extends CustomPainter {
   final Color color;
   const _DotGridPainter({required this.color});
-
   @override
   void paint(Canvas canvas, Size size) {
     const spacing = 14.0;
@@ -858,11 +776,9 @@ class _DotGridPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter old) => false;
 }
 
-// ─── Diagonal line painter ────────────────────────────────────────
 class _DiagonalLinePainter extends CustomPainter {
   final Color color;
   const _DiagonalLinePainter({required this.color});
-
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()

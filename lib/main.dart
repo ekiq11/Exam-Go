@@ -1,4 +1,3 @@
-// lib/main.dart
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/firebas_analytics/analytic_service.dart';
 import 'package:examgo/firebas_analytics/firebase_options.dart';
@@ -15,10 +14,17 @@ void main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // Portrait only — berlaku untuk semua platform
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+
+  // Pastikan edge-to-edge di Android; iOS akan mengikuti SafeArea
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.edgeToEdge,
+    overlays: SystemUiOverlay.values,
+  );
 
   runApp(const ExamGoApp());
 }
@@ -32,12 +38,20 @@ class ExamGoApp extends StatelessWidget {
       title: 'ExamGO',
       debugShowCheckedModeBanner: false,
       navigatorObservers: [AnalyticsService.instance.observer],
+
+      // ── Scrollbar tidak muncul di mana-mana (tablet / iOS) ────
+      scrollBehavior: const _NoGlowScrollBehavior(),
+
       theme: ThemeData(
         useMaterial3: false,
         primarySwatch: Colors.green,
         primaryColor: AppColors.primaryGreen,
         scaffoldBackgroundColor: Colors.white,
-        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
+
+        // ── Visual density: adaptive agar pas di semua ukuran ───
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+
+        textTheme: GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme),
         appBarTheme: AppBarTheme(
           backgroundColor: AppColors.primaryGreen,
           elevation: 0,
@@ -65,8 +79,6 @@ class ExamGoApp extends StatelessWidget {
           primary: AppColors.primaryGreen,
         ),
       ),
-      // ── Gunakan SplashScreen sebagai entry point ──────────────
-      // SplashScreen akan cek onboarding sebelum redirect
       initialRoute: '/',
       routes: {
         '/': (_) => const SplashScreen(),
@@ -75,4 +87,22 @@ class ExamGoApp extends StatelessWidget {
       },
     );
   }
+}
+
+/// Hilangkan overscroll glow (Android) dan pastikan scrolling
+/// terasa native di semua platform
+class _NoGlowScrollBehavior extends ScrollBehavior {
+  const _NoGlowScrollBehavior();
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) => child; // hapus glow biru Android
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) =>
+      // BouncingScrollPhysics di semua platform agar konsisten
+      const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
 }

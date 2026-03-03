@@ -1,9 +1,10 @@
-// lib/splash_screen.dart
 // ignore_for_file: deprecated_member_use
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/constant/app_config.dart';
+import 'package:examgo/constant/responsive.dart';
 import 'package:examgo/view/onboardong_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -22,6 +23,16 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
+
+    // Status bar transparan saat splash
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+    );
+
     _ctrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -36,7 +47,6 @@ class _SplashScreenState extends State<SplashScreen>
     ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack));
     _ctrl.forward();
 
-    // ── PERBAIKAN: cek onboarding setelah splash ──────────────
     Future.delayed(const Duration(seconds: 3), () async {
       if (!mounted) return;
       final done = await isOnboardingDone();
@@ -57,6 +67,9 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Skala ikon berdasarkan device
+    final iconSize = context.isTablet ? 130.0 : context.rs(110);
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -69,70 +82,72 @@ class _SplashScreenState extends State<SplashScreen>
             ],
           ),
         ),
-        child: Center(
-          child: FadeTransition(
-            opacity: _fade,
-            child: ScaleTransition(
-              scale: _scale,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 110,
-                    height: 110,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 24,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+        child: SafeArea(
+          child: Center(
+            child: FadeTransition(
+              opacity: _fade,
+              child: ScaleTransition(
+                scale: _scale,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: iconSize,
+                      height: iconSize,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 24,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.school,
+                        size: iconSize * 0.5,
+                        color: AppColors.primaryGreen,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.school,
-                      size: 56,
-                      color: AppColors.primaryGreen,
+                    SizedBox(height: context.rs(28)),
+                    Text(
+                      AppConfig.appName,
+                      style: GoogleFonts.poppins(
+                        fontSize: context.rs(30),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 28),
-                  Text(
-                    AppConfig.appName,
-                    style: GoogleFonts.poppins(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 1.2,
+                    SizedBox(height: context.rs(6)),
+                    Text(
+                      'Secure Exam Browser',
+                      style: GoogleFonts.poppins(
+                        fontSize: context.rs(14),
+                        color: Colors.white.withOpacity(0.85),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Secure Exam Browser',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.85),
+                    SizedBox(height: context.rs(6)),
+                    Text(
+                      'v${AppConfig.appVersion}',
+                      style: GoogleFonts.poppins(
+                        fontSize: context.rs(11),
+                        color: Colors.white.withOpacity(0.6),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'v${AppConfig.appVersion}',
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      color: Colors.white.withOpacity(0.6),
+                    SizedBox(height: context.rs(48)),
+                    SizedBox(
+                      width: context.rs(28),
+                      height: context.rs(28),
+                      child: const CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 48),
-                  const SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
