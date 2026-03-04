@@ -1,103 +1,86 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!--
-  ╔══════════════════════════════════════════════════════════════╗
-  ║  ExamGO — ios/Runner/Info.plist                             ║
-  ║  Tambahkan KEY-VALUE berikut ke dalam <dict> yang sudah ada ║
-  ╚══════════════════════════════════════════════════════════════╝
--->
 <plist version="1.0">
 <dict>
 
-  <!-- ══════════════════════════════════════════════════════════
-       IZIN KAMERA — wajib untuk QR Scanner
-       Teks ini ditampilkan iOS saat meminta izin pertama kali
-       ══════════════════════════════════════════════════════════ -->
-  <key>NSCameraUsageDescription</key>
-  <string>ExamGO memerlukan akses kamera untuk memindai QR Code ujian. Kamera hanya aktif saat halaman scan dibuka.</string>
+	<!-- Core Flutter/iOS keys -->
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>ExamGO</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>examgo</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
 
-  <!-- ══════════════════════════════════════════════════════════
-       IZIN GALERI / FOTO — untuk scan QR dari gambar
-       ══════════════════════════════════════════════════════════ -->
-  <key>NSPhotoLibraryUsageDescription</key>
-  <string>ExamGO memerlukan akses galeri foto untuk memindai QR Code dari gambar yang tersimpan.</string>
+	<!-- Kamera & Galeri -->
+	<key>NSCameraUsageDescription</key>
+	<string>ExamGO memerlukan akses kamera untuk memindai QR Code ujian. Kamera hanya aktif saat halaman scan dibuka.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>ExamGO memerlukan akses galeri foto untuk memindai QR Code dari gambar yang tersimpan.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>ExamGO dapat menyimpan QR Code ujian yang digenerate ke galeri foto Anda.</string>
 
-  <!-- ══════════════════════════════════════════════════════════
-       IZIN TAMBAH KE GALERI — opsional, jika app menyimpan QR
-       ══════════════════════════════════════════════════════════ -->
-  <key>NSPhotoLibraryAddUsageDescription</key>
-  <string>ExamGO dapat menyimpan QR Code ujian yang digenerate ke galeri foto Anda.</string>
+	<!-- UI -->
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
 
-  <!-- ══════════════════════════════════════════════════════════
-       TAMPILAN LAYAR PENUH (iOS Safe Area)
-       Agar app bisa menggunakan seluruh layar termasuk notch
-       ══════════════════════════════════════════════════════════ -->
-  <key>UIViewControllerBasedStatusBarAppearance</key>
-  <false/>
+	<!-- Orientasi — iPhone: portrait only -->
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
 
-  <!-- ══════════════════════════════════════════════════════════
-       ORIENTASI — hanya portrait (sesuai SecurityService)
-       ══════════════════════════════════════════════════════════ -->
-  <key>UISupportedInterfaceOrientations</key>
-  <array>
-    <string>UIInterfaceOrientationPortrait</string>
-  </array>
+	<!-- Orientasi — iPad: portrait + landscape -->
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
 
-  <key>UISupportedInterfaceOrientations~ipad</key>
-  <array>
-    <string>UIInterfaceOrientationPortrait</string>
-    <string>UIInterfaceOrientationPortraitUpsideDown</string>
-  </array>
+	<!-- Jaringan: izinkan HTTP (hapus jika semua server sudah HTTPS) -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 
-  <!-- ══════════════════════════════════════════════════════════
-       JARINGAN — izinkan koneksi HTTP (jika server ujian pakai HTTP)
-       Hapus bagian ini jika semua server sudah HTTPS
-       ══════════════════════════════════════════════════════════ -->
-  <key>NSAppTransportSecurity</key>
-  <dict>
-    <!-- Pilih SALAH SATU opsi di bawah: -->
-
-    <!-- OPSI A (Direkomendasikan): Izinkan semua domain — untuk server ujian beragam -->
-    <key>NSAllowsArbitraryLoads</key>
-    <true/>
-
-    <!-- OPSI B (Lebih aman): Whitelist domain spesifik saja
-    <key>NSAllowsArbitraryLoads</key>
-    <false/>
-    <key>NSExceptionDomains</key>
-    <dict>
-      <key>ujian.kemenag.go.id</key>
-      <dict>
-        <key>NSExceptionAllowsInsecureHTTPLoads</key>
-        <true/>
-        <key>NSIncludesSubdomains</key>
-        <true/>
-      </dict>
-    </dict>
-    -->
-  </dict>
-
-  <!-- ══════════════════════════════════════════════════════════
-       FIREBASE — diperlukan untuk Google Sign-In / Analytics
-       ══════════════════════════════════════════════════════════ -->
-  <key>CFBundleURLTypes</key>
-  <array>
-    <dict>
-      <key>CFBundleTypeRole</key>
-      <string>Editor</string>
-      <key>CFBundleURLSchemes</key>
-      <array>
-        <!-- Ganti dengan REVERSED_CLIENT_ID dari GoogleService-Info.plist -->
-        <string>com.googleusercontent.apps.GANTI_DENGAN_REVERSED_CLIENT_ID</string>
-      </array>
-    </dict>
-  </array>
-
-  <!-- ══════════════════════════════════════════════════════════
-       NAMA APP DI HOME SCREEN
-       ══════════════════════════════════════════════════════════ -->
-  <key>CFBundleDisplayName</key>
-  <string>ExamGO</string>
+	<!-- Firebase / Google Sign-In URL Scheme -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.app-1-607855529793-ios-3a3b85a80bbd256a0c1bc0</string>
+			</array>
+		</dict>
+	</array>
 
 </dict>
 </plist>
