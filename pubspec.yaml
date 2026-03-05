@@ -22,7 +22,7 @@ dependencies:
   # WebView — tambahan wkwebview untuk iOS
   webview_flutter: ^4.13.0
   webview_flutter_wkwebview: ^3.20.0    # iOS WKWebView
-  webview_flutter_android: ^4.3.0       # Android WebView (pastikan sinkron)
+  webview_flutter_android: ^4.10.11       # Android WebView (pastikan sinkron)
 
   # Permissions
   permission_handler: ^12.0.1

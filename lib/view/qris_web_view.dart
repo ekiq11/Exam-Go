@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 class ExamWebViewScreen extends StatefulWidget {
@@ -47,6 +48,10 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   Timer? _retryTimer;
   static const int _kMaxSilentRetry = 2;
   static const Duration _kRetryDelay = Duration(seconds: 3);
+
+  // Render process crash recovery — ditangani di MainActivity.kt (native)
+  // Variable ini dipakai agar onWebResourceError tidak double-handle
+  bool _renderCrashed = false;
 
   @override
   void initState() {
@@ -174,7 +179,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   }
 
   void _initWebView() {
-    // ── Platform-specific WebView init ────────────────────────
     late final PlatformWebViewControllerCreationParams params;
     if (!kIsWeb && Platform.isIOS) {
       params = WebKitWebViewControllerCreationParams(
@@ -182,7 +186,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
       );
     } else {
-      params = const PlatformWebViewControllerCreationParams();
+      params = AndroidWebViewControllerCreationParams();
     }
 
     _wvc = WebViewController.fromPlatformCreationParams(params)
@@ -194,7 +198,11 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             if (mounted) setState(() => _progress = p / 100);
           },
           onPageStarted: (_) {
-            if (mounted) setState(() => _loading = true);
+            if (mounted)
+              setState(() {
+                _loading = true;
+                _renderCrashed = false;
+              });
             _loadErrorCount = 0;
             _retryTimer?.cancel();
           },
@@ -205,11 +213,12 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
           },
           onWebResourceError: (e) {
             if (!mounted) return;
-            // Hanya tangani main frame, abaikan sub-resource
             final isMainFrame = e.isForMainFrame ?? true;
             if (!isMainFrame) return;
-            // Abaikan error non-fatal
             if (e.errorCode == -6) return;
+            // Render process crash sudah di-handle di MainActivity.kt
+            // Saat crash terjadi, native mengembalikan true sehingga
+            // onWebResourceError tetap terpanggil — kita retry di sini
             final msg = e.description ?? 'Koneksi bermasalah';
             _loadErrorCount++;
             AnalyticsService.instance.logExamLoadError(
@@ -233,6 +242,11 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         ),
       )
       ..loadRequest(Uri.parse(_resolvedUrl));
+
+    // Matikan remote debug inspector di production
+    if (!kIsWeb && Platform.isAndroid) {
+      AndroidWebViewController.enableDebugging(false);
+    }
 
     // iOS: konfigurasi tambahan WKWebView
     if (!kIsWeb && Platform.isIOS) {
@@ -702,7 +716,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       ),
       child: Padding(
         padding: EdgeInsets.only(
-          // SafeArea manual agar benar di iPhone notch, Dynamic Island, Android punch-hole
           top: MediaQuery.of(context).padding.top + context.rs(10),
           bottom: context.rs(13),
           left: context.rs(16),

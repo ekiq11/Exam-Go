@@ -8,13 +8,11 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <!-- READ_EXTERNAL_STORAGE: only needed on Android <= 12 (API 32).
-         Android 13+ uses Photo Picker, no storage permission required. -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
-    <!-- ══ Camera hardware — optional so app installs on all devices ══ -->
+    <!-- ══ Camera hardware — optional ══ -->
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
@@ -29,15 +27,6 @@
         android:hardwareAccelerated="true"
         android:usesCleartextTraffic="false">
 
-        <!--
-            Notes on activity attributes:
-            - launchMode="singleTop"  : correct for Flutter. singleTask caused
-              blank screen after returning from camera/gallery on many devices.
-            - screenOrientation       : prevents brief landscape flash on launch;
-              also locked programmatically in security_service.dart.
-            - HOME + DEFAULT removed  : those categories made ExamGO appear as
-              a home screen replacement. Kiosk mode is in MainActivity.kt.
-        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -62,6 +51,25 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!--
+            FIX: Render process crash — Android 16 Beta (SDK 36)
+            Galaxy Tab A11+ 5G crash: "Render process wasn't handled by
+            all associated webviews, triggering application crash"
+
+            MetricsOptOut mendorong WebView ke single-process mode.
+            Di SDK 36, multiprocess renderer di-kill agresif saat memory
+            pressure → trigger crash yang tidak bisa di-handle dari Dart.
+            Single-process lebih stabil untuk exam kiosk (1 URL aktif).
+        -->
+        <meta-data
+            android:name="android.webkit.WebView.MetricsOptOut"
+            android:value="true" />
+
+        <!-- Nonaktifkan Safe Browsing — mengurangi network request background -->
+        <meta-data
+            android:name="android.webkit.WebView.EnableSafeBrowsing"
+            android:value="false" />
 
     </application>
 
