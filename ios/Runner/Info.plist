@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 
-	<!-- Core Flutter/iOS keys -->
+	<!-- ══ Core Flutter/iOS Keys ═══════════════════════════════════ -->
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
@@ -29,15 +29,86 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 
-	<!-- Kamera & Galeri -->
+	<!-- ══ Permissions ══════════════════════════════════════════════
+	     Mapping dari AndroidManifest:
+	       CAMERA                → NSCameraUsageDescription
+	       READ_EXTERNAL_STORAGE → NSPhotoLibraryUsageDescription
+	       WAKE_LOCK             → isIdleTimerDisabled di AppDelegate (runtime)
+	       INTERNET              → NSAppTransportSecurity (HTTPS-only)
+	       ACCESS_NETWORK_STATE  → tidak perlu, auto-granted di iOS
+	     ══════════════════════════════════════════════════════════ -->
+
+	<!-- Kamera — setara uses-permission CAMERA + uses-feature camera optional -->
 	<key>NSCameraUsageDescription</key>
 	<string>ExamGO memerlukan akses kamera untuk memindai QR Code ujian. Kamera hanya aktif saat halaman scan dibuka.</string>
+
+	<!-- Galeri baca — setara READ_EXTERNAL_STORAGE (maxSdkVersion 32) -->
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>ExamGO memerlukan akses galeri foto untuk memindai QR Code dari gambar yang tersimpan.</string>
+
+	<!-- Galeri tulis — untuk simpan QR Code yang di-generate guru/pengawas -->
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>ExamGO dapat menyimpan QR Code ujian yang digenerate ke galeri foto Anda.</string>
 
-	<!-- UI -->
+	<!-- ══ Jaringan ═════════════════════════════════════════════════
+	     Setara android:usesCleartextTraffic="false" di AndroidManifest.
+	     HTTPS-only untuk semua koneksi. Jika server ujian masih HTTP,
+	     tambahkan exception domain di bawah ini.
+	     ══════════════════════════════════════════════════════════ -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<!--
+		    Jika ada server ujian internal yang masih HTTP, uncomment dan
+		    sesuaikan domain di bawah ini:
+
+		    <key>NSExceptionDomains</key>
+		    <dict>
+		        <key>ujian.sekolah.sch.id</key>
+		        <dict>
+		            <key>NSExceptionAllowsInsecureHTTPLoads</key>
+		            <true/>
+		            <key>NSIncludesSubdomains</key>
+		            <true/>
+		        </dict>
+		    </dict>
+		-->
+	</dict>
+
+	<!-- ══ WebView — setara android.webkit.WebView.MetricsOptOut ════
+	     Nonaktifkan Web Inspector di production build.
+	     Setara AndroidWebViewController.enableDebugging(false).
+	     wk.setInspectable(false) sudah dilakukan di qris_web_view.dart,
+	     key ini sebagai failsafe di level plist.
+	     ══════════════════════════════════════════════════════════ -->
+	<key>WebKitDeveloperExtrasEnabledPreferenceKey</key>
+	<false/>
+
+	<!-- Blok window.open() dari JS — setara Safe Browsing dinonaktifkan -->
+	<key>WebKitJavaScriptCanOpenWindowsAutomatically</key>
+	<false/>
+
+	<!-- ══ Orientasi — setara android:screenOrientation="portrait" ══ -->
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+
+	<!-- iPad: portrait + landscape (fleksibel untuk tablet ujian) -->
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+
+	<!-- ══ UI ═══════════════════════════════════════════════════════
+	     WAKE_LOCK equivalent:
+	     UIApplication.shared.isIdleTimerDisabled = true
+	     diaktifkan saat kiosk/ujian mulai di AppDelegate.swift
+	     ══════════════════════════════════════════════════════════ -->
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -47,29 +118,7 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 
-	<!-- Orientasi — iPhone: portrait only -->
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-	</array>
-
-	<!-- Orientasi — iPad: portrait + landscape -->
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-
-	<!-- Jaringan: izinkan HTTP (hapus jika semua server sudah HTTPS) -->
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-	</dict>
-
-	<!-- Firebase / Google Sign-In URL Scheme -->
+	<!-- ══ Firebase / Google Sign-In URL Scheme ════════════════════ -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

@@ -155,6 +155,8 @@ class AnalyticsService {
   Future<void> logExamLoadError({
     required String examHost,
     required String errorMessage,
+    int? errorCode,
+    int? retryCount,
   }) async {
     try {
       await _analytics.logEvent(
@@ -166,6 +168,8 @@ class AnalyticsService {
             0,
             errorMessage.length > 100 ? 100 : errorMessage.length,
           ),
+          if (errorCode != null) 'error_code': errorCode,
+          if (retryCount != null) 'retry_count': retryCount,
         },
       );
     } catch (e) {

@@ -50,26 +50,64 @@ class MainActivity: FlutterActivity() {
      * Rekursif inject custom WebViewClient ke semua WebView
      * yang sudah di-inflate oleh Flutter. Juga dipanggil ulang
      * saat onResume karena WebView bisa recreate setelah crash.
+     *
+     * PENTING: Kita WRAP existing webViewClient, bukan replace-nya,
+     * agar callback Flutter (onPageFinished, onWebResourceError, dll)
+     * tetap berfungsi. Replace langsung adalah bug yang menyebabkan
+     * exam_load_error tidak ter-handle atau ter-trigger berulang.
      */
     private fun injectRenderProcessGoneHandler() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         try {
             findWebViews(window.decorView).forEach { webView ->
-                webView.webViewClient = object : WebViewClient() {
-                    override fun onRenderProcessGone(
-                        view: WebView?,
-                        detail: RenderProcessGoneDetail?
-                    ): Boolean {
-                        // Return true = kita handle sendiri, app tidak crash.
-                        // Dart onWebResourceError akan trigger retry logic.
-                        println("⚠️ Render process gone — didCrash=${detail?.didCrash()}")
-                        return true
-                    }
-                }
+                val existing = webView.webViewClient
+                // Jangan wrap ulang kalau sudah di-wrap
+                if (existing is RenderProcessSafeClient) return@forEach
+                webView.webViewClient = RenderProcessSafeClient(existing)
             }
         } catch (e: Exception) {
             println("⚠️ injectRenderProcessGoneHandler error: ${e.message}")
         }
+    }
+
+    /**
+     * Wrapper WebViewClient yang hanya override onRenderProcessGone,
+     * dan mendelegasikan semua metode lain ke delegate asli.
+     * Ini mencegah Flutter kehilangan callback-nya.
+     */
+    private inner class RenderProcessSafeClient(
+        private val delegate: WebViewClient
+    ) : WebViewClient() {
+
+        override fun onRenderProcessGone(
+            view: WebView?,
+            detail: RenderProcessGoneDetail?
+        ): Boolean {
+            println("⚠️ Render process gone — didCrash=${detail?.didCrash()}")
+            return true // handle sendiri, app tidak crash
+        }
+
+        // Delegasi semua method lain ke original Flutter client
+        override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?) =
+            delegate.shouldOverrideUrlLoading(view, request)
+
+        override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) =
+            delegate.onPageStarted(view, url, favicon)
+
+        override fun onPageFinished(view: WebView?, url: String?) =
+            delegate.onPageFinished(view, url)
+
+        override fun onReceivedError(view: WebView?, request: android.webkit.WebResourceRequest?, error: android.webkit.WebResourceError?) =
+            delegate.onReceivedError(view, request, error)
+
+        override fun onReceivedHttpError(view: WebView?, request: android.webkit.WebResourceRequest?, errorResponse: android.webkit.WebResourceResponse?) =
+            delegate.onReceivedHttpError(view, request, errorResponse)
+
+        override fun onReceivedSslError(view: WebView?, handler: android.webkit.SslErrorHandler?, error: android.net.http.SslError?) =
+            delegate.onReceivedSslError(view, handler, error)
+
+        override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) =
+            delegate.doUpdateVisitedHistory(view, url, isReload)
     }
 
     private fun findWebViews(view: android.view.View): List<WebView> {

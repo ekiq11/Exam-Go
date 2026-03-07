@@ -1,5 +1,28 @@
+// AppDelegate.swift
+// ExamGO — iOS Native Layer
+//
+// Equivalent mapping dari Android:
+//   MainActivity.kt           → AppDelegate + KioskViewController
+//   KioskMethodChannel.kt     → KioskChannelHandler
+//   ExamGoWebViewClient.kt    → WKNavigationDelegate di ExamGoWebViewProxy
+//   ExamGoDeviceAdminReceiver → GuidedAccessController (iOS equivalent)
+//
+// Permission equivalents (Info.plist + runtime):
+//   FLAG_SECURE               → UIScreen.isCaptured check + blur overlay
+//   FLAG_KEEP_SCREEN_ON       → isIdleTimerDisabled = true
+//   FLAG_FULLSCREEN           → prefersStatusBarHidden
+//   WAKE_LOCK                 → isIdleTimerDisabled
+//   CAMERA                    → NSCameraUsageDescription (Info.plist)
+//   READ_EXTERNAL_STORAGE     → NSPhotoLibraryUsageDescription (Info.plist)
+
 import UIKit
 import Flutter
+import WebKit
+
+// ══════════════════════════════════════════════════════════════════
+// MARK: - AppDelegate
+// Equivalent: MainActivity.kt — setup, method channels, lifecycle
+// ══════════════════════════════════════════════════════════════════
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -7,147 +30,403 @@ import Flutter
     private var isKioskActive = false
     private var flutterEngine = FlutterEngine(name: "main")
 
+    // Screenshot-block overlay (setara FLAG_SECURE)
+    private var secureOverlay: UIView?
+
     override func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
 
-        // ── 1. Jalankan engine dulu ─────────────────────────────
+        // ── 1. Jalankan Flutter engine ──────────────────────────
         flutterEngine.run()
         GeneratedPluginRegistrant.register(with: flutterEngine)
 
-        // ── 2. Buat KioskViewController sebagai root ────────────
+        // ── 2. Root view controller: KioskViewController ────────
+        //    Setara: android:launchMode="singleTop" + kiosk setup
         let kioskVC = KioskViewController(engine: flutterEngine, nibName: nil, bundle: nil)
         window = UIWindow(frame: UIScreen.main.bounds)
         window?.rootViewController = kioskVC
         window?.makeKeyAndVisible()
 
-        // ── 3. Daftarkan Method Channel ─────────────────────────
-        FlutterMethodChannel(
-            name: "com.kemenag.examgo/kiosk",
-            binaryMessenger: flutterEngine.binaryMessenger
-        ).setMethodCallHandler(handleKiosk)
+        // ── 3. Daftarkan semua Method Channel ───────────────────
+        //    Setara: configureFlutterEngine() di MainActivity.kt
+        KioskChannelHandler.register(
+            messenger: flutterEngine.binaryMessenger,
+            delegate: self
+        )
 
-        FlutterMethodChannel(
-            name: "com.kemenag.examgo/locktask",
-            binaryMessenger: flutterEngine.binaryMessenger
-        ).setMethodCallHandler(handleLockTask)
+        // ── 4. Observe screenshot/screen recording ──────────────
+        //    Setara: FLAG_SECURE di Android
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(onScreenCaptureChanged),
+            name: UIScreen.capturedDidChangeNotification,
+            object: nil
+        )
 
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
 
-    // ══════════════════════════════════════════════════════
-    // MARK: Channel Handlers
-    // ══════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════════
+    // MARK: FLAG_SECURE equivalent — blur saat screen recording
+    // Setara: window.setFlags(FLAG_SECURE, FLAG_SECURE) di MainActivity
+    // ══════════════════════════════════════════════════════════
 
-    private func handleKiosk(call: FlutterMethodCall, result: @escaping FlutterResult) {
-        switch call.method {
-        case "enableKioskMode":   enableKiosk();  result(true)
-        case "disableKioskMode":  disableKiosk(); result(true)
-        case "startLockTask":     enableKiosk();  result(true)
-        case "stopLockTask":      disableKiosk(); result(nil)
-        case "isKioskModeActive": result(isKioskActive)
-        case "hideSystemUI":      applyImmersive(); result(nil)
-        case "showSystemUI":      result(nil)
-
-        // Method Android yang tidak ada di iOS — kembalikan nilai aman
-        case "isDeviceAdminEnabled":      result(true)
-        case "requestDeviceAdmin":        result(nil)
-        case "checkBlockedApps":          result(nil)
-        case "getRunningApps":            result([String]())
-        case "checkUsageStatsPermission": result(true)
-        case "openUsageStatsSettings":    result(nil)
-        case "blockRecentApps":           result(nil)
-
-        default: result(FlutterMethodNotImplemented)
+    @objc private func onScreenCaptureChanged() {
+        guard isKioskActive else { return }
+        if UIScreen.main.isCaptured {
+            showSecureOverlay()
+        } else {
+            hideSecureOverlay()
         }
     }
 
-    private func handleLockTask(call: FlutterMethodCall, result: @escaping FlutterResult) {
-        switch call.method {
-        case "startLockTask":
-            enableKiosk()
-            result("lock_started")
-        case "stopLockTask":
-            disableKiosk()
-            result("lock_stopped")
-        case "bringToForeground":
-            result("brought_to_front") // no-op di iOS
-        default:
-            result(FlutterMethodNotImplemented)
-        }
+    private func showSecureOverlay() {
+        guard secureOverlay == nil else { return }
+        let overlay = UIView(frame: UIScreen.main.bounds)
+        overlay.backgroundColor = .black
+        overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+
+        let label = UILabel()
+        label.text = "🔒 Rekaman layar tidak diizinkan saat ujian berlangsung"
+        label.textColor = .white
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        overlay.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: overlay.centerYAnchor),
+            label.leadingAnchor.constraint(equalTo: overlay.leadingAnchor, constant: 32),
+            label.trailingAnchor.constraint(equalTo: overlay.trailingAnchor, constant: -32),
+        ])
+
+        window?.addSubview(overlay)
+        secureOverlay = overlay
     }
 
-    // ══════════════════════════════════════════════════════
-    // MARK: Kiosk Logic
-    // ══════════════════════════════════════════════════════
+    private func hideSecureOverlay() {
+        secureOverlay?.removeFromSuperview()
+        secureOverlay = nil
+    }
 
-    private func enableKiosk() {
+    // ══════════════════════════════════════════════════════════
+    // MARK: Kiosk Control
+    // Setara: startLockTask() / stopLockTask() di MainActivity.kt
+    // ══════════════════════════════════════════════════════════
+
+    func enableKiosk() {
         isKioskActive = true
 
-        // Layar tidak mati (setara FLAG_KEEP_SCREEN_ON)
+        // WAKE_LOCK equivalent — layar tidak mati
         UIApplication.shared.isIdleTimerDisabled = true
 
-        // Sembunyikan status bar & home indicator
+        // FLAG_FULLSCREEN equivalent — sembunyikan status bar & home indicator
         applyImmersive()
 
-        // Prompt Guided Access jika belum aktif
-        showGuidedAccessPrompt()
+        // Device Admin equivalent — Guided Access prompt
+        GuidedAccessController.requestIfNeeded(from: window?.rootViewController)
     }
 
-    private func disableKiosk() {
+    func disableKiosk() {
         isKioskActive = false
         UIApplication.shared.isIdleTimerDisabled = false
-
-        // Tampilkan kembali status bar & home indicator
+        hideSecureOverlay()
         NotificationCenter.default.post(name: .kioskModeChanged, object: false)
         window?.rootViewController?.setNeedsStatusBarAppearanceUpdate()
     }
 
-    private func applyImmersive() {
+    func applyImmersive() {
         DispatchQueue.main.async {
             NotificationCenter.default.post(name: .kioskModeChanged, object: true)
             self.window?.rootViewController?.setNeedsStatusBarAppearanceUpdate()
         }
     }
 
-    private func showGuidedAccessPrompt() {
-        guard !UIAccessibility.isGuidedAccessEnabled else { return }
+    // ══════════════════════════════════════════════════════════
+    // MARK: App Lifecycle
+    // Setara: onResume() / onPause() / onDestroy() di MainActivity.kt
+    // ══════════════════════════════════════════════════════════
 
-        DispatchQueue.main.async {
-            let alert = UIAlertController(
-                title: "Mode Ujian Aktif",
-                message: "Aktifkan Guided Access agar tidak bisa keluar aplikasi:\n\nSettings → Accessibility → Guided Access → ON\n\nAtau tekan tombol Home/Side 3× lalu pilih 'Mulai'.",
-                preferredStyle: .alert
-            )
-            alert.addAction(UIAlertAction(title: "Buka Pengaturan", style: .default) { _ in
-                UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
-            })
-            alert.addAction(UIAlertAction(title: "Sudah Mengerti", style: .cancel))
-            self.window?.rootViewController?.present(alert, animated: true)
+    override func applicationDidBecomeActive(_ application: UIApplication) {
+        if isKioskActive {
+            // Re-apply immersive saat resume (setara onResume re-inject handler)
+            applyImmersive()
+            hideSecureOverlay()
         }
     }
 
-    // ══════════════════════════════════════════════════════
-    // MARK: Foreground → terapkan ulang
-    // ══════════════════════════════════════════════════════
+    override func applicationWillResignActive(_ application: UIApplication) {
+        if isKioskActive {
+            // Blur content saat app di-background (tambahan keamanan)
+            showSecureOverlay()
+        }
+    }
 
-    override func applicationDidBecomeActive(_ application: UIApplication) {
-        if isKioskActive { applyImmersive() }
+    override func applicationDidEnterBackground(_ application: UIApplication) {
+        if isKioskActive {
+            print("⚠️ App entered background while kiosk active")
+        }
     }
 }
 
-// ══════════════════════════════════════════════════════════
-// MARK: Notification Name
-// ══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
+// MARK: - KioskChannelHandler
+// Equivalent: KioskMethodChannel.kt — semua method channel handler
+// ══════════════════════════════════════════════════════════════════
 
-extension Notification.Name {
-    static let kioskModeChanged = Notification.Name("kioskModeChanged")
+class KioskChannelHandler {
+
+    static func register(messenger: FlutterBinaryMessenger, delegate: AppDelegate) {
+        // Channel utama kiosk
+        FlutterMethodChannel(
+            name: "com.kemenag.examgo/kiosk",
+            binaryMessenger: messenger
+        ).setMethodCallHandler { call, result in
+            KioskChannelHandler.handleKiosk(call: call, result: result, delegate: delegate)
+        }
+
+        // Channel locktask (setara com.examgo/locktask di MainActivity.kt)
+        FlutterMethodChannel(
+            name: "com.kemenag.examgo/locktask",
+            binaryMessenger: messenger
+        ).setMethodCallHandler { call, result in
+            KioskChannelHandler.handleLockTask(call: call, result: result, delegate: delegate)
+        }
+    }
+
+    // ── Kiosk channel handler ───────────────────────────────────
+    private static func handleKiosk(
+        call: FlutterMethodCall,
+        result: @escaping FlutterResult,
+        delegate: AppDelegate
+    ) {
+        switch call.method {
+        case "enableKioskMode":
+            delegate.enableKiosk()
+            result(true)
+
+        case "disableKioskMode":
+            delegate.disableKiosk()
+            result(true)
+
+        case "startLockTask":
+            // Setara: startLockTask() di MainActivity.kt
+            delegate.enableKiosk()
+            result(true)
+
+        case "stopLockTask":
+            // Setara: stopLockTask() di MainActivity.kt
+            delegate.disableKiosk()
+            result(nil)
+
+        case "isKioskModeActive":
+            result(delegate.isKioskActive)
+
+        case "isLockTaskActive":
+            // Compat alias
+            result(delegate.isKioskActive)
+
+        case "hideSystemUI":
+            // Setara: FLAG_FULLSCREEN
+            delegate.applyImmersive()
+            result(nil)
+
+        case "showSystemUI":
+            result(nil)
+
+        case "bringToForeground":
+            // No-op di iOS — app selalu di foreground saat aktif
+            result("brought_to_front")
+
+        // ── Android-only methods — kembalikan nilai aman ───────
+        // Setara: ExamGoDeviceAdminReceiver.kt capabilities
+        case "isDeviceAdminEnabled":
+            // iOS: Guided Access = closest equivalent
+            result(UIAccessibility.isGuidedAccessEnabled)
+
+        case "requestDeviceAdmin":
+            // iOS: tidak bisa request secara programmatic, arahkan ke Settings
+            GuidedAccessController.requestIfNeeded(
+                from: UIApplication.shared.connectedScenes
+                    .compactMap { $0 as? UIWindowScene }
+                    .flatMap { $0.windows }
+                    .first { $0.isKeyWindow }?.rootViewController
+            )
+            result(nil)
+
+        case "checkBlockedApps":
+            result(nil)
+
+        case "getRunningApps":
+            // iOS sandbox tidak bisa lihat app lain
+            result([String]())
+
+        case "checkUsageStatsPermission":
+            result(true)
+
+        case "openUsageStatsSettings":
+            result(nil)
+
+        case "blockRecentApps":
+            result(nil)
+
+        default:
+            result(FlutterMethodNotImplemented)
+        }
+    }
+
+    // ── LockTask channel handler ────────────────────────────────
+    private static func handleLockTask(
+        call: FlutterMethodCall,
+        result: @escaping FlutterResult,
+        delegate: AppDelegate
+    ) {
+        switch call.method {
+        case "startLockTask":
+            delegate.enableKiosk()
+            result("lock_started")
+
+        case "stopLockTask":
+            delegate.disableKiosk()
+            result("lock_stopped")
+
+        case "bringToForeground":
+            result("brought_to_front")
+
+        case "isLockTaskActive":
+            result(delegate.isKioskActive)
+
+        default:
+            result(FlutterMethodNotImplemented)
+        }
+    }
 }
 
-// ══════════════════════════════════════════════════════════
-// MARK: KioskViewController — digabung dalam 1 file
-// ══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
+// MARK: - GuidedAccessController
+// Equivalent: ExamGoDeviceAdminReceiver.kt
+// Android Device Admin → iOS Guided Access (closest equivalent)
+// ══════════════════════════════════════════════════════════════════
+
+class GuidedAccessController {
+
+    /// Tampilkan prompt Guided Access jika belum aktif.
+    /// Setara: ExamGoDeviceAdminReceiver onEnabled / onDisabled.
+    static func requestIfNeeded(from viewController: UIViewController?) {
+        guard !UIAccessibility.isGuidedAccessEnabled else {
+            print("✅ Guided Access sudah aktif")
+            return
+        }
+
+        DispatchQueue.main.async {
+            let alert = UIAlertController(
+                title: "Aktifkan Kunci Ujian",
+                message: """
+                    Untuk keamanan ujian, aktifkan Guided Access agar aplikasi \
+                    tidak bisa ditinggalkan selama ujian berlangsung.
+
+                    Cara aktifkan:
+                    1. Buka Pengaturan → Aksesibilitas → Guided Access → ON
+                    2. Saat ujian dimulai, klik 3× tombol Home/Side
+                    3. Pilih "Mulai"
+
+                    Setara dengan Kiosk Mode di Android.
+                    """,
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "Buka Pengaturan", style: .default) { _ in
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            })
+            alert.addAction(UIAlertAction(title: "Mengerti", style: .cancel))
+            viewController?.present(alert, animated: true)
+        }
+    }
+
+    /// Log status Guided Access (setara onReceive di DeviceAdminReceiver)
+    static func logStatus() {
+        let status = UIAccessibility.isGuidedAccessEnabled ? "AKTIF" : "TIDAK AKTIF"
+        print("📱 Guided Access: \(status)")
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MARK: - ExamGoWebViewProxy
+// Equivalent: ExamGoWebViewClient.kt
+// onRenderProcessGone → WKWebView navigationDelegate + didFailProvisionalNavigation
+// ══════════════════════════════════════════════════════════════════
+
+/// Proxy WKNavigationDelegate untuk menangani crash/error WebView.
+/// Setara: ExamGoWebViewClient.onRenderProcessGone() di Android.
+///
+/// Cara pakai: inject ke WKWebView setelah Flutter inflate view-nya.
+/// Flutter webview_flutter_wkwebview sudah handle ini secara internal,
+/// tapi class ini tersedia jika ada WKWebView native yang perlu di-wrap.
+class ExamGoWebViewProxy: NSObject, WKNavigationDelegate {
+
+    private weak var originalDelegate: WKNavigationDelegate?
+
+    init(wrapping delegate: WKNavigationDelegate?) {
+        self.originalDelegate = delegate
+        super.init()
+    }
+
+    // ── Setara: onRenderProcessGone — handle crash WebView ─────
+    // Di iOS, WKWebView crash = webViewWebContentProcessDidTerminate
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        print("⚠️ WKWebView content process terminated — reloading")
+        // Reload otomatis, setara return true di onRenderProcessGone
+        webView.reload()
+        // Teruskan ke delegate asli jika ada
+        originalDelegate?.webViewWebContentProcessDidTerminate?(webView)
+    }
+
+    // ── Delegasi semua method lain ke original delegate ─────────
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        originalDelegate?.webView?(webView, didStartProvisionalNavigation: navigation)
+    }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        originalDelegate?.webView?(webView, didFinish: navigation)
+    }
+
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        originalDelegate?.webView?(webView, didFail: navigation, withError: error)
+    }
+
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        let nsError = error as NSError
+        // NSURLErrorCancelled (-999) = navigasi dibatalkan, bukan error nyata
+        // Setara: errorCode -3 (ERR_ABORTED) filter di qris_web_view.dart
+        if nsError.code == NSURLErrorCancelled {
+            return
+        }
+        print("⚠️ WKWebView provisional navigation failed: \(error.localizedDescription)")
+        originalDelegate?.webView?(webView, didFailProvisionalNavigation: navigation, withError: error)
+    }
+
+    func webView(
+        _ webView: WKWebView,
+        decidePolicyFor navigationAction: WKNavigationAction,
+        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+    ) {
+        if let method = originalDelegate?.webView?(_:decidePolicyFor:decisionHandler:) {
+            method(webView, navigationAction, decisionHandler)
+        } else {
+            decisionHandler(.allow)
+        }
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MARK: - KioskViewController
+// Equivalent: bagian kiosk di MainActivity.kt
+// Sembunyikan status bar, home indicator, blok swipe gesture
+// ══════════════════════════════════════════════════════════════════
 
 class KioskViewController: FlutterViewController {
 
@@ -156,10 +435,9 @@ class KioskViewController: FlutterViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Blok swipe back gesture
+        // Blok swipe back (setara onBackPressed di MainActivity)
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
 
-        // Dengarkan perubahan kiosk mode
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(onKioskChanged(_:)),
@@ -175,22 +453,26 @@ class KioskViewController: FlutterViewController {
         setNeedsUpdateOfScreenEdgesDeferringSystemGestures()
     }
 
-    // Sembunyikan status bar saat kiosk aktif
-    override var prefersStatusBarHidden: Bool {
-        return kioskActive
-    }
+    // Sembunyikan status bar — setara FLAG_FULLSCREEN
+    override var prefersStatusBarHidden: Bool { kioskActive }
 
-    // Sembunyikan home indicator (garis bawah iPhone X+)
-    override var prefersHomeIndicatorAutoHidden: Bool {
-        return kioskActive
-    }
+    // Sembunyikan home indicator iPhone X+
+    override var prefersHomeIndicatorAutoHidden: Bool { kioskActive }
 
-    // Tahan semua swipe dari tepi layar
+    // Tahan swipe dari semua tepi layar — setara kiosk lock
     override var preferredScreenEdgesDeferringSystemGestures: UIRectEdge {
-        return kioskActive ? .all : []
+        kioskActive ? .all : []
     }
 
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MARK: - Notification Extension
+// ══════════════════════════════════════════════════════════════════
+
+extension Notification.Name {
+    static let kioskModeChanged = Notification.Name("kioskModeChanged")
 }

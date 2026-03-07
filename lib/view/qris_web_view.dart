@@ -46,8 +46,8 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   // Error handling & retry
   int _loadErrorCount = 0;
   Timer? _retryTimer;
-  static const int _kMaxSilentRetry = 2;
-  static const Duration _kRetryDelay = Duration(seconds: 3);
+  static const int _kMaxSilentRetry = 3;         // naik dari 2 → lebih toleran
+  static const Duration _kRetryDelay = Duration(seconds: 5); // naik dari 3s → beri waktu network recover
 
   // Render process crash recovery — ditangani di MainActivity.kt (native)
   // Variable ini dipakai agar onWebResourceError tidak double-handle
@@ -215,17 +215,18 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             if (!mounted) return;
             final isMainFrame = e.isForMainFrame ?? true;
             if (!isMainFrame) return;
+            // errorCode -6 = ERR_FILE_NOT_FOUND / interstitial — abaikan
             if (e.errorCode == -6) return;
-            // Render process crash sudah di-handle di MainActivity.kt
-            // Saat crash terjadi, native mengembalikan true sehingga
-            // onWebResourceError tetap terpanggil — kita retry di sini
+            // errorCode -3 = ERR_ABORTED (navigasi dibatalkan, bukan error nyata)
+            if (e.errorCode == -3) return;
+
             final msg = e.description ?? 'Koneksi bermasalah';
             _loadErrorCount++;
-            AnalyticsService.instance.logExamLoadError(
-              examHost: Uri.tryParse(_resolvedUrl)?.host ?? 'unknown',
-              errorMessage: msg,
-            );
+
             if (_loadErrorCount <= _kMaxSilentRetry) {
+              // Silent retry — JANGAN log analytics dulu
+              // Banyak error ini adalah transient (jaringan lemah, timeout singkat)
+              // dan akan sukses di retry berikutnya.
               _retryTimer?.cancel();
               _retryTimer = Timer(_kRetryDelay, () {
                 if (mounted && !_isExiting) _wvc.reload();
@@ -236,6 +237,14 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                 duration: 3,
               );
             } else {
+              // Hanya log ke analytics setelah semua retry gagal
+              // Ini mengurangi false-positive exam_load_error secara drastis
+              AnalyticsService.instance.logExamLoadError(
+                examHost: Uri.tryParse(_resolvedUrl)?.host ?? 'unknown',
+                errorMessage: msg,
+                errorCode: e.errorCode,
+                retryCount: _loadErrorCount - 1,
+              );
               _showLoadError(msg);
             }
           },
