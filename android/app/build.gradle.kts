@@ -10,7 +10,7 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// Load keystore properties from key.properties file
+// Load keystore properties dari key.properties
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
 
@@ -24,6 +24,7 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // VERSION_1_8 kompatibel dengan semua device target (minSdk Flutter default)
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
@@ -36,6 +37,8 @@ android {
         applicationId = "com.kemenag.examgo"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
+        // versionCode & versionName otomatis dari pubspec.yaml
+        // version: 2.1.0+11 → versionName=2.1.0, versionCode=11
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -43,9 +46,9 @@ android {
     signingConfigs {
         create("release") {
             if (keystorePropertiesFile.exists()) {
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
-                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                keyAlias      = keystoreProperties.getProperty("keyAlias")
+                keyPassword   = keystoreProperties.getProperty("keyPassword")
+                storeFile     = file(keystoreProperties.getProperty("storeFile"))
                 storePassword = keystoreProperties.getProperty("storePassword")
             }
         }
@@ -54,11 +57,8 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
-            
-            // Enable code shrinking, obfuscation, and optimization
             isMinifyEnabled = true
             isShrinkResources = true
-            
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -68,8 +68,9 @@ android {
 }
 
 dependencies {
-    implementation("com.google.android.play:app-update:2.1.0")
-    implementation("com.google.android.play:asset-delivery:2.2.2")
+    // FIX: app-update dan asset-delivery DIHAPUS — tidak dipakai di kode
+    // native maupun Flutter. Keduanya menambah ~2MB ke AAB tanpa manfaat.
+    // Update sudah ditangani via HTTP ke GitHub Releases (update.dart).
 }
 
 flutter {

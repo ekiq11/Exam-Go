@@ -57,6 +57,11 @@ class SecurityService {
     _lockActive = false;
     try {
       if (_isAndroid) {
+        // FIX: "PigeonProxyApiRegistrar: Failed to remove Dart strong reference"
+        // Error ini terjadi saat WebView masih punya pending native callback
+        // ketika di-dispose. Beri waktu native layer selesai sebelum unlock.
+        // Delay 200ms cukup untuk flush pending PigeonProxyApi operations.
+        await Future.delayed(const Duration(milliseconds: 200));
         if (_nativeLockActive || force) await _tryNativeUnlock();
         await _restoreAndroidUI();
       } else if (_isIOS) {

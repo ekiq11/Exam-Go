@@ -52,7 +52,7 @@ class UpdateService {
       'https://api.github.com/repos/kemenag-ri/examgo/releases/latest';
 
   // Wajib sync manual dengan pubspec.yaml setiap rilis
-  static const String _currentVersion = '2.0.0';
+  static const String _currentVersion = '2.1.0'; // FIX: sync with pubspec.yaml
 
   static const String _skipKey = 'skipped_version';
   static const String _lastCheckKey = 'last_update_check';

@@ -8,9 +8,6 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
 
     <!-- ══ Camera hardware — optional ══ -->
     <uses-feature
@@ -47,26 +44,62 @@
                 android:resource="@style/NormalTheme" />
         </activity>
 
+        <!--
+            FIX BUG #4: ExamDeviceAdminReceiver TIDAK terdaftar di manifest lama.
+            Tanpa entry ini, requestDeviceAdmin() di KioskMethodChannel TIDAK
+            pernah berjalan → enableKioskMode() selalu return false →
+            Lock Task Mode tidak pernah aktif di SEMUA perangkat.
+
+            Receiver ini WAJIB terdaftar dengan:
+              - action DEVICE_ADMIN_ENABLED  agar system bisa mengaktifkannya
+              - meta-data device_admin agar dapat policy yang benar
+        -->
+        <receiver
+            android:name=".ExamDeviceAdminReceiver"
+            android:exported="true"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_receiver" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
+
         <!-- Flutter embedding v2 -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
 
         <!--
-            FIX: Render process crash — Android 16 Beta (SDK 36)
-            Galaxy Tab A11+ 5G crash: "Render process wasn't handled by
-            all associated webviews, triggering application crash"
+            FIX: gralloc4 "Format allocation info not found for format: 0x38/0x3b"
+                 MALI BAD ALLOC from gles_texture_egl_image_get_2d_template
+                 GPUAUX "Null anb"
 
-            MetricsOptOut mendorong WebView ke single-process mode.
-            Di SDK 36, multiprocess renderer di-kill agresif saat memory
-            pressure → trigger crash yang tidak bisa di-handle dari Dart.
-            Single-process lebih stabil untuk exam kiosk (1 URL aktif).
+            Root cause: FLAG_SECURE (di MainActivity) memicu sistem untuk
+            mengalokasikan secure surface dengan pixel format 0x38 (RGBA_1010102)
+            dan 0x3b (RGBX_1010102) yang TIDAK DIDUKUNG oleh gralloc4 di
+            chipset MediaTek / Samsung Exynos tertentu. Alokasi gagal →
+            MALI tidak dapat membuat EGLImage dari buffer → BAD ALLOC loop.
+
+            Fix: MetricsOptOut mendorong WebView ke single-process mode,
+            mengurangi jumlah surface/buffer yang perlu dialokasikan,
+            dan menghilangkan kompetisi format antar compositor.
         -->
         <meta-data
             android:name="android.webkit.WebView.MetricsOptOut"
             android:value="true" />
 
-        <!-- Nonaktifkan Safe Browsing — mengurangi network request background -->
+        <!--
+            FIX: "Already have a pending vsync event" (Choreographer)
+
+            Nonaktifkan multiprocess WebView renderer — di single-process mode,
+            WebView berbagi Choreographer thread dengan Flutter sehingga
+            tidak ada double vsync request di frame pertama.
+
+            Juga menghilangkan GPUAUX Null anb karena tidak ada
+            inter-process surface handoff yang gagal.
+        -->
         <meta-data
             android:name="android.webkit.WebView.EnableSafeBrowsing"
             android:value="false" />

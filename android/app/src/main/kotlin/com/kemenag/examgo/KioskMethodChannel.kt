@@ -10,12 +10,14 @@ import android.os.Build
 import android.provider.Settings
 import android.view.View
 import android.view.WindowManager
-import androidx.annotation.NonNull
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
-import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.app.AppOpsManager
+
+// FIX: Import baru untuk mengganti startActivityForResult yang deprecated
+import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
 
 class KioskMethodChannel(
     private val activity: Activity,
@@ -48,8 +50,7 @@ class KioskMethodChannel(
 
     init {
         devicePolicyManager = activity.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-        
-        // FIX: Lebih eksplisit untuk avoid compile error
+
         adminComponent = ComponentName(
             activity.applicationContext,
             ExamDeviceAdminReceiver::class.java
@@ -130,7 +131,18 @@ class KioskMethodChannel(
                     "Exam Go needs device admin permission to enable secure exam mode and prevent app switching during exams."
                 )
             }
-            activity.startActivityForResult(intent, 100)
+
+            // FIX: startActivityForResult deprecated di API 30+.
+            // Pada Samsung One UI 5+ dan Android 12+ lainnya, panggilan
+            // ini mungkin tidak mengembalikan result dengan benar.
+            //
+            // Solusi ideal: gunakan ActivityResultLauncher via ComponentActivity.
+            // Karena KioskMethodChannel bukan Activity, kita delegate ke activity.
+            //
+            // Sementara gunakan startActivity (bukan startActivityForResult)
+            // karena result-nya tidak dipakai di sini — hanya meminta izin.
+            // Cek status admin via isDeviceAdmin() setelah user kembali.
+            activity.startActivity(intent)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -142,39 +154,25 @@ class KioskMethodChannel(
         }
 
         isKioskActive = true
-        
-        // 1. Start Lock Task Mode
         startLockTaskMode()
-        
-        // 2. Hide System UI
         hideSystemUI()
-        
-        // 3. Block Recent Apps
         blockRecentApps()
-        
-        // 4. Prevent screen off
         activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        
+
         return true
     }
 
     private fun disableKioskMode(): Boolean {
         isKioskActive = false
-        
-        try {
-            // Stop lock task
+
+        return try {
             stopLockTaskMode()
-            
-            // Show system UI
             showSystemUI()
-            
-            // Allow screen off
             activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            
-            return true
+            true
         } catch (e: Exception) {
             e.printStackTrace()
-            return false
+            false
         }
     }
 
@@ -211,7 +209,6 @@ class KioskMethodChannel(
     private fun hideSystemUI() {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                // Android 11+
                 activity.window.setDecorFitsSystemWindows(false)
                 activity.window.insetsController?.apply {
                     hide(android.view.WindowInsets.Type.statusBars())
@@ -251,18 +248,16 @@ class KioskMethodChannel(
     }
 
     private fun blockRecentApps() {
-        // This is handled by Lock Task Mode
-        // Additional blocking can be done via accessibility service if needed
+        // Handled by Lock Task Mode
     }
 
     private fun checkBlockedApps(): String? {
         if (!hasUsageStatsPermission()) return null
 
-        try {
+        return try {
             val usageStatsManager = activity.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
             val currentTime = System.currentTimeMillis()
-            
-            // Check last 500ms
+
             val stats = usageStatsManager.queryUsageStats(
                 UsageStatsManager.INTERVAL_DAILY,
                 currentTime - 500,
@@ -271,40 +266,39 @@ class KioskMethodChannel(
 
             if (stats.isNullOrEmpty()) return null
 
-            // Get most recent app
             val sortedStats = stats.sortedByDescending { it.lastTimeUsed }
             val mostRecentApp = sortedStats.firstOrNull()
 
-            // Check if it's a blocked app and not our app
-            if (mostRecentApp != null && 
+            if (mostRecentApp != null &&
                 mostRecentApp.packageName != activity.packageName &&
                 blockedApps.contains(mostRecentApp.packageName)) {
-                return getAppName(mostRecentApp.packageName)
+                getAppName(mostRecentApp.packageName)
+            } else {
+                null
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            null
         }
-
-        return null
     }
 
     private fun getRunningApps(): List<String> {
         if (!hasUsageStatsPermission()) return emptyList()
 
-        try {
+        return try {
             val usageStatsManager = activity.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
             val currentTime = System.currentTimeMillis()
-            
+
             val stats = usageStatsManager.queryUsageStats(
                 UsageStatsManager.INTERVAL_DAILY,
                 currentTime - 1000,
                 currentTime
             )
 
-            return stats?.map { it.packageName } ?: emptyList()
+            stats?.map { it.packageName } ?: emptyList()
         } catch (e: Exception) {
             e.printStackTrace()
-            return emptyList()
+            emptyList()
         }
     }
 

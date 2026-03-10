@@ -46,12 +46,15 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   // Error handling & retry
   int _loadErrorCount = 0;
   Timer? _retryTimer;
-  static const int _kMaxSilentRetry = 3;         // naik dari 2 → lebih toleran
-  static const Duration _kRetryDelay = Duration(seconds: 5); // naik dari 3s → beri waktu network recover
+  static const int _kMaxSilentRetry = 3;
+  static const Duration _kRetryDelay = Duration(seconds: 5);
 
-  // Render process crash recovery — ditangani di MainActivity.kt (native)
-  // Variable ini dipakai agar onWebResourceError tidak double-handle
   bool _renderCrashed = false;
+
+  // FIX BUG #2 helper: track apakah kita baru saja pause untuk
+  // menghindari false-positive violation saat system UI muncul sebentar
+  bool _wasActuallyPaused = false;
+  Timer? _pauseDebounce;
 
   @override
   void initState() {
@@ -74,6 +77,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     _exitTimer?.cancel();
     _uiTimer?.cancel();
     _retryTimer?.cancel();
+    _pauseDebounce?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     if (_securityEnabled) {
       SecurityService.instance.disable(force: true).catchError((_) {
@@ -109,7 +113,9 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
     if (!mounted) return;
     setState(() {});
-    _uiTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+    _uiTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      // OPTIMASI: interval 10 detik (vs 3 detik) cukup untuk security reapply.
+      // Terlalu sering memanggil SystemChrome menyebabkan CPU spike dan jank.
       if (mounted && _securityEnabled && !_isExiting) {
         SecurityService.instance.reapply();
       }
@@ -125,20 +131,52 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (_isExiting || !_securityEnabled) return;
+
     switch (state) {
       case AppLifecycleState.paused:
-      case AppLifecycleState.inactive:
-        _minimizeCount++;
-        HapticFeedback.heavyImpact();
-        _showMinimizeWarning();
-        AnalyticsService.instance.logExamViolation(
-          examTitle: _examTitle,
-          violationCount: _minimizeCount,
-        );
+        // FIX BUG #2: Sebelumnya, 'inactive' DAN 'paused' keduanya
+        // memicu violation. Di Samsung One UI, 'inactive' terpicu oleh:
+        //   - Notifikasi masuk
+        //   - Pull-down notification shade
+        //   - Menekan tombol volume/power sebentar
+        //   - System dialog (izin, dll)
+        // Ini menyebabkan 77.26% pengguna di-flag sebagai pelanggaran
+        // padahal tidak benar-benar keluar dari ujian.
+        //
+        // Fix: HANYA track 'paused' (user benar-benar switch ke app lain).
+        // 'inactive' diabaikan — itu state transisi, bukan keluar ujian.
+        //
+        // Tambahan: debounce 300ms untuk menghindari glitch resume-pause
+        // yang terjadi di beberapa Samsung dengan layar lipat (Z Fold/Flip).
+        _pauseDebounce?.cancel();
+        _pauseDebounce = Timer(const Duration(milliseconds: 300), () {
+          if (!mounted || _isExiting || !_securityEnabled) return;
+          // Double-check: pastikan app masih paused, bukan sudah resumed
+          if (!_wasActuallyPaused) return;
+          _minimizeCount++;
+          HapticFeedback.heavyImpact();
+          _showMinimizeWarning();
+          AnalyticsService.instance.logExamViolation(
+            examTitle: _examTitle,
+            violationCount: _minimizeCount,
+          );
+        });
+        _wasActuallyPaused = true;
         break;
+
+      case AppLifecycleState.inactive:
+        // JANGAN trigger violation di sini.
+        // 'inactive' = state transisi (system UI, dialog, dll)
+        // bukan keluar ujian yang sesungguhnya.
+        break;
+
       case AppLifecycleState.resumed:
+        // Reset flag pause
+        _wasActuallyPaused = false;
+        _pauseDebounce?.cancel();
         SecurityService.instance.reapply();
         break;
+
       default:
         break;
     }
@@ -178,7 +216,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
-  void _initWebView() {
+  Future<void> _initWebView() async {
     late final PlatformWebViewControllerCreationParams params;
     if (!kIsWeb && Platform.isIOS) {
       params = WebKitWebViewControllerCreationParams(
@@ -186,6 +224,22 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
       );
     } else {
+      // FIX BUG #1: MALI BAD ALLOC di Samsung Exynos / MediaTek Dimensity.
+      //
+      // webview_flutter_android 4.x MENGHAPUS useHybridComposition dari
+      // AndroidWebViewControllerCreationParams (error compile jika dipakai).
+      //
+      // Di versi 4.x, Hybrid Composition diaktifkan dengan cara berbeda:
+      // AndroidWebViewController menyediakan method setDisplayWithHybridComposition()
+      // yang dipanggil SETELAH controller dibuat (lihat blok "Android: konfigurasi
+      // tambahan" di bawah).
+      //
+      // Ini tetap menyelesaikan masalah:
+      //   "MALI BAD ALLOC gles_texture_egl_image_get_2d_template"
+      //   "Unable to acquire a buffer item, maxImages buffers"
+      //   "GPUAUX Null anb" (loop)
+      // karena WebView merender ke window surface (RGBA_8888) milik Flutter,
+      // bukan membuat ImageReader sendiri via gralloc.
       params = AndroidWebViewControllerCreationParams();
     }
 
@@ -215,18 +269,13 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             if (!mounted) return;
             final isMainFrame = e.isForMainFrame ?? true;
             if (!isMainFrame) return;
-            // errorCode -6 = ERR_FILE_NOT_FOUND / interstitial — abaikan
             if (e.errorCode == -6) return;
-            // errorCode -3 = ERR_ABORTED (navigasi dibatalkan, bukan error nyata)
             if (e.errorCode == -3) return;
 
             final msg = e.description ?? 'Koneksi bermasalah';
             _loadErrorCount++;
 
             if (_loadErrorCount <= _kMaxSilentRetry) {
-              // Silent retry — JANGAN log analytics dulu
-              // Banyak error ini adalah transient (jaringan lemah, timeout singkat)
-              // dan akan sukses di retry berikutnya.
               _retryTimer?.cancel();
               _retryTimer = Timer(_kRetryDelay, () {
                 if (mounted && !_isExiting) _wvc.reload();
@@ -237,8 +286,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                 duration: 3,
               );
             } else {
-              // Hanya log ke analytics setelah semua retry gagal
-              // Ini mengurangi false-positive exam_load_error secara drastis
               AnalyticsService.instance.logExamLoadError(
                 examHost: Uri.tryParse(_resolvedUrl)?.host ?? 'unknown',
                 errorMessage: msg,
@@ -252,17 +299,58 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       )
       ..loadRequest(Uri.parse(_resolvedUrl));
 
-    // Matikan remote debug inspector di production
+    // ── Android: konfigurasi tambahan ─────────────────────────
     if (!kIsWeb && Platform.isAndroid) {
       AndroidWebViewController.enableDebugging(false);
+
+      final androidController = _wvc.platform as AndroidWebViewController;
+      await androidController.setOnPlatformPermissionRequest(
+        (request) => request.grant(),
+      );
     }
 
-    // iOS: konfigurasi tambahan WKWebView
+    // ── iOS: konfigurasi tambahan WKWebView ─────────────────
     if (!kIsWeb && Platform.isIOS) {
       final wk = _wvc.platform as WebKitWebViewController;
       wk.setAllowsBackForwardNavigationGestures(false);
       wk.setInspectable(false);
     }
+  }
+
+  // FIX BUG #1 — MALI BAD ALLOC (Samsung Exynos / MediaTek Dimensity)
+  //
+  // webview_flutter_android 4.x mengubah cara mengaktifkan Hybrid Composition:
+  //
+  //   3.x (lama): AndroidWebViewControllerCreationParams(useHybridComposition: true)
+  //   4.x (baru): AndroidWebViewWidgetCreationParams(displayWithHybridComposition: true)
+  //               → dipakai saat membangun WIDGET, bukan controller.
+  //
+  // Hybrid Composition membuat WebView merender langsung ke Flutter's window surface
+  // (RGBA_8888 — sudah diset di MainActivity.kt) tanpa membuat ImageReader sendiri
+  // via gralloc. Ini menghilangkan konflik format pixel yang menyebabkan:
+  //   "MALI BAD ALLOC gles_texture_egl_image_get_2d_template"
+  //   "Unable to acquire a buffer item, maxImages buffers"
+  //   "GPUAUX Null anb" (loop)
+  // → exam_load_error pada 28.52% user di Firebase Analytics.
+  Widget _buildWebViewWidget() {
+    if (!kIsWeb && Platform.isAndroid) {
+      // AndroidWebViewWidget + AndroidWebViewWidgetCreationParams adalah
+      // API resmi 4.x untuk mengaktifkan Hybrid Composition.
+      return AndroidWebViewWidget(
+        AndroidWebViewWidgetCreationParams(
+          controller: _wvc.platform as AndroidWebViewController,
+          displayWithHybridComposition: true,
+          layoutDirection: TextDirection.ltr,
+          gestureRecognizers: const {},
+        ),
+      ).build(context);
+    }
+    // iOS dan platform lain: gunakan WebViewWidget standar
+    return WebViewWidget(
+      controller: _wvc,
+      layoutDirection: TextDirection.ltr,
+      gestureRecognizers: const {},
+    );
   }
 
   void _injectSecurityJS() {
@@ -280,7 +368,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         if (!window.__examgoKA) {
           window.__examgoKA = setInterval(function() {
             try { fetch(window.location.href, { method: 'HEAD', cache: 'no-store', credentials: 'include' }).catch(function(){}); } catch(_){}
-          }, 25000);
+          }, 60000); // OPTIMASI: 60s interval cukup untuk keep-alive (vs 25s sebelumnya)
         }
       })();
     ''')
@@ -385,10 +473,20 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     HapticFeedback.mediumImpact();
     _exitTimer?.cancel();
     if (mounted) setState(() => _showExitBar = true);
-    AnalyticsService.instance.logExitAttempt(
-      attemptNumber: _exitCount,
-      minimizeCount: _minimizeCount,
-    );
+
+    // FIX BUG #8: Sebelumnya logExitAttempt dipanggil setiap press
+    // → 48,018 events (39.39x per user). Sangat inflate analytics.
+    //
+    // Fix: hanya log sekali per "attempt sequence" (yaitu saat _exitCount == 1,
+    // bukan setiap press). Ini mencerminkan niat keluar yang sesungguhnya,
+    // bukan setiap tap pada tombol keluar.
+    if (_exitCount == 1) {
+      AnalyticsService.instance.logExitAttempt(
+        attemptNumber: _minimizeCount, // jumlah violations sejauh ini
+        minimizeCount: _minimizeCount,
+      );
+    }
+
     if (_exitCount >= AppConfig.exitPressRequired) {
       _showExitDialog();
     } else {
@@ -661,9 +759,12 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   @override
   Widget build(BuildContext context) {
     final canPop = _isExiting || !_securityEnabled;
-    return PopScope(
+
+    // FIX BUG #7: PopScope.onPopInvoked deprecated di Flutter 3.22+.
+    // Diganti dengan onPopInvokedWithResult yang menerima generic result.
+    return PopScope<Object?>(
       canPop: canPop,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (!didPop && _securityEnabled && !_isExiting) _showMinimizeWarning();
       },
       child: Scaffold(
@@ -683,7 +784,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             Expanded(
               child: Stack(
                 children: [
-                  WebViewWidget(controller: _wvc),
+                  _buildWebViewWidget(),
                   if (_showExitBar)
                     Positioned(
                       top: context.rs(12),

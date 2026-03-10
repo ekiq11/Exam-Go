@@ -32,6 +32,24 @@ void main() async {
 class ExamGoApp extends StatelessWidget {
   const ExamGoApp({super.key});
 
+  // OPTIMASI: Cache TextTheme & AppBarStyle sebagai static lazy fields.
+  // Diinisialisasi saat build() pertama kali dipanggil (setelah Flutter init),
+  // bukan di top-level (yang bisa crash sebelum WidgetsFlutterBinding siap).
+  static TextTheme? _cachedTextTheme;
+  static TextStyle? _cachedAppBarStyle;
+
+  static TextTheme _textTheme() {
+    return _cachedTextTheme ??= GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme);
+  }
+
+  static TextStyle _appBarStyle() {
+    return _cachedAppBarStyle ??= GoogleFonts.poppins(
+      fontSize: 18,
+      fontWeight: FontWeight.w600,
+      color: Colors.white,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -51,17 +69,13 @@ class ExamGoApp extends StatelessWidget {
         // ── Visual density: adaptive agar pas di semua ukuran ───
         visualDensity: VisualDensity.adaptivePlatformDensity,
 
-        textTheme: GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme),
+        textTheme: _textTheme(),
         appBarTheme: AppBarTheme(
           backgroundColor: AppColors.primaryGreen,
           elevation: 0,
           centerTitle: true,
           iconTheme: const IconThemeData(color: Colors.white),
-          titleTextStyle: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
+          titleTextStyle: _appBarStyle(),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
