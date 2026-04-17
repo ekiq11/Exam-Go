@@ -27,7 +27,7 @@ import WebKit
 @main
 @objc class AppDelegate: FlutterAppDelegate {
 
-    private var isKioskActive = false
+    fileprivate var isKioskActive = false
     private var flutterEngine = FlutterEngine(name: "main")
 
     // Screenshot-block overlay (setara FLAG_SECURE)
@@ -414,9 +414,11 @@ class ExamGoWebViewProxy: NSObject, WKNavigationDelegate {
         decidePolicyFor navigationAction: WKNavigationAction,
         decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
     ) {
-        if let method = originalDelegate?.webView?(_:decidePolicyFor:decisionHandler:) {
-            method(webView, navigationAction, decisionHandler)
-        } else {
+        if originalDelegate?.webView?(
+            webView,
+            decidePolicyFor: navigationAction,
+            decisionHandler: decisionHandler
+        ) == nil {
             decisionHandler(.allow)
         }
     }
