@@ -151,15 +151,29 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         _pauseDebounce?.cancel();
         _pauseDebounce = Timer(const Duration(milliseconds: 300), () {
           if (!mounted || _isExiting || !_securityEnabled) return;
-          // Double-check: pastikan app masih paused, bukan sudah resumed
           if (!_wasActuallyPaused) return;
           _minimizeCount++;
-          HapticFeedback.heavyImpact();
-          _showMinimizeWarning();
+          _triggerVibrationAlarm();
+          
           AnalyticsService.instance.logExamViolation(
             examTitle: _examTitle,
             violationCount: _minimizeCount,
           );
+
+          if (Platform.isIOS) {
+            // iOS: Force Exit directly because there's no native lock
+            ScaffoldMessenger.of(context).clearSnackBars();
+            _showSnack('⚠️ Ujian dibatalkan otomatis karena pindah aplikasi!', color: Colors.red.shade800, duration: 6);
+            _performExit();
+          } else {
+            // Android: We have LockTask, so this is likely a bugged breakout or they found a way out.
+            // Give 1 warning just in case it was an OS glitch, then force kick on 2nd attempt.
+            _showMinimizeWarning();
+            if (_minimizeCount >= 2) {
+              _showSnack('⚠️ Ujian dibatalkan otomatis karena pelanggaran!', color: Colors.red.shade800, duration: 6);
+              _performExit();
+            }
+          }
         });
         _wasActuallyPaused = true;
         break;
@@ -179,6 +193,15 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
 
       default:
         break;
+    }
+  }
+
+  void _triggerVibrationAlarm() async {
+    // Memberikan feedback getar bertubi-tubi seperti alarm
+    for (int i = 0; i < 6; i++) {
+      if (!mounted) break;
+      HapticFeedback.heavyImpact();
+      await Future.delayed(const Duration(milliseconds: 150));
     }
   }
 
@@ -690,11 +713,11 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
-  Future<void> _performExit(BuildContext dialogCtx) async {
+  Future<void> _performExit([BuildContext? dialogCtx]) async {
     if (_isExiting) return;
     _isExiting = true;
     _securityEnabled = false;
-    if (dialogCtx.mounted) Navigator.of(dialogCtx).pop();
+    if (dialogCtx != null && dialogCtx.mounted) Navigator.of(dialogCtx).pop();
     _uiTimer?.cancel();
     _exitTimer?.cancel();
     final duration = _examStartTime != null
