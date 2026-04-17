@@ -160,19 +160,14 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             violationCount: _minimizeCount,
           );
 
-          if (Platform.isIOS) {
-            // iOS: Force Exit directly because there's no native lock
+          // Berlaku untuk Android dan iOS: batas maksimal 3 kali.
+          if (_minimizeCount >= 3) {
             ScaffoldMessenger.of(context).clearSnackBars();
-            _showSnack('⚠️ Ujian dibatalkan otomatis karena pindah aplikasi!', color: Colors.red.shade800, duration: 6);
+            _showSnack('⚠️ Ujian dibatalkan otomatis karena batas pelanggaran tercapai!', color: Colors.red.shade800, duration: 6);
             _performExit();
           } else {
-            // Android: We have LockTask, so this is likely a bugged breakout or they found a way out.
-            // Give 1 warning just in case it was an OS glitch, then force kick on 2nd attempt.
             _showMinimizeWarning();
-            if (_minimizeCount >= 2) {
-              _showSnack('⚠️ Ujian dibatalkan otomatis karena pelanggaran!', color: Colors.red.shade800, duration: 6);
-              _performExit();
-            }
+            _showViolationDialog();
           }
         });
         _wasActuallyPaused = true;
@@ -235,6 +230,43 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
           context.rs(16),
           context.rs(80),
         ),
+      ),
+    );
+  }
+
+  void _showViolationDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            const SizedBox(width: 8),
+            Text(
+              'Peringatan!',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          'Anda terdeteksi keluar dari layar ujian.\n\nJika Anda keluar atau meminimize aplikasi sebanyak 3x, maka ujian akan dibatalkan otomatis.\n\nPelanggaran saat ini: $_minimizeCount / 3',
+          style: GoogleFonts.poppins(fontSize: context.rs(13)),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange.shade700,
+            ),
+            child: Text(
+              'Saya Mengerti',
+              style: GoogleFonts.poppins(fontSize: context.rs(13), color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
       ),
     );
   }
