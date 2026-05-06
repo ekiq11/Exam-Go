@@ -153,6 +153,7 @@ class MainActivity : FlutterActivity() {
                 "stopLockTask"      -> stopLockTask(result)
                 "bringToForeground" -> bringToForeground(result)
                 "isLockTaskActive"  -> result.success(isLockTaskActive)
+                "isScreenOn"        -> isScreenOn(result)
                 else                -> result.notImplemented()
             }
         }
@@ -206,6 +207,15 @@ class MainActivity : FlutterActivity() {
             result.success(true)
         } catch (e: Exception) {
             result.success(false)
+        }
+    }
+
+    private fun isScreenOn(result: MethodChannel.Result) {
+        try {
+            val pm = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+            result.success(pm.isInteractive)
+        } catch (e: Exception) {
+            result.success(true)
         }
     }
 

@@ -149,9 +149,15 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         // Tambahan: debounce 300ms untuk menghindari glitch resume-pause
         // yang terjadi di beberapa Samsung dengan layar lipat (Z Fold/Flip).
         _pauseDebounce?.cancel();
-        _pauseDebounce = Timer(const Duration(milliseconds: 300), () {
+        _pauseDebounce = Timer(const Duration(milliseconds: 300), () async {
           if (!mounted || _isExiting || !_securityEnabled) return;
           if (!_wasActuallyPaused) return;
+          
+          // Cek apakah layar mati (user menekan tombol power)
+          // Jika layar mati, JANGAN hitung sebagai pelanggaran keluar ujian.
+          final isScreenOn = await SecurityService.instance.isScreenOn();
+          if (!isScreenOn && mounted) return;
+
           _minimizeCount++;
           _triggerVibrationAlarm();
           

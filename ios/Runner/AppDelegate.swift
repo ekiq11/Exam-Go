@@ -190,7 +190,7 @@ class KioskChannelHandler {
 
         // Channel locktask (setara com.examgo/locktask di MainActivity.kt)
         FlutterMethodChannel(
-            name: "com.kemenag.examgo/locktask",
+            name: "com.examgo/locktask",
             binaryMessenger: messenger
         ).setMethodCallHandler { call, result in
             KioskChannelHandler.handleLockTask(call: call, result: result, delegate: delegate)
@@ -298,6 +298,11 @@ class KioskChannelHandler {
 
         case "isLockTaskActive":
             result(delegate.isKioskActive)
+
+        case "isScreenOn":
+            DispatchQueue.main.async {
+                result(UIScreen.main.brightness > 0.0)
+            }
 
         default:
             result(FlutterMethodNotImplemented)

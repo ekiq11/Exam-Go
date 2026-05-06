@@ -22,6 +22,16 @@ class SecurityService {
 
   bool get isLockActive => _lockActive;
 
+  Future<bool> isScreenOn() async {
+    if (kIsWeb) return true;
+    try {
+      final result = await _channel.invokeMethod<bool>('isScreenOn');
+      return result ?? true;
+    } catch (_) {
+      return true;
+    }
+  }
+
   static bool get _isIOS => !kIsWeb && Platform.isIOS;
   static bool get _isAndroid => !kIsWeb && Platform.isAndroid;
 
@@ -33,10 +43,15 @@ class SecurityService {
       await _lockOrientation();
       if (_isAndroid) {
         await _applyImmersiveMode();
-        await _tryNativeLock();
       } else if (_isIOS) {
         await _applyIOSFullScreen();
       }
+      
+      // CALL _tryNativeLock UNTUK KEDUA PLATFORM!
+      // iOS membutuhkan ini untuk memicu `enableKiosk()` di AppDelegate,
+      // yang berisi `isIdleTimerDisabled = true` dan `GuidedAccessController`.
+      await _tryNativeLock();
+      
       _lockActive = true;
       print(
         '✅ SecurityService: enabled (${_isIOS ? "iOS" : "Android"}, native=$_nativeLockActive)',
@@ -65,6 +80,7 @@ class SecurityService {
         if (_nativeLockActive || force) await _tryNativeUnlock();
         await _restoreAndroidUI();
       } else if (_isIOS) {
+        if (_nativeLockActive || force) await _tryNativeUnlock();
         await _restoreIOSUI();
       }
       await _restoreOrientation();
