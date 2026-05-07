@@ -12,7 +12,6 @@ import 'package:image_picker/image_picker.dart';
 
 import '../constant/app_colors.dart';
 import '../constant/responsive.dart';
-import '../services/qr_payload.dart';
 
 class ScanResult {
   final String url;
@@ -21,8 +20,9 @@ class ScanResult {
   String encode() => '$title\x00$url';
   static ScanResult decode(String raw) {
     final idx = raw.indexOf('\x00');
-    if (idx == -1)
+    if (idx == -1) {
       return ScanResult(url: raw, title: Uri.tryParse(raw)?.host ?? raw);
+    }
     return ScanResult(
       url: raw.substring(idx + 1),
       title: raw.substring(0, idx),
@@ -719,7 +719,7 @@ class _ScanLine extends StatelessWidget {
     final top = (MediaQuery.of(context).size.height - scanSize) / 2;
     return AnimatedBuilder(
       animation: animation,
-      builder: (_, __) => Positioned(
+      builder: (_, child) => Positioned(
         left: (MediaQuery.of(context).size.width - scanSize) / 2,
         top: top + scanSize * animation.value,
         child: Container(

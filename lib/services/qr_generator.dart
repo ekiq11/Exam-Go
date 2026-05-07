@@ -1,6 +1,5 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:examgo/services/qr_payload.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;

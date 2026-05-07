@@ -144,6 +144,13 @@ class MainActivity : FlutterActivity() {
     // ════════════════════════════════════════════════════════════════
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // [FIX T-2] Instantiate KioskMethodChannel agar channel com.examgo/kiosk
+        // terdaftar dan aktif. Sebelumnya class ini tidak pernah diinisialisasi
+        // sehingga semua call ke enableKioskMode, checkBlockedApps, dll.
+        // selalu return FlutterMethodNotImplemented.
+        KioskMethodChannel(this, flutterEngine)
+
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             CHANNEL

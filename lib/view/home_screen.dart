@@ -1,7 +1,11 @@
 // ignore_for_file: deprecated_member_use
+import 'package:examgo/firebas_analytics/analytic_service.dart';
 import 'package:examgo/services/qr_generator.dart';
+import 'package:examgo/services/exam_session_service.dart';
+import 'package:examgo/view/pre_exam_checklist.dart';
 import 'package:examgo/view/qr_scanner.dart';
 import 'package:examgo/view/qris_web_view.dart';
+import 'package:examgo/view/teacher_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -50,6 +54,7 @@ class _HomeScreenState extends State<HomeScreen>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   bool _connected = true;
   List<_HistoryItem> _history = [];
+  int _logoTapCount = 0; // tap 7x untuk buka Mode Guru
 
   static const _historyKey = 'scan_history_v3';
   StreamSubscription<List<ConnectivityResult>>? _connectSub;
@@ -73,6 +78,8 @@ class _HomeScreenState extends State<HomeScreen>
     _checkConnectivity();
     _listenConnectivity();
     _loadHistory();
+    // Cek apakah ada sesi ujian yang tidak selesai (crash recovery)
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkCrashRecovery());
   }
 
   @override
@@ -130,6 +137,62 @@ class _HomeScreenState extends State<HomeScreen>
           0,
           context.rs(16),
           context.rs(20),
+        ),
+      ),
+    );
+  }
+
+  // ─── Crash Recovery ───────────────────────────────────────────
+
+  Future<void> _checkCrashRecovery() async {
+    final session = await ExamSessionService.instance.getActiveSession();
+    if (session == null || !mounted) return;
+
+    final resume = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Row(
+          children: [
+            const Icon(Icons.restore_rounded, color: Colors.orange),
+            const SizedBox(width: 8),
+            Text(
+              'Sesi Tidak Selesai',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          'Ujian "${session.title}" ditemukan tidak selesai.\n\nApakah Anda ingin melanjutkan ujian?',
+          style: GoogleFonts.poppins(fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('Abaikan', style: GoogleFonts.poppins(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: Text('Lanjutkan', style: GoogleFonts.poppins(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (resume != true || !mounted) {
+      await ExamSessionService.instance.clear();
+      return;
+    }
+
+    // Langsung buka WebView dengan URL dari sesi sebelumnya
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ExamWebViewScreen(
+          url: session.url,
+          title: session.title,
         ),
       ),
     );
@@ -233,145 +296,50 @@ class _HomeScreenState extends State<HomeScreen>
         ? title.trim()
         : Uri.tryParse(url)?.host ?? url;
 
-    final go = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        // Batasi lebar dialog di tablet
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
-            padding: EdgeInsets.all(context.rs(24)),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(context.rs(16)),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primaryGreen, Color(0xFF43A047)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryGreen.withOpacity(0.35),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.play_circle_outline,
-                    color: Colors.white,
-                    size: context.rs(32),
-                  ),
-                ),
-                SizedBox(height: context.rs(16)),
-                Text(
-                  'Mulai Ujian?',
-                  style: GoogleFonts.poppins(
-                    fontSize: context.rs(18),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: context.rs(10)),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.rs(16),
-                    vertical: context.rs(10),
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.paleGreen,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.school,
-                        color: AppColors.primaryGreen,
-                        size: 16,
-                      ),
-                      SizedBox(width: context.rs(8)),
-                      Flexible(
-                        child: Text(
-                          displayTitle,
-                          style: GoogleFonts.poppins(
-                            fontSize: context.rs(13),
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primaryGreen,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: context.rs(22)),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(ctx).pop(false),
-                        style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
-                            vertical: context.rs(13),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: Text(
-                          'Batal',
-                          style: GoogleFonts.poppins(fontSize: context.rs(14)),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: context.rs(12)),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(ctx).pop(true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryGreen,
-                          padding: EdgeInsets.symmetric(
-                            vertical: context.rs(13),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          elevation: 2,
-                        ),
-                        child: Text(
-                          'Mulai Ujian',
-                          style: GoogleFonts.poppins(
-                            fontSize: context.rs(14),
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+    // Tampilkan Pre-Exam Checklist Dialog (Cek Baterai, Root/Dev Mode, dan Identitas)
+    final identity = await PreExamChecklistDialog.show(context, displayTitle);
+    
+    // Jika dialog ditutup tanpa memulai, batalkan
+    if (identity == null) return;
+    if (!mounted) return;
+
+    final name = identity['name'] ?? '';
+    final nis  = identity['nis'] ?? '';
+
+    // ── A. Sisipkan identitas ke URL ujian sebagai query parameter ──
+    // Server ujian (Google Form / LMS) akan menerima ?peserta=Budi&nis=12345
+    // sehingga rekap jawaban otomatis mencatat nama peserta.
+    final finalUrl = _appendIdentityToUrl(url, name: name, nis: nis);
+
+    // ── B. Set Firebase Analytics user properties ──────────────────
+    // Guru yang punya akses Firebase Console bisa melihat per-user.
+    // Juga berguna jika terjadi crash — Crashlytics tahu siapa yang crash.
+    AnalyticsService.instance.setStudentIdentity(name: name, nis: nis);
+
+    // Arahkan ke WebView dengan URL yang sudah mengandung identitas
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ExamWebViewScreen(
+          url: finalUrl,
+          title: displayTitle,
         ),
       ),
     );
+  }
 
-    if (go == true && mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ExamWebViewScreen(url: url, title: displayTitle),
-        ),
-      );
+  /// Menambahkan query parameter peserta & nis ke URL ujian.
+  /// Jika URL sudah punya query, parameter ditambahkan (tidak menimpa).
+  String _appendIdentityToUrl(String url, {required String name, required String nis}) {
+    try {
+      if (name.isEmpty && nis.isEmpty) return url;
+      final uri = Uri.parse(url);
+      final params = Map<String, String>.from(uri.queryParameters);
+      if (name.isNotEmpty) params['peserta'] = name;
+      if (nis.isNotEmpty)  params['nis']     = nis;
+      return uri.replace(queryParameters: params).toString();
+    } catch (_) {
+      return url; // fallback: tetap pakai URL asli jika parsing gagal
     }
   }
 
@@ -558,20 +526,47 @@ class _HomeScreenState extends State<HomeScreen>
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Container(
-                            padding: EdgeInsets.all(context.rs(11)),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.18),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.25),
-                                width: 1,
+                          GestureDetector(
+                            onTap: () {
+                              _logoTapCount++;
+                              final remaining = 7 - _logoTapCount;
+                              if (_logoTapCount >= 7) {
+                                _logoTapCount = 0;
+                                openTeacherMode(context);
+                              } else if (remaining <= 3) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      '$remaining lagi untuk mode guru',
+                                      style: GoogleFonts.poppins(fontSize: 12),
+                                    ),
+                                    duration: const Duration(seconds: 1),
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    margin: EdgeInsets.fromLTRB(
+                                      context.rs(16), 0, context.rs(16), context.rs(80),
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            child: Container(
+                              padding: EdgeInsets.all(context.rs(11)),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.18),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.25),
+                                  width: 1,
+                                ),
                               ),
-                            ),
-                            child: Icon(
-                              Icons.school,
-                              color: Colors.white,
-                              size: context.rs(28),
+                              child: Icon(
+                                Icons.school,
+                                color: Colors.white,
+                                size: context.rs(28),
+                              ),
                             ),
                           ),
                           SizedBox(width: context.rs(14)),

@@ -1,9 +1,10 @@
 // ignore_for_file: avoid_print
 import 'dart:async';
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, NetworkInterface;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart' show Colors;
 import 'package:flutter/services.dart';
+import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
 
 /// Cross-platform security wrapper — Android & iOS, semua vendor.
 ///
@@ -29,6 +30,56 @@ class SecurityService {
       return result ?? true;
     } catch (_) {
       return true;
+    }
+  }
+
+  /// Mengecek keamanan sistem level OS: Root, Jailbreak, Developer Mode.
+  /// Mengembalikan String alasan error, atau null jika perangkat aman.
+  Future<String?> checkDeviceIntegrity() async {
+    if (kIsWeb) return null;
+    try {
+      final isJailbroken = await FlutterJailbreakDetection.jailbroken;
+      if (isJailbroken) {
+        return _isAndroid 
+          ? 'Perangkat Anda terdeteksi Root. Ujian diblokir.' 
+          : 'Perangkat Anda terdeteksi Jailbreak. Ujian diblokir.';
+      }
+      if (_isAndroid) {
+        final isDevMode = await FlutterJailbreakDetection.developerMode;
+        if (isDevMode) {
+          return 'Developer Mode aktif. Harap matikan USB Debugging / Opsi Pengembang sebelum ujian.';
+        }
+      }
+      // Cek VPN aktif (Android & iOS)
+      final hasVpn = await _isVpnActive();
+      if (hasVpn) {
+        return 'Koneksi VPN terdeteksi. Harap matikan VPN sebelum memulai ujian.';
+      }
+      return null;
+    } catch (e) {
+      print('Gagal cek integrity: $e');
+      return null;
+    }
+  }
+
+  /// Deteksi VPN dengan memeriksa nama interface jaringan yang aktif.
+  /// Interface VPN biasanya bernama tun0, ppp0, ipsec0, atau utun.
+  static Future<bool> _isVpnActive() async {
+    try {
+      final interfaces = await NetworkInterface.list(includeLoopback: false);
+      for (final iface in interfaces) {
+        final name = iface.name.toLowerCase();
+        if (name.startsWith('tun') ||
+            name.startsWith('ppp') ||
+            name.startsWith('ipsec') ||
+            name.startsWith('utun') ||
+            name.startsWith('wg')) {
+          return true;
+        }
+      }
+      return false;
+    } catch (_) {
+      return false;
     }
   }
 

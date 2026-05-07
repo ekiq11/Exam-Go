@@ -2,6 +2,7 @@
 // ignore_for_file: avoid_print
 
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 /// Centralized Firebase Analytics wrapper untuk ExamGO.
 /// Semua event tracking dipusatkan di sini agar mudah dikelola.
@@ -13,6 +14,29 @@ class AnalyticsService {
 
   FirebaseAnalyticsObserver get observer =>
       FirebaseAnalyticsObserver(analytics: _analytics);
+
+  // ─── Identity ─────────────────────────────────────────────────
+
+  /// Set identitas peserta ke Firebase Analytics & Crashlytics.
+  ///
+  /// Cara guru melihat data ini:
+  ///   - Firebase Console → Analytics → User Properties → student_name / student_nis
+  ///   - Firebase Console → Crashlytics → jika ada crash, terlihat NIS peserta
+  Future<void> setStudentIdentity({
+    required String name,
+    required String nis,
+  }) async {
+    try {
+      // Set sebagai Analytics user properties
+      await _analytics.setUserProperty(name: 'student_name', value: name);
+      await _analytics.setUserProperty(name: 'student_nis',  value: nis);
+      // Set sebagai Crashlytics user identifier
+      // Format: "NIS - Nama" agar mudah dibaca saat debugging crash
+      await FirebaseCrashlytics.instance.setUserIdentifier('$nis - $name');
+    } catch (e) {
+      print('Analytics setUserIdentity error: $e');
+    }
+  }
 
   // ─── App Events ───────────────────────────────────────────────
 
@@ -168,7 +192,10 @@ class AnalyticsService {
             0,
             errorMessage.length > 100 ? 100 : errorMessage.length,
           ),
+          // Hanya sertakan field jika tidak null — hindari mengirim null ke Firebase
+          // ignore: use_null_aware_elements — Map<String, Object> tidak support ?'key': nullable
           if (errorCode != null) 'error_code': errorCode,
+          // ignore: use_null_aware_elements
           if (retryCount != null) 'retry_count': retryCount,
         },
       );

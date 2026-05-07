@@ -28,7 +28,7 @@ Future<bool> showUpdateDialog(BuildContext context, UpdateInfo info) async {
         child: FadeTransition(opacity: curved, child: child),
       );
     },
-    pageBuilder: (ctx, _, __) => _UpdateDialog(info: info),
+    pageBuilder: (ctx, _, child) => _UpdateDialog(info: info),
   );
   return result ?? false;
 }
@@ -175,7 +175,7 @@ class _UpdateDialogState extends State<_UpdateDialog>
   Widget _buildAnimatedBg() {
     return AnimatedBuilder(
       animation: _bgAnim,
-      builder: (_, __) {
+      builder: (_, child) {
         final t = _bgAnim.value;
         return Container(
           height: 320,
@@ -201,7 +201,7 @@ class _UpdateDialogState extends State<_UpdateDialog>
       width: double.infinity,
       child: AnimatedBuilder(
         animation: _particleCtrl,
-        builder: (_, __) =>
+        builder: (_, child) =>
             CustomPaint(painter: _ParticlePainter(_particleCtrl.value)),
       ),
     );

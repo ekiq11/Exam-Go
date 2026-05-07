@@ -1,10 +1,12 @@
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/firebas_analytics/analytic_service.dart';
 import 'package:examgo/firebas_analytics/firebase_options.dart';
+import 'package:examgo/services/app_remote_config.dart';
 import 'package:examgo/view/home_screen.dart';
 import 'package:examgo/view/onboardong_screen.dart';
 import 'package:examgo/view/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,6 +15,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // ── Crashlytics: tangkap semua crash Flutter & Dart ────────────
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  // Tangkap error di luar Flutter framework (async, isolate, dll.)
+  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+
+  // ── Remote Config: fetch nilainya di startup ────────────────────
+  await AppRemoteConfig.instance.init();
 
   // Portrait only — berlaku untuk semua platform
   await SystemChrome.setPreferredOrientations([

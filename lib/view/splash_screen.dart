@@ -1,6 +1,5 @@
 // lib/view/splash_screen.dart
 // ignore_for_file: deprecated_member_use
-import 'dart:math' as math;
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/constant/app_config.dart';
 import 'package:examgo/constant/responsive.dart';
@@ -177,7 +176,7 @@ class _SplashScreenState extends State<SplashScreen>
                       // ── Logo ──
                       AnimatedBuilder(
                         animation: _breathe,
-                        builder: (_, __) => Container(
+                        builder: (_, child) => Container(
                           width: logoSize,
                           height: logoSize,
                           decoration: BoxDecoration(
@@ -323,7 +322,7 @@ class _GrainWaveLoader extends StatelessWidget {
     const count = 5;
     return AnimatedBuilder(
       animation: ctrl,
-      builder: (_, __) {
+      builder: (_, child) {
         return Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,

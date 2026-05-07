@@ -1,5 +1,4 @@
 // ignore_for_file: deprecated_member_use
-import 'dart:math' as math;
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/constant/responsive.dart';
 import 'package:flutter/material.dart';
@@ -130,8 +129,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   void dispose() {
     _pageController.dispose();
-    for (final c in _fadeControllers) c.dispose();
-    for (final c in _slideControllers) c.dispose();
+    for (final c in _fadeControllers) { c.dispose(); }
+    for (final c in _slideControllers) { c.dispose(); }
     super.dispose();
   }
 

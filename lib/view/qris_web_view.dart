@@ -6,6 +6,7 @@ import 'package:examgo/constant/app_config.dart';
 import 'package:examgo/constant/responsive.dart';
 import 'package:examgo/constant/security_service.dart';
 import 'package:examgo/firebas_analytics/analytic_service.dart';
+import 'package:examgo/services/exam_session_service.dart';
 import 'package:examgo/services/qr_payload.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -43,13 +44,18 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   // Analytics
   DateTime? _examStartTime;
 
+  // Exam Timer Overlay
+  Timer? _examTimer;
+  int _examElapsedSeconds = 0;
+
+  // URL Whitelist — domain yang diizinkan selama ujian
+  String _allowedHost = '';
+
   // Error handling & retry
   int _loadErrorCount = 0;
   Timer? _retryTimer;
   static const int _kMaxSilentRetry = 3;
   static const Duration _kRetryDelay = Duration(seconds: 5);
-
-  bool _renderCrashed = false;
 
   // FIX BUG #2 helper: track apakah kita baru saja pause untuk
   // menghindari false-positive violation saat system UI muncul sebentar
@@ -62,6 +68,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     WidgetsBinding.instance.addObserver(this);
     final resolved = _resolveInput(widget.url);
     _resolvedUrl = resolved.url;
+    _allowedHost = Uri.tryParse(resolved.url)?.host ?? '';
     _examTitle = widget.title.isNotEmpty
         ? widget.title
         : resolved.title.isNotEmpty
@@ -72,12 +79,23 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     AnalyticsService.instance.logScreenView(screenName: 'exam_webview');
   }
 
+  // Simpan sesi ke disk agar bisa di-recover jika app crash
+  Future<void> _saveSession() async {
+    await ExamSessionService.instance.save(
+      url: _resolvedUrl,
+      title: _examTitle,
+      violations: _minimizeCount,
+    );
+  }
+
   @override
   void dispose() {
     _exitTimer?.cancel();
     _uiTimer?.cancel();
+    _examTimer?.cancel();
     _retryTimer?.cancel();
     _pauseDebounce?.cancel();
+    ExamSessionService.instance.clear(); // hapus sesi saat keluar normal
     WidgetsBinding.instance.removeObserver(this);
     if (_securityEnabled) {
       SecurityService.instance.disable(force: true).catchError((_) {
@@ -107,6 +125,15 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     await SecurityService.instance.enable();
     _securityEnabled = true;
     _examStartTime = DateTime.now();
+    await _saveSession(); // simpan sesi ke disk
+    // Mulai timer ujian
+    _examTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _examElapsedSeconds++);
+      // Update violations di storage setiap 30 detik
+      if (_examElapsedSeconds % 30 == 0) {
+        ExamSessionService.instance.updateViolations(_minimizeCount);
+      }
+    });
     await AnalyticsService.instance.logExamStarted(
       examTitle: _examTitle,
       examUrl: _resolvedUrl,
@@ -168,6 +195,8 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
 
           // Berlaku untuk Android dan iOS: batas maksimal 3 kali.
           if (_minimizeCount >= 3) {
+            // [FIX T-1] Guard mounted sebelum akses context setelah await
+            if (!mounted) return;
             ScaffoldMessenger.of(context).clearSnackBars();
             _showSnack('⚠️ Ujian dibatalkan otomatis karena batas pelanggaran tercapai!', color: Colors.red.shade800, duration: 6);
             _performExit();
@@ -313,11 +342,11 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             if (mounted) setState(() => _progress = p / 100);
           },
           onPageStarted: (_) {
-            if (mounted)
+            if (mounted) {
               setState(() {
                 _loading = true;
-                _renderCrashed = false;
               });
+            }
             _loadErrorCount = 0;
             _retryTimer?.cancel();
           },
@@ -326,6 +355,23 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             _loadErrorCount = 0;
             _injectSecurityJS();
           },
+          // URL Whitelist: hanya izinkan domain ujian yang sama
+          onNavigationRequest: (req) {
+            if (!_securityEnabled) return NavigationDecision.navigate;
+            if (_allowedHost.isEmpty) return NavigationDecision.navigate;
+            final reqHost = Uri.tryParse(req.url)?.host ?? '';
+            // Izinkan subdomain dari host yang sama
+            if (reqHost == _allowedHost || reqHost.endsWith('.$_allowedHost')) {
+              return NavigationDecision.navigate;
+            }
+            // Blokir navigasi ke domain lain
+            _showSnack(
+              '🚫 Navigasi ke domain lain diblokir selama ujian',
+              color: Colors.red.shade700,
+              duration: 3,
+            );
+            return NavigationDecision.prevent;
+          },
           onWebResourceError: (e) {
             if (!mounted) return;
             final isMainFrame = e.isForMainFrame ?? true;
@@ -333,7 +379,8 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             if (e.errorCode == -6) return;
             if (e.errorCode == -3) return;
 
-            final msg = e.description ?? 'Koneksi bermasalah';
+            // [FIX T-3] Hapus dead null-aware — description non-nullable di API terbaru
+            final msg = e.description;
             _loadErrorCount++;
 
             if (_loadErrorCount <= _kMaxSilentRetry) {
@@ -418,18 +465,30 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     _wvc
         .runJavaScript('''
       (function(){
+        // --- Blokir copy-paste & klik kanan ---
         document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('copy',        e => e.preventDefault());
+        document.addEventListener('cut',         e => e.preventDefault());
+        document.addEventListener('paste',       e => e.preventDefault());
         document.addEventListener('selectstart', e => e.preventDefault());
         try { document.body.style.webkitUserSelect = 'none'; } catch(_){}
         try { document.body.style.userSelect = 'none'; } catch(_){}
+        // Blokir Print Screen / PrintDialog
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'PrintScreen' || (e.ctrlKey && (e.key==='p'||e.key==='s'||e.key==='a'))) {
+            e.preventDefault();
+          }
+        });
+        // Blokir window.open agar tidak bisa membuka tab baru
         window.open = function(){ return null; };
         window.addEventListener('beforeunload', function(e) {
           e.stopImmediatePropagation();
         }, true);
+        // Keep-alive ping ke server ujian
         if (!window.__examgoKA) {
           window.__examgoKA = setInterval(function() {
             try { fetch(window.location.href, { method: 'HEAD', cache: 'no-store', credentials: 'include' }).catch(function(){}); } catch(_){}
-          }, 60000); // OPTIMASI: 60s interval cukup untuk keep-alive (vs 25s sebelumnya)
+          }, 60000);
         }
       })();
     ''')
@@ -554,11 +613,12 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       _exitTimer = Timer(
         Duration(seconds: AppConfig.exitPressWindowSeconds),
         () {
-          if (mounted)
+          if (mounted) {
             setState(() {
               _exitCount = 0;
               _showExitBar = false;
             });
+          }
         },
       );
     }
@@ -703,11 +763,12 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                     child: OutlinedButton(
                       onPressed: () {
                         Navigator.of(ctx).pop();
-                        if (mounted)
+                        if (mounted) {
                           setState(() {
                             _exitCount = 0;
                             _showExitBar = false;
                           });
+                        }
                       },
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: context.rs(13)),
@@ -803,9 +864,21 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
+  String _formatDuration(int seconds) {
+    final h = seconds ~/ 3600;
+    final m = (seconds % 3600) ~/ 60;
+    final s = seconds % 60;
+    if (h > 0) {
+      return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    }
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
   ({String url, String title}) _resolveInput(String raw) {
-    if (raw.startsWith('http://') || raw.startsWith('https://'))
+    // [FIX R-5] Tambahkan curly braces pada if statement
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
       return (url: raw, title: '');
+    }
     try {
       final p = QRPayloadService.validate(raw);
       if (p != null) return (url: p.url, title: p.title);
@@ -927,12 +1000,25 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text(
-                    'Ujian sedang berlangsung',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: context.rs(10),
-                    ),
+                  // Exam Timer — tampilkan durasi ujian berjalan
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.timer_outlined,
+                        size: 10,
+                        color: Colors.white.withOpacity(0.7),
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        _formatDuration(_examElapsedSeconds),
+                        style: GoogleFonts.poppins(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: context.rs(10),
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

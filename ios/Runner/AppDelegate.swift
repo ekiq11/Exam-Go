@@ -300,8 +300,16 @@ class KioskChannelHandler {
             result(delegate.isKioskActive)
 
         case "isScreenOn":
+            // [FIX S-6] UIScreen.main.brightness TIDAK akurat:
+            // - Di Low Power Mode brightness bisa mendekati 0 saat layar masih menyala
+            // - Di beberapa iPhone, auto-brightness menyebabkan nilai fluktuatif
+            //
+            // Fix: Jika app sedang menerima method call ini, berarti app AKTIF
+            // di foreground = layar pasti menyala. Hanya return false jika
+            // app benar-benar di background (applicationState == .background).
             DispatchQueue.main.async {
-                result(UIScreen.main.brightness > 0.0)
+                let isActive = UIApplication.shared.applicationState != .background
+                result(isActive)
             }
 
         default:
