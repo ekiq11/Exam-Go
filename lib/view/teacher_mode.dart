@@ -79,13 +79,20 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
 
   Future<void> _checkBiometricAndPrompt() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final useBiometric = prefs.getBool('teacher_use_biometric') ?? true; // default true
+      
       final canCheck = await _localAuth.canCheckBiometrics;
       final isSupported = await _localAuth.isDeviceSupported();
-      if (canCheck && isSupported) {
+      
+      if (canCheck && isSupported && useBiometric) {
         setState(() => _biometricAvailable = true);
         // Langsung picu biometrik saat layar dibuka
         await Future.delayed(const Duration(milliseconds: 400));
         _authenticateWithBiometric();
+      } else if (canCheck && isSupported) {
+        // Biometric supported but disabled in settings
+        setState(() => _biometricAvailable = true);
       }
     } catch (_) {
       // Biometrik tidak tersedia, fallback ke PIN
@@ -497,6 +504,17 @@ class TeacherDashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             _MenuTile(
+              icon: Icons.fingerprint_rounded,
+              color: Colors.purple,
+              title: 'Pengaturan Biometrik',
+              subtitle: 'Aktifkan sidik jari / Face ID untuk login',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const BiometricSettingsScreen()),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _MenuTile(
               icon: Icons.info_outline_rounded,
               color: Colors.blue,
               title: 'Tentang Aplikasi',
@@ -621,3 +639,144 @@ class _MenuTile extends StatelessWidget {
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// Biometric Settings Screen
+// ─────────────────────────────────────────────────────────────
+class BiometricSettingsScreen extends StatefulWidget {
+  const BiometricSettingsScreen({super.key});
+
+  @override
+  State<BiometricSettingsScreen> createState() => _BiometricSettingsScreenState();
+}
+
+class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
+  final LocalAuthentication _localAuth = LocalAuthentication();
+  bool _isSupported = false;
+  bool _canCheckBiometrics = false;
+  bool _useBiometric = false;
+  List<BiometricType> _availableBiometrics = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometricSupport();
+    _loadSettings();
+  }
+
+  Future<void> _checkBiometricSupport() async {
+    try {
+      _isSupported = await _localAuth.isDeviceSupported();
+      _canCheckBiometrics = await _localAuth.canCheckBiometrics;
+      if (_canCheckBiometrics) {
+        _availableBiometrics = await _localAuth.getAvailableBiometrics();
+      }
+      setState(() {});
+    } catch (_) {}
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _useBiometric = prefs.getBool('teacher_use_biometric') ?? true; // default true if supported
+    });
+  }
+
+  Future<void> _toggleBiometric(bool value) async {
+    if (value) {
+      // Prompt user to authenticate before enabling
+      try {
+        final authenticated = await _localAuth.authenticate(
+          localizedReason: 'Verifikasi sidik jari/Face ID untuk mengaktifkan fitur ini',
+          options: const AuthenticationOptions(
+            biometricOnly: true,
+            useErrorDialogs: true,
+            stickyAuth: true,
+          ),
+        );
+        if (!authenticated) return; // User cancelled or failed
+      } catch (_) {
+        return;
+      }
+    }
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('teacher_use_biometric', value);
+    setState(() {
+      _useBiometric = value;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey.shade50,
+      appBar: AppBar(
+        title: Text('Pengaturan Biometrik', style: GoogleFonts.poppins()),
+        backgroundColor: AppColors.primaryGreen,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Icon(Icons.fingerprint_rounded, size: 80, color: AppColors.primaryGreen.withOpacity(0.5)),
+          const SizedBox(height: 20),
+          Text(
+            'Autentikasi Biometrik',
+            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Gunakan sidik jari atau Face ID Anda untuk masuk ke Mode Guru dengan lebih cepat dan aman.',
+            style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[600]),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 40),
+          if (!_isSupported || !_canCheckBiometrics)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Perangkat ini tidak mendukung biometrik atau Anda belum mendaftarkan sidik jari/Face ID di pengaturan perangkat.',
+                      style: GoogleFonts.poppins(fontSize: 12, color: Colors.orange.shade900),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: SwitchListTile(
+                title: Text('Gunakan Biometrik', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                subtitle: Text(
+                  _availableBiometrics.contains(BiometricType.face) ? 'Face ID / Pengenalan Wajah' : 'Sidik Jari / Fingerprint',
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
+                ),
+                activeColor: AppColors.primaryGreen,
+                value: _useBiometric,
+                onChanged: _toggleBiometric,
+                secondary: const Icon(Icons.security_rounded, color: AppColors.primaryGreen),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
