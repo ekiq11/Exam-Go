@@ -7,6 +7,7 @@ import 'package:examgo/constant/responsive.dart';
 import 'package:examgo/constant/security_service.dart';
 import 'package:examgo/firebas_analytics/analytic_service.dart';
 import 'package:examgo/services/exam_session_service.dart';
+import 'package:examgo/services/monitoring_service.dart';
 import 'package:examgo/services/qr_payload.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -19,7 +20,18 @@ import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 class ExamWebViewScreen extends StatefulWidget {
   final String url;
   final String title;
-  const ExamWebViewScreen({super.key, required this.url, this.title = ''});
+  final String examId;
+  final String studentName;
+  final String studentNis;
+
+  const ExamWebViewScreen({
+    super.key,
+    required this.url,
+    this.title = '',
+    this.examId = '',
+    this.studentName = '',
+    this.studentNis = '',
+  });
 
   @override
   State<ExamWebViewScreen> createState() => _ExamWebViewScreenState();
@@ -51,6 +63,9 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   // URL Whitelist — domain yang diizinkan selama ujian
   String _allowedHost = '';
 
+  // Monitoring
+  Timer? _pingTimer;
+
   // Error handling & retry
   int _loadErrorCount = 0;
   Timer? _retryTimer;
@@ -77,6 +92,34 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     _initWebView();
     _activateSecurity();
     AnalyticsService.instance.logScreenView(screenName: 'exam_webview');
+
+    if (widget.examId.isNotEmpty) {
+      _sendMonitoringStatus('ACTIVE');
+      _pingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+        _sendMonitoringStatus('ACTIVE');
+      });
+    }
+  }
+
+  void _sendMonitoringStatus(String status) {
+    if (widget.examId.isEmpty) return;
+    MonitoringService.instance.updateStudentStatus(
+      examId: widget.examId,
+      nis: widget.studentNis,
+      name: widget.studentName,
+      status: status,
+      violations: _minimizeCount,
+    );
+  }
+
+  void _logActivity(String type, String description) {
+    if (widget.examId.isEmpty || widget.studentNis.isEmpty) return;
+    MonitoringService.instance.logActivity(
+      examId: widget.examId,
+      nis: widget.studentNis,
+      activityType: type,
+      description: description,
+    );
   }
 
   // Simpan sesi ke disk agar bisa di-recover jika app crash
@@ -95,6 +138,8 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     _examTimer?.cancel();
     _retryTimer?.cancel();
     _pauseDebounce?.cancel();
+    _pingTimer?.cancel();
+    _sendMonitoringStatus('FINISHED');
     ExamSessionService.instance.clear(); // hapus sesi saat keluar normal
     WidgetsBinding.instance.removeObserver(this);
     if (_securityEnabled) {
@@ -193,14 +238,21 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             violationCount: _minimizeCount,
           );
 
-          // Berlaku untuk Android dan iOS: batas maksimal 3 kali.
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).clearSnackBars();
+          
           if (_minimizeCount >= 3) {
-            // [FIX T-1] Guard mounted sebelum akses context setelah await
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).clearSnackBars();
-            _showSnack('⚠️ Ujian dibatalkan otomatis karena batas pelanggaran tercapai!', color: Colors.red.shade800, duration: 6);
-            _performExit();
+            _logActivity('EXIT_APP', 'Keluar aplikasi (ke-$_minimizeCount×) — Status: BLOCKED');
+            _sendMonitoringStatus('BLOCKED');
+            _showSnack(
+              '⚠️ Peringatan ke-$_minimizeCount: Pelanggaran telah dicatat dan dilaporkan ke pengawas ujian.',
+              color: Colors.red.shade800,
+              duration: 5,
+            );
+            _showViolationDialog();
           } else {
+            _logActivity('EXIT_APP', 'Keluar aplikasi (ke-$_minimizeCount×) — Peringatan');
+            _sendMonitoringStatus('PAUSED');
             _showMinimizeWarning();
             _showViolationDialog();
           }
@@ -213,12 +265,18 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         // 'inactive' = state transisi (system UI, dialog, dll)
         // bukan keluar ujian yang sesungguhnya.
         break;
-
       case AppLifecycleState.resumed:
-        // Reset flag pause
+        if (!_wasActuallyPaused) return; // FIX BUG #2: Jika hanya transisi dari inactive, abaikan.
         _wasActuallyPaused = false;
-        _pauseDebounce?.cancel();
-        SecurityService.instance.reapply();
+        
+        // Cek layar nyala/mati saat resume. Jika mati, abaikan.
+        SecurityService.instance.isScreenOn().then((isScreenOn) {
+          if (!isScreenOn && mounted) return;
+          _sendMonitoringStatus('ACTIVE');
+          if (mounted && _securityEnabled) {
+            SecurityService.instance.reapply();
+          }
+        });
         break;
 
       default:
@@ -334,6 +392,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     }
 
     _wvc = WebViewController.fromPlatformCreationParams(params)
+      ..setUserAgent('ExamGo-Secure-Browser/2.1.0')
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.white)
       ..setNavigationDelegate(
@@ -405,6 +464,18 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
           },
         ),
       )
+      ..addJavaScriptChannel(
+        'ExamGoChannel',
+        onMessageReceived: (msg) {
+          if (msg.message == 'SCREENSHOT_ATTEMPT') {
+            _logActivity('SCREENSHOT', 'Percobaan screenshot / cetak layar terdeteksi');
+            _showSnack('📵 Screenshot diblokir!', color: Colors.red.shade700, duration: 2);
+          } else if (msg.message == 'VISIBILITY_HIDDEN') {
+            // Dicatat tapi tidak trigger pelanggaran — bisa jadi notifikasi
+            _logActivity('SCREEN_HIDDEN', 'Halaman tidak terlihat (mungkin switching apps)');
+          }
+        },
+      )
       ..loadRequest(Uri.parse(_resolvedUrl));
 
     // ── Android: konfigurasi tambahan ─────────────────────────
@@ -473,10 +544,17 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         document.addEventListener('selectstart', e => e.preventDefault());
         try { document.body.style.webkitUserSelect = 'none'; } catch(_){}
         try { document.body.style.userSelect = 'none'; } catch(_){}
-        // Blokir Print Screen / PrintDialog
+        // Blokir Print Screen / PrintDialog — notifikasi ke Flutter
         document.addEventListener('keydown', function(e) {
           if (e.key === 'PrintScreen' || (e.ctrlKey && (e.key==='p'||e.key==='s'||e.key==='a'))) {
             e.preventDefault();
+            try { ExamGoChannel.postMessage('SCREENSHOT_ATTEMPT'); } catch(_){}
+          }
+        });
+        // Deteksi screenshot Android (visibilitychange ke hidden)
+        document.addEventListener('visibilitychange', function() {
+          if (document.visibilityState === 'hidden') {
+            try { ExamGoChannel.postMessage('VISIBILITY_HIDDEN'); } catch(_){}
           }
         });
         // Blokir window.open agar tidak bisa membuka tab baru
@@ -594,15 +672,10 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     _exitTimer?.cancel();
     if (mounted) setState(() => _showExitBar = true);
 
-    // FIX BUG #8: Sebelumnya logExitAttempt dipanggil setiap press
-    // → 48,018 events (39.39x per user). Sangat inflate analytics.
-    //
-    // Fix: hanya log sekali per "attempt sequence" (yaitu saat _exitCount == 1,
-    // bukan setiap press). Ini mencerminkan niat keluar yang sesungguhnya,
-    // bukan setiap tap pada tombol keluar.
     if (_exitCount == 1) {
+      _logActivity('EXIT_ATTEMPT', 'Menekan tombol Keluar Ujian (ke-$_exitCount×)');
       AnalyticsService.instance.logExitAttempt(
-        attemptNumber: _minimizeCount, // jumlah violations sejauh ini
+        attemptNumber: _minimizeCount,
         minimizeCount: _minimizeCount,
       );
     }
@@ -832,6 +905,13 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     } catch (_) {
       await SecurityService.instance.emergencyReset();
     }
+    
+    // Auto-Clear Cache & Cookies untuk keamanan perangkat bersama
+    try {
+      await _wvc.clearCache();
+      await _wvc.clearLocalStorage();
+    } catch (_) {}
+
     await Future.delayed(const Duration(milliseconds: 300));
     if (mounted) Navigator.of(context).pop();
   }

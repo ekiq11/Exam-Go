@@ -16,16 +16,18 @@ import '../constant/responsive.dart';
 class ScanResult {
   final String url;
   final String title;
-  const ScanResult({required this.url, required this.title});
-  String encode() => '$title\x00$url';
+  final String examId;
+  const ScanResult({required this.url, required this.title, this.examId = ''});
+  String encode() => '$title\x00$url\x00$examId';
   static ScanResult decode(String raw) {
-    final idx = raw.indexOf('\x00');
-    if (idx == -1) {
+    final parts = raw.split('\x00');
+    if (parts.length == 1) {
       return ScanResult(url: raw, title: Uri.tryParse(raw)?.host ?? raw);
     }
     return ScanResult(
-      url: raw.substring(idx + 1),
-      title: raw.substring(0, idx),
+      title: parts[0],
+      url: parts[1],
+      examId: parts.length > 2 ? parts[2] : '',
     );
   }
 }
@@ -134,7 +136,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
         final t = p.title.trim().isNotEmpty
             ? p.title.trim()
             : Uri.tryParse(p.url)?.host ?? p.url;
-        _popResult(ScanResult(url: p.url, title: t));
+        _popResult(ScanResult(url: p.url, title: t, examId: p.nonce));
         return;
       }
     } catch (_) {}

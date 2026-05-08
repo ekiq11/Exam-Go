@@ -22,16 +22,18 @@ import '../constant/responsive.dart';
 class _HistoryItem {
   final String title;
   final String url;
-  const _HistoryItem({required this.title, required this.url});
+  final String examId;
+  const _HistoryItem({required this.title, required this.url, this.examId = ''});
 
-  String toStorage() => '$title\x00$url';
+  String toStorage() => '$title\x00$url\x00$examId';
 
   static _HistoryItem fromStorage(String raw) {
-    final idx = raw.indexOf('\x00');
-    if (idx != -1) {
+    final parts = raw.split('\x00');
+    if (parts.length >= 2) {
       return _HistoryItem(
-        title: raw.substring(0, idx),
-        url: raw.substring(idx + 1),
+        title: parts[0],
+        url: parts[1],
+        examId: parts.length > 2 ? parts[2] : '',
       );
     }
     return _HistoryItem(title: Uri.tryParse(raw)?.host ?? raw, url: raw);
@@ -286,11 +288,11 @@ class _HomeScreenState extends State<HomeScreen>
     );
     if (encoded == null || encoded.isEmpty || !mounted) return;
     final result = ScanResult.decode(encoded);
-    await _saveEntry(_HistoryItem(title: result.title, url: result.url));
-    _confirmAndStart(result.url, title: result.title);
+    await _saveEntry(_HistoryItem(title: result.title, url: result.url, examId: result.examId));
+    _confirmAndStart(result.url, title: result.title, examId: result.examId);
   }
 
-  Future<void> _confirmAndStart(String url, {String title = ''}) async {
+  Future<void> _confirmAndStart(String url, {String title = '', String examId = ''}) async {
     if (!mounted) return;
     final displayTitle = title.trim().isNotEmpty
         ? title.trim()
@@ -323,6 +325,9 @@ class _HomeScreenState extends State<HomeScreen>
         builder: (_) => ExamWebViewScreen(
           url: finalUrl,
           title: displayTitle,
+          examId: examId,
+          studentName: name,
+          studentNis: nis,
         ),
       ),
     );
@@ -963,13 +968,35 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // ── Generator Card ─────────────────────────────────────────────
   Widget _buildGeneratorCard() {
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const QRGeneratorScreen()),
-      ),
+      onTap: () async {
+        final prefs = await SharedPreferences.getInstance();
+        final hasPin = prefs.getString('teacher_pin_hash') != null;
+        if (!mounted) return;
+
+        if (hasPin) {
+          openTeacherMode(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Anda belum mengatur PIN. Silakan tap logo topi toga 7x untuk membuat PIN Mode Guru.',
+                style: GoogleFonts.poppins(fontSize: 13),
+              ),
+              backgroundColor: Colors.orange.shade800,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: EdgeInsets.fromLTRB(
+                context.rs(16), 0, context.rs(16), context.rs(20),
+              ),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      },
       child: Container(
         padding: EdgeInsets.all(context.rs(16)),
         decoration: BoxDecoration(
@@ -1102,7 +1129,25 @@ class _HomeScreenState extends State<HomeScreen>
           return Padding(
             padding: EdgeInsets.only(bottom: context.rs(10)),
             child: GestureDetector(
-              onTap: () => _confirmAndStart(item.url, title: item.title),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Riwayat ini hanya untuk dilihat. Silakan scan QR Code kembali jika ingin masuk ke ujian.',
+                      style: GoogleFonts.poppins(fontSize: 13),
+                    ),
+                    backgroundColor: Colors.orange.shade800,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    margin: EdgeInsets.fromLTRB(
+                      context.rs(16), 0, context.rs(16), context.rs(20),
+                    ),
+                    duration: const Duration(seconds: 4),
+                  ),
+                );
+              },
               child: Container(
                 padding: EdgeInsets.all(context.rs(14)),
                 decoration: BoxDecoration(
@@ -1176,12 +1221,12 @@ class _HomeScreenState extends State<HomeScreen>
                     Container(
                       padding: EdgeInsets.all(context.rs(8)),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryGreen.withOpacity(0.1),
+                        color: Colors.orange.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
-                        Icons.play_arrow_rounded,
-                        color: AppColors.primaryGreen,
+                        Icons.info_outline_rounded,
+                        color: Colors.orange,
                         size: 18,
                       ),
                     ),

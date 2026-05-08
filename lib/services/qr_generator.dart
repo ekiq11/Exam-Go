@@ -1,7 +1,10 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:io';
 import 'dart:ui' as ui;
+import 'dart:convert';
 import 'package:examgo/services/qr_payload.dart';
+import 'package:examgo/services/monitoring_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -60,11 +63,39 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     }
     final title = _titleController.text.trim();
     final signed = QRPayloadService.generate(url, title: title);
+    
+    // Ekstrak nonce/examId dan daftarkan sesi ke Firestore
+    try {
+      final envelope = jsonDecode(signed) as Map<String, dynamic>;
+      final dataJson = jsonDecode(envelope['data'] as String) as Map<String, dynamic>;
+      final examId = dataJson['nonce'] as String;
+      final displayTitle = title.isEmpty ? 'Ujian Baru' : title;
+      
+      MonitoringService.instance.createExamSession(
+        examId: examId,
+        title: displayTitle,
+        url: url,
+      );
+      
+      _saveCreatedExamLocally(examId, displayTitle);
+    } catch (_) {}
+
     setState(() {
       _qrData = signed;
       _errorText = null;
       _generated = true;
     });
+  }
+
+  Future<void> _saveCreatedExamLocally(String examId, String title) async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList('teacher_exam_history') ?? [];
+    // Simpan dalam format examId|title|timestamp
+    final entry = '$examId|$title|${DateTime.now().millisecondsSinceEpoch}';
+    list.insert(0, entry);
+    // Batasi 10 history terakhir
+    if (list.length > 10) list.removeLast();
+    await prefs.setStringList('teacher_exam_history', list);
   }
 
   // ─── Save / Share ─────────────────────────────────────────────

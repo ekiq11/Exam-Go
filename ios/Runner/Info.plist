@@ -42,6 +42,10 @@
 	<key>NSCameraUsageDescription</key>
 	<string>ExamGO memerlukan akses kamera untuk memindai QR Code ujian. Kamera hanya aktif saat halaman scan dibuka.</string>
 
+	<!-- Face ID — untuk autentikasi Mode Guru -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>ExamGO menggunakan Face ID untuk memverifikasi identitas guru sebelum mengakses Mode Guru.</string>
+
 	<!-- Galeri baca — setara READ_EXTERNAL_STORAGE (maxSdkVersion 32) -->
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>ExamGO memerlukan akses galeri foto untuk memindai QR Code dari gambar yang tersimpan.</string>

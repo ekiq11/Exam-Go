@@ -4,9 +4,11 @@ import 'package:crypto/crypto.dart';
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/constant/app_config.dart';
 import 'package:examgo/services/qr_generator.dart';
+import 'package:examgo/view/teacher_monitoring_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ─────────────────────────────────────────────────────────────
@@ -64,6 +66,49 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
   bool _isConfirming = false;
   bool _hasError = false;
   String _errorMsg = '';
+  bool _biometricAvailable = false;
+  final _localAuth = LocalAuthentication();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.mode == _PinMode.verify) {
+      _checkBiometricAndPrompt();
+    }
+  }
+
+  Future<void> _checkBiometricAndPrompt() async {
+    try {
+      final canCheck = await _localAuth.canCheckBiometrics;
+      final isSupported = await _localAuth.isDeviceSupported();
+      if (canCheck && isSupported) {
+        setState(() => _biometricAvailable = true);
+        // Langsung picu biometrik saat layar dibuka
+        await Future.delayed(const Duration(milliseconds: 400));
+        _authenticateWithBiometric();
+      }
+    } catch (_) {
+      // Biometrik tidak tersedia, fallback ke PIN
+    }
+  }
+
+  Future<void> _authenticateWithBiometric() async {
+    try {
+      final authenticated = await _localAuth.authenticate(
+        localizedReason: 'Verifikasi sidik jari / Face ID untuk masuk Mode Guru',
+        options: const AuthenticationOptions(
+          biometricOnly: false, // Izinkan fallback ke PIN device jika biometrik gagal
+          stickyAuth: true,     // Jangan batalkan saat app ke background
+          useErrorDialogs: true,
+        ),
+      );
+      if (authenticated && mounted) {
+        _goToDashboard();
+      }
+    } catch (_) {
+      // Gagal → user masukkan PIN manual
+    }
+  }
 
   void _onDigit(String d) {
     if (_pin.length >= 4) return;
@@ -235,6 +280,42 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
 
               // Numpad
               _buildNumpad(),
+
+              // Tombol Biometrik (hanya di mode verify & jika tersedia)
+              if (widget.mode == _PinMode.verify && _biometricAvailable) ...[
+                const SizedBox(height: 24),
+                GestureDetector(
+                  onTap: _authenticateWithBiometric,
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryGreen.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.primaryGreen.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.fingerprint_rounded,
+                          size: 36,
+                          color: AppColors.primaryGreen,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Gunakan Sidik Jari / Face ID',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: AppColors.primaryGreen,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -255,6 +336,28 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: row.map((d) {
+            // Di mode verify, slot kosong di bawah ganti jadi ikon biometrik (jika tersedia)
+            if (d.isEmpty && widget.mode == _PinMode.verify && _biometricAvailable) {
+              return GestureDetector(
+                onTap: _authenticateWithBiometric,
+                child: Container(
+                  width: 80,
+                  height: 60,
+                  margin: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryGreen.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: AppColors.primaryGreen.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: const Center(
+                    child: Icon(Icons.fingerprint_rounded,
+                        color: AppColors.primaryGreen, size: 28),
+                  ),
+                ),
+              );
+            }
             if (d.isEmpty) return const SizedBox(width: 80, height: 60);
             return GestureDetector(
               onTap: () {
@@ -379,6 +482,17 @@ class TeacherDashboardScreen extends StatelessWidget {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const QRGeneratorScreen()),
+              ),
+            ),
+            const SizedBox(height: 10),
+            _MenuTile(
+              icon: Icons.monitor_heart_rounded,
+              color: Colors.orange,
+              title: 'Monitoring Ujian',
+              subtitle: 'Pantau aktivitas peserta ujian',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const TeacherMonitoringListScreen()),
               ),
             ),
             const SizedBox(height: 10),
