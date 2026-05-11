@@ -56,6 +56,10 @@ post_install do |installer|
         
         ## dart: PermissionGroup.photos
         'PERMISSION_PHOTOS=1',
+
+        ## dart: PermissionGroup.photosAddOnly
+        ## Diperlukan untuk NSPhotoLibraryAddUsageDescription (simpan QR ke galeri)
+        'PERMISSION_PHOTOS_ADD_ONLY=1',
       ]
     end
   end

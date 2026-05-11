@@ -40,7 +40,7 @@ android {
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         // versionCode & versionName otomatis dari pubspec.yaml
-        // version: 2.1.0+11 → versionName=2.1.0, versionCode=11
+        // version: 2.1.1+16 → versionName=2.1.1, versionCode=16
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         ndk {
