@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/constant/responsive.dart';
 import 'package:flutter/material.dart';
@@ -202,13 +201,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   ),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? Colors.white.withOpacity(0.2)
-                        : Colors.black.withOpacity(0.07),
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : Colors.black.withValues(alpha: 0.07),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isDark
-                          ? Colors.white.withOpacity(0.3)
-                          : Colors.black.withOpacity(0.1),
+                          ? Colors.white.withValues(alpha: 0.3)
+                          : Colors.black.withValues(alpha: 0.1),
                       width: 1,
                     ),
                   ),
@@ -295,7 +294,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       child: Text(
                         page.description,
                         style: GoogleFonts.poppins(
-                          color: Colors.white.withOpacity(0.78),
+                          color: Colors.white.withValues(alpha: 0.78),
                           fontSize: context.rs(13),
                           height: 1.7,
                         ),
@@ -426,7 +425,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               page.title,
               style: GoogleFonts.poppins(
                 color: isDark
-                    ? Colors.white.withOpacity(0.75)
+                    ? Colors.white.withValues(alpha: 0.75)
                     : AppColors.textSecondary,
                 fontSize: context.rs(18),
                 fontWeight: FontWeight.w400,
@@ -472,13 +471,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   height: context.rs(28),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? Colors.white.withOpacity(0.15)
+                        ? Colors.white.withValues(alpha: 0.15)
                         : AppColors.paleGreen,
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: isDark
-                          ? Colors.white.withOpacity(0.3)
-                          : AppColors.primaryGreen.withOpacity(0.25),
+                          ? Colors.white.withValues(alpha: 0.3)
+                          : AppColors.primaryGreen.withValues(alpha: 0.25),
                       width: 1,
                     ),
                   ),
@@ -496,7 +495,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     e.value,
                     style: GoogleFonts.poppins(
                       color: isDark
-                          ? Colors.white.withOpacity(0.88)
+                          ? Colors.white.withValues(alpha: 0.88)
                           : AppColors.textPrimary,
                       fontSize: context.rs(13),
                       fontWeight: FontWeight.w500,
@@ -517,20 +516,20 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       height: context.rs(80),
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.white.withOpacity(0.15)
-            : AppColors.primaryGreen.withOpacity(0.1),
+            ? Colors.white.withValues(alpha: 0.15)
+            : AppColors.primaryGreen.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isDark
-              ? Colors.white.withOpacity(0.25)
-              : AppColors.primaryGreen.withOpacity(0.2),
+              ? Colors.white.withValues(alpha: 0.25)
+              : AppColors.primaryGreen.withValues(alpha: 0.2),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withOpacity(0.15)
-                : AppColors.primaryGreen.withOpacity(0.12),
+                ? Colors.black.withValues(alpha: 0.15)
+                : AppColors.primaryGreen.withValues(alpha: 0.12),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -563,7 +562,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             : LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Colors.white.withOpacity(0.98)],
+                colors: [Colors.transparent, Colors.white.withValues(alpha: 0.98)],
               ),
       ),
       padding: EdgeInsets.fromLTRB(
@@ -588,8 +587,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   color: isActive
                       ? (isDark ? Colors.white : AppColors.primaryGreen)
                       : (isDark
-                            ? Colors.white.withOpacity(0.3)
-                            : AppColors.primaryGreen.withOpacity(0.25)),
+                            ? Colors.white.withValues(alpha: 0.3)
+                            : AppColors.primaryGreen.withValues(alpha: 0.25)),
                   borderRadius: BorderRadius.circular(4),
                 ),
               );
@@ -612,8 +611,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 boxShadow: [
                   BoxShadow(
                     color: isDark
-                        ? Colors.black.withOpacity(0.2)
-                        : AppColors.primaryGreen.withOpacity(0.4),
+                        ? Colors.black.withValues(alpha: 0.2)
+                        : AppColors.primaryGreen.withValues(alpha: 0.4),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -665,7 +664,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         height: 260,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
         ),
       ),
     ),
@@ -677,7 +676,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         height: 180,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white.withOpacity(0.04),
+          color: Colors.white.withValues(alpha: 0.04),
         ),
       ),
     ),
@@ -695,7 +694,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     ),
     Positioned.fill(
       child: CustomPaint(
-        painter: _DiagonalLinePainter(color: Colors.white.withOpacity(0.04)),
+        painter: _DiagonalLinePainter(color: Colors.white.withValues(alpha: 0.04)),
       ),
     ),
   ];
@@ -709,7 +708,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         height: 280,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppColors.primaryGreen.withOpacity(0.06),
+          color: AppColors.primaryGreen.withValues(alpha: 0.06),
         ),
       ),
     ),
@@ -721,7 +720,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         height: 200,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppColors.primaryGreen.withOpacity(0.05),
+          color: AppColors.primaryGreen.withValues(alpha: 0.05),
         ),
       ),
     ),

@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use
 import 'package:examgo/firebas_analytics/analytic_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:examgo/services/exam_session_service.dart';
@@ -502,7 +501,7 @@ class _HomeScreenState extends State<HomeScreen>
                     height: context.isTablet ? 280 : 200,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.08),
+                      color: Colors.white.withValues(alpha: 0.08),
                     ),
                   ),
                 ),
@@ -517,7 +516,7 @@ class _HomeScreenState extends State<HomeScreen>
                     height: 140,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.05),
                     ),
                   ),
                 ),
@@ -583,10 +582,10 @@ class _HomeScreenState extends State<HomeScreen>
                             child: Container(
                               padding: EdgeInsets.all(context.rs(11)),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.18),
+                                color: Colors.white.withValues(alpha: 0.18),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.25),
+                                  color: Colors.white.withValues(alpha: 0.25),
                                   width: 1,
                                 ),
                               ),
@@ -617,7 +616,7 @@ class _HomeScreenState extends State<HomeScreen>
                                 Text(
                                   'Secure Exam Browser',
                                   style: GoogleFonts.poppins(
-                                    color: Colors.white.withOpacity(0.72),
+                                    color: Colors.white.withValues(alpha: 0.72),
                                     fontSize: context.rs(11),
                                   ),
                                 ),
@@ -625,7 +624,7 @@ class _HomeScreenState extends State<HomeScreen>
                                 Container(
                                   padding: EdgeInsets.symmetric(horizontal: context.rs(8), vertical: context.rs(4)),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.15),
+                                    color: Colors.white.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   // FIX BUG-07: Gunakan _ClockWidget — hanya rebuild text jam,
@@ -641,10 +640,10 @@ class _HomeScreenState extends State<HomeScreen>
                               vertical: context.rs(5),
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.18),
+                              color: Colors.white.withValues(alpha: 0.18),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.28),
+                                color: Colors.white.withValues(alpha: 0.28),
                                 width: 1,
                               ),
                             ),
@@ -681,7 +680,7 @@ class _HomeScreenState extends State<HomeScreen>
                           Container(
                             padding: const EdgeInsets.all(7),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.18),
+                              color: Colors.white.withValues(alpha: 0.18),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Icon(
@@ -708,8 +707,8 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                             decoration: BoxDecoration(
                               color: _connected
-                                  ? Colors.white.withOpacity(0.2)
-                                  : Colors.orange.withOpacity(0.3),
+                                  ? Colors.white.withValues(alpha: 0.2)
+                                  : Colors.orange.withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Row(
@@ -775,14 +774,14 @@ class _HomeScreenState extends State<HomeScreen>
       decoration: BoxDecoration(
         color: const Color(0xFFE8F5E9),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primaryGreen.withOpacity(0.25)),
+        border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: AppColors.primaryGreen.withOpacity(0.12),
+              color: AppColors.primaryGreen.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -808,7 +807,7 @@ class _HomeScreenState extends State<HomeScreen>
                   'Siap memulai ujian',
                   style: GoogleFonts.poppins(
                     fontSize: context.rs(11),
-                    color: AppColors.primaryGreen.withOpacity(0.65),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.65),
                   ),
                 ),
               ],
@@ -861,14 +860,14 @@ class _HomeScreenState extends State<HomeScreen>
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8E1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.orange.withOpacity(0.35)),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.12),
+              color: Colors.orange.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -936,7 +935,7 @@ class _HomeScreenState extends State<HomeScreen>
             boxShadow: _connected
                 ? [
                     BoxShadow(
-                      color: AppColors.primaryGreen.withOpacity(0.38),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.38),
                       blurRadius: 22,
                       offset: const Offset(0, 8),
                     ),
@@ -948,7 +947,7 @@ class _HomeScreenState extends State<HomeScreen>
               Container(
                 padding: EdgeInsets.all(context.rs(14)),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Icon(
@@ -977,7 +976,7 @@ class _HomeScreenState extends State<HomeScreen>
                           ? 'Ketuk untuk mulai scan'
                           : 'Butuh koneksi internet',
                       style: GoogleFonts.poppins(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: context.rs(11),
                       ),
                     ),
@@ -987,7 +986,7 @@ class _HomeScreenState extends State<HomeScreen>
               Container(
                 padding: EdgeInsets.all(context.rs(8)),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -1027,7 +1026,7 @@ class _HomeScreenState extends State<HomeScreen>
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 30, offset: const Offset(0, 10)),
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 30, offset: const Offset(0, 10)),
                 ],
               ),
               child: Column(
@@ -1089,7 +1088,7 @@ class _HomeScreenState extends State<HomeScreen>
                             gradient: const LinearGradient(colors: [Color(0xFF1B5E20), AppColors.primaryGreen]),
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
-                              BoxShadow(color: AppColors.primaryGreen.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4)),
+                              BoxShadow(color: AppColors.primaryGreen.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4)),
                             ],
                           ),
                           child: ElevatedButton(
@@ -1141,11 +1140,11 @@ class _HomeScreenState extends State<HomeScreen>
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Colors.grey.withOpacity(0.25),
+            color: Colors.grey.withValues(alpha: 0.25),
             width: 1.5,
           ),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 3)),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 3)),
           ],
         ),
         child: Row(
@@ -1244,12 +1243,12 @@ class _HomeScreenState extends State<HomeScreen>
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: AppColors.primaryGreen.withOpacity(0.25),
+            color: AppColors.primaryGreen.withValues(alpha: 0.25),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -1396,7 +1395,7 @@ class _HomeScreenState extends State<HomeScreen>
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 3),
                     ),
@@ -1462,7 +1461,7 @@ class _HomeScreenState extends State<HomeScreen>
                     Container(
                       padding: EdgeInsets.all(context.rs(8)),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
+                        color: Colors.orange.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
@@ -1501,7 +1500,7 @@ class _HomeScreenState extends State<HomeScreen>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -1544,7 +1543,7 @@ class _HomeScreenState extends State<HomeScreen>
                       width: context.rs(34),
                       height: context.rs(34),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryGreen.withOpacity(0.1),
+                        color: AppColors.primaryGreen.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Center(
@@ -1559,7 +1558,7 @@ class _HomeScreenState extends State<HomeScreen>
                       Container(
                         width: 2,
                         height: context.rs(28),
-                        color: AppColors.primaryGreen.withOpacity(0.12),
+                        color: AppColors.primaryGreen.withValues(alpha: 0.12),
                       ),
                   ],
                 ),

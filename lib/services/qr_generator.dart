@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'dart:convert';
@@ -177,11 +176,12 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
         '${dir.path}/${title}_${DateTime.now().millisecondsSinceEpoch}.png',
       );
       await file.writeAsBytes(bytes);
-      await Share.shareXFiles(
-        [XFile(file.path, mimeType: 'image/png')],
-        subject: 'QR Ujian ExamGO — $title',
-        text:
-            'QR Code ujian terenkripsi ExamGO.\nHanya bisa dibuka melalui aplikasi ExamGO.',
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path, mimeType: 'image/png')],
+          subject: 'QR Ujian ExamGO — $title',
+          text: 'QR Code ujian terenkripsi ExamGO.\nHanya bisa dibuka melalui aplikasi ExamGO.',
+        ),
       );
     } catch (e) {
       _showSnack('Error: $e', isError: true);
@@ -279,9 +279,9 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
         child: Container(
           margin: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.18),
+            color: Colors.white.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.white.withOpacity(0.22), width: 1),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.22), width: 1),
           ),
           child: const Icon(
             Icons.arrow_back_ios_new,
@@ -315,7 +315,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                 height: 120,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.07),
+                  color: Colors.white.withValues(alpha: 0.07),
                 ),
               ),
             ),
@@ -327,7 +327,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                 height: 80,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.05),
+                  color: Colors.white.withValues(alpha: 0.05),
                 ),
               ),
             ),
@@ -338,7 +338,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.qr_code_2, color: Colors.white, size: 16),
@@ -368,10 +368,10 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+        border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -432,7 +432,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -493,7 +493,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
               filled: true,
               fillColor: _generated
                   ? Colors.grey.shade50
-                  : AppColors.paleGreen.withOpacity(0.5),
+                  : AppColors.paleGreen.withValues(alpha: 0.5),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
@@ -548,7 +548,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
               filled: true,
               fillColor: _generated
                   ? Colors.grey.shade50
-                  : AppColors.paleGreen.withOpacity(0.5),
+                  : AppColors.paleGreen.withValues(alpha: 0.5),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
@@ -588,7 +588,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primaryGreen.withOpacity(0.38),
+              color: AppColors.primaryGreen.withValues(alpha: 0.38),
               blurRadius: 18,
               offset: const Offset(0, 7),
             ),
@@ -599,7 +599,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
             Container(
               padding: EdgeInsets.all(context.rs(12)),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
@@ -625,7 +625,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                   Text(
                     'Enkripsi HMAC-SHA256',
                     style: GoogleFonts.poppins(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontSize: context.rs(11),
                     ),
                   ),
@@ -635,7 +635,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
             Container(
               padding: EdgeInsets.all(context.rs(8)),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -666,12 +666,12 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryGreen.withOpacity(0.1),
+            color: AppColors.primaryGreen.withValues(alpha: 0.1),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -703,7 +703,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                     height: 60,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.07),
+                      color: Colors.white.withValues(alpha: 0.07),
                     ),
                   ),
                 ),
@@ -712,10 +712,10 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                     Container(
                       padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           width: 1,
                         ),
                       ),
@@ -743,7 +743,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                           Text(
                             'Terenkripsi • Hanya ExamGO',
                             style: GoogleFonts.poppins(
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontSize: context.rs(10),
                             ),
                           ),
@@ -756,10 +756,10 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                         vertical: context.rs(4),
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.25),
+                          color: Colors.white.withValues(alpha: 0.25),
                           width: 1,
                         ),
                       ),
@@ -789,7 +789,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: AppColors.primaryGreen.withOpacity(0.15),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.15),
                     width: 1.5,
                   ),
                 ),
@@ -867,7 +867,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: AppColors.primaryGreen.withOpacity(0.3)),
+                                  border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -955,7 +955,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                   ? []
                   : [
                       BoxShadow(
-                        color: AppColors.primaryGreen.withOpacity(0.35),
+                        color: AppColors.primaryGreen.withValues(alpha: 0.35),
                         blurRadius: 16,
                         offset: const Offset(0, 6),
                       ),
@@ -966,7 +966,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                 Container(
                   padding: EdgeInsets.all(context.rs(10)),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: _saving
@@ -999,7 +999,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                   Container(
                     padding: EdgeInsets.all(context.rs(7)),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: Icon(
@@ -1027,12 +1027,12 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: AppColors.primaryGreen.withOpacity(0.4),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.4),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -1070,12 +1070,12 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: AppColors.info.withOpacity(0.4),
+                      color: AppColors.info.withValues(alpha: 0.4),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -1163,10 +1163,10 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),

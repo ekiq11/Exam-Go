@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use
 import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:examgo/services/qr_payload.dart';
@@ -231,7 +230,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
               Container(
                 padding: EdgeInsets.all(context.rs(14)),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -505,7 +504,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
           vertical: context.rs(14),
         ),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.7),
+          color: Colors.black.withValues(alpha: 0.7),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -576,13 +575,13 @@ class _QRScannerScreenState extends State<QRScannerScreen>
         ),
         decoration: BoxDecoration(
           color: isActive
-              ? AppColors.primaryGreen.withOpacity(0.2)
-              : Colors.black.withOpacity(0.5),
+              ? AppColors.primaryGreen.withValues(alpha: 0.2)
+              : Colors.black.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isActive
                 ? AppColors.primaryGreen
-                : Colors.white.withOpacity(0.3),
+                : Colors.white.withValues(alpha: 0.3),
             width: 2,
           ),
         ),
@@ -613,7 +612,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     return Container(
       margin: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.5),
+        color: Colors.black.withValues(alpha: 0.5),
         shape: BoxShape.circle,
       ),
       child: IconButton(
@@ -737,7 +736,7 @@ class _ScanLine extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryGreen.withOpacity(0.5),
+                color: AppColors.primaryGreen.withValues(alpha: 0.5),
                 blurRadius: 8,
               ),
             ],
@@ -765,12 +764,12 @@ class _ScannerOverlay extends CustomPainter {
         ..addRect(Rect.fromLTWH(0, 0, size.width, size.height))
         ..addRRect(RRect.fromRectAndRadius(scanRect, const Radius.circular(24)))
         ..fillType = PathFillType.evenOdd,
-      Paint()..color = Colors.black.withOpacity(0.6),
+      Paint()..color = Colors.black.withValues(alpha: 0.6),
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(scanRect, const Radius.circular(24)),
       Paint()
-        ..color = Colors.white.withOpacity(0.4)
+        ..color = Colors.white.withValues(alpha: 0.4)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5,
     );
@@ -842,7 +841,7 @@ class _BaseDialog extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(context.rs(14)),
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                color: iconColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: context.rs(44), color: iconColor),

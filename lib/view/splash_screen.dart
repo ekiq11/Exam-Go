@@ -1,5 +1,4 @@
 // lib/view/splash_screen.dart
-// ignore_for_file: deprecated_member_use
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/constant/app_config.dart';
 import 'package:examgo/constant/responsive.dart';
@@ -137,7 +136,7 @@ class _SplashScreenState extends State<SplashScreen>
                 height: size.width * 0.9,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF1B5E20).withOpacity(0.35),
+                  color: const Color(0xFF1B5E20).withValues(alpha: 0.35),
                 ),
               ),
             ),
@@ -150,7 +149,7 @@ class _SplashScreenState extends State<SplashScreen>
                 height: size.width * 0.75,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF2E7D32).withOpacity(0.25),
+                  color: const Color(0xFF2E7D32).withValues(alpha: 0.25),
                 ),
               ),
             ),
@@ -181,16 +180,16 @@ class _SplashScreenState extends State<SplashScreen>
                           height: logoSize,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.12),
+                            color: Colors.white.withValues(alpha: 0.12),
                             border: Border.all(
-                              color: Colors.white.withOpacity(
+                              color: Colors.white.withValues(alpha: 
                                 0.28 + _breathe.value * 0.18,
                               ),
                               width: 1.2,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.white.withOpacity(
+                                color: Colors.white.withValues(alpha: 
                                   0.08 + _breathe.value * 0.08,
                                 ),
                                 blurRadius: 30,
@@ -228,7 +227,7 @@ class _SplashScreenState extends State<SplashScreen>
                         style: GoogleFonts.poppins(
                           fontSize: context.isTablet ? 13.0 : context.rs(12),
                           fontWeight: FontWeight.w400,
-                          color: Colors.white.withOpacity(0.75),
+                          color: Colors.white.withValues(alpha: 0.75),
                           letterSpacing: 0.3,
                           height: 1.4,
                         ),
@@ -244,9 +243,9 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(100),
-                          color: Colors.white.withOpacity(0.12),
+                          color: Colors.white.withValues(alpha: 0.12),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.22),
+                            color: Colors.white.withValues(alpha: 0.22),
                             width: 0.8,
                           ),
                         ),
@@ -255,7 +254,7 @@ class _SplashScreenState extends State<SplashScreen>
                           style: GoogleFonts.poppins(
                             fontSize: context.rs(10),
                             fontWeight: FontWeight.w500,
-                            color: Colors.white.withOpacity(0.70),
+                            color: Colors.white.withValues(alpha: 0.70),
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -285,7 +284,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 style: GoogleFonts.poppins(
                                   fontSize: context.rs(11),
                                   fontWeight: FontWeight.w400,
-                                  color: Colors.white.withOpacity(0.60),
+                                  color: Colors.white.withValues(alpha: 0.60),
                                   letterSpacing: 0.2,
                                 ),
                               ),
@@ -350,11 +349,11 @@ class _GrainWaveLoader extends StatelessWidget {
                   height: grainSize,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(opacity),
+                    color: Colors.white.withValues(alpha: opacity),
                     boxShadow: scale > 0.7
                         ? [
                             BoxShadow(
-                              color: Colors.white.withOpacity(0.22),
+                              color: Colors.white.withValues(alpha: 0.22),
                               blurRadius: 6,
                               spreadRadius: 1,
                             ),

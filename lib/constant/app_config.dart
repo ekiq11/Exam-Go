@@ -5,8 +5,8 @@ class AppConfig {
 
   static const String appName = 'ExamGO';
 
-  // Sync dengan pubspec.yaml: version: 2.1.0+24
-  static const String appVersion = '2.1.0';
+  // Sync dengan pubspec.yaml: version: 2.1.1+16
+  static const String appVersion = '2.1.1';
   static const int qrFormatVersion = 1;
 
   /// Secret key for HMAC-SHA256 QR signing.

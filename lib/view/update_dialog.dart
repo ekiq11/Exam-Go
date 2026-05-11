@@ -1,5 +1,4 @@
 // lib/view/update_dialog.dart
-// ignore_for_file: deprecated_member_use
 import 'dart:math' as math;
 import 'package:examgo/constant/responsive.dart';
 import 'package:examgo/constant/update.dart';
@@ -16,7 +15,7 @@ Future<bool> showUpdateDialog(BuildContext context, UpdateInfo info) async {
     // tetap diblokir via PopScope di dalam widget
     barrierDismissible: !info.isMajorUpdate,
     barrierLabel: '',
-    barrierColor: Colors.black.withOpacity(0.75),
+    barrierColor: Colors.black.withValues(alpha: 0.75),
     transitionDuration: const Duration(milliseconds: 500),
     transitionBuilder: (ctx, anim, _, child) {
       final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutExpo);
@@ -184,8 +183,8 @@ class _UpdateDialogState extends State<_UpdateDialog>
               center: Alignment(-0.6 + t * 1.2, -0.8 + t * 0.4),
               radius: 1.2,
               colors: [
-                const Color(0xFF1A4731).withOpacity(0.9),
-                const Color(0xFF0F2A1C).withOpacity(0.6),
+                const Color(0xFF1A4731).withValues(alpha: 0.9),
+                const Color(0xFF0F2A1C).withValues(alpha: 0.6),
                 Colors.transparent,
               ],
             ),
@@ -225,7 +224,7 @@ class _UpdateDialogState extends State<_UpdateDialog>
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -253,7 +252,7 @@ class _UpdateDialogState extends State<_UpdateDialog>
               'Versi terbaru udah nunggu kamu nih',
               style: GoogleFonts.poppins(
                 fontSize: context.rs(13),
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w400,
               ),
               textAlign: TextAlign.center,
@@ -311,7 +310,7 @@ class _UpdateDialogState extends State<_UpdateDialog>
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF2ECC71).withOpacity(0.4),
+              color: const Color(0xFF2ECC71).withValues(alpha: 0.4),
               blurRadius: 24,
               spreadRadius: 4,
             ),
@@ -338,9 +337,9 @@ class _UpdateDialogState extends State<_UpdateDialog>
         vertical: context.rs(16),
       ),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.08), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 1),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -364,7 +363,7 @@ class _UpdateDialogState extends State<_UpdateDialog>
                     height: 6,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFF2ECC71).withOpacity(0.3 + i * 0.3),
+                      color: const Color(0xFF2ECC71).withValues(alpha: 0.3 + i * 0.3),
                     ),
                   ),
                 ),
@@ -394,7 +393,7 @@ class _UpdateDialogState extends State<_UpdateDialog>
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: fg.withOpacity(0.3), width: 1),
+            border: Border.all(color: fg.withValues(alpha: 0.3), width: 1),
           ),
           child: Text(
             'v$version',
@@ -411,7 +410,7 @@ class _UpdateDialogState extends State<_UpdateDialog>
           label,
           style: GoogleFonts.poppins(
             fontSize: context.rs(10),
-            color: Colors.white.withOpacity(0.35),
+            color: Colors.white.withValues(alpha: 0.35),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -425,9 +424,9 @@ class _UpdateDialogState extends State<_UpdateDialog>
       width: double.infinity,
       padding: EdgeInsets.all(context.rs(16)),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.04),
+        color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.07), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -478,7 +477,7 @@ class _UpdateDialogState extends State<_UpdateDialog>
                       line.replaceAll(RegExp(r'^[-•*]\s*'), ''),
                       style: GoogleFonts.poppins(
                         fontSize: context.rs(12),
-                        color: Colors.white.withOpacity(0.65),
+                        color: Colors.white.withValues(alpha: 0.65),
                         height: 1.5,
                       ),
                     ),
@@ -512,7 +511,7 @@ class _UpdateDialogState extends State<_UpdateDialog>
                   ? []
                   : [
                       BoxShadow(
-                        color: const Color(0xFF2ECC71).withOpacity(0.35),
+                        color: const Color(0xFF2ECC71).withValues(alpha: 0.35),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -559,10 +558,10 @@ class _UpdateDialogState extends State<_UpdateDialog>
               width: double.infinity,
               padding: EdgeInsets.symmetric(vertical: context.rs(15)),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.06),
+                color: Colors.white.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   width: 1,
                 ),
               ),
@@ -572,7 +571,7 @@ class _UpdateDialogState extends State<_UpdateDialog>
                   style: GoogleFonts.poppins(
                     fontSize: context.rs(14),
                     fontWeight: FontWeight.w500,
-                    color: Colors.white.withOpacity(0.55),
+                    color: Colors.white.withValues(alpha: 0.55),
                   ),
                 ),
               ),
@@ -590,9 +589,9 @@ class _UpdateDialogState extends State<_UpdateDialog>
         'Lewatin versi ${widget.info.latestVersion}',
         style: GoogleFonts.poppins(
           fontSize: context.rs(11),
-          color: Colors.white.withOpacity(0.25),
+          color: Colors.white.withValues(alpha: 0.25),
           decoration: TextDecoration.underline,
-          decorationColor: Colors.white.withOpacity(0.15),
+          decorationColor: Colors.white.withValues(alpha: 0.15),
         ),
       ),
     );
@@ -647,7 +646,7 @@ class _ParticlePainter extends CustomPainter {
         Offset(x, y),
         p[3],
         Paint()
-          ..color = const Color(0xFF2ECC71).withOpacity(opacity)
+          ..color = const Color(0xFF2ECC71).withValues(alpha: opacity)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
       );
     }

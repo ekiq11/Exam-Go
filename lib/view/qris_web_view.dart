@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use
 import 'dart:async';
 import 'dart:io' show Platform;
 import 'package:examgo/constant/app_colors.dart';
@@ -746,7 +745,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.red.withOpacity(0.3),
+                      color: Colors.red.withValues(alpha: 0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -1050,7 +1049,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                   if (_isFrozen)
                     Positioned.fill(
                       child: Container(
-                        color: Colors.black.withOpacity(0.9),
+                        color: Colors.black.withValues(alpha: 0.9),
                         child: Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -1099,10 +1098,10 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.22),
+                  color: Colors.white.withValues(alpha: 0.22),
                   width: 1,
                 ),
               ),
@@ -1136,13 +1135,13 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                       Icon(
                         Icons.timer_outlined,
                         size: 10,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: 3),
                       Text(
                         _formatDuration(_examElapsedSeconds),
                         style: GoogleFonts.poppins(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           fontSize: context.rs(10),
                           fontFeatures: const [FontFeature.tabularFigures()],
                         ),
@@ -1152,7 +1151,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                         width: 3,
                         height: 3,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -1160,13 +1159,13 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                       Icon(
                         Icons.access_time_rounded,
                         size: 10,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: 3),
                       Text(
                         '${_currentTime.hour.toString().padLeft(2, '0')}:${_currentTime.minute.toString().padLeft(2, '0')}:${_currentTime.second.toString().padLeft(2, '0')} WIB',
                         style: GoogleFonts.poppins(
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                           fontSize: context.rs(10),
                           fontWeight: FontWeight.w500,
                           fontFeatures: const [FontFeature.tabularFigures()],
@@ -1215,10 +1214,10 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                 vertical: context.rs(4),
               ),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.25),
+                  color: Colors.white.withValues(alpha: 0.25),
                   width: 1,
                 ),
               ),
@@ -1274,7 +1273,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -1299,7 +1298,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                     Text(
                       'Tekan ${AppConfig.exitPressRequired - _exitCount}× lagi dalam ${AppConfig.exitPressWindowSeconds} detik',
                       style: GoogleFonts.poppins(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: context.rs(11),
                       ),
                     ),
@@ -1335,7 +1334,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.9),
+        color: color.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2)),
@@ -1365,7 +1364,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.07),
+            color: Colors.black.withValues(alpha: 0.07),
             blurRadius: 12,
             offset: const Offset(0, -3),
           ),
@@ -1428,14 +1427,14 @@ class _BottomBtn extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: context.rs(13)),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color, color.withOpacity(0.82)],
+            colors: [color, color.withValues(alpha: 0.82)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.3),
+              color: color.withValues(alpha: 0.3),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),

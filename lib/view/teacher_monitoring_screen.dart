@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/services/monitoring_service.dart';
@@ -154,7 +153,7 @@ class _TeacherMonitoringListScreenState extends State<TeacherMonitoringListScree
               child: Tooltip(
                 message: 'Geser item ke kiri untuk hapus',
                 child: Icon(Icons.swipe_left_rounded,
-                    color: Colors.white.withOpacity(0.7), size: 20),
+                    color: Colors.white.withValues(alpha: 0.7), size: 20),
               ),
             ),
         ],
@@ -218,7 +217,7 @@ class _TeacherMonitoringListScreenState extends State<TeacherMonitoringListScree
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           leading: CircleAvatar(
-                            backgroundColor: AppColors.primaryGreen.withOpacity(0.12),
+                            backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.12),
                             child: const Icon(Icons.qr_code, color: AppColors.primaryGreen),
                           ),
                           title: Text(item['title']!,
@@ -398,7 +397,7 @@ class TeacherMonitoringDetailScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14),
                         side: BorderSide(
                           color: violations > 0
-                              ? Colors.red.withOpacity(0.3)
+                              ? Colors.red.withValues(alpha: 0.3)
                               : Colors.grey.shade200,
                           width: violations > 0 ? 1.5 : 1,
                         ),
@@ -424,7 +423,7 @@ class TeacherMonitoringDetailScreen extends StatelessWidget {
                                 width: 42,
                                 height: 42,
                                 decoration: BoxDecoration(
-                                  color: statusColor.withOpacity(0.12),
+                                  color: statusColor.withValues(alpha: 0.12),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(statusIcon, color: statusColor, size: 20),
@@ -581,9 +580,9 @@ class StudentActivityLogScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: statusColor.withOpacity(0.3)),
+                    border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -707,9 +706,9 @@ class _SummaryChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.25)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -756,10 +755,10 @@ class _LogItem extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(isFirst ? 0.2 : 0.1),
+                  color: color.withValues(alpha: isFirst ? 0.2 : 0.1),
                   shape: BoxShape.circle,
                   border: isFirst
-                      ? Border.all(color: color.withOpacity(0.5), width: 1.5)
+                      ? Border.all(color: color.withValues(alpha: 0.5), width: 1.5)
                       : null,
                 ),
                 child: Icon(icon, color: color, size: 17),
@@ -781,7 +780,7 @@ class _LogItem extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isFirst ? color.withOpacity(0.3) : Colors.grey.shade200,
+                  color: isFirst ? color.withValues(alpha: 0.3) : Colors.grey.shade200,
                   width: isFirst ? 1.5 : 1,
                 ),
               ),
