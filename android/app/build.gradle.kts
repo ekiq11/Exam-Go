@@ -21,7 +21,9 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.kemenag.examgo"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // FIX PLAY-16KB: NDK 27+ sudah dikompilasi dengan 16KB page alignment.
+    // flutter.ndkVersion bawaan mungkin masih NDK 25/26 yang belum support 16KB.
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         // VERSION_1_8 kompatibel dengan semua device target (minSdk Flutter default)
