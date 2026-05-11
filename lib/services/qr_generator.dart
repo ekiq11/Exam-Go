@@ -32,8 +32,37 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   String? _errorText;
   bool _generated = false;
   bool _saving = false;
+  String? _lastExamId;
 
   final _repaintKey = GlobalKey();
+
+  List<Map<String, String>> _historyList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList('teacher_exam_history') ?? [];
+    final parsed = list.map((item) {
+      final parts = item.split('|');
+      return {
+        'examId':    parts.isNotEmpty ? parts[0] : '',
+        'title':     parts.length > 1 ? parts[1] : 'Ujian',
+        'timestamp': parts.length > 2 ? parts[2] : '0',
+        'url':       parts.length > 3 ? parts[3] : '',
+        'qrData':    parts.length > 4 ? parts[4] : '',
+      };
+    }).where((element) => element['qrData']!.isNotEmpty).toList();
+    if (mounted) {
+      setState(() {
+        _historyList = parsed;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -77,25 +106,31 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
         url: url,
       );
       
-      _saveCreatedExamLocally(examId, displayTitle);
+      _saveCreatedExamLocally(examId, displayTitle, url, signed);
     } catch (_) {}
 
     setState(() {
       _qrData = signed;
       _errorText = null;
       _generated = true;
+      try {
+        final envelope = jsonDecode(signed) as Map<String, dynamic>;
+        final dataJson = jsonDecode(envelope['data'] as String) as Map<String, dynamic>;
+        _lastExamId = dataJson['nonce'] as String;
+      } catch (_) {}
     });
   }
 
-  Future<void> _saveCreatedExamLocally(String examId, String title) async {
+  Future<void> _saveCreatedExamLocally(String examId, String title, String url, String qrData) async {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList('teacher_exam_history') ?? [];
-    // Simpan dalam format examId|title|timestamp
-    final entry = '$examId|$title|${DateTime.now().millisecondsSinceEpoch}';
+    // Simpan dalam format examId|title|timestamp|url|qrData
+    final entry = '$examId|$title|${DateTime.now().millisecondsSinceEpoch}|$url|$qrData';
     list.insert(0, entry);
-    // Batasi 10 history terakhir
-    if (list.length > 10) list.removeLast();
+    // Batasi 20 history terakhir untuk QR
+    if (list.length > 20) list.removeLast();
     await prefs.setStringList('teacher_exam_history', list);
+    _loadHistory();
   }
 
   // ─── Save / Share ─────────────────────────────────────────────
@@ -166,6 +201,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     _generated = false;
     _urlController.clear();
     _titleController.clear();
+    _lastExamId = null;
   });
 
   void _showSnack(String msg, {bool isError = false}) {
@@ -218,6 +254,10 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                   MaxWidthBox(child: _buildQRCard()),
                   SizedBox(height: context.rs(14)),
                   MaxWidthBox(child: _buildActionRow()),
+                ],
+                if (_historyList.isNotEmpty) ...[
+                  SizedBox(height: context.rs(24)),
+                  MaxWidthBox(child: _buildHistorySection()),
                 ],
                 SizedBox(height: context.rs(48)),
               ]),
@@ -815,6 +855,38 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                               ),
                             ],
                           ),
+                          if (_lastExamId != null) ...[
+                            SizedBox(height: context.rs(8)),
+                            GestureDetector(
+                              onTap: () {
+                                Clipboard.setData(ClipboardData(text: _lastExamId!));
+                                _showSnack('Token $_lastExamId disalin');
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: context.rs(12), vertical: context.rs(6)),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: AppColors.primaryGreen.withOpacity(0.3)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Token: ',
+                                      style: GoogleFonts.poppins(fontSize: context.rs(11), color: Colors.grey.shade600),
+                                    ),
+                                    Text(
+                                      _lastExamId!,
+                                      style: GoogleFonts.poppins(fontSize: context.rs(12), fontWeight: FontWeight.bold, color: AppColors.textPrimary, letterSpacing: 1.5),
+                                    ),
+                                    SizedBox(width: context.rs(8)),
+                                    const Icon(Icons.copy_rounded, size: 14, color: AppColors.primaryGreen),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                           SizedBox(height: context.rs(3)),
                           Text(
                             displayUrl,
@@ -1028,6 +1100,129 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+
+  // ── History Section ────────────────────────────────────────────
+  Widget _buildHistorySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 4,
+              height: 18,
+              decoration: BoxDecoration(
+                color: AppColors.primaryGreen,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            SizedBox(width: context.rs(8)),
+            Text(
+              'QR Code yang Dibuat',
+              style: GoogleFonts.poppins(
+                fontSize: context.rs(15),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: context.rs(12)),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _historyList.length,
+          separatorBuilder: (context, index) => SizedBox(height: context.rs(10)),
+          itemBuilder: (context, i) {
+            final item = _historyList[i];
+            final title = item['title'] ?? 'Ujian';
+            final url = item['url'] ?? '';
+            final tsStr = item['timestamp'] ?? '0';
+            final qrData = item['qrData'] ?? '';
+            final ts = int.tryParse(tsStr) ?? 0;
+
+            final dt = DateTime.fromMillisecondsSinceEpoch(ts);
+            final timeStr = '${dt.day}/${dt.month}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _titleController.text = title;
+                  _urlController.text = url;
+                  _qrData = qrData;
+                  _lastExamId = item['examId'];
+                  _generated = true;
+                });
+                _showSnack('QR Code dimuat kembali');
+              },
+              child: Container(
+                padding: EdgeInsets.all(context.rs(14)),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(context.rs(10)),
+                      decoration: BoxDecoration(
+                        color: AppColors.paleGreen,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.qr_code,
+                        color: AppColors.primaryGreen,
+                        size: 20,
+                      ),
+                    ),
+                    SizedBox(width: context.rs(12)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: GoogleFonts.poppins(
+                              fontSize: context.rs(13),
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: context.rs(2)),
+                          Text(
+                            '$timeStr • $url',
+                            style: GoogleFonts.poppins(
+                              fontSize: context.rs(11),
+                              color: Colors.grey.shade600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.refresh_rounded,
+                      color: Colors.grey.shade400,
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ],
     );

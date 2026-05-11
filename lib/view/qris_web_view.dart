@@ -49,6 +49,8 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   int _exitCount = 0;
   Timer? _exitTimer;
   bool _showExitBar = false;
+  
+  DateTime _currentTime = DateTime.now();
   Timer? _uiTimer;
   bool _isExiting = false;
   bool _securityEnabled = false;
@@ -65,6 +67,8 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
 
   // Monitoring
   Timer? _pingTimer;
+  StreamSubscription? _statusSub;
+  bool _isFrozen = false;
 
   // Error handling & retry
   int _loadErrorCount = 0;
@@ -97,6 +101,29 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       _sendMonitoringStatus('ACTIVE');
       _pingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
         _sendMonitoringStatus('ACTIVE');
+      });
+      _statusSub = MonitoringService.instance.streamStudentStatus(widget.examId, widget.studentNis).listen((doc) {
+        if (!mounted) return;
+        if (doc.exists) {
+          final data = doc.data() as Map<String, dynamic>;
+          final status = data['status'] as String?;
+          if (status == 'ACTIVE' && _isFrozen) {
+            setState(() {
+              _minimizeCount = 0;
+              _isFrozen = false;
+            });
+            ExamSessionService.instance.updateViolations(0);
+            _sendMonitoringStatus('ACTIVE');
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Layar telah dibuka oleh pengawas.', style: GoogleFonts.poppins()),
+              backgroundColor: Colors.green,
+            ));
+          } else if (status == 'BLOCKED' && !_isFrozen) {
+            setState(() {
+              _isFrozen = true;
+            });
+          }
+        }
       });
     }
   }
@@ -139,6 +166,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     _retryTimer?.cancel();
     _pauseDebounce?.cancel();
     _pingTimer?.cancel();
+    _statusSub?.cancel();
     _sendMonitoringStatus('FINISHED');
     ExamSessionService.instance.clear(); // hapus sesi saat keluar normal
     WidgetsBinding.instance.removeObserver(this);
@@ -173,7 +201,12 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     await _saveSession(); // simpan sesi ke disk
     // Mulai timer ujian
     _examTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() => _examElapsedSeconds++);
+      if (mounted) {
+        setState(() {
+          _examElapsedSeconds++;
+          _currentTime = DateTime.now();
+        });
+      }
       // Update violations di storage setiap 30 detik
       if (_examElapsedSeconds % 30 == 0) {
         ExamSessionService.instance.updateViolations(_minimizeCount);
@@ -199,6 +232,8 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
+  Timer? _inactiveTimer;
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
@@ -206,27 +241,12 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
 
     switch (state) {
       case AppLifecycleState.paused:
-        // FIX BUG #2: Sebelumnya, 'inactive' DAN 'paused' keduanya
-        // memicu violation. Di Samsung One UI, 'inactive' terpicu oleh:
-        //   - Notifikasi masuk
-        //   - Pull-down notification shade
-        //   - Menekan tombol volume/power sebentar
-        //   - System dialog (izin, dll)
-        // Ini menyebabkan 77.26% pengguna di-flag sebagai pelanggaran
-        // padahal tidak benar-benar keluar dari ujian.
-        //
-        // Fix: HANYA track 'paused' (user benar-benar switch ke app lain).
-        // 'inactive' diabaikan — itu state transisi, bukan keluar ujian.
-        //
-        // Tambahan: debounce 300ms untuk menghindari glitch resume-pause
-        // yang terjadi di beberapa Samsung dengan layar lipat (Z Fold/Flip).
+        _inactiveTimer?.cancel();
         _pauseDebounce?.cancel();
         _pauseDebounce = Timer(const Duration(milliseconds: 300), () async {
           if (!mounted || _isExiting || !_securityEnabled) return;
           if (!_wasActuallyPaused) return;
           
-          // Cek apakah layar mati (user menekan tombol power)
-          // Jika layar mati, JANGAN hitung sebagai pelanggaran keluar ujian.
           final isScreenOn = await SecurityService.instance.isScreenOn();
           if (!isScreenOn && mounted) return;
 
@@ -261,15 +281,22 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         break;
 
       case AppLifecycleState.inactive:
-        // JANGAN trigger violation di sini.
-        // 'inactive' = state transisi (system UI, dialog, dll)
-        // bukan keluar ujian yang sesungguhnya.
+        // Kadang saat keluar layar (masuk App Switcher iOS/Android), state menjadi inactive.
+        // Beri waktu 1.5 detik. Jika masih inactive, itu pelanggaran!
+        _inactiveTimer?.cancel();
+        _inactiveTimer = Timer(const Duration(milliseconds: 1500), () {
+           if (!mounted || _isExiting || !_securityEnabled) return;
+           // Anggap sebagai paused agar memicu violation
+           _wasActuallyPaused = true;
+           didChangeAppLifecycleState(AppLifecycleState.paused);
+        });
         break;
+
       case AppLifecycleState.resumed:
-        if (!_wasActuallyPaused) return; // FIX BUG #2: Jika hanya transisi dari inactive, abaikan.
+        _inactiveTimer?.cancel();
+        if (!_wasActuallyPaused) return;
         _wasActuallyPaused = false;
         
-        // Cek layar nyala/mati saat resume. Jika mati, abaikan.
         SecurityService.instance.isScreenOn().then((isScreenOn) {
           if (!isScreenOn && mounted) return;
           _sendMonitoringStatus('ACTIVE');
@@ -496,35 +523,15 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     }
   }
 
-  // FIX BUG #1 — MALI BAD ALLOC (Samsung Exynos / MediaTek Dimensity)
-  //
-  // webview_flutter_android 4.x mengubah cara mengaktifkan Hybrid Composition:
-  //
-  //   3.x (lama): AndroidWebViewControllerCreationParams(useHybridComposition: true)
-  //   4.x (baru): AndroidWebViewWidgetCreationParams(displayWithHybridComposition: true)
-  //               → dipakai saat membangun WIDGET, bukan controller.
-  //
-  // Hybrid Composition membuat WebView merender langsung ke Flutter's window surface
-  // (RGBA_8888 — sudah diset di MainActivity.kt) tanpa membuat ImageReader sendiri
-  // via gralloc. Ini menghilangkan konflik format pixel yang menyebabkan:
-  //   "MALI BAD ALLOC gles_texture_egl_image_get_2d_template"
-  //   "Unable to acquire a buffer item, maxImages buffers"
-  //   "GPUAUX Null anb" (loop)
-  // → exam_load_error pada 28.52% user di Firebase Analytics.
   Widget _buildWebViewWidget() {
     if (!kIsWeb && Platform.isAndroid) {
-      // AndroidWebViewWidget + AndroidWebViewWidgetCreationParams adalah
-      // API resmi 4.x untuk mengaktifkan Hybrid Composition.
       return AndroidWebViewWidget(
         AndroidWebViewWidgetCreationParams(
           controller: _wvc.platform as AndroidWebViewController,
-          displayWithHybridComposition: true,
-          layoutDirection: TextDirection.ltr,
-          gestureRecognizers: const {},
+          displayWithHybridComposition: false,
         ),
       ).build(context);
     }
-    // iOS dan platform lain: gunakan WebViewWidget standar
     return WebViewWidget(
       controller: _wvc,
       layoutDirection: TextDirection.ltr,
@@ -1019,6 +1026,27 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                       right: context.rs(12),
                       child: _buildMinimizeBadge(),
                     ),
+                  if (_isFrozen)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withOpacity(0.9),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.lock_rounded, size: 64, color: Colors.redAccent),
+                              SizedBox(height: context.rs(16)),
+                              Text('Layar Dibekukan!', style: GoogleFonts.poppins(color: Colors.white, fontSize: context.rs(24), fontWeight: FontWeight.bold)),
+                              SizedBox(height: context.rs(8)),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: context.rs(32)),
+                                child: Text('Anda telah melakukan pelanggaran batas maksimal. Silakan lapor ke pengawas untuk membuka kunci agar dapat melanjutkan ujian.', textAlign: TextAlign.center, style: GoogleFonts.poppins(color: Colors.white70, fontSize: context.rs(14))),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -1080,7 +1108,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  // Exam Timer — tampilkan durasi ujian berjalan
+                  // Exam Timer & Real-time Clock
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -1095,6 +1123,31 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                         style: GoogleFonts.poppins(
                           color: Colors.white.withOpacity(0.8),
                           fontSize: context.rs(10),
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 3,
+                        height: 3,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.access_time_rounded,
+                        size: 10,
+                        color: Colors.white.withOpacity(0.7),
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${_currentTime.hour.toString().padLeft(2, '0')}:${_currentTime.minute.toString().padLeft(2, '0')}:${_currentTime.second.toString().padLeft(2, '0')} WIB',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: context.rs(10),
+                          fontWeight: FontWeight.w500,
                           fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),

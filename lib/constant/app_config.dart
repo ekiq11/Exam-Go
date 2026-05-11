@@ -17,11 +17,10 @@ class AppConfig {
     'QR_SECRET_KEY',
     defaultValue: 'ExamGO_S3cr3t_K3y_2024_#K3m3n4g_P3nd1d1k4n_N4s10n4l',
   );
-
-  /// [FIX S-1] QR payload expires setelah 120 menit (2 jam).
+  /// [FIX S-1] QR payload expires setelah 7 hari (10080 menit).
   /// Cukup untuk sesi ujian terpanjang sekaligus mencegah penyalahgunaan QR bocor.
   /// Set 0 untuk menonaktifkan expiry (tidak disarankan untuk production).
-  static const int qrExpiryMinutes = 120;
+  static const int qrExpiryMinutes = 10080;
 
   /// [FIX R-3] Turunkan dari 5 ke 3 — lebih ergonomis.
   /// 5× dalam 3 detik hampir tidak mungkin dilakukan satu tangan.

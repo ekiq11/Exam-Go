@@ -355,8 +355,10 @@ class TeacherMonitoringDetailScreen extends StatelessWidget {
                   itemCount: docs.length,
                   itemBuilder: (context, i) {
                     final data = docs[i].data() as Map<String, dynamic>;
-                    final name = data['name'] as String? ?? 'Anonim';
-                    final nis = data['nis'] as String? ?? '-';
+                    final rawName = data['name'] as String?;
+                    final name = (rawName == null || rawName.trim().isEmpty) ? 'Anonim' : rawName;
+                    final rawNis = data['nis'] as String?;
+                    final nis = (rawNis == null || rawNis.trim().isEmpty) ? '-' : rawNis;
                     final status = data['status'] as String? ?? 'OFFLINE';
                     final violations = data['violations'] as int? ?? 0;
                     final battery = data['battery_level'] as int? ?? 0;
@@ -539,6 +541,34 @@ class StudentActivityLogScreen extends StatelessWidget {
         ),
         backgroundColor: AppColors.primaryGreen,
         foregroundColor: Colors.white,
+        actions: [
+          if (status == 'BLOCKED')
+            IconButton(
+              icon: const Icon(Icons.lock_open_rounded),
+              tooltip: 'Buka Kunci Layar',
+              onPressed: () {
+                MonitoringService.instance.updateStudentStatus(
+                  examId: examId,
+                  nis: nis,
+                  name: name,
+                  status: 'ACTIVE',
+                  violations: 0,
+                );
+                MonitoringService.instance.logActivity(
+                  examId: examId,
+                  nis: nis,
+                  activityType: 'INFO',
+                  description: 'Pengawas membuka kunci layar ujian',
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Layar siswa berhasil dibuka', style: GoogleFonts.poppins()),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+            ),
+        ],
       ),
       body: Column(
         children: [

@@ -44,12 +44,12 @@ class SecurityService {
           ? 'Perangkat Anda terdeteksi Root. Ujian diblokir.' 
           : 'Perangkat Anda terdeteksi Jailbreak. Ujian diblokir.';
       }
-      if (_isAndroid) {
-        final isDevMode = await FlutterJailbreakDetection.developerMode;
-        if (isDevMode) {
-          return 'Developer Mode aktif. Harap matikan USB Debugging / Opsi Pengembang sebelum ujian.';
-        }
-      }
+      // if (_isAndroid) {
+      //   final isDevMode = await FlutterJailbreakDetection.developerMode;
+      //   if (isDevMode) {
+      //     return 'Developer Mode aktif. Harap matikan USB Debugging / Opsi Pengembang sebelum ujian.';
+      //   }
+      // }
       // Cek VPN aktif (Android & iOS)
       final hasVpn = await _isVpnActive();
       if (hasVpn) {

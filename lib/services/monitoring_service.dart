@@ -92,6 +92,16 @@ class MonitoringService {
         .snapshots();
   }
 
+  /// Stream status satu siswa tertentu (digunakan oleh siswa untuk mendengarkan perubahan status dari guru)
+  Stream<DocumentSnapshot> streamStudentStatus(String examId, String nis) {
+    return _db
+        .collection('exam_sessions')
+        .doc(examId)
+        .collection('students')
+        .doc(nis)
+        .snapshots();
+  }
+
   /// Membuat sesi ujian baru dengan TTL 7 hari (expires_at)
   Future<void> createExamSession({
     required String examId,

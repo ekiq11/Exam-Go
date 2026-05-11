@@ -31,7 +31,7 @@ class QRPayloadService {
   /// [url] wajib. [title] opsional — nama ujian yang ditampilkan ke user.
   static String generate(String url, {String title = ''}) {
     final timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    final nonce = _randomNonce(8);
+    final nonce = _randomNonce(6);
     final version = AppConfig.qrFormatVersion;
 
     final data = jsonEncode({
@@ -94,7 +94,7 @@ class QRPayloadService {
   static bool _verify(String data, String sig) => _sign(data) == sig;
 
   static String _randomNonce(int length) {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final rng = Random.secure();
     return List.generate(
       length,

@@ -1,6 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'package:examgo/firebas_analytics/analytic_service.dart';
-import 'package:examgo/services/qr_generator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:examgo/services/exam_session_service.dart';
 import 'package:examgo/view/pre_exam_checklist.dart';
 import 'package:examgo/view/qr_scanner.dart';
@@ -57,6 +57,8 @@ class _HomeScreenState extends State<HomeScreen>
   bool _connected = true;
   List<_HistoryItem> _history = [];
   int _logoTapCount = 0; // tap 7x untuk buka Mode Guru
+  Timer? _clockTimer;
+  DateTime _currentTime = DateTime.now();
 
   static const _historyKey = 'scan_history_v3';
   StreamSubscription<List<ConnectivityResult>>? _connectSub;
@@ -82,10 +84,15 @@ class _HomeScreenState extends State<HomeScreen>
     _loadHistory();
     // Cek apakah ada sesi ujian yang tidak selesai (crash recovery)
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkCrashRecovery());
+
+    _clockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) setState(() => _currentTime = DateTime.now());
+    });
   }
 
   @override
   void dispose() {
+    _clockTimer?.cancel();
     _connectSub?.cancel();
     _pulseController.dispose();
     WidgetsBinding.instance.removeObserver(this);
@@ -386,6 +393,34 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
+  String _formatDateTime(DateTime dt) {
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+    final day = dt.day.toString().padLeft(2, '0');
+    final month = months[dt.month - 1];
+    final year = dt.year;
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    final s = dt.second.toString().padLeft(2, '0');
+    return '$day $month $year  •  $h:$m:$s WIB';
+  }
+
+  void _showLoading(String msg) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Row(
+          children: [
+            const CircularProgressIndicator(color: AppColors.primaryGreen),
+            SizedBox(width: context.rs(16)),
+            Text(msg, style: GoogleFonts.poppins()),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ─── Build ────────────────────────────────────────────────────
 
   @override
@@ -411,6 +446,8 @@ class _HomeScreenState extends State<HomeScreen>
                 MaxWidthBox(child: _buildConnectionBanner()),
                 SizedBox(height: context.rs(20)),
                 MaxWidthBox(child: _buildScanCard()),
+                SizedBox(height: context.rs(12)),
+                MaxWidthBox(child: _buildInputTokenCard()),
                 SizedBox(height: context.rs(12)),
                 MaxWidthBox(child: _buildGeneratorCard()),
                 if (_history.isNotEmpty) ...[
@@ -590,11 +627,36 @@ class _HomeScreenState extends State<HomeScreen>
                                     letterSpacing: -0.5,
                                   ),
                                 ),
+                                SizedBox(height: context.rs(2)),
                                 Text(
                                   'Secure Exam Browser',
                                   style: GoogleFonts.poppins(
                                     color: Colors.white.withOpacity(0.72),
                                     fontSize: context.rs(11),
+                                  ),
+                                ),
+                                SizedBox(height: context.rs(8)),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: context.rs(8), vertical: context.rs(4)),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.access_time_rounded, color: Colors.white, size: context.rs(12)),
+                                      SizedBox(width: context.rs(6)),
+                                      Text(
+                                        _formatDateTime(_currentTime),
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                          fontSize: context.rs(10),
+                                          fontWeight: FontWeight.w600,
+                                          fontFeatures: const [FontFeature.tabularFigures()],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -963,6 +1025,212 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildInputTokenCard() {
+    return GestureDetector(
+      onTap: () async {
+        if (!_connected) {
+          _showError(
+            'Tidak Ada Koneksi',
+            'Pastikan perangkat terhubung ke internet sebelum ujian.',
+          );
+          return;
+        }
+        
+        final ctrl = TextEditingController();
+        final token = await showDialog<String>(
+          context: context,
+          builder: (ctx) => Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            child: Container(
+              padding: EdgeInsets.all(context.rs(28)),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 30, offset: const Offset(0, 10)),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(context.rs(16)),
+                    decoration: BoxDecoration(
+                      color: AppColors.paleGreen,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.key_rounded, color: AppColors.primaryGreen, size: 32),
+                  ),
+                  SizedBox(height: context.rs(16)),
+                  Text(
+                    'Input Token Ujian',
+                    style: GoogleFonts.poppins(fontSize: context.rs(20), fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                  ),
+                  SizedBox(height: context.rs(4)),
+                  Text(
+                    'Masukkan 6 digit token dari pengawas',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(fontSize: context.rs(13), color: AppColors.textSecondary),
+                  ),
+                  SizedBox(height: context.rs(24)),
+                  TextField(
+                    controller: ctrl,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(fontSize: context.rs(24), fontWeight: FontWeight.bold, letterSpacing: 4),
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: InputDecoration(
+                      hintText: 'XXXXXX',
+                      hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400, letterSpacing: 4),
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.grey.shade200)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.grey.shade200)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2)),
+                    ),
+                  ),
+                  SizedBox(height: context.rs(32)),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: context.rs(16)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+                      SizedBox(width: context.rs(12)),
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [Color(0xFF1B5E20), AppColors.primaryGreen]),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(color: AppColors.primaryGreen.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4)),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.of(ctx).pop(ctrl.text.trim().toUpperCase()),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: EdgeInsets.symmetric(vertical: context.rs(16)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            child: Text('Cari Ujian', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        
+        if (token == null || token.isEmpty) return;
+        
+        // Cek Firebase untuk token ini
+        _showLoading('Mencari Token...');
+        try {
+          final doc = await FirebaseFirestore.instance.collection('exam_sessions').doc(token).get();
+          if (!mounted) return;
+          Navigator.of(context).pop(); // Tutup loading
+          
+          if (doc.exists) {
+            final data = doc.data()!;
+            final title = data['title'] ?? 'Ujian';
+            final url = data['url'] ?? '';
+            await _saveEntry(_HistoryItem(title: title, url: url, examId: token));
+            _confirmAndStart(url, title: title, examId: token);
+          } else {
+            _showError('Tidak Ditemukan', 'Token ujian tidak valid atau sudah kadaluarsa.');
+          }
+        } catch (e) {
+          if (mounted) Navigator.of(context).pop();
+          _showError('Gagal Mencari', 'Terjadi kesalahan saat memverifikasi token.');
+        }
+      },
+      child: Container(
+        padding: EdgeInsets.all(context.rs(16)),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.grey.withOpacity(0.25),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 3)),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(context.rs(10)),
+              decoration: BoxDecoration(
+                color: AppColors.paleGreen,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.keyboard_alt_rounded,
+                color: AppColors.primaryGreen,
+                size: 22,
+              ),
+            ),
+            SizedBox(width: context.rs(14)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Input Token Manual',
+                    style: GoogleFonts.poppins(
+                      fontSize: context.rs(14),
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    'Alternatif jika kamera rusak',
+                    style: GoogleFonts.poppins(
+                      fontSize: context.rs(11),
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.rs(11),
+                vertical: context.rs(5),
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.paleGreen,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                'Token',
+                style: GoogleFonts.poppins(
+                  fontSize: context.rs(11),
+                  color: AppColors.primaryGreen,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
