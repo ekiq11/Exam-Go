@@ -41,6 +41,21 @@ android {
         // version: 2.1.0+11 → versionName=2.1.0, versionCode=11
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        ndk {
+            // FIX PLAY-16KB: Batasi ke ABI yang mendukung 16KB page alignment
+            // arm64-v8a (ARM 64-bit) dan x86_64 sudah fully supported.
+            abiFilters += listOf("arm64-v8a", "x86_64")
+        }
+    }
+
+    // FIX PLAY-16KB: Wajib untuk Google Play agar native .so teralignment 16KB.
+    // useLegacyPackaging = false → .so libs TIDAK dikompres di AAB/APK,
+    // sehingga system linker bisa membacanya langsung dari storage dengan
+    // page boundary 16KB (required untuk Android 15 / API 35+).
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
     }
 
     signingConfigs {
