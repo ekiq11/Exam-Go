@@ -720,7 +720,7 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Icon(Icons.fingerprint_rounded, size: 80, color: AppColors.primaryGreen.withOpacity(0.5)),
+          Icon(Icons.fingerprint_rounded, size: 80, color: AppColors.primaryGreen.withValues(alpha: 0.5)),
           const SizedBox(height: 20),
           Text(
             'Autentikasi Biometrik',
@@ -768,9 +768,10 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
                   _availableBiometrics.contains(BiometricType.face) ? 'Face ID / Pengenalan Wajah' : 'Sidik Jari / Fingerprint',
                   style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
                 ),
-                activeColor: AppColors.primaryGreen,
                 value: _useBiometric,
                 onChanged: _toggleBiometric,
+                activeThumbColor: AppColors.primaryGreen,
+                activeTrackColor: AppColors.primaryGreen.withValues(alpha: 0.5),
                 secondary: const Icon(Icons.security_rounded, color: AppColors.primaryGreen),
               ),
             ),

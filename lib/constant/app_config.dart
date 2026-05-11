@@ -5,7 +5,7 @@ class AppConfig {
 
   static const String appName = 'ExamGO';
 
-  // [FIX K-2] Sinkronkan dengan pubspec.yaml version: 2.1.0+14
+  // Sync dengan pubspec.yaml: version: 2.1.0+24
   static const String appVersion = '2.1.0';
   static const int qrFormatVersion = 1;
 

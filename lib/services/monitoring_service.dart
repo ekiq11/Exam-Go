@@ -124,28 +124,41 @@ class MonitoringService {
     }
   }
 
-  /// Hapus seluruh sesi ujian dari Firestore (beserta subcollection students)
-  /// Catatan: Firestore tidak auto-delete subcollection, jadi kita hapus students dulu.
+  /// Hapus seluruh sesi ujian dari Firestore (beserta subcollection students).
+  /// FIX BUG-05: Gunakan WriteBatch dengan chunking 500 dokumen (batas Firestore)
+  /// untuk menggantikan sequential O(n²) delete yang bisa timeout pada sesi besar.
   Future<void> deleteExamSession(String examId) async {
     try {
-      // 1. Ambil semua students
-      final studentsSnap = await _db
-          .collection('exam_sessions')
-          .doc(examId)
-          .collection('students')
-          .get();
+      final sessionRef = _db.collection('exam_sessions').doc(examId);
 
-      // 2. Hapus logs tiap student lalu student-nya
-      for (final studentDoc in studentsSnap.docs) {
-        final logsSnap = await studentDoc.reference.collection('logs').get();
-        for (final logDoc in logsSnap.docs) {
-          await logDoc.reference.delete();
+      // Helper: batch delete max 500 docs per batch (batas Firestore WriteBatch)
+      Future<void> batchDelete(List<DocumentSnapshot> docs) async {
+        if (docs.isEmpty) return;
+        for (var i = 0; i < docs.length; i += 500) {
+          final chunk = docs.sublist(
+            i,
+            (i + 500) < docs.length ? (i + 500) : docs.length,
+          );
+          final batch = _db.batch();
+          for (final doc in chunk) {
+            batch.delete(doc.reference);
+          }
+          await batch.commit();
         }
-        await studentDoc.reference.delete();
       }
 
+      // 1. Hapus logs tiap student menggunakan batch
+      final studentsSnap = await sessionRef.collection('students').get();
+      for (final studentDoc in studentsSnap.docs) {
+        final logsSnap = await studentDoc.reference.collection('logs').get();
+        await batchDelete(logsSnap.docs);
+      }
+
+      // 2. Hapus semua student documents sekaligus menggunakan batch
+      await batchDelete(studentsSnap.docs);
+
       // 3. Hapus dokumen sesi utama
-      await _db.collection('exam_sessions').doc(examId).delete();
+      await sessionRef.delete();
     } catch (_) {}
   }
 }

@@ -281,12 +281,17 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         break;
 
       case AppLifecycleState.inactive:
-        // Kadang saat keluar layar (masuk App Switcher iOS/Android), state menjadi inactive.
-        // Beri waktu 1.5 detik. Jika masih inactive, itu pelanggaran!
+        // Pada iOS, notification center membuat app masuk ke inactive.
+        // Beri waktu 1.5 detik. Jika masih inactive, anggap pelanggaran.
         _inactiveTimer?.cancel();
         _inactiveTimer = Timer(const Duration(milliseconds: 1500), () {
            if (!mounted || _isExiting || !_securityEnabled) return;
-           // Anggap sebagai paused agar memicu violation
+           // FIX BUG-09: Cegah double-trigger violation.
+           // Jika paused debounce sudah aktif (dari transition inactive→paused),
+           // atau jika wasActuallyPaused sudah di-set true oleh paused handler,
+           // jangan mulai violation baru dari inactive timer.
+           if (_pauseDebounce?.isActive == true) return;
+           if (_wasActuallyPaused) return;
            _wasActuallyPaused = true;
            didChangeAppLifecycleState(AppLifecycleState.paused);
         });
@@ -441,11 +446,22 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             _loadErrorCount = 0;
             _injectSecurityJS();
           },
-          // URL Whitelist: hanya izinkan domain ujian yang sama
+          // FIX BUG-04: Tambahkan exception untuk non-HTTP scheme.
+          // javascript:, data:, blob:, about: memiliki host kosong,
+          // sehingga cek host biasa akan memblokir form submit, redirect SPA,
+          // dan navigasi internal yang sah dalam halaman ujian.
           onNavigationRequest: (req) {
             if (!_securityEnabled) return NavigationDecision.navigate;
             if (_allowedHost.isEmpty) return NavigationDecision.navigate;
-            final reqHost = Uri.tryParse(req.url)?.host ?? '';
+            final uri = Uri.tryParse(req.url);
+            final scheme = uri?.scheme ?? '';
+            // Izinkan non-HTTP scheme agar form submit, blob URL,
+            // javascript:void(0), data:, about:blank tidak diblokir
+            if (scheme != 'http' && scheme != 'https') {
+              return NavigationDecision.navigate;
+            }
+            final reqHost = uri?.host ?? '';
+            if (reqHost.isEmpty) return NavigationDecision.navigate;
             // Izinkan subdomain dari host yang sama
             if (reqHost == _allowedHost || reqHost.endsWith('.$_allowedHost')) {
               return NavigationDecision.navigate;
@@ -525,12 +541,17 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
 
   Widget _buildWebViewWidget() {
     if (!kIsWeb && Platform.isAndroid) {
-      return AndroidWebViewWidget(
-        AndroidWebViewWidgetCreationParams(
-          controller: _wvc.platform as AndroidWebViewController,
-          displayWithHybridComposition: false,
-        ),
-      ).build(context);
+      // FIX BUG-03: AndroidWebViewWidget tidak bisa langsung direturn sebagai Widget
+      // karena tipe-nya adalah PlatformWebViewWidget, bukan Widget.
+      // Bungkus dengan Builder agar widget tree tetap benar tanpa panggil .build() manual.
+      return Builder(
+        builder: (ctx) => AndroidWebViewWidget(
+          AndroidWebViewWidgetCreationParams(
+            controller: _wvc.platform as AndroidWebViewController,
+            displayWithHybridComposition: false,
+          ),
+        ).build(ctx),
+      );
     }
     return WebViewWidget(
       controller: _wvc,

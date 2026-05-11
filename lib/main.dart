@@ -3,7 +3,7 @@ import 'package:examgo/firebas_analytics/analytic_service.dart';
 import 'package:examgo/firebas_analytics/firebase_options.dart';
 import 'package:examgo/services/app_remote_config.dart';
 import 'package:examgo/view/home_screen.dart';
-import 'package:examgo/view/onboardong_screen.dart';
+import 'package:examgo/view/onboarding_screen.dart';
 import 'package:examgo/view/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -18,6 +18,16 @@ void main() async {
 
   // ── Crashlytics: tangkap semua crash Flutter & Dart ────────────
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+  // FIX BUG-01: Tangkap uncaught async error di luar Flutter framework.
+  // FlutterError.onError TIDAK menangkap error dari async callbacks,
+  // isolate, atau Platform-level errors. PlatformDispatcher.onError
+  // adalah satu-satunya cara menangkap error tersebut ke Crashlytics.
+  WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
   // Tangkap error di luar Flutter framework (async, isolate, dll.)
   await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
 

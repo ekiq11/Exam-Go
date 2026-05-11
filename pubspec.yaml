@@ -2,7 +2,7 @@ name: examgo
 description: "ExamGO — Secure Exam Browser for Android & iOS"
 publish_to: 'none'
 
-version: 2.1.0+18
+version: 2.1.0+24
 
 environment:
   sdk: ^3.9.2
@@ -16,25 +16,25 @@ dependencies:
   google_fonts: ^8.0.2
 
   # QR Scanner & Generator
-  mobile_scanner: ^7.1.3
+  mobile_scanner: ^7.1.3  # Contains MLKit libbarhopper_v3.so
   qr_flutter: ^4.1.0
 
   # WebView — tambahan wkwebview untuk iOS
   webview_flutter: ^4.13.0
-  webview_flutter_wkwebview: ^3.20.0    # iOS WKWebView
-  webview_flutter_android: ^4.10.11       # Android WebView (pastikan sinkron)
+  webview_flutter_wkwebview: ^3.25.0    # iOS WKWebView
+  webview_flutter_android: ^4.12.0       # Android WebView
 
   # Permissions
   permission_handler: ^12.0.1
 
-  # Biometric Authentication (fingerprint / Face ID)
+  # Biometric Authentication (fingerprint / Face ID) — digunakan di teacher_mode.dart
   local_auth: ^2.3.0
 
   # Gallery (pick QR image)
   image_picker: ^1.2.1
 
   # Device info (Android SDK version check)
-  device_info_plus: ^12.3.0
+  device_info_plus: ^12.4.0
 
   # Connectivity
   connectivity_plus: ^7.0.0
@@ -50,7 +50,7 @@ dependencies:
 
   # Save QR image to temp + share
   path_provider: ^2.1.4
-  share_plus: ^12.0.1
+  share_plus: ^12.0.2
   url_launcher: ^6.3.1        # Open APK download link
 
   # Firebase
@@ -59,7 +59,7 @@ dependencies:
   firebase_crashlytics: ^5.2.0
   firebase_remote_config: ^6.4.0
   battery_plus: ^7.0.0
-  flutter_jailbreak_detection: ^1.10.0
+  # flutter_jailbreak_detection: ^1.10.0 # DISABLED: Fails 16KB alignment (libtoolChecker.so)
   cloud_firestore: ^6.3.0
 
 dev_dependencies:

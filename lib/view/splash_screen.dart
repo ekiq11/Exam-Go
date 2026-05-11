@@ -4,7 +4,7 @@ import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/constant/app_config.dart';
 import 'package:examgo/constant/responsive.dart';
 import 'package:examgo/constant/update.dart';
-import 'package:examgo/view/onboardong_screen.dart';
+import 'package:examgo/view/onboarding_screen.dart';
 import 'package:examgo/view/update_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';

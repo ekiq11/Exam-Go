@@ -44,9 +44,11 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         ndk {
-            // FIX PLAY-16KB: Batasi ke ABI yang mendukung 16KB page alignment
-            // arm64-v8a (ARM 64-bit) dan x86_64 sudah fully supported.
-            abiFilters += listOf("arm64-v8a", "x86_64")
+            // FIX PLAY-16KB: arm64-v8a untuk modern devices, armeabi-v7a untuk older tablets.
+            // NDK 27+ mendukung 16KB alignment untuk kedua arsitektur ini.
+            abiFilters.clear()
+            abiFilters.add("arm64-v8a")
+            abiFilters.add("armeabi-v7a")
         }
     }
 

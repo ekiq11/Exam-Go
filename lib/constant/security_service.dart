@@ -4,7 +4,7 @@ import 'dart:io' show Platform, NetworkInterface;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart' show Colors;
 import 'package:flutter/services.dart';
-import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
+// import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
 
 /// Cross-platform security wrapper — Android & iOS, semua vendor.
 ///
@@ -38,18 +38,15 @@ class SecurityService {
   Future<String?> checkDeviceIntegrity() async {
     if (kIsWeb) return null;
     try {
+      /* 
+      // DISABLED: flutter_jailbreak_detection fails 16KB alignment check
       final isJailbroken = await FlutterJailbreakDetection.jailbroken;
       if (isJailbroken) {
         return _isAndroid 
           ? 'Perangkat Anda terdeteksi Root. Ujian diblokir.' 
           : 'Perangkat Anda terdeteksi Jailbreak. Ujian diblokir.';
       }
-      // if (_isAndroid) {
-      //   final isDevMode = await FlutterJailbreakDetection.developerMode;
-      //   if (isDevMode) {
-      //     return 'Developer Mode aktif. Harap matikan USB Debugging / Opsi Pengembang sebelum ujian.';
-      //   }
-      // }
+      */
       // Cek VPN aktif (Android & iOS)
       final hasVpn = await _isVpnActive();
       if (hasVpn) {

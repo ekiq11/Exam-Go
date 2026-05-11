@@ -43,8 +43,24 @@ class MainActivity : FlutterFragmentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED)
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        @Suppress("DEPRECATION")
-        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+
+        // FIX BUG-02: FLAG_FULLSCREEN deprecated sejak API 30 (Android 11).
+        // Beberapa OEM ROM (Xiaomi MIUI 14, Samsung One UI 6+) melempar
+        // WindowManager$BadTokenException saat FLAG_FULLSCREEN diset setelah
+        // window sudah attach. Gunakan WindowInsetsController untuk API 30+.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false)
+            window.insetsController?.apply {
+                hide(android.view.WindowInsets.Type.statusBars())
+                hide(android.view.WindowInsets.Type.navigationBars())
+                systemBarsBehavior =
+                    android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        }
+
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
     }

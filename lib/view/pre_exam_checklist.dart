@@ -132,7 +132,7 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 30,
               offset: const Offset(0, 10),
             ),
@@ -245,12 +245,12 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
           padding: EdgeInsets.all(context.rs(12)),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [AppColors.primaryGreen.withOpacity(0.05), AppColors.paleGreen],
+              colors: [AppColors.primaryGreen.withValues(alpha: 0.05), AppColors.paleGreen],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primaryGreen.withOpacity(0.1)),
+            border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.1)),
           ),
           child: Row(
             children: [
@@ -260,7 +260,7 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 4, offset: const Offset(0, 2)),
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 4, offset: const Offset(0, 2)),
                   ],
                 ),
                 child: const Icon(Icons.school_rounded, color: AppColors.primaryGreen, size: 16),
@@ -406,7 +406,7 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                   ),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
-                    BoxShadow(color: AppColors.primaryGreen.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 3)),
+                    BoxShadow(color: AppColors.primaryGreen.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 3)),
                   ],
                 ),
                 child: ElevatedButton(

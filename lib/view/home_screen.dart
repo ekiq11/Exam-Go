@@ -57,8 +57,6 @@ class _HomeScreenState extends State<HomeScreen>
   bool _connected = true;
   List<_HistoryItem> _history = [];
   int _logoTapCount = 0; // tap 7x untuk buka Mode Guru
-  Timer? _clockTimer;
-  DateTime _currentTime = DateTime.now();
 
   static const _historyKey = 'scan_history_v3';
   StreamSubscription<List<ConnectivityResult>>? _connectSub;
@@ -84,15 +82,11 @@ class _HomeScreenState extends State<HomeScreen>
     _loadHistory();
     // Cek apakah ada sesi ujian yang tidak selesai (crash recovery)
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkCrashRecovery());
-
-    _clockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) setState(() => _currentTime = DateTime.now());
-    });
+    // FIX BUG-07: Clock dikelola oleh _ClockWidget — tidak perlu timer di sini.
   }
 
   @override
   void dispose() {
-    _clockTimer?.cancel();
     _connectSub?.cancel();
     _pulseController.dispose();
     WidgetsBinding.instance.removeObserver(this);
@@ -393,16 +387,8 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  String _formatDateTime(DateTime dt) {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
-    final day = dt.day.toString().padLeft(2, '0');
-    final month = months[dt.month - 1];
-    final year = dt.year;
-    final h = dt.hour.toString().padLeft(2, '0');
-    final m = dt.minute.toString().padLeft(2, '0');
-    final s = dt.second.toString().padLeft(2, '0');
-    return '$day $month $year  •  $h:$m:$s WIB';
-  }
+  // FIX BUG-07+08: _formatDateTime dipindahkan ke _ClockWidget
+  // sehingga hanya clock text yang rebuild setiap detik, bukan seluruh HomeScreen.
 
   void _showLoading(String msg) {
     showDialog(
@@ -642,22 +628,9 @@ class _HomeScreenState extends State<HomeScreen>
                                     color: Colors.white.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.access_time_rounded, color: Colors.white, size: context.rs(12)),
-                                      SizedBox(width: context.rs(6)),
-                                      Text(
-                                        _formatDateTime(_currentTime),
-                                        style: GoogleFonts.poppins(
-                                          color: Colors.white,
-                                          fontSize: context.rs(10),
-                                          fontWeight: FontWeight.w600,
-                                          fontFeatures: const [FontFeature.tabularFigures()],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                  // FIX BUG-07: Gunakan _ClockWidget — hanya rebuild text jam,
+                                  // bukan seluruh HomeScreen setiap detik.
+                                  child: const _ClockWidget(),
                                 ),
                               ],
                             ),
@@ -1637,6 +1610,70 @@ class _HomeScreenState extends State<HomeScreen>
           }),
         ],
       ),
+    );
+  }
+}
+
+// ─── Clock Widget ─────────────────────────────────────────────────
+/// FIX BUG-07+08: Clock widget terpisah agar hanya text jam yang rebuild
+/// setiap detik, bukan seluruh HomeScreen widget tree.
+/// Sekaligus fix timezone label: WIB (UTC+7) / WITA (UTC+8) / WIT (UTC+9).
+class _ClockWidget extends StatefulWidget {
+  const _ClockWidget();
+
+  @override
+  State<_ClockWidget> createState() => _ClockWidgetState();
+}
+
+class _ClockWidgetState extends State<_ClockWidget> {
+  DateTime _time = DateTime.now();
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _time = DateTime.now());
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _format(DateTime dt) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+    final d = dt.day.toString().padLeft(2, '0');
+    final mo = months[dt.month - 1];
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    final s = dt.second.toString().padLeft(2, '0');
+    // FIX BUG-08: Deteksi timezone Indonesia berdasarkan UTC offset.
+    // UTC+7 = WIB, UTC+8 = WITA, UTC+9 = WIT.
+    final offset = dt.timeZoneOffset.inHours;
+    final tz = offset >= 9 ? 'WIT' : offset >= 8 ? 'WITA' : 'WIB';
+    return '$d $mo ${dt.year}  \u2022  $h:$m:$s $tz';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.access_time_rounded, color: Colors.white, size: context.rs(12)),
+        SizedBox(width: context.rs(6)),
+        Text(
+          _format(_time),
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: context.rs(10),
+            fontWeight: FontWeight.w600,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
     );
   }
 }
