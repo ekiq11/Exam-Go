@@ -12,10 +12,15 @@ import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import io.flutter.embedding.android.FlutterFragmentActivity
+import io.flutter.embedding.android.RenderMode
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterFragmentActivity() {
+
+    override fun getRenderMode(): RenderMode {
+        return RenderMode.texture
+    }
 
     private val CHANNEL = "com.examgo/locktask"
     private var isLockTaskActive = false
