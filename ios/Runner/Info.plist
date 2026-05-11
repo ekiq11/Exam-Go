@@ -99,13 +99,11 @@
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
 
-	<!-- iPad: portrait + landscape (fleksibel untuk tablet ujian) -->
+	<!-- iPad: portrait only — konsisten dengan iPhone dan Android -->
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 
 	<!-- ══ UI ═══════════════════════════════════════════════════════
