@@ -44,10 +44,28 @@ class MainActivity : FlutterFragmentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        // FIX BUG-02: FLAG_FULLSCREEN deprecated sejak API 30 (Android 11).
-        // Beberapa OEM ROM (Xiaomi MIUI 14, Samsung One UI 6+) melempar
-        // WindowManager$BadTokenException saat FLAG_FULLSCREEN diset setelah
-        // window sudah attach. Gunakan WindowInsetsController untuk API 30+.
+        // Untuk API < 30: FLAG_FULLSCREEN masih aman dan cukup
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            @Suppress("DEPRECATION")
+            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        }
+        // Catatan: WindowInsetsController (API 30+) dipanggil di
+        // onWindowFocusChanged() agar insetsController tidak null.
+
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+    }
+
+    // FIX INFINIX/TRANSSION: insetsController adalah null di onCreate() pada
+    // beberapa device Infinix X6855 (MediaTek Helio G88) karena window belum
+    // sepenuhnya attached ke WindowManager saat onCreate dipanggil.
+    // onWindowFocusChanged(true) dipanggil saat window sudah visible dan
+    // insetsController sudah terjamin non-null.
+    // Ini juga mengurangi startup jank (366 frames skipped) karena tidak ada
+    // layout pass tambahan sebelum first frame.
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (!hasFocus) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.setDecorFitsSystemWindows(false)
             window.insetsController?.apply {
@@ -56,13 +74,7 @@ class MainActivity : FlutterFragmentActivity() {
                 systemBarsBehavior =
                     android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
-        } else {
-            @Suppress("DEPRECATION")
-            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         }
-
-        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
     }
 
     // ════════════════════════════════════════════════════════════════
