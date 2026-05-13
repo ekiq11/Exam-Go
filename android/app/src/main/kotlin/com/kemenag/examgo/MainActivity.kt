@@ -1,6 +1,8 @@
 package com.kemenag.examgo
 
 import android.app.ActivityManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
@@ -28,8 +30,29 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applyWindowFlags()
+        createNotificationChannels() // FIX FCM-3: Buat channel sebelum notifikasi pertama
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             window.decorView.post { injectRenderProcessGoneHandler() }
+        }
+    }
+
+    // FIX FCM-3: Android 8+ (API 26+) wajib punya NotificationChannel sebelum
+    // menampilkan notifikasi. FCM dari GAS menggunakan channelId 'exam_violations'.
+    // Tanpa channel ini, sound/vibration settings diabaikan sistem.
+    private fun createNotificationChannels() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "exam_violations",
+                "Pelanggaran Ujian",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Notifikasi saat siswa melanggar aturan ujian"
+                enableVibration(true)
+                enableLights(true)
+                vibrationPattern = longArrayOf(0, 500, 200, 500)
+            }
+            val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            nm.createNotificationChannel(channel)
         }
     }
 

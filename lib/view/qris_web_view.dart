@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/constant/app_config.dart';
@@ -8,10 +9,12 @@ import 'package:examgo/firebas_analytics/analytic_service.dart';
 import 'package:examgo/services/exam_session_service.dart';
 import 'package:examgo/services/monitoring_service.dart';
 import 'package:examgo/services/qr_payload.dart';
+import 'package:examgo/services/app_remote_config.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
@@ -48,7 +51,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   int _exitCount = 0;
   Timer? _exitTimer;
   bool _showExitBar = false;
-  
+
   DateTime _currentTime = DateTime.now();
   Timer? _uiTimer;
   bool _isExiting = false;
@@ -68,6 +71,10 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   Timer? _pingTimer;
   StreamSubscription? _statusSub;
   bool _isFrozen = false;
+  // FIX FCM-1: Flag agar notifikasi ke guru hanya dikirim SEKALI
+  // saat pelanggaran pertama kali mencapai threshold, bukan setiap
+  // pelanggaran ke-4, ke-5, dst. (mencegah spam notifikasi).
+  bool _teacherNotified = false;
 
   // Error handling & retry
   int _loadErrorCount = 0;
@@ -96,34 +103,44 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     _activateSecurity();
     AnalyticsService.instance.logScreenView(screenName: 'exam_webview');
 
-    if (widget.examId.isNotEmpty) {
+    // FIX BUG-STREAM: Tambah guard studentNis.isNotEmpty.
+    // studentNis kosong → path Firestore invalid (students/'') → "No active stream to cancel"
+    // saat dispose() dipanggil sebelum stream fully connected.
+    if (widget.examId.isNotEmpty && widget.studentNis.isNotEmpty) {
       _sendMonitoringStatus('ACTIVE');
       _pingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
         _sendMonitoringStatus('ACTIVE');
       });
-      _statusSub = MonitoringService.instance.streamStudentStatus(widget.examId, widget.studentNis).listen((doc) {
-        if (!mounted) return;
-        if (doc.exists) {
-          final data = doc.data() as Map<String, dynamic>;
-          final status = data['status'] as String?;
-          if (status == 'ACTIVE' && _isFrozen) {
-            setState(() {
-              _minimizeCount = 0;
-              _isFrozen = false;
-            });
-            ExamSessionService.instance.updateViolations(0);
-            _sendMonitoringStatus('ACTIVE');
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('Layar telah dibuka oleh pengawas.', style: GoogleFonts.poppins()),
-              backgroundColor: Colors.green,
-            ));
-          } else if (status == 'BLOCKED' && !_isFrozen) {
-            setState(() {
-              _isFrozen = true;
-            });
-          }
-        }
-      });
+      _statusSub = MonitoringService.instance
+          .streamStudentStatus(widget.examId, widget.studentNis)
+          .listen((doc) {
+            if (!mounted) return;
+            if (doc.exists) {
+              final data = doc.data() as Map<String, dynamic>;
+              final status = data['status'] as String?;
+              if (status == 'ACTIVE' && _isFrozen) {
+                setState(() {
+                  _minimizeCount = 0;
+                  _isFrozen = false;
+                });
+                ExamSessionService.instance.updateViolations(0);
+                _sendMonitoringStatus('ACTIVE');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Layar telah dibuka oleh pengawas.',
+                      style: GoogleFonts.poppins(),
+                    ),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } else if (status == 'BLOCKED' && !_isFrozen) {
+                setState(() {
+                  _isFrozen = true;
+                });
+              }
+            }
+          });
     }
   }
 
@@ -148,11 +165,40 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
+  /// Kirim notifikasi pelanggaran ke device guru via GAS.
+  /// GAS membaca TEACHER_FCM_TOKEN dari Script Properties sendiri
+  /// sehingga Flutter tidak perlu tahu/menyimpan token guru.
+  /// Fire-and-forget — tidak ada await, tidak mengganggu UX siswa.
+  void _notifyTeacherViaGas() {
+    if (AppConfig.gasUrl.isEmpty || AppConfig.gasApiKey.isEmpty) return;
+    http
+        .post(
+          Uri.parse(AppConfig.gasUrl),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'apiKey': AppConfig.gasApiKey,
+            'action': 'notify',
+            'examId': widget.examId,
+            'examTitle': _examTitle,
+            'studentName': widget.studentName,
+            'studentNis': widget.studentNis,
+            'violations': _minimizeCount,
+          }),
+        )
+        .timeout(const Duration(seconds: 15))
+        .catchError((_) {
+          // Abaikan semua error — notifikasi gagal tidak boleh mengganggu ujian
+        });
+  }
+
   // Simpan sesi ke disk agar bisa di-recover jika app crash
   Future<void> _saveSession() async {
     await ExamSessionService.instance.save(
       url: _resolvedUrl,
       title: _examTitle,
+      examId: widget.examId,
+      studentName: widget.studentName,
+      studentNis: widget.studentNis,
       violations: _minimizeCount,
     );
   }
@@ -165,7 +211,9 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     _retryTimer?.cancel();
     _pauseDebounce?.cancel();
     _pingTimer?.cancel();
-    _statusSub?.cancel();
+    // FIX BUG-STREAM: Gunakan catchError agar PlatformException "No active stream to cancel"
+    // tidak propagasi ke Crashlytics jika dispose() dipanggil sebelum stream fully connected.
+    _statusSub?.cancel().catchError((_) {});
     _sendMonitoringStatus('FINISHED');
     ExamSessionService.instance.clear(); // hapus sesi saat keluar normal
     WidgetsBinding.instance.removeObserver(this);
@@ -245,13 +293,13 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         _pauseDebounce = Timer(const Duration(milliseconds: 300), () async {
           if (!mounted || _isExiting || !_securityEnabled) return;
           if (!_wasActuallyPaused) return;
-          
+
           final isScreenOn = await SecurityService.instance.isScreenOn();
           if (!isScreenOn && mounted) return;
 
           _minimizeCount++;
           _triggerVibrationAlarm();
-          
+
           AnalyticsService.instance.logExamViolation(
             examTitle: _examTitle,
             violationCount: _minimizeCount,
@@ -259,10 +307,25 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
 
           if (!mounted) return;
           ScaffoldMessenger.of(context).clearSnackBars();
-          
-          if (_minimizeCount >= 3) {
-            _logActivity('EXIT_APP', 'Keluar aplikasi (ke-$_minimizeCount×) — Status: BLOCKED');
+
+          // FIX AUDIT-3: Gunakan AppRemoteConfig.instance.maxViolations
+          // sebagai threshold alih-alih hardcode 3.
+          final maxViolations = AppRemoteConfig.instance.maxViolations > 0
+              ? AppRemoteConfig.instance.maxViolations
+              : 3;
+
+          if (_minimizeCount >= maxViolations) {
+            _logActivity(
+              'EXIT_APP',
+              'Keluar aplikasi (ke-$_minimizeCount×) — Status: BLOCKED',
+            );
             _sendMonitoringStatus('BLOCKED');
+            // FIX FCM-1: Kirim notifikasi ke guru hanya sekali saat threshold pertama kali tercapai.
+            // _teacherNotified mencegah spam jika siswa keluar lagi.
+            if (!_teacherNotified) {
+              _teacherNotified = true;
+              _notifyTeacherViaGas();
+            }
             _showSnack(
               '⚠️ Peringatan ke-$_minimizeCount: Pelanggaran telah dicatat dan dilaporkan ke pengawas ujian.',
               color: Colors.red.shade800,
@@ -270,7 +333,10 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             );
             _showViolationDialog();
           } else {
-            _logActivity('EXIT_APP', 'Keluar aplikasi (ke-$_minimizeCount×) — Peringatan');
+            _logActivity(
+              'EXIT_APP',
+              'Keluar aplikasi (ke-$_minimizeCount×) — Peringatan',
+            );
             _sendMonitoringStatus('PAUSED');
             _showMinimizeWarning();
             _showViolationDialog();
@@ -284,15 +350,15 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         // Beri waktu 1.5 detik. Jika masih inactive, anggap pelanggaran.
         _inactiveTimer?.cancel();
         _inactiveTimer = Timer(const Duration(milliseconds: 1500), () {
-           if (!mounted || _isExiting || !_securityEnabled) return;
-           // FIX BUG-09: Cegah double-trigger violation.
-           // Jika paused debounce sudah aktif (dari transition inactive→paused),
-           // atau jika wasActuallyPaused sudah di-set true oleh paused handler,
-           // jangan mulai violation baru dari inactive timer.
-           if (_pauseDebounce?.isActive == true) return;
-           if (_wasActuallyPaused) return;
-           _wasActuallyPaused = true;
-           didChangeAppLifecycleState(AppLifecycleState.paused);
+          if (!mounted || _isExiting || !_securityEnabled) return;
+          // FIX BUG-09: Cegah double-trigger violation.
+          // Jika paused debounce sudah aktif (dari transition inactive→paused),
+          // atau jika wasActuallyPaused sudah di-set true oleh paused handler,
+          // jangan mulai violation baru dari inactive timer.
+          if (_pauseDebounce?.isActive == true) return;
+          if (_wasActuallyPaused) return;
+          _wasActuallyPaused = true;
+          didChangeAppLifecycleState(AppLifecycleState.paused);
         });
         break;
 
@@ -300,7 +366,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         _inactiveTimer?.cancel();
         if (!_wasActuallyPaused) return;
         _wasActuallyPaused = false;
-        
+
         SecurityService.instance.isScreenOn().then((isScreenOn) {
           if (!isScreenOn && mounted) return;
           _sendMonitoringStatus('ACTIVE');
@@ -367,7 +433,11 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.orange,
+              size: 28,
+            ),
             const SizedBox(width: 8),
             Text(
               'Peringatan!',
@@ -387,7 +457,11 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             ),
             child: Text(
               'Saya Mengerti',
-              style: GoogleFonts.poppins(fontSize: context.rs(13), color: Colors.white, fontWeight: FontWeight.bold),
+              style: GoogleFonts.poppins(
+                fontSize: context.rs(13),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -510,11 +584,21 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         'ExamGoChannel',
         onMessageReceived: (msg) {
           if (msg.message == 'SCREENSHOT_ATTEMPT') {
-            _logActivity('SCREENSHOT', 'Percobaan screenshot / cetak layar terdeteksi');
-            _showSnack('📵 Screenshot diblokir!', color: Colors.red.shade700, duration: 2);
+            _logActivity(
+              'SCREENSHOT',
+              'Percobaan screenshot / cetak layar terdeteksi',
+            );
+            _showSnack(
+              '📵 Screenshot diblokir!',
+              color: Colors.red.shade700,
+              duration: 2,
+            );
           } else if (msg.message == 'VISIBILITY_HIDDEN') {
             // Dicatat tapi tidak trigger pelanggaran — bisa jadi notifikasi
-            _logActivity('SCREEN_HIDDEN', 'Halaman tidak terlihat (mungkin switching apps)');
+            _logActivity(
+              'SCREEN_HIDDEN',
+              'Halaman tidak terlihat (mungkin switching apps)',
+            );
           }
         },
       )
@@ -700,7 +784,10 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     if (mounted) setState(() => _showExitBar = true);
 
     if (_exitCount == 1) {
-      _logActivity('EXIT_ATTEMPT', 'Menekan tombol Keluar Ujian (ke-$_exitCount×)');
+      _logActivity(
+        'EXIT_ATTEMPT',
+        'Menekan tombol Keluar Ujian (ke-$_exitCount×)',
+      );
       AnalyticsService.instance.logExitAttempt(
         attemptNumber: _minimizeCount,
         minimizeCount: _minimizeCount,
@@ -932,7 +1019,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     } catch (_) {
       await SecurityService.instance.emergencyReset();
     }
-    
+
     // Auto-Clear Cache & Cookies untuk keamanan perangkat bersama
     try {
       await _wvc.clearCache();
@@ -1054,14 +1141,34 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.lock_rounded, size: 64, color: Colors.redAccent),
+                              const Icon(
+                                Icons.lock_rounded,
+                                size: 64,
+                                color: Colors.redAccent,
+                              ),
                               SizedBox(height: context.rs(16)),
-                              Text('Layar Dibekukan!', style: GoogleFonts.poppins(color: Colors.white, fontSize: context.rs(24), fontWeight: FontWeight.bold)),
+                              Text(
+                                'Layar Dibekukan!',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: context.rs(24),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               SizedBox(height: context.rs(8)),
                               Padding(
-                                padding: EdgeInsets.symmetric(horizontal: context.rs(32)),
-                                child: Text('Anda telah melakukan pelanggaran batas maksimal. Silakan lapor ke pengawas untuk membuka kunci agar dapat melanjutkan ujian.', textAlign: TextAlign.center, style: GoogleFonts.poppins(color: Colors.white70, fontSize: context.rs(14))),
-                              )
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: context.rs(32),
+                                ),
+                                child: Text(
+                                  'Anda telah melakukan pelanggaran batas maksimal. Silakan lapor ke pengawas untuk membuka kunci agar dapat melanjutkan ujian.',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white70,
+                                    fontSize: context.rs(14),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),

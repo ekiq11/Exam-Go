@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
 import '../constant/app_config.dart';
+import '../services/app_remote_config.dart';
 
 /// Decoded & validated ExamGO QR payload.
 class ExamQRPayload {
@@ -63,7 +64,13 @@ class QRPayloadService {
       if (AppConfig.qrExpiryMinutes > 0) {
         final ts = (data['ts'] as num).toInt();
         final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-        if (now - ts > AppConfig.qrExpiryMinutes * 60) return null;
+        // FIX AUDIT-4: Gunakan RemoteConfig qrExpiryMinutes agar bisa
+        // diubah dari Firebase tanpa perlu rilis app baru.
+        // Fallback ke AppConfig.qrExpiryMinutes jika RemoteConfig 0.
+        final expiryMinutes = AppRemoteConfig.instance.qrExpiryMinutes > 0
+            ? AppRemoteConfig.instance.qrExpiryMinutes
+            : AppConfig.qrExpiryMinutes;
+        if (now - ts > expiryMinutes * 60) return null;
       }
 
       final url = data['url'] as String? ?? '';
@@ -73,7 +80,8 @@ class QRPayloadService {
         url: url,
         title: (data['title'] as String?) ?? '',
         timestamp: (data['ts'] as num).toInt(),
-        nonce: data['nonce'] as String,
+        // FIX AUDIT-2: nonce bisa null di QR format lama — gunakan null-safe cast
+        nonce: (data['nonce'] as String?) ?? '',
         version: version,
       );
     } catch (_) {

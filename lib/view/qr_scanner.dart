@@ -47,6 +47,10 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   bool _permissionPermanentlyDenied = false;
   bool _processing = false;
   bool _disposed = false;
+  // FIX BUG-SCANNER: Flag bahwa camera hardware sudah selesai init.
+  // Tombol Flash/Balik/Galeri tidak boleh memanggil controller methods
+  // sebelum flag ini true — mencegah MobileScannerException(controllerUninitialized).
+  bool _controllerReady = false;
   late final AnimationController _lineAnim;
   final ImagePicker _picker = ImagePicker();
 
@@ -63,7 +67,19 @@ class _QRScannerScreenState extends State<QRScannerScreen>
       facing: CameraFacing.back,
       torchEnabled: false,
     );
+    // FIX BUG-SCANNER: MobileScannerController extends ValueNotifier<MobileScannerState>.
+    // Dengarkan perubahan state untuk mendeteksi kapan camera hardware selesai init.
+    // onScannerStarted tidak tersedia di mobile_scanner ^7.1.3 — ini alternatif yang benar.
+    _controller.addListener(_onScannerStateChanged);
     _requestPermission();
+  }
+
+  void _onScannerStateChanged() {
+    if (!mounted) return;
+    final isRunning = _controller.value.isRunning;
+    if (_controllerReady != isRunning) {
+      setState(() => _controllerReady = isRunning);
+    }
   }
 
   @override
@@ -71,6 +87,8 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     _disposed = true;
     _lineAnim.dispose();
     WidgetsBinding.instance.removeObserver(this);
+    // FIX BUG-SCANNER: Hapus listener sebelum dispose controller.
+    _controller.removeListener(_onScannerStateChanged);
     _controller.dispose();
     super.dispose();
   }
@@ -422,18 +440,26 @@ class _QRScannerScreenState extends State<QRScannerScreen>
 
   void _resetScan() {
     if (!mounted || _disposed) return;
-    setState(() => _scanned = false);
+    // FIX BUG-SCANNER: Reset _controllerReady saat restart agar tombol Flash/Balik
+    // tetap di-guard selama camera re-initialization cycle.
+    // onScannerStarted akan set _controllerReady = true kembali setelah siap.
+    setState(() {
+      _scanned = false;
+      _controllerReady = false;
+    });
     _controller.start();
   }
 
   void _toggleFlash() {
-    if (_disposed) return;
+    // FIX BUG-SCANNER: Guard _controllerReady agar tidak crash sebelum camera init.
+    if (_disposed || !_controllerReady) return;
     _controller.toggleTorch();
     setState(() => _flashOn = !_flashOn);
   }
 
   void _switchCamera() {
-    if (_disposed) return;
+    // FIX BUG-SCANNER: Guard _controllerReady agar tidak crash sebelum camera init.
+    if (_disposed || !_controllerReady) return;
     _controller.switchCamera();
   }
 
@@ -467,6 +493,8 @@ class _QRScannerScreenState extends State<QRScannerScreen>
           MobileScanner(
             controller: _controller,
             onDetect: _onDetect,
+            // _controllerReady dikelola oleh _onScannerStateChanged() via controller.addListener().
+            // Tidak perlu onScannerStarted (tidak ada di mobile_scanner ^7.1.3).
             errorBuilder: (ctx, error) => Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),

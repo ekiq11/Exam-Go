@@ -195,6 +195,9 @@ class _HomeScreenState extends State<HomeScreen>
         builder: (_) => ExamWebViewScreen(
           url: session.url,
           title: session.title,
+          examId: session.examId,
+          studentName: session.studentName,
+          studentNis: session.studentNis,
         ),
       ),
     );

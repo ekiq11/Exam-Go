@@ -5,9 +5,11 @@ import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/constant/app_config.dart';
 import 'package:examgo/services/qr_generator.dart';
 import 'package:examgo/view/teacher_monitoring_screen.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -178,10 +180,37 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
   }
 
   void _goToDashboard() {
+    // Daftarkan FCM token device guru ke GAS (fire-and-forget)
+    _registerTeacherToken();
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const TeacherDashboardScreen()),
     );
+  }
+
+  /// Ambil FCM token device ini dan kirim ke GAS untuk disimpan.
+  /// Dipanggil setiap kali guru login agar token selalu up-to-date.
+  Future<void> _registerTeacherToken() async {
+    if (AppConfig.gasUrl.isEmpty || AppConfig.gasApiKey.isEmpty) return;
+    try {
+      // Minta permission notifikasi (Android 13+ wajib, iOS selalu minta)
+      await FirebaseMessaging.instance.requestPermission(
+        alert: true, badge: true, sound: true,
+      );
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token == null) return;
+      await http.post(
+        Uri.parse(AppConfig.gasUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'apiKey': AppConfig.gasApiKey,
+          'action': 'registerToken',
+          'token':  token,
+        }),
+      ).timeout(const Duration(seconds: 10));
+    } catch (_) {
+      // Abaikan — jangan blokir login guru jika GAS gagal
+    }
   }
 
   String get _title {

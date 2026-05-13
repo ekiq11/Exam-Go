@@ -5,8 +5,8 @@ class AppConfig {
 
   static const String appName = 'ExamGO';
 
-  // Sync dengan pubspec.yaml: version: 2.1.1+16
-  static const String appVersion = '2.1.1';
+  // Sync dengan pubspec.yaml: version: 2.1.2+26
+  static const String appVersion = '2.1.2';
   static const int qrFormatVersion = 1;
 
   /// Secret key for HMAC-SHA256 QR signing.
@@ -34,4 +34,21 @@ class AppConfig {
 
   /// Prefix to identify ExamGO-signed QR codes
   static const String qrPrefix = 'EXAMGO';
+
+  // ── GAS (Google Apps Script) Backend ──────────────────────────
+  // URL GAS bukan rahasia — keamanan dijaga oleh API_KEY di GAS Script Properties.
+  // Inject via: flutter build apk --dart-define=GAS_URL=...
+  // Default sudah diset ke URL produksi ExamGO.
+  static const String gasUrl = String.fromEnvironment(
+    'GAS_URL',
+    defaultValue: 'https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec',
+  );
+
+  // API key rahasia yang sama dengan Script Properties 'API_KEY' di GAS.
+  // WAJIB diinject via: flutter build apk --dart-define=GAS_API_KEY=nilai_rahasia
+  // Tanpa ini fitur notifikasi guru dinonaktifkan.
+  static const String gasApiKey = String.fromEnvironment(
+    'GAS_API_KEY',
+    defaultValue: 'examgo_guru_2026',
+  );
 }

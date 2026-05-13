@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:examgo/constant/app_colors.dart';
+import 'package:examgo/constant/app_config.dart';
 import 'package:examgo/firebas_analytics/analytic_service.dart';
 import 'package:examgo/firebas_analytics/firebase_options.dart';
 import 'package:examgo/services/app_remote_config.dart';
@@ -7,9 +9,11 @@ import 'package:examgo/view/onboarding_screen.dart';
 import 'package:examgo/view/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +49,32 @@ void main() async {
     SystemUiMode.edgeToEdge,
     overlays: SystemUiOverlay.values,
   );
+
+  // FIX BUG-FONT: Nonaktifkan HTTP fetch google_fonts di runtime.
+  // google_fonts ^8.x melempar Exception (bukan silent fallback) jika
+  // fonts.gstatic.com tidak bisa dijangkau saat cold install / offline.
+  // Dengan allowRuntimeFetching = false, font diambil dari cache/bundle saja
+  // dan fallback ke system font jika tidak ada — TIDAK ada crash.
+  GoogleFonts.config.allowRuntimeFetching = false;
+
+  // FIX FCM-4: Auto-update GAS saat Firebase merotasi FCM token guru.
+  // Token bisa berubah kapan saja (factory reset, clear data, dll).
+  // Listener ini memastikan GAS selalu punya token terbaru tanpa guru
+  // harus buka Teacher Mode ulang.
+  FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+    if (AppConfig.gasUrl.isEmpty || AppConfig.gasApiKey.isEmpty) return;
+    try {
+      await http.post(
+        Uri.parse(AppConfig.gasUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'apiKey': AppConfig.gasApiKey,
+          'action': 'registerToken',
+          'token':  newToken,
+        }),
+      ).timeout(const Duration(seconds: 10));
+    } catch (_) {}
+  });
 
   runApp(const ExamGoApp());
 }

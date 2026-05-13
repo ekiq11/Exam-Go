@@ -2,7 +2,7 @@ name: examgo
 description: "ExamGO — Secure Exam Browser for Android & iOS"
 publish_to: 'none'
 
-version: 2.1.1+16
+version: 2.1.2+26
 
 environment:
   sdk: ^3.9.2
@@ -58,6 +58,7 @@ dependencies:
   firebase_analytics: ^12.1.3
   firebase_crashlytics: ^5.2.0
   firebase_remote_config: ^6.4.0
+  firebase_messaging: ^16.2.0   # FCM — notifikasi pelanggaran ke device guru
   battery_plus: ^7.0.0
   # flutter_jailbreak_detection: ^1.10.0 # DISABLED: Fails 16KB alignment (libtoolChecker.so)
   cloud_firestore: ^6.3.0

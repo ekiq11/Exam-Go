@@ -20,7 +20,8 @@ class AppRemoteConfig {
 
   // ─── Defaults (sama dengan AppConfig) ─────────────────────────
   static const _defaults = {
-    _kQrExpiry:      120,
+    // FIX AUDIT-5: Samakan dengan AppConfig.qrExpiryMinutes (10080 / 7 hari)
+    _kQrExpiry:      10080,
     _kExitRequired:  3,
     _kMaxViolations: 3,
     _kMaxHistory:    10,

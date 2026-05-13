@@ -120,6 +120,13 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 
+	<!-- ══ Background Modes (FCM) ═══════════════════════════════════ -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+
 	<!-- ══ Firebase / Google Sign-In URL Scheme ════════════════════ -->
 	<key>CFBundleURLTypes</key>
 	<array>

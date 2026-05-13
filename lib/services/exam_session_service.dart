@@ -7,16 +7,24 @@ class ExamSessionService {
   ExamSessionService._();
   static final ExamSessionService instance = ExamSessionService._();
 
-  static const _kUrl        = 'session_url';
-  static const _kTitle      = 'session_title';
+  static const _kUrl         = 'session_url';
+  static const _kTitle       = 'session_title';
   static const _kStartedAt  = 'session_started_at';
   static const _kViolations = 'session_violations';
   static const _kActive     = 'session_active';
+  // FIX AUDIT-1: Simpan context monitoring agar crash recovery
+  // bisa restore Firestore stream dan FCM notification.
+  static const _kExamId      = 'session_exam_id';
+  static const _kStudentName = 'session_student_name';
+  static const _kStudentNis  = 'session_student_nis';
 
   /// Simpan sesi baru saat ujian dimulai
   Future<void> save({
     required String url,
     required String title,
+    String examId = '',
+    String studentName = '',
+    String studentNis = '',
     int violations = 0,
   }) async {
     final prefs = await SharedPreferences.getInstance();
@@ -25,6 +33,9 @@ class ExamSessionService {
     await prefs.setString(_kTitle, title);
     await prefs.setString(_kStartedAt, DateTime.now().toIso8601String());
     await prefs.setInt(_kViolations, violations);
+    await prefs.setString(_kExamId, examId);
+    await prefs.setString(_kStudentName, studentName);
+    await prefs.setString(_kStudentNis, studentNis);
   }
 
   /// Update jumlah pelanggaran saat berjalan
@@ -41,6 +52,9 @@ class ExamSessionService {
     await prefs.remove(_kTitle);
     await prefs.remove(_kStartedAt);
     await prefs.remove(_kViolations);
+    await prefs.remove(_kExamId);
+    await prefs.remove(_kStudentName);
+    await prefs.remove(_kStudentNis);
   }
 
   /// Cek apakah ada sesi yang belum selesai (crash recovery)
@@ -63,6 +77,9 @@ class ExamSessionService {
       title: title ?? '',
       startedAt: startedAt ?? DateTime.now(),
       violations: prefs.getInt(_kViolations) ?? 0,
+      examId: prefs.getString(_kExamId) ?? '',
+      studentName: prefs.getString(_kStudentName) ?? '',
+      studentNis: prefs.getString(_kStudentNis) ?? '',
     );
   }
 }
@@ -72,12 +89,19 @@ class ExamSession {
   final String title;
   final DateTime startedAt;
   final int violations;
+  // FIX AUDIT-1: Tambah fields monitoring context
+  final String examId;
+  final String studentName;
+  final String studentNis;
 
   const ExamSession({
     required this.url,
     required this.title,
     required this.startedAt,
     required this.violations,
+    this.examId = '',
+    this.studentName = '',
+    this.studentNis = '',
   });
 
   /// Durasi sesi dalam detik
