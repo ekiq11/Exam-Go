@@ -52,7 +52,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   Timer? _exitTimer;
   bool _showExitBar = false;
 
-  DateTime _currentTime = DateTime.now();
   Timer? _uiTimer;
   bool _isExiting = false;
   bool _securityEnabled = false;
@@ -188,6 +187,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         .timeout(const Duration(seconds: 15))
         .catchError((_) {
           // Abaikan semua error — notifikasi gagal tidak boleh mengganggu ujian
+          return http.Response('', 500);
         });
   }
 
@@ -248,12 +248,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     await _saveSession(); // simpan sesi ke disk
     // Mulai timer ujian
     _examTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
-        setState(() {
-          _examElapsedSeconds++;
-          _currentTime = DateTime.now();
-        });
-      }
+      _examElapsedSeconds++;
       // Update violations di storage setiap 30 detik
       if (_examElapsedSeconds % 30 == 0) {
         ExamSessionService.instance.updateViolations(_minimizeCount);
@@ -1058,16 +1053,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
-  String _formatDuration(int seconds) {
-    final h = seconds ~/ 3600;
-    final m = (seconds % 3600) ~/ 60;
-    final s = seconds % 60;
-    if (h > 0) {
-      return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-    }
-    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-  }
-
   ({String url, String title}) _resolveInput(String raw) {
     // [FIX R-5] Tambahkan curly braces pada if statement
     if (raw.startsWith('http://') || raw.startsWith('https://')) {
@@ -1236,50 +1221,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                     overflow: TextOverflow.ellipsis,
                   ),
                   // Exam Timer & Real-time Clock
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.timer_outlined,
-                        size: 10,
-                        color: Colors.white.withValues(alpha: 0.7),
-                      ),
-                      const SizedBox(width: 3),
-                      Text(
-                        _formatDuration(_examElapsedSeconds),
-                        style: GoogleFonts.poppins(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: context.rs(10),
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 3,
-                        height: 3,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.access_time_rounded,
-                        size: 10,
-                        color: Colors.white.withValues(alpha: 0.7),
-                      ),
-                      const SizedBox(width: 3),
-                      Text(
-                        '${_currentTime.hour.toString().padLeft(2, '0')}:${_currentTime.minute.toString().padLeft(2, '0')}:${_currentTime.second.toString().padLeft(2, '0')} WIB',
-                        style: GoogleFonts.poppins(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: context.rs(10),
-                          fontWeight: FontWeight.w500,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ],
-                  ),
+                  _LiveTimerWidget(startTime: _examStartTime),
                 ],
               ),
             ),
@@ -1570,3 +1512,104 @@ class _BottomBtn extends StatelessWidget {
     );
   }
 }
+
+// ─── Live Timer Widget ──────────────────────────────────────────────────
+// Memisahkan clock & durasi agar tidak memicu rebuild WebView setiap detik
+class _LiveTimerWidget extends StatefulWidget {
+  final DateTime? startTime;
+  const _LiveTimerWidget({required this.startTime});
+
+  @override
+  State<_LiveTimerWidget> createState() => _LiveTimerWidgetState();
+}
+
+class _LiveTimerWidgetState extends State<_LiveTimerWidget> {
+  late DateTime _currentTime;
+  int _elapsedSeconds = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentTime = DateTime.now();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {
+          _currentTime = DateTime.now();
+          if (widget.startTime != null) {
+            _elapsedSeconds = _currentTime.difference(widget.startTime!).inSeconds;
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _formatDuration(int seconds) {
+    if (seconds < 0) seconds = 0;
+    final h = seconds ~/ 3600;
+    final m = (seconds % 3600) ~/ 60;
+    final s = seconds % 60;
+    if (h > 0) {
+      return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    }
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final offset = _currentTime.timeZoneOffset.inHours;
+    final tz = offset >= 9 ? 'WIT' : offset >= 8 ? 'WITA' : 'WIB';
+    
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.timer_outlined,
+          size: 10,
+          color: Colors.white.withValues(alpha: 0.7),
+        ),
+        const SizedBox(width: 3),
+        Text(
+          _formatDuration(_elapsedSeconds),
+          style: GoogleFonts.poppins(
+            color: Colors.white.withValues(alpha: 0.8),
+            fontSize: context.rs(10),
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          width: 3,
+          height: 3,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.5),
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Icon(
+          Icons.access_time_rounded,
+          size: 10,
+          color: Colors.white.withValues(alpha: 0.7),
+        ),
+        const SizedBox(width: 3),
+        Text(
+          '${_currentTime.hour.toString().padLeft(2, '0')}:${_currentTime.minute.toString().padLeft(2, '0')}:${_currentTime.second.toString().padLeft(2, '0')} $tz',
+          style: GoogleFonts.poppins(
+            color: Colors.white.withValues(alpha: 0.8),
+            fontSize: context.rs(10),
+            fontWeight: FontWeight.w500,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
+    );
+  }
+}
+

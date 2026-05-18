@@ -41,7 +41,7 @@ android {
         // minSdk >= 23 (Android 6.0). flutter.minSdkVersion = 21 (Android 5.0)
         // menyebabkan crash dlopen failed: libflutter.so di Android 5.x.
         // Android 6+ (2015) sudah mencakup >99.5% device aktif per 2026.
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         // versionCode & versionName otomatis dari pubspec.yaml
         // version: 2.1.1+16 → versionName=2.1.1, versionCode=16

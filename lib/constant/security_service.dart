@@ -248,13 +248,13 @@ class SecurityService {
     try {
       await SystemChrome.setPreferredOrientations([]);
     } catch (_) {}
-    if (_isAndroid) {
-      try {
-        await _channel
-            .invokeMethod('stopLockTask')
-            .timeout(const Duration(milliseconds: 500));
-      } catch (_) {}
-    }
+    // Panggil stopLockTask untuk kedua platform (iOS juga menangkap event ini
+    // di AppDelegate untuk mendisable overlay / Kiosk state).
+    try {
+      await _channel
+          .invokeMethod('stopLockTask')
+          .timeout(const Duration(milliseconds: 500));
+    } catch (_) {}
   }
 
   Future<void> _tryNativeLock() async {
