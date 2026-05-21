@@ -254,7 +254,7 @@ class _TeacherMonitoringListScreenState extends State<TeacherMonitoringListScree
 }
 
 // ─── Detail Sesi (Daftar Siswa) ──────────────────────────────────────────────
-class TeacherMonitoringDetailScreen extends StatelessWidget {
+class TeacherMonitoringDetailScreen extends StatefulWidget {
   final String examId;
   final String title;
 
@@ -265,234 +265,475 @@ class TeacherMonitoringDetailScreen extends StatelessWidget {
   });
 
   @override
+  State<TeacherMonitoringDetailScreen> createState() => _TeacherMonitoringDetailScreenState();
+}
+
+class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailScreen> {
+  String _searchQuery = '';
+  String _selectedFilter = 'Semua';
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600)),
-            Text('Ketuk siswa untuk lihat log aktivitas',
-                style: GoogleFonts.poppins(fontSize: 11, color: Colors.white70)),
-          ],
-        ),
-        backgroundColor: AppColors.primaryGreen,
-        foregroundColor: Colors.white,
-      ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: MonitoringService.instance.streamExamStudents(examId),
+        stream: MonitoringService.instance.streamExamStudents(widget.examId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return _buildScaffoldWith(const Center(child: CircularProgressIndicator()));
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return _buildScaffoldWith(Center(child: Text('Error: ${snapshot.error}')));
           }
 
           final docs = snapshot.data?.docs ?? [];
           if (docs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.people_outline_rounded, size: 72, color: Colors.grey.shade300),
-                  const SizedBox(height: 16),
-                  Text('Belum ada siswa yang bergabung',
-                      style: GoogleFonts.poppins(color: Colors.grey)),
-                  const SizedBox(height: 8),
-                  Text('Minta siswa scan QR ujian',
-                      style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade400)),
-                ],
+            return _buildScaffoldWith(
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.people_outline_rounded, size: 72, color: Colors.grey.shade300),
+                    const SizedBox(height: 16),
+                    Text('Belum ada siswa yang bergabung',
+                        style: GoogleFonts.poppins(color: Colors.grey)),
+                    const SizedBox(height: 8),
+                    Text('Minta siswa scan QR ujian',
+                        style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade400)),
+                  ],
+                ),
               ),
             );
           }
 
+          // Hitung Metrik
           int activeCount = 0;
-          for (var d in docs) {
+          int violationCount = 0;
+          int lowBatteryCount = 0;
+
+          final allStudents = docs.map((d) {
             final data = d.data() as Map<String, dynamic>;
+            final rawName = data['name'] as String?;
+            final name = (rawName == null || rawName.trim().isEmpty) ? 'Anonim' : rawName;
+            final rawNis = data['nis'] as String?;
+            final nis = (rawNis == null || rawNis.trim().isEmpty) ? '-' : rawNis;
             final status = data['status'] as String? ?? 'OFFLINE';
+            final violations = data['violations'] as int? ?? 0;
+            final battery = data['battery_level'] as int? ?? 0;
             final lastPing = data['last_ping'] as Timestamp?;
+
             final isOffline = lastPing == null ||
                 DateTime.now().difference(lastPing.toDate()).inMinutes > 2;
-            if (status == 'ACTIVE' && !isOffline) activeCount++;
+            final displayStatus = isOffline ? 'OFFLINE' : status;
+
+            return {
+              'name': name,
+              'nis': nis,
+              'status': displayStatus,
+              'violations': violations,
+              'battery': battery,
+              'last_ping': lastPing,
+              'data': data,
+            };
+          }).toList();
+
+          for (var s in allStudents) {
+            if (s['status'] == 'ACTIVE') activeCount++;
+            if ((s['violations'] as int) > 0 || s['status'] == 'BLOCKED') violationCount++;
+            if ((s['battery'] as int) <= 20) lowBatteryCount++;
           }
 
-          return Column(
-            children: [
-              // ── Summary Bar ──────────────────────────────────────
-              Container(
-                color: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                child: Row(
-                  children: [
-                    _SummaryChip(
-                      icon: Icons.people_rounded,
-                      label: '${docs.length} Siswa',
-                      color: Colors.blueGrey,
-                    ),
-                    const SizedBox(width: 10),
-                    _SummaryChip(
-                      icon: Icons.wifi_rounded,
-                      label: '$activeCount Online',
-                      color: Colors.green,
-                    ),
-                    const SizedBox(width: 10),
-                    _SummaryChip(
-                      icon: Icons.warning_amber_rounded,
-                      label: '${docs.length - activeCount} Offline',
-                      color: Colors.orange,
-                    ),
-                  ],
+          // Filter Data
+          final filteredStudents = allStudents.where((s) {
+            final nameMatches = (s['name'] as String).toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                (s['nis'] as String).toLowerCase().contains(_searchQuery.toLowerCase());
+            
+            bool filterMatches = true;
+            if (_selectedFilter == 'Aktif') filterMatches = s['status'] == 'ACTIVE';
+            else if (_selectedFilter == 'Melanggar') filterMatches = (s['violations'] as int) > 0 || s['status'] == 'BLOCKED';
+            else if (_selectedFilter == 'Offline') filterMatches = s['status'] == 'OFFLINE';
+            
+            return nameMatches && filterMatches;
+          }).toList();
+
+          return CustomScrollView(
+            slivers: [
+              // AppBar
+              SliverAppBar(
+                expandedHeight: 120,
+                floating: false,
+                pinned: true,
+                backgroundColor: AppColors.primaryGreen,
+                foregroundColor: Colors.white,
+                flexibleSpace: FlexibleSpaceBar(
+                  titlePadding: const EdgeInsets.only(left: 50, bottom: 16),
+                  title: Text(
+                    widget.title,
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.white),
+                  ),
+                  background: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0xFF1B5E20), AppColors.primaryGreen],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: -30,
+                        top: -30,
+                        child: Icon(Icons.monitor_rounded, size: 150, color: Colors.white.withValues(alpha: 0.1)),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const Divider(height: 1),
-              // ── Daftar Siswa ─────────────────────────────────────
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: docs.length,
-                  itemBuilder: (context, i) {
-                    final data = docs[i].data() as Map<String, dynamic>;
-                    final rawName = data['name'] as String?;
-                    final name = (rawName == null || rawName.trim().isEmpty) ? 'Anonim' : rawName;
-                    final rawNis = data['nis'] as String?;
-                    final nis = (rawNis == null || rawNis.trim().isEmpty) ? '-' : rawNis;
-                    final status = data['status'] as String? ?? 'OFFLINE';
-                    final violations = data['violations'] as int? ?? 0;
-                    final battery = data['battery_level'] as int? ?? 0;
-                    final lastPing = data['last_ping'] as Timestamp?;
-
-                    final isOffline = lastPing == null ||
-                        DateTime.now().difference(lastPing.toDate()).inMinutes > 2;
-                    final displayStatus = isOffline ? 'OFFLINE' : status;
-
-                    Color statusColor;
-                    IconData statusIcon;
-                    switch (displayStatus) {
-                      case 'ACTIVE':
-                        statusColor = Colors.green;
-                        statusIcon = Icons.wifi_rounded;
-                        break;
-                      case 'PAUSED':
-                        statusColor = Colors.orange;
-                        statusIcon = Icons.pause_circle_rounded;
-                        break;
-                      case 'FINISHED':
-                        statusColor = Colors.blue;
-                        statusIcon = Icons.check_circle_rounded;
-                        break;
-                      case 'BLOCKED':
-                        statusColor = Colors.red;
-                        statusIcon = Icons.block_rounded;
-                        break;
-                      default:
-                        statusColor = Colors.grey;
-                        statusIcon = Icons.cloud_off_rounded;
-                    }
-
-                    return Card(
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        side: BorderSide(
-                          color: violations > 0
-                              ? Colors.red.withValues(alpha: 0.3)
-                              : Colors.grey.shade200,
-                          width: violations > 0 ? 1.5 : 1,
-                        ),
+              
+              // Dashboard Grid
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Ringkasan Ujian', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(child: _buildMetricCard('Total Siswa', '${docs.length}', Icons.people_rounded, Colors.blue)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildMetricCard('Aktif', '$activeCount', Icons.wifi_rounded, Colors.green)),
+                        ],
                       ),
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(14),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => StudentActivityLogScreen(
-                            examId: examId,
-                            nis: nis,
-                            name: name,
-                            status: displayStatus,
-                            violations: violations,
-                          ),
-                        )),
-                        child: Padding(
-                          padding: const EdgeInsets.all(14),
-                          child: Row(
-                            children: [
-                              // Status Circle
-                              Container(
-                                width: 42,
-                                height: 42,
-                                decoration: BoxDecoration(
-                                  color: statusColor.withValues(alpha: 0.12),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(statusIcon, color: statusColor, size: 20),
-                              ),
-                              const SizedBox(width: 12),
-                              // Nama & NIS
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(name,
-                                        style: GoogleFonts.poppins(
-                                            fontWeight: FontWeight.w600, fontSize: 14),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis),
-                                    Text('NIS: $nis',
-                                        style: GoogleFonts.poppins(
-                                            fontSize: 12, color: Colors.grey.shade600)),
-                                  ],
-                                ),
-                              ),
-                              // Baterai + Pelanggaran
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        battery > 20 ? Icons.battery_full_rounded : Icons.battery_alert_rounded,
-                                        size: 13,
-                                        color: battery > 20 ? Colors.green : Colors.red,
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Text('$battery%',
-                                          style: GoogleFonts.poppins(fontSize: 12)),
-                                    ],
-                                  ),
-                                  if (violations > 0) ...[
-                                    const SizedBox(height: 4),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Colors.red.shade50,
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: Colors.red.shade200),
-                                      ),
-                                      child: Text('$violations ⚠️',
-                                          style: GoogleFonts.poppins(
-                                              fontSize: 11,
-                                              color: Colors.red.shade700,
-                                              fontWeight: FontWeight.bold)),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(Icons.chevron_right_rounded,
-                                  color: Colors.grey.shade400, size: 18),
-                            ],
-                          ),
-                        ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(child: _buildMetricCard('Melanggar', '$violationCount', Icons.warning_rounded, Colors.red)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildMetricCard('Baterai Lemah', '$lowBatteryCount', Icons.battery_alert_rounded, Colors.orange)),
+                        ],
                       ),
-                    );
-                  },
+                    ],
+                  ),
                 ),
+              ),
+
+              // Search & Filter
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Column(
+                    children: [
+                      TextField(
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                        decoration: InputDecoration(
+                          hintText: 'Cari nama atau NIS siswa...',
+                          hintStyle: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade400),
+                          prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppColors.primaryGreen),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: ['Semua', 'Aktif', 'Melanggar', 'Offline'].map((filter) {
+                            final isSelected = _selectedFilter == filter;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: Text(filter, style: GoogleFonts.poppins(fontSize: 12, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal)),
+                                selected: isSelected,
+                                onSelected: (val) => setState(() => _selectedFilter = filter),
+                                selectedColor: AppColors.primaryGreen.withValues(alpha: 0.2),
+                                labelStyle: TextStyle(color: isSelected ? AppColors.primaryGreen : Colors.grey.shade700),
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  side: BorderSide(color: isSelected ? AppColors.primaryGreen : Colors.grey.shade300),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // List Siswa
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: filteredStudents.isEmpty
+                    ? SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: Center(
+                            child: Text('Tidak ada siswa yang cocok dengan filter.',
+                                style: GoogleFonts.poppins(color: Colors.grey)),
+                          ),
+                        ),
+                      )
+                    : SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final s = filteredStudents[index];
+                            return _buildStudentCard(s);
+                          },
+                          childCount: filteredStudents.length,
+                        ),
+                      ),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildScaffoldWith(Widget child) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w600)),
+        backgroundColor: AppColors.primaryGreen,
+        foregroundColor: Colors.white,
+      ),
+      body: child,
+    );
+  }
+
+  Widget _buildMetricCard(String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.grey.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(value, style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
+                Text(title, style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey.shade600), maxLines: 1, overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStudentCard(Map<String, dynamic> s) {
+    final name = s['name'] as String;
+    final nis = s['nis'] as String;
+    final displayStatus = s['status'] as String;
+    final violations = s['violations'] as int;
+    final battery = s['battery'] as int;
+    final lastPing = s['last_ping'] as Timestamp?;
+
+    Color statusColor;
+    IconData statusIcon;
+    switch (displayStatus) {
+      case 'ACTIVE':
+        statusColor = Colors.green;
+        statusIcon = Icons.wifi_rounded;
+        break;
+      case 'PAUSED':
+        statusColor = Colors.orange;
+        statusIcon = Icons.pause_circle_rounded;
+        break;
+      case 'FINISHED':
+        statusColor = Colors.blue;
+        statusIcon = Icons.check_circle_rounded;
+        break;
+      case 'BLOCKED':
+        statusColor = Colors.red;
+        statusIcon = Icons.block_rounded;
+        break;
+      default:
+        statusColor = Colors.grey;
+        statusIcon = Icons.cloud_off_rounded;
+    }
+
+    final isBlocked = displayStatus == 'BLOCKED';
+    final hasViolations = violations > 0;
+
+    String lastActiveText = '';
+    if (lastPing != null) {
+      final diff = DateTime.now().difference(lastPing.toDate());
+      if (diff.inMinutes < 1) lastActiveText = 'Baru saja';
+      else if (diff.inMinutes < 60) lastActiveText = '${diff.inMinutes} mnt lalu';
+      else lastActiveText = '${diff.inHours} jam lalu';
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isBlocked ? Colors.red.shade50 : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.grey.withValues(alpha: 0.08), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+        border: Border.all(
+          color: isBlocked ? Colors.red.shade200 : (hasViolations ? Colors.orange.shade200 : Colors.transparent),
+          width: 1.5,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => Navigator.push(context, MaterialPageRoute(
+            builder: (_) => StudentActivityLogScreen(
+              examId: widget.examId,
+              nis: nis,
+              name: name,
+              status: displayStatus,
+              violations: violations,
+            ),
+          )),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Status Indicator
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                      ),
+                      child: Icon(statusIcon, color: statusColor, size: 24),
+                    ),
+                    if (displayStatus == 'OFFLINE')
+                      Positioned(
+                        right: -4,
+                        bottom: -4,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                          child: Icon(Icons.error_rounded, color: Colors.red.shade400, size: 14),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(width: 16),
+                
+                // Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.black87),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(nis, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade600)),
+                          const SizedBox(width: 8),
+                          Container(width: 4, height: 4, decoration: BoxDecoration(color: Colors.grey.shade400, shape: BoxShape.circle)),
+                          const SizedBox(width: 8),
+                          Text(lastActiveText, style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey.shade500, fontStyle: FontStyle.italic)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Badges
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (hasViolations || isBlocked)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade600,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(color: Colors.red.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 2))
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.warning_rounded, color: Colors.white, size: 12),
+                            const SizedBox(width: 4),
+                            Text('$violations', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ],
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryGreen.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(displayStatus, style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.primaryGreen)),
+                      ),
+                    
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          battery > 20 ? Icons.battery_full_rounded : Icons.battery_alert_rounded,
+                          size: 14,
+                          color: battery > 20 ? Colors.green.shade400 : Colors.red,
+                        ),
+                        const SizedBox(width: 4),
+                        Text('$battery%', style: GoogleFonts.poppins(fontSize: 11, color: battery > 20 ? Colors.grey.shade600 : Colors.red, fontWeight: battery > 20 ? FontWeight.normal : FontWeight.bold)),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

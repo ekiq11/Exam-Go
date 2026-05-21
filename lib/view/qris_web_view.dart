@@ -141,11 +141,9 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                   setState(() {
                     _isFrozen = true;
                   });
-                  // FIX BUG-FREEZE: Hentikan ping timer saat layar dibekukan
-                  // agar tidak ada kiriman status 'ACTIVE' yang menimpa 'BLOCKED'
-                  // di Firestore selama guru belum membuka kunci.
-                  _pingTimer?.cancel();
-                  _pingTimer = null;
+                  // Catatan: _pingTimer dibiarkan berjalan agar bisa otomatis
+                  // melanjutkan ping 'ACTIVE' saat guru membuka blokir (unfreeze).
+                  // Logika di dalam _pingTimer sudah dilindungi oleh `if (!_isFrozen)`.
                 }
               }
             },
