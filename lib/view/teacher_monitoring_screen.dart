@@ -1240,60 +1240,87 @@ class _StudentActivityLogScreenState extends State<StudentActivityLogScreen> {
         slivers: [
           // ── AppBar ─────────────────────────────────────────
           SliverAppBar(
-            expandedHeight: 220,
+            expandedHeight: 230,
             pinned: true,
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black87,
+            backgroundColor: const Color(0xFF2E7D32),
+            foregroundColor: Colors.white,
             elevation: 0,
+            title: Text(widget.name, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
             bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(1),
-              child: Container(color: Colors.grey.shade200, height: 1),
+              preferredSize: const Size.fromHeight(20),
+              child: Container(
+                height: 20,
+                decoration: const BoxDecoration(
+                  color: _kBg,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                ),
+              ),
             ),
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.pin,
-              background: Container(
-                color: Colors.white,
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 20, 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        // Avatar Row
-                        Row(
-                          children: [
-                            Container(
-                              width: 64,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                color: _statusColor.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
-                                border: Border.all(color: _statusColor.withValues(alpha: 0.3), width: 1.5),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  widget.name.isNotEmpty ? widget.name[0].toUpperCase() : '?',
-                                  style: GoogleFonts.poppins(fontSize: 26, fontWeight: FontWeight.w700, color: _statusColor),
+              background: Stack(
+                children: [
+                  // Elegant Background Pattern / Gradient
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: -40, right: -40,
+                    child: Container(
+                      width: 150, height: 150,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.05),
+                      ),
+                    ),
+                  ),
+                  SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 50, 20, 32), // Top padding 50 to avoid title overlap
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          // Avatar Row
+                          Row(
+                            children: [
+                              Container(
+                                width: 64,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    widget.name.isNotEmpty ? widget.name[0].toUpperCase() : '?',
+                                    style: GoogleFonts.poppins(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white),
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(widget.name,
-                                      style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.black87, height: 1.2),
-                                      maxLines: 1, overflow: TextOverflow.ellipsis),
-                                  const SizedBox(height: 4),
-                                  Text('NIS: ${widget.nis}',
-                                      style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade600)),
-                                ],
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(widget.name,
+                                        style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white, height: 1.2),
+                                        maxLines: 1, overflow: TextOverflow.ellipsis),
+                                    const SizedBox(height: 4),
+                                    Text('NIS: ${widget.nis}',
+                                        style: GoogleFonts.poppins(fontSize: 13, color: Colors.white.withValues(alpha: 0.8))),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
                         const SizedBox(height: 20),
                         // Status & Violation Badges
                         Row(
@@ -1333,9 +1360,10 @@ class _StudentActivityLogScreenState extends State<StudentActivityLogScreen> {
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
+        ),
 
           // ── Log Timeline Header ───────────────────────────
           SliverToBoxAdapter(
