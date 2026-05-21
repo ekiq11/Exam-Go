@@ -322,8 +322,8 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
             final battery = data['battery_level'] as int? ?? 0;
             final lastPing = data['last_ping'] as Timestamp?;
 
-            final isOffline = lastPing == null ||
-                DateTime.now().difference(lastPing.toDate()).inMinutes > 2;
+             final isOffline = lastPing == null ||
+                DateTime.now().difference(lastPing.toDate()).inMinutes > 10;
             final displayStatus = isOffline ? 'OFFLINE' : status;
 
             return {
