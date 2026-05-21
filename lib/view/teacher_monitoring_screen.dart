@@ -685,7 +685,7 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
                           const SizedBox(width: 8),
                           Container(width: 4, height: 4, decoration: BoxDecoration(color: Colors.grey.shade400, shape: BoxShape.circle)),
                           const SizedBox(width: 8),
-                          Text(lastActiveText, style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey.shade500, fontStyle: FontStyle.italic)),
+                          Text(lastActiveText, style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey.shade500, fontStyle: FontStyle.normal)),
                         ],
                       ),
                     ],

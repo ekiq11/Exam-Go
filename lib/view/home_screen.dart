@@ -610,7 +610,7 @@ class _HomeScreenState extends State<HomeScreen>
                                   style: GoogleFonts.poppins(
                                     color: Colors.white,
                                     fontSize: context.rs(26),
-                                    fontWeight: FontWeight.w800,
+                                    fontWeight: FontWeight.w700,
                                     height: 1.1,
                                     letterSpacing: -0.5,
                                   ),
@@ -969,7 +969,7 @@ class _HomeScreenState extends State<HomeScreen>
                       style: GoogleFonts.poppins(
                         color: Colors.white,
                         fontSize: context.rs(17),
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                         height: 1.1,
                       ),
                     ),
@@ -1046,7 +1046,7 @@ class _HomeScreenState extends State<HomeScreen>
                   SizedBox(height: context.rs(16)),
                   Text(
                     'Input Token Ujian',
-                    style: GoogleFonts.poppins(fontSize: context.rs(20), fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                    style: GoogleFonts.poppins(fontSize: context.rs(20), fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                   ),
                   SizedBox(height: context.rs(4)),
                   Text(

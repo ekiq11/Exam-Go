@@ -162,7 +162,7 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                           'Persiapan Ujian',
                           style: GoogleFonts.poppins(
                             fontSize: context.rs(16),
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                             color: AppColors.textPrimary,
                             height: 1.2,
                           ),

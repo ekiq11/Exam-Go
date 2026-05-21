@@ -237,7 +237,7 @@ class _UpdateDialogState extends State<_UpdateDialog>
               'Update Tersedia! 🚀',
               style: GoogleFonts.spaceGrotesk(
                 fontSize: context.rs(26),
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: Colors.white,
                 height: 1.1,
                 letterSpacing: -0.5,
@@ -540,7 +540,7 @@ class _UpdateDialogState extends State<_UpdateDialog>
                           'Update Sekarang',
                           style: GoogleFonts.spaceGrotesk(
                             fontSize: context.rs(15),
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                             color: Colors.white,
                             letterSpacing: 0.3,
                           ),

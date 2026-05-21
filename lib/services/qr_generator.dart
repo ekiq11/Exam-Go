@@ -618,7 +618,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                     style: GoogleFonts.poppins(
                       color: Colors.white,
                       fontSize: context.rs(16),
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       height: 1.1,
                     ),
                   ),
@@ -920,7 +920,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
               style: GoogleFonts.poppins(
                 fontSize: context.rs(10),
                 color: Colors.grey,
-                fontStyle: FontStyle.italic,
+                fontStyle: FontStyle.normal,
               ),
               textAlign: TextAlign.center,
             ),

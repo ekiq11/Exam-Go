@@ -437,7 +437,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               style: GoogleFonts.poppins(
                 color: isDark ? Colors.white : AppColors.primaryGreen,
                 fontSize: context.rs(36),
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 height: 1.1,
                 letterSpacing: -1,
               ),
