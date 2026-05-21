@@ -1,11 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:battery_plus/battery_plus.dart';
+import 'package:flutter/foundation.dart';
 
 class MonitoringService {
   static final MonitoringService instance = MonitoringService._();
-  MonitoringService._();
+  MonitoringService._({FirebaseFirestore? db}) : _db = db ?? FirebaseFirestore.instance;
 
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
+
+  @visibleForTesting
+  static MonitoringService createForTest(FirebaseFirestore db) => MonitoringService._(db: db);
 
   // ─── Dari Sisi Siswa (Update Status) ───────────────────────────────────
 

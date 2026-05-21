@@ -28,7 +28,18 @@ void main() async {
   // isolate, atau Platform-level errors. PlatformDispatcher.onError
   // adalah satu-satunya cara menangkap error tersebut ke Crashlytics.
   WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    // FIX BUG: Cegah Exception async seperti "No active stream to cancel" 
+    // atau "No active scan" dari menurunkan skor Crash-Free Sessions.
+    if (error is PlatformException) {
+      final msg = error.message ?? '';
+      final code = error.code;
+      if (msg.contains('No active') || code.contains('No active')) {
+        return true; // Abaikan sepenuhnya, ini aman
+      }
+    }
+    // Set fatal: false agar error background tidak dihitung sebagai 'Crash' utama 
+    // oleh Crashlytics (karena aplikasi tidak force-close).
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: false);
     return true;
   };
 

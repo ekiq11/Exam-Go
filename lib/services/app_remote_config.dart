@@ -2,15 +2,20 @@
 // ignore_for_file: avoid_print
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 
+import 'package:flutter/foundation.dart';
+
 /// Wrapper singleton untuk Firebase Remote Config.
 /// Nilai defaultnya sinkron dengan AppConfig agar app tetap berjalan
 /// walaupun tidak ada koneksi internet.
 class AppRemoteConfig {
-  AppRemoteConfig._();
-  static final AppRemoteConfig instance = AppRemoteConfig._();
+  AppRemoteConfig._({FirebaseRemoteConfig? rc}) : _rc = rc ?? FirebaseRemoteConfig.instance;
+  static AppRemoteConfig instance = AppRemoteConfig._();
 
-  final _rc = FirebaseRemoteConfig.instance;
+  final FirebaseRemoteConfig _rc;
   bool _initialized = false;
+
+  @visibleForTesting
+  static AppRemoteConfig createForTest(FirebaseRemoteConfig rc) => AppRemoteConfig._(rc: rc);
 
   // ─── Keys ─────────────────────────────────────────────────────
   static const _kQrExpiry       = 'qr_expiry_minutes';

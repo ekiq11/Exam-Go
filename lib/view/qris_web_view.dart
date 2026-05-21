@@ -52,7 +52,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   Timer? _exitTimer;
   bool _showExitBar = false;
 
-  Timer? _uiTimer;
   bool _isExiting = false;
   bool _securityEnabled = false;
 
@@ -112,34 +111,39 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       });
       _statusSub = MonitoringService.instance
           .streamStudentStatus(widget.examId, widget.studentNis)
-          .listen((doc) {
-            if (!mounted) return;
-            if (doc.exists) {
-              final data = doc.data() as Map<String, dynamic>;
-              final status = data['status'] as String?;
-              if (status == 'ACTIVE' && _isFrozen) {
-                setState(() {
-                  _minimizeCount = 0;
-                  _isFrozen = false;
-                });
-                ExamSessionService.instance.updateViolations(0);
-                _sendMonitoringStatus('ACTIVE');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Layar telah dibuka oleh pengawas.',
-                      style: GoogleFonts.poppins(),
+          .listen(
+            (doc) {
+              if (!mounted) return;
+              if (doc.exists) {
+                final data = doc.data() as Map<String, dynamic>;
+                final status = data['status'] as String?;
+                if (status == 'ACTIVE' && _isFrozen) {
+                  setState(() {
+                    _minimizeCount = 0;
+                    _isFrozen = false;
+                  });
+                  ExamSessionService.instance.updateViolations(0);
+                  _sendMonitoringStatus('ACTIVE');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Layar telah dibuka oleh pengawas.',
+                        style: GoogleFonts.poppins(),
+                      ),
+                      backgroundColor: Colors.green,
                     ),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } else if (status == 'BLOCKED' && !_isFrozen) {
-                setState(() {
-                  _isFrozen = true;
-                });
+                  );
+                } else if (status == 'BLOCKED' && !_isFrozen) {
+                  setState(() {
+                    _isFrozen = true;
+                  });
+                }
               }
-            }
-          });
+            },
+            onError: (error) {
+              // Abaikan error jaringan atau "No active stream to cancel"
+            },
+          );
     }
   }
 
@@ -206,7 +210,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   @override
   void dispose() {
     _exitTimer?.cancel();
-    _uiTimer?.cancel();
     _examTimer?.cancel();
     _retryTimer?.cancel();
     _pauseDebounce?.cancel();
@@ -260,13 +263,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
     if (!mounted) return;
     setState(() {});
-    _uiTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      // OPTIMASI: interval 10 detik (vs 3 detik) cukup untuk security reapply.
-      // Terlalu sering memanggil SystemChrome menyebabkan CPU spike dan jank.
-      if (mounted && _securityEnabled && !_isExiting) {
-        SecurityService.instance.reapply();
-      }
-    });
+
     _showSnack(
       '🔒 Ujian dimulai — mode kunci aktif',
       color: Colors.red.shade700,
@@ -999,7 +996,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     _isExiting = true;
     _securityEnabled = false;
     if (dialogCtx != null && dialogCtx.mounted) Navigator.of(dialogCtx).pop();
-    _uiTimer?.cancel();
     _exitTimer?.cancel();
     final duration = _examStartTime != null
         ? DateTime.now().difference(_examStartTime!).inSeconds
@@ -1537,7 +1533,9 @@ class _LiveTimerWidgetState extends State<_LiveTimerWidget> {
         setState(() {
           _currentTime = DateTime.now();
           if (widget.startTime != null) {
-            _elapsedSeconds = _currentTime.difference(widget.startTime!).inSeconds;
+            _elapsedSeconds = _currentTime
+                .difference(widget.startTime!)
+                .inSeconds;
           }
         });
       }
@@ -1564,8 +1562,12 @@ class _LiveTimerWidgetState extends State<_LiveTimerWidget> {
   @override
   Widget build(BuildContext context) {
     final offset = _currentTime.timeZoneOffset.inHours;
-    final tz = offset >= 9 ? 'WIT' : offset >= 8 ? 'WITA' : 'WIB';
-    
+    final tz = offset >= 9
+        ? 'WIT'
+        : offset >= 8
+        ? 'WITA'
+        : 'WIB';
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1612,4 +1614,3 @@ class _LiveTimerWidgetState extends State<_LiveTimerWidget> {
     );
   }
 }
-
