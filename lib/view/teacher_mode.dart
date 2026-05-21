@@ -548,12 +548,7 @@ class TeacherDashboardScreen extends StatelessWidget {
               color: Colors.blue,
               title: 'Tentang Aplikasi',
               subtitle: 'Versi, lisensi, dan informasi app',
-              onTap: () => showAboutDialog(
-                context: context,
-                applicationName: AppConfig.appName,
-                applicationVersion: AppConfig.appVersion,
-                applicationLegalese: '© Kemenag — Secure Exam Browser',
-              ),
+              onTap: () => _showCustomAboutDialog(context),
             ),
             const SizedBox(height: 10),
             _MenuTile(
@@ -597,6 +592,125 @@ class TeacherDashboardScreen extends StatelessWidget {
     await prefs.remove(_kPinKey);
     if (!context.mounted) return;
     Navigator.of(context).popUntil((r) => r.isFirst);
+  }
+
+  void _showCustomAboutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header Icon/Logo
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.admin_panel_settings_rounded,
+                  color: Color(0xFF2E7D32),
+                  size: 48,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // App Name
+              Text(
+                AppConfig.appName,
+                style: GoogleFonts.poppins(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF1B5E20),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              // Version Badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Versi ${AppConfig.appVersion}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF2E7D32),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Description
+              Text(
+                'Aplikasi Secure Exam Browser dengan pengamanan Biometrik dan Kiosk Mode untuk menjamin integritas ujian yang lebih baik dan elegan.',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: Colors.grey.shade700,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              // Divider
+              Divider(color: Colors.grey.shade200),
+              const SizedBox(height: 12),
+              // Copyright
+              Text(
+                '© Kemenag — Secure Exam Browser',
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Close Button
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2E7D32),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Text(
+                    'Tutup',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
