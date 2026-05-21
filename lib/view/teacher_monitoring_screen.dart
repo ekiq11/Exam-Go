@@ -564,12 +564,13 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
             headerSliverBuilder: (context, innerBoxIsScrolled) => [
               // ── Custom SliverAppBar ──────────────────────────
               SliverAppBar(
-                expandedHeight: 190,
+                expandedHeight: 210,
                 pinned: true,
                 stretch: true,
                 backgroundColor: _kGreen,
                 foregroundColor: Colors.white,
                 elevation: 0,
+                title: Text(widget.title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
                 bottom: PreferredSize(
                   preferredSize: const Size.fromHeight(20),
                   child: Container(
@@ -606,7 +607,7 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
                       ),
                       SafeArea(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+                          padding: const EdgeInsets.fromLTRB(24, 50, 24, 32),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.end,
