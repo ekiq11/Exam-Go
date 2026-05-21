@@ -22,8 +22,13 @@ import 'package:http/http.dart' as http;
 // Flutter menjalankan ini di Isolate terpisah saat app di-background/terminated.
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Firebase harus diinisialisasi ulang di isolate background
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Pastikan engine Flutter terikat di isolate background ini
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Gunakan guard agar tidak terjadi crash Duplicate App jika sudah terinisialisasi
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  }
   // Tampilkan notifikasi lokal agar muncul di notification tray
   await _showLocalNotification(message);
 }
