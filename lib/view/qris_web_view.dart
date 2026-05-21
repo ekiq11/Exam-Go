@@ -330,7 +330,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
               color: Colors.red.shade800,
               duration: 5,
             );
-            _showViolationDialog();
+            _showViolationDialog(isBlocked: true);
           } else {
             _logActivity(
               'EXIT_APP',
@@ -338,7 +338,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             );
             _sendMonitoringStatus('PAUSED');
             _showMinimizeWarning();
-            _showViolationDialog();
+            _showViolationDialog(isBlocked: false);
           }
         });
         _wasActuallyPaused = true;
@@ -423,8 +423,12 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
-  void _showViolationDialog() {
+  void _showViolationDialog({required bool isBlocked}) {
     if (!mounted) return;
+    final maxViolations = AppRemoteConfig.instance.maxViolations > 0
+        ? AppRemoteConfig.instance.maxViolations
+        : 3;
+        
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -432,30 +436,41 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Row(
           children: [
-            const Icon(
-              Icons.warning_amber_rounded,
-              color: Colors.orange,
+            Icon(
+              isBlocked ? Icons.cancel_rounded : Icons.warning_amber_rounded,
+              color: isBlocked ? Colors.red : Colors.orange,
               size: 28,
             ),
             const SizedBox(width: 8),
             Text(
-              'Peringatan!',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              isBlocked ? 'Ujian Dibatalkan!' : 'Peringatan!',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                color: isBlocked ? Colors.red.shade700 : Colors.black87,
+              ),
             ),
           ],
         ),
         content: Text(
-          'Anda terdeteksi keluar dari layar ujian.\n\nJika Anda keluar atau meminimize aplikasi sebanyak 3x, maka ujian akan dibatalkan otomatis.\n\nPelanggaran saat ini: $_minimizeCount / 3',
+          isBlocked
+              ? 'Anda telah melanggar aturan dengan keluar/meminimize aplikasi sebanyak $maxViolations kali.\n\nSesuai aturan ujian, akses ujian Anda otomatis dibatalkan dan ujian ditutup.'
+              : 'Anda terdeteksi keluar dari layar ujian.\n\nJika Anda keluar atau meminimize aplikasi sebanyak $maxViolations kali, maka ujian akan dibatalkan otomatis.\n\nPelanggaran saat ini: $_minimizeCount / $maxViolations',
           style: GoogleFonts.poppins(fontSize: context.rs(13)),
         ),
         actions: [
           ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(),
+            onPressed: () {
+              if (isBlocked) {
+                _performExit(ctx);
+              } else {
+                Navigator.of(ctx).pop();
+              }
+            },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange.shade700,
+              backgroundColor: isBlocked ? Colors.red.shade700 : Colors.orange.shade700,
             ),
             child: Text(
-              'Saya Mengerti',
+              isBlocked ? 'Keluar Aplikasi' : 'Saya Mengerti',
               style: GoogleFonts.poppins(
                 fontSize: context.rs(13),
                 color: Colors.white,
