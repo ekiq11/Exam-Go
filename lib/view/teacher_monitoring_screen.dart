@@ -349,9 +349,13 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
                 (s['nis'] as String).toLowerCase().contains(_searchQuery.toLowerCase());
             
             bool filterMatches = true;
-            if (_selectedFilter == 'Aktif') filterMatches = s['status'] == 'ACTIVE';
-            else if (_selectedFilter == 'Melanggar') filterMatches = (s['violations'] as int) > 0 || s['status'] == 'BLOCKED';
-            else if (_selectedFilter == 'Offline') filterMatches = s['status'] == 'OFFLINE';
+            if (_selectedFilter == 'Aktif') {
+              filterMatches = s['status'] == 'ACTIVE';
+            } else if (_selectedFilter == 'Melanggar') {
+              filterMatches = (s['violations'] as int) > 0 || s['status'] == 'BLOCKED';
+            } else if (_selectedFilter == 'Offline') {
+              filterMatches = s['status'] == 'OFFLINE';
+            }
             
             return nameMatches && filterMatches;
           }).toList();
@@ -596,9 +600,13 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
     String lastActiveText = '';
     if (lastPing != null) {
       final diff = DateTime.now().difference(lastPing.toDate());
-      if (diff.inMinutes < 1) lastActiveText = 'Baru saja';
-      else if (diff.inMinutes < 60) lastActiveText = '${diff.inMinutes} mnt lalu';
-      else lastActiveText = '${diff.inHours} jam lalu';
+      if (diff.inMinutes < 1) {
+        lastActiveText = 'Baru saja';
+      } else if (diff.inMinutes < 60) {
+        lastActiveText = '${diff.inMinutes} mnt lalu';
+      } else {
+        lastActiveText = '${diff.inHours} jam lalu';
+      }
     }
 
     return Container(
@@ -936,34 +944,6 @@ class StudentActivityLogScreen extends StatelessWidget {
 
 // ─── Widget Helpers ───────────────────────────────────────────────────────────
 
-class _SummaryChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  const _SummaryChip({required this.icon, required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: color),
-          const SizedBox(width: 5),
-          Text(label,
-              style: GoogleFonts.poppins(
-                  fontSize: 11, fontWeight: FontWeight.w600, color: color)),
-        ],
-      ),
-    );
-  }
-}
 
 class _LogItem extends StatelessWidget {
   final IconData icon;
