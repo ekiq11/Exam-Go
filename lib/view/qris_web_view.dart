@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
+import 'package:crypto/crypto.dart';
+import 'package:examgo/utils/webview_error_handler.dart';
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/constant/app_config.dart';
 import 'package:examgo/constant/responsive.dart';
@@ -567,22 +569,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
       );
     } else {
-      // FIX BUG #1: MALI BAD ALLOC di Samsung Exynos / MediaTek Dimensity.
-      //
-      // webview_flutter_android 4.x MENGHAPUS useHybridComposition dari
-      // AndroidWebViewControllerCreationParams (error compile jika dipakai).
-      //
-      // Di versi 4.x, Hybrid Composition diaktifkan dengan cara berbeda:
-      // AndroidWebViewController menyediakan method setDisplayWithHybridComposition()
-      // yang dipanggil SETELAH controller dibuat (lihat blok "Android: konfigurasi
-      // tambahan" di bawah).
-      //
-      // Ini tetap menyelesaikan masalah:
-      //   "MALI BAD ALLOC gles_texture_egl_image_get_2d_template"
-      //   "Unable to acquire a buffer item, maxImages buffers"
-      //   "GPUAUX Null anb" (loop)
-      // karena WebView merender ke window surface (RGBA_8888) milik Flutter,
-      // bukan membuat ImageReader sendiri via gralloc.
       params = AndroidWebViewControllerCreationParams();
     }
 
@@ -609,27 +595,19 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             _loadErrorCount = 0;
             _injectSecurityJS();
           },
-          // FIX BUG-04: Tambahkan exception untuk non-HTTP scheme.
-          // javascript:, data:, blob:, about: memiliki host kosong,
-          // sehingga cek host biasa akan memblokir form submit, redirect SPA,
-          // dan navigasi internal yang sah dalam halaman ujian.
           onNavigationRequest: (req) {
             if (!_securityEnabled) return NavigationDecision.navigate;
             if (_allowedHost.isEmpty) return NavigationDecision.navigate;
             final uri = Uri.tryParse(req.url);
             final scheme = uri?.scheme ?? '';
-            // Izinkan non-HTTP scheme agar form submit, blob URL,
-            // javascript:void(0), data:, about:blank tidak diblokir
             if (scheme != 'http' && scheme != 'https') {
               return NavigationDecision.navigate;
             }
             final reqHost = uri?.host ?? '';
             if (reqHost.isEmpty) return NavigationDecision.navigate;
-            // Izinkan subdomain dari host yang sama
             if (reqHost == _allowedHost || reqHost.endsWith('.$_allowedHost')) {
               return NavigationDecision.navigate;
             }
-            // Blokir navigasi ke domain lain
             _showSnack(
               '🚫 Navigasi ke domain lain diblokir selama ujian',
               color: Colors.red.shade700,
@@ -644,21 +622,28 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             if (e.errorCode == -6) return;
             if (e.errorCode == -3) return;
 
-            // [FIX T-3] Hapus dead null-aware — description non-nullable di API terbaru
             final msg = e.description;
             _loadErrorCount++;
+            
+            final isSilentRetry = WebViewErrorHandler.shouldRetrySilently(e.errorCode);
+            final userMessage = WebViewErrorHandler.getErrorMessage(e.errorCode, msg);
 
-            if (_loadErrorCount <= _kMaxSilentRetry) {
+            if (isSilentRetry && _loadErrorCount <= _kMaxSilentRetry) {
               _retryTimer?.cancel();
               _retryTimer = Timer(_kRetryDelay, () {
                 if (mounted && !_isExiting) _wvc.reload();
               });
               _showSnack(
-                '🔄 Koneksi terputus, mencoba ulang... ($_loadErrorCount/$_kMaxSilentRetry)',
+                '🔄 Mencoba ulang... ($_loadErrorCount/$_kMaxSilentRetry)',
                 color: Colors.orange.shade700,
                 duration: 3,
               );
             } else {
+              _showSnack(
+                '⚠️ $userMessage',
+                color: Colors.red.shade800,
+                duration: 5,
+              );
               AnalyticsService.instance.logExamLoadError(
                 examHost: Uri.tryParse(_resolvedUrl)?.host ?? 'unknown',
                 errorMessage: msg,
