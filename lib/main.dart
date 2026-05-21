@@ -15,6 +15,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ── FCM Background Handler ────────────────────────────────────────────
 // WAJIB berupa top-level function (bukan method class) dan diberi
@@ -170,6 +171,11 @@ void main() async {
   // Listener ini memastikan GAS selalu punya token terbaru tanpa guru
   // harus buka Teacher Mode ulang.
   FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+    // FIX FCM-5: Mencegah HP Siswa menimpa token Guru.
+    // Hanya device yang pernah masuk ke Mode Guru (punya PIN) yang boleh daftar.
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getString('teacher_pin_hash') == null) return;
+
     if (AppConfig.gasUrl.isEmpty || AppConfig.gasApiKey.isEmpty) return;
     try {
       await http.post(

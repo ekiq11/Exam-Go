@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'package:examgo/constant/app_config.dart';
 import 'package:examgo/services/monitoring_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ─── Konstanta Warna & Style ──────────────────────────────────────────────────
@@ -454,6 +458,26 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _registerTokenForThisExam();
+  }
+
+  /// Mendaftarkan token guru HANYA untuk ujian ini, agar notifikasi terisolasi per pengawas.
+  Future<void> _registerTokenForThisExam() async {
+    if (AppConfig.gasUrl.isEmpty || AppConfig.gasApiKey.isEmpty) return;
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token == null) return;
+      await http.post(
+        Uri.parse(AppConfig.gasUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'apiKey': AppConfig.gasApiKey,
+          'action': 'registerToken',
+          'token':  token,
+          'examId': widget.examId,
+        }),
+      ).timeout(const Duration(seconds: 10));
+    } catch (_) {}
   }
 
   @override

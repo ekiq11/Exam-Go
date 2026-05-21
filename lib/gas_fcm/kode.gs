@@ -40,20 +40,32 @@ function doPost(e) {
   if (action === 'registerToken') {
     if (!data.token) return _json({ error: 'missing_token' });
 
-    // FIX FCM-LEAK: Simpan token PER examId, bukan satu token global.
-    // Dulu: props.setProperty('TEACHER_FCM_TOKEN', token)
-    //   → token guru A ditimpa guru B → notif ke HP yang salah.
-    // Sekarang: props.setProperty('TEACHER_TOKEN_<examId>', token)
-    //   → setiap ujian punya token guru-nya sendiri.
+    // FIX MULTI-TEACHER: Simpan array of tokens agar lebih dari 1 guru bisa menerima notifikasi
+    var tokensStr = props.getProperty('TEACHER_FCM_TOKENS') || '[]';
+    var tokens = JSON.parse(tokensStr);
+    
+    // Tambahkan token jika belum ada
+    if (tokens.indexOf(data.token) === -1) {
+      tokens.push(data.token);
+      // Batasi maksimal 20 guru agar ukuran string tidak membebani Script Properties
+      if (tokens.length > 20) tokens.shift();
+      props.setProperty('TEACHER_FCM_TOKENS', JSON.stringify(tokens));
+    }
+
     if (data.examId) {
-      var key = 'TEACHER_TOKEN_' + data.examId;
-      props.setProperty(key, data.token);
-      // Simpan timestamp agar bisa di-cleanup setelah 7 hari
-      props.setProperty(key + '_TS', String(Date.now()));
+      var key = 'TEACHER_TOKENS_' + data.examId;
+      var examTokensStr = props.getProperty(key) || '[]';
+      var examTokens = JSON.parse(examTokensStr);
+      if (examTokens.indexOf(data.token) === -1) {
+        examTokens.push(data.token);
+        if (examTokens.length > 10) examTokens.shift();
+        props.setProperty(key, JSON.stringify(examTokens));
+        props.setProperty(key + '_TS', String(Date.now()));
+      }
       Logger.log('✅ Token registered for examId [' + data.examId + ']: ' + data.token.substring(0, 20) + '...');
     }
 
-    // Tetap simpan token global sebagai fallback (backward-compat)
+    // Tetap simpan token tunggal sebagai fallback (backward-compat)
     props.setProperty('TEACHER_FCM_TOKEN', data.token);
     Logger.log('✅ Global teacher token updated: ' + data.token.substring(0, 20) + '...');
 
@@ -67,23 +79,31 @@ function doPost(e) {
   if (action === 'notify') {
     var examId = data.examId || '';
 
-    // FIX FCM-LEAK: Cari token berdasarkan examId terlebih dahulu.
-    // Hanya jika tidak ada → fallback ke token global.
-    var teacherToken = null;
+    // Ambil target token (multi-guru)
+    var targetTokens = [];
+    
     if (examId) {
-      teacherToken = props.getProperty('TEACHER_TOKEN_' + examId);
-      if (teacherToken) {
-        Logger.log('✅ Menggunakan token spesifik untuk examId: ' + examId);
-      } else {
-        Logger.log('⚠️ Token untuk examId [' + examId + '] tidak ditemukan, coba token global.');
+      var examTokensStr = props.getProperty('TEACHER_TOKENS_' + examId);
+      if (examTokensStr) {
+        try { targetTokens = JSON.parse(examTokensStr); } catch(e) {}
       }
     }
 
-    if (!teacherToken) {
-      teacherToken = props.getProperty('TEACHER_FCM_TOKEN');
+    // Jika tidak ada guru spesifik untuk ujian ini, kirim ke semua guru secara global
+    if (targetTokens.length === 0) {
+      var tokensStr = props.getProperty('TEACHER_FCM_TOKENS');
+      if (tokensStr) {
+        try { targetTokens = JSON.parse(tokensStr); } catch(e) {}
+      }
     }
 
-    if (!teacherToken) {
+    // Backward compatibility jika array tidak ditemukan
+    if (targetTokens.length === 0) {
+      var oldToken = props.getProperty('TEACHER_FCM_TOKEN');
+      if (oldToken) targetTokens.push(oldToken);
+    }
+
+    if (targetTokens.length === 0) {
       Logger.log('⚠️ Tidak ada teacher FCM token. Guru belum membuka Teacher Mode.');
       return _json({ error: 'no_teacher_token' });
     }
@@ -96,17 +116,21 @@ function doPost(e) {
     var title = '⚠️ Pelanggaran Ujian ke-' + violations;
     var body  = studentName + ' (' + studentNis + ') keluar dari: ' + examTitle;
 
-    var fcmResult = _sendFcm(teacherToken, title, body, {
-      examId:      examId,
-      examTitle:   examTitle,
-      studentName: studentName,
-      studentNis:  studentNis,
-      violations:  String(violations),
-    });
+    var results = [];
+    for (var i = 0; i < targetTokens.length; i++) {
+      var fcmResult = _sendFcm(targetTokens[i], title, body, {
+        examId:      examId,
+        examTitle:   examTitle,
+        studentName: studentName,
+        studentNis:  studentNis,
+        violations:  String(violations),
+      });
+      results.push(fcmResult);
+    }
 
     _logToSheet(data);
 
-    return _json({ success: true, fcm: fcmResult });
+    return _json({ success: true, results: results });
   }
 
   return _json({ error: 'unknown_action', action: action });
@@ -119,7 +143,7 @@ function _cleanupStaleTokens(props) {
     var now = Date.now();
     var sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
     Object.keys(allProps).forEach(function(key) {
-      if (key.indexOf('TEACHER_TOKEN_') === 0 && key.indexOf('_TS') === -1) {
+      if ((key.indexOf('TEACHER_TOKEN') === 0) && key.indexOf('_TS') === -1) {
         var tsKey = key + '_TS';
         var ts = parseInt(allProps[tsKey] || '0');
         if (ts > 0 && (now - ts) > sevenDaysMs) {
