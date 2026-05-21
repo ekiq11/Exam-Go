@@ -89,22 +89,8 @@ function doPost(e) {
       }
     }
 
-    // Jika tidak ada guru spesifik untuk ujian ini, kirim ke semua guru secara global
     if (targetTokens.length === 0) {
-      var tokensStr = props.getProperty('TEACHER_FCM_TOKENS');
-      if (tokensStr) {
-        try { targetTokens = JSON.parse(tokensStr); } catch(e) {}
-      }
-    }
-
-    // Backward compatibility jika array tidak ditemukan
-    if (targetTokens.length === 0) {
-      var oldToken = props.getProperty('TEACHER_FCM_TOKEN');
-      if (oldToken) targetTokens.push(oldToken);
-    }
-
-    if (targetTokens.length === 0) {
-      Logger.log('⚠️ Tidak ada teacher FCM token. Guru belum membuka Teacher Mode.');
+      Logger.log('⚠️ Tidak ada teacher FCM token spesifik untuk ujian ini. Guru belum membuka layar monitoring.');
       return _json({ error: 'no_teacher_token' });
     }
 
