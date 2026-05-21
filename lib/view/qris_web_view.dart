@@ -53,6 +53,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   bool _showExitBar = false;
 
   bool _isExiting = false;
+  bool _kickedOut = false; // Flag khusus jika tertendang karena pelanggaran
   bool _securityEnabled = false;
 
   // Analytics
@@ -106,7 +107,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     // saat dispose() dipanggil sebelum stream fully connected.
     if (widget.examId.isNotEmpty && widget.studentNis.isNotEmpty) {
       _sendMonitoringStatus('ACTIVE');
-      _pingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      _pingTimer = Timer.periodic(const Duration(minutes: 5), (_) {
         // FIX BUG-FREEZE: Jangan kirim 'ACTIVE' saat layar sedang dibekukan
         // oleh guru (BLOCKED). Ping ini akan menimpa status BLOCKED di Firestore
         // dan memicu stream listener untuk membuka freeze secara otomatis
@@ -128,15 +129,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                   });
                   ExamSessionService.instance.updateViolations(0);
                   _sendMonitoringStatus('ACTIVE');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Layar telah dibuka oleh pengawas.',
-                        style: GoogleFonts.poppins(),
-                      ),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
                 } else if (status == 'BLOCKED' && !_isFrozen) {
                   setState(() {
                     _isFrozen = true;
@@ -224,7 +216,12 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     // FIX BUG-STREAM: Gunakan catchError agar PlatformException "No active stream to cancel"
     // tidak propagasi ke Crashlytics jika dispose() dipanggil sebelum stream fully connected.
     _statusSub?.cancel().catchError((_) {});
-    _sendMonitoringStatus('FINISHED');
+    
+    // Jangan timpa status BLOCKED dengan FINISHED jika siswa dikeluarkan paksa
+    if (!_kickedOut) {
+      _sendMonitoringStatus('FINISHED');
+    }
+    
     ExamSessionService.instance.clear(); // hapus sesi saat keluar normal
     WidgetsBinding.instance.removeObserver(this);
     if (_securityEnabled) {
@@ -314,6 +311,8 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
               : 3;
 
           if (_minimizeCount >= maxViolations) {
+            _kickedOut = true; // Tandai bahwa siswa ditendang paksa
+            MonitoringService.instance.setLocalBlock(widget.examId, widget.studentNis); // Local fallback
             _logActivity(
               'EXIT_APP',
               'Keluar aplikasi (ke-$_minimizeCount×) — Diblokir karena membuka aplikasi lain (Browser/Chat/dll)',
@@ -330,7 +329,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
               color: Colors.red.shade800,
               duration: 5,
             );
-            _showViolationDialog(isBlocked: true);
+            _performExit(null, 'blocked_violation');
           } else {
             _logActivity(
               'EXIT_APP',
@@ -338,7 +337,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             );
             _sendMonitoringStatus('PAUSED');
             _showMinimizeWarning();
-            _showViolationDialog(isBlocked: false);
+            _showViolationDialog();
           }
         });
         _wasActuallyPaused = true;
@@ -423,7 +422,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
-  void _showViolationDialog({required bool isBlocked}) {
+  void _showViolationDialog() {
     if (!mounted) return;
     final maxViolations = AppRemoteConfig.instance.maxViolations > 0
         ? AppRemoteConfig.instance.maxViolations
@@ -436,41 +435,35 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Row(
           children: [
-            Icon(
-              isBlocked ? Icons.cancel_rounded : Icons.warning_amber_rounded,
-              color: isBlocked ? Colors.red : Colors.orange,
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.orange,
               size: 28,
             ),
             const SizedBox(width: 8),
             Text(
-              isBlocked ? 'Ujian Dibatalkan!' : 'Peringatan!',
+              'Peringatan!',
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.bold,
-                color: isBlocked ? Colors.red.shade700 : Colors.black87,
+                color: Colors.black87,
               ),
             ),
           ],
         ),
         content: Text(
-          isBlocked
-              ? 'Anda telah melanggar aturan dengan keluar/meminimize aplikasi sebanyak $maxViolations kali.\n\nSesuai aturan ujian, akses ujian Anda otomatis dibatalkan dan ujian ditutup.'
-              : 'Anda terdeteksi keluar dari layar ujian.\n\nJika Anda keluar atau meminimize aplikasi sebanyak $maxViolations kali, maka ujian akan dibatalkan otomatis.\n\nPelanggaran saat ini: $_minimizeCount / $maxViolations',
+          'Anda terdeteksi keluar dari layar ujian.\n\nJika Anda keluar atau meminimize aplikasi sebanyak $maxViolations kali, maka ujian akan dibatalkan otomatis.\n\nPelanggaran saat ini: $_minimizeCount / $maxViolations',
           style: GoogleFonts.poppins(fontSize: context.rs(13)),
         ),
         actions: [
           ElevatedButton(
             onPressed: () {
-              if (isBlocked) {
-                _performExit(ctx);
-              } else {
-                Navigator.of(ctx).pop();
-              }
+              Navigator.of(ctx).pop();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: isBlocked ? Colors.red.shade700 : Colors.orange.shade700,
+              backgroundColor: Colors.orange.shade700,
             ),
             child: Text(
-              isBlocked ? 'Keluar Aplikasi' : 'Saya Mengerti',
+              'Saya Mengerti',
               style: GoogleFonts.poppins(
                 fontSize: context.rs(13),
                 color: Colors.white,
@@ -1041,7 +1034,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
-  Future<void> _performExit([BuildContext? dialogCtx]) async {
+  Future<void> _performExit([BuildContext? dialogCtx, String? exitReason]) async {
     if (_isExiting) return;
     _isExiting = true;
     _securityEnabled = false;
@@ -1068,7 +1061,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     } catch (_) {}
 
     await Future.delayed(const Duration(milliseconds: 300));
-    if (mounted) Navigator.of(context).pop();
+    if (mounted) Navigator.of(context).pop(exitReason);
   }
 
   void _onRefresh() {

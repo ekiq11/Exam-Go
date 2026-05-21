@@ -1,6 +1,7 @@
 import 'package:examgo/firebas_analytics/analytic_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:examgo/services/exam_session_service.dart';
+import 'package:examgo/services/monitoring_service.dart';
 import 'package:examgo/view/pre_exam_checklist.dart';
 import 'package:examgo/view/qr_scanner.dart';
 import 'package:examgo/view/qris_web_view.dart';
@@ -188,8 +189,17 @@ class _HomeScreenState extends State<HomeScreen>
       return;
     }
 
+    // Cek apakah siswa masih diblokir oleh pengawas
+    if (session.examId.isNotEmpty && session.studentNis.isNotEmpty) {
+      final status = await MonitoringService.instance.getStudentStatus(session.examId, session.studentNis);
+      if (status == 'BLOCKED') {
+        if (mounted) _showViolationPopup();
+        return;
+      }
+    }
+
     // Langsung buka WebView dengan URL dari sesi sebelumnya
-    Navigator.push(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ExamWebViewScreen(
@@ -201,6 +211,10 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
     );
+
+    if (result == 'blocked_violation' && mounted) {
+      _showViolationPopup();
+    }
   }
 
   // ─── History ──────────────────────────────────────────────────
@@ -321,8 +335,17 @@ class _HomeScreenState extends State<HomeScreen>
     // Juga berguna jika terjadi crash — Crashlytics tahu siapa yang crash.
     AnalyticsService.instance.setStudentIdentity(name: name, nis: nis);
 
+    // Cek apakah siswa masih diblokir oleh pengawas
+    if (examId.isNotEmpty && nis.isNotEmpty) {
+      final status = await MonitoringService.instance.getStudentStatus(examId, nis);
+      if (status == 'BLOCKED') {
+        if (mounted) _showViolationPopup();
+        return;
+      }
+    }
+
     // Arahkan ke WebView dengan URL yang sudah mengandung identitas
-    Navigator.push(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ExamWebViewScreen(
@@ -332,6 +355,40 @@ class _HomeScreenState extends State<HomeScreen>
           studentName: name,
           studentNis: nis,
         ),
+      ),
+    );
+
+    if (result == 'blocked_violation' && mounted) {
+      _showViolationPopup();
+    }
+  }
+
+  void _showViolationPopup() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Row(
+          children: [
+            const Icon(Icons.cancel_rounded, color: Colors.red, size: 28),
+            const SizedBox(width: 8),
+            Text(
+              'Akses Diblokir',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.red.shade700),
+            ),
+          ],
+        ),
+        content: Text(
+          'Ujian Anda dibatalkan karena Anda terdeteksi melakukan pelanggaran maksimal (seperti meminimize atau membuka aplikasi lain) selama ujian berlangsung.\n\nSilakan lapor kepada pengawas ujian jika Anda ingin mengaktifkan kembali akses Anda.',
+          style: GoogleFonts.poppins(fontSize: 13),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
+            child: Text('Tutup', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+          ),
+        ],
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MonitoringService {
   static final MonitoringService instance = MonitoringService._();
@@ -104,6 +105,50 @@ class MonitoringService {
         .collection('students')
         .doc(nis)
         .snapshots();
+  }
+
+  /// Get status satu siswa secara one-off (cek lokal dulu sebagai fallback kuota Firestore)
+  Future<String?> getStudentStatus(String examId, String nis) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final localBlocked = prefs.getBool('blocked_${examId}_$nis') ?? false;
+      
+      final doc = await _db
+          .collection('exam_sessions')
+          .doc(examId)
+          .collection('students')
+          .doc(nis)
+          .get();
+          
+      if (doc.exists) {
+        final status = doc.data()?['status'] as String?;
+        // Jika di server ACTIVE, hapus blokir lokal
+        if (status == 'ACTIVE' && localBlocked) {
+          await prefs.remove('blocked_${examId}_$nis');
+        }
+        // Jika di server BLOCKED, pastikan lokal juga tersimpan
+        if (status == 'BLOCKED' && !localBlocked) {
+          await prefs.setBool('blocked_${examId}_$nis', true);
+        }
+        return status;
+      } else if (localBlocked) {
+        // Fallback jika dokumen tidak ada atau error quota tapi lokal terblokir
+        return 'BLOCKED';
+      }
+    } catch (_) {
+      // Jika Firestore error (misal Quota Exceeded), gunakan status lokal
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool('blocked_${examId}_$nis') == true) return 'BLOCKED';
+    }
+    return null;
+  }
+  
+  /// Tandai blokir secara lokal (dijamin berfungsi meski tanpa internet/quota)
+  Future<void> setLocalBlock(String examId, String nis) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('blocked_${examId}_$nis', true);
+    } catch (_) {}
   }
 
   /// Membuat sesi ujian baru dengan TTL 7 hari (expires_at)

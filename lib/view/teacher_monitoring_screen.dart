@@ -637,8 +637,10 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
           )),
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
+            child: Column(
               children: [
+                Row(
+                  children: [
                 // Status Indicator
                 Stack(
                   clipBehavior: Clip.none,
@@ -738,6 +740,48 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
                     ),
                   ],
                 ),
+              ],
+                ),
+                if (isBlocked) ...[
+                  const SizedBox(height: 12),
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          MonitoringService.instance.updateStudentStatus(
+                            examId: widget.examId,
+                            nis: nis,
+                            name: name,
+                            status: 'ACTIVE',
+                            violations: 0,
+                          );
+                          MonitoringService.instance.logActivity(
+                            examId: widget.examId,
+                            nis: nis,
+                            activityType: 'INFO',
+                            description: 'Pengawas membuka akses siswa',
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Akses $name berhasil dibuka', style: GoogleFonts.poppins()),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.lock_open_rounded, color: Colors.white, size: 20),
+                        label: Text('Buka Akses Ujian', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade600,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ]
               ],
             ),
           ),
