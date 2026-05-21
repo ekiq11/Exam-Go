@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class WebViewErrorHandler {
   /// Analyzes WebView errors to determine if a retry is feasible
   /// or if the user should be shown a fatal error (like OOM or Network loss).
