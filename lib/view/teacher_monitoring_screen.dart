@@ -563,38 +563,34 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
           return NestedScrollView(
             headerSliverBuilder: (context, innerBoxIsScrolled) => [
               // ── Custom SliverAppBar ──────────────────────────
-              SliverAppBar(
-                expandedHeight: 210,
-                pinned: true,
-                stretch: true,
-                backgroundColor: _kGreen,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                bottom: PreferredSize(
-                  preferredSize: const Size.fromHeight(20),
-                  child: Container(
-                    height: 20,
-                    decoration: const BoxDecoration(
-                      color: _kBg,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+              SliverLayoutBuilder(
+                builder: (context, constraints) {
+                  final isCollapsed = constraints.scrollOffset > 130;
+                  return SliverAppBar(
+                    expandedHeight: 210,
+                    pinned: true,
+                    stretch: true,
+                    backgroundColor: _kGreen,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    centerTitle: true,
+                    title: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      opacity: isCollapsed ? 1.0 : 0.0,
+                      child: Text(widget.title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
                     ),
-                  ),
-                ),
-                flexibleSpace: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final top = constraints.biggest.height;
-                    // tolerance of 40px for the bottom curve
-                    final isCollapsed = top <= kToolbarHeight + MediaQuery.of(context).padding.top + 40;
-                    return FlexibleSpaceBar(
-                      collapseMode: CollapseMode.pin,
-                      centerTitle: false,
-                      titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
-                      expandedTitleScale: 1.0,
-                      title: AnimatedOpacity(
-                        duration: const Duration(milliseconds: 200),
-                        opacity: isCollapsed ? 1.0 : 0.0,
-                        child: Text(widget.title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                    bottom: PreferredSize(
+                      preferredSize: const Size.fromHeight(20),
+                      child: Container(
+                        height: 20,
+                        decoration: const BoxDecoration(
+                          color: _kBg,
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                        ),
                       ),
+                    ),
+                    flexibleSpace: FlexibleSpaceBar(
+                      collapseMode: CollapseMode.pin,
                       background: Stack(
                     children: [
                       // Elegant Background Pattern / Gradient
@@ -665,9 +661,9 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
                       ),
                     ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
             ],
             body: Column(
@@ -1254,36 +1250,33 @@ class _StudentActivityLogScreenState extends State<StudentActivityLogScreen> {
         physics: const BouncingScrollPhysics(),
         slivers: [
           // ── AppBar ─────────────────────────────────────────
-          SliverAppBar(
-            expandedHeight: 230,
-            pinned: true,
-            backgroundColor: const Color(0xFF2E7D32),
-            foregroundColor: Colors.white,
-            elevation: 0,
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(20),
-              child: Container(
-                height: 20,
-                decoration: const BoxDecoration(
-                  color: _kBg,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+          SliverLayoutBuilder(
+            builder: (context, constraints) {
+              final isCollapsed = constraints.scrollOffset > 130;
+              return SliverAppBar(
+                expandedHeight: 230,
+                pinned: true,
+                backgroundColor: const Color(0xFF2E7D32),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                centerTitle: true,
+                title: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: isCollapsed ? 1.0 : 0.0,
+                  child: Text(widget.name, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
                 ),
-              ),
-            ),
-            flexibleSpace: LayoutBuilder(
-              builder: (context, constraints) {
-                final top = constraints.biggest.height;
-                final isCollapsed = top <= kToolbarHeight + MediaQuery.of(context).padding.top + 40;
-                return FlexibleSpaceBar(
-                  collapseMode: CollapseMode.pin,
-                  centerTitle: false,
-                  titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
-                  expandedTitleScale: 1.0,
-                  title: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: isCollapsed ? 1.0 : 0.0,
-                    child: Text(widget.name, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(20),
+                  child: Container(
+                    height: 20,
+                    decoration: const BoxDecoration(
+                      color: _kBg,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                    ),
                   ),
+                ),
+                flexibleSpace: FlexibleSpaceBar(
+                  collapseMode: CollapseMode.pin,
                   background: Stack(
                 children: [
                   // Elegant Background Pattern / Gradient
@@ -1388,10 +1381,10 @@ class _StudentActivityLogScreenState extends State<StudentActivityLogScreen> {
                 ),
               ],
             ),
-          );
-        },
+          ),
+        );
+      },
       ),
-    ),
 
           // ── Log Timeline Header ───────────────────────────
           SliverToBoxAdapter(
