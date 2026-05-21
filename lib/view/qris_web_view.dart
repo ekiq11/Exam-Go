@@ -127,6 +127,9 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                   setState(() {
                     _minimizeCount = 0;
                     _isFrozen = false;
+                    // FIX FCM-3: Reset flag agar FCM bisa terkirim lagi
+                    // jika siswa melanggar lagi setelah guru membuka blokir.
+                    _teacherNotified = false;
                   });
                   ExamSessionService.instance.updateViolations(0);
                   _sendMonitoringStatus('ACTIVE');
