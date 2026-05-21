@@ -71,10 +71,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   Timer? _pingTimer;
   StreamSubscription? _statusSub;
   bool _isFrozen = false;
-  // FIX FCM-1: Flag agar notifikasi ke guru hanya dikirim SEKALI
-  // saat pelanggaran pertama kali mencapai threshold, bukan setiap
-  // pelanggaran ke-4, ke-5, dst. (mencegah spam notifikasi).
-  bool _teacherNotified = false;
 
   // Error handling & retry
   int _loadErrorCount = 0;
@@ -127,9 +123,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                   setState(() {
                     _minimizeCount = 0;
                     _isFrozen = false;
-                    // FIX FCM-3: Reset flag agar FCM bisa terkirim lagi
-                    // jika siswa melanggar lagi setelah guru membuka blokir.
-                    _teacherNotified = false;
                     // FIX BUG-B: Reset _kickedOut agar dispose() bisa mengirim
                     // status FINISHED ke Firestore saat siswa keluar secara normal
                     // setelah guru membuka blokir. Tanpa ini, status siswa
@@ -331,12 +324,8 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
               'Keluar aplikasi (ke-$_minimizeCount×) — Diblokir karena membuka aplikasi lain (Browser/Chat/dll)',
             );
             _sendMonitoringStatus('BLOCKED');
-            // FIX FCM-1: Kirim notifikasi ke guru hanya sekali saat threshold pertama kali tercapai.
-            // _teacherNotified mencegah spam jika siswa keluar lagi.
-            if (!_teacherNotified) {
-              _teacherNotified = true;
-              _notifyTeacherViaGas();
-            }
+            // Kirim FCM ke guru — siswa mencapai batas maksimal pelanggaran
+            _notifyTeacherViaGas();
             _showSnack(
               '⚠️ Peringatan ke-$_minimizeCount: Pelanggaran telah dicatat dan dilaporkan ke pengawas ujian.',
               color: Colors.red.shade800,
@@ -349,6 +338,9 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
               'Keluar aplikasi (ke-$_minimizeCount×) — Peringatan membuka aplikasi lain',
             );
             _sendMonitoringStatus('PAUSED');
+            // Kirim FCM ke guru di setiap pelanggaran agar guru bisa memantau
+            // secara real-time, tidak hanya saat siswa diblokir.
+            _notifyTeacherViaGas();
             _showMinimizeWarning();
             _showViolationDialog();
           }
