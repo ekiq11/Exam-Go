@@ -564,63 +564,93 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
             headerSliverBuilder: (context, innerBoxIsScrolled) => [
               // ── Custom SliverAppBar ──────────────────────────
               SliverAppBar(
-                expandedHeight: 160,
+                expandedHeight: 190,
                 pinned: true,
                 stretch: true,
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black87,
+                backgroundColor: _kGreen,
+                foregroundColor: Colors.white,
                 elevation: 0,
                 bottom: PreferredSize(
-                  preferredSize: const Size.fromHeight(1),
-                  child: Container(color: Colors.grey.shade200, height: 1),
+                  preferredSize: const Size.fromHeight(20),
+                  child: Container(
+                    height: 20,
+                    decoration: const BoxDecoration(
+                      color: _kBg,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                    ),
+                  ),
                 ),
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.pin,
-                  background: SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(60, 12, 20, 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Row(
+                  background: Stack(
+                    children: [
+                      // Elegant Background Pattern / Gradient
+                      Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: -40, right: -40,
+                        child: Container(
+                          width: 150, height: 150,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.05),
+                          ),
+                        ),
+                      ),
+                      SafeArea(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.shade50,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.green.shade200),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(width: 6, height: 6,
-                                      decoration: const BoxDecoration(color: Color(0xFF2E7D32), shape: BoxShape.circle)),
-                                    const SizedBox(width: 5),
-                                    Text('LIVE', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF2E7D32))),
-                                  ],
-                                ),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(width: 6, height: 6,
+                                          decoration: const BoxDecoration(color: Color(0xFF69F0AE), shape: BoxShape.circle)),
+                                        const SizedBox(width: 6),
+                                        Text('LIVE', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5)),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const _LiveClockText(color: Colors.white70),
+                                ],
                               ),
-                              const SizedBox(width: 10),
-                              const _LiveClockText(color: Colors.black54),
+                              const SizedBox(height: 12),
+                              Text(
+                                widget.title,
+                                style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white, height: 1.2),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '${docs.length} Peserta Terdaftar',
+                                style: GoogleFonts.poppins(fontSize: 13, color: Colors.white.withValues(alpha: 0.8)),
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            widget.title,
-                            style: GoogleFonts.poppins(fontSize: 19, fontWeight: FontWeight.w700, color: Colors.black87, height: 1.2),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${docs.length} Peserta Terdaftar',
-                            style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade600),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ),

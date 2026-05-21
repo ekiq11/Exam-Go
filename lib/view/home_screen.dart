@@ -368,29 +368,80 @@ class _HomeScreenState extends State<HomeScreen>
   void _showViolationPopup() {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Row(
-          children: [
-            const Icon(Icons.cancel_rounded, color: Colors.red, size: 28),
-            const SizedBox(width: 8),
-            Text(
-              'Akses Diblokir',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.red.shade700),
-            ),
-          ],
-        ),
-        content: Text(
-          'Ujian Anda dibatalkan karena Anda terdeteksi melakukan pelanggaran maksimal (seperti meminimize atau membuka aplikasi lain) selama ujian berlangsung.\n\nSilakan lapor kepada pengawas ujian jika Anda ingin mengaktifkan kembali akses Anda.',
-          style: GoogleFonts.poppins(fontSize: 13),
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
-            child: Text('Tutup', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+      barrierColor: Colors.black.withValues(alpha: 0.7),
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Container(
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.red.shade900.withValues(alpha: 0.15),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              )
+            ],
           ),
-        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.gpp_bad_rounded, color: Colors.red.shade600, size: 48),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Akses Diblokir',
+                style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.red.shade800),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Ujian Anda dibatalkan karena terdeteksi melakukan pelanggaran maksimal (seperti meminimize atau membuka aplikasi lain) selama ujian berlangsung.',
+                style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade700, height: 1.5),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: Colors.amber.shade50, borderRadius: BorderRadius.circular(12)),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline_rounded, color: Colors.amber.shade800, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text('Silakan lapor kepada pengawas ujian untuk meminta pembukaan akses blokir.',
+                        style: GoogleFonts.poppins(fontSize: 12, color: Colors.amber.shade900, fontWeight: FontWeight.w500)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 0,
+                  ),
+                  child: Text('Saya Mengerti', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 14)),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
