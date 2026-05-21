@@ -431,7 +431,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.6),
+      barrierColor: Colors.black.withValues(alpha: 0.6),
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -443,7 +443,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.red.withOpacity(0.15),
+                color: Colors.red.withValues(alpha: 0.15),
                 blurRadius: 20,
                 spreadRadius: 5,
               )

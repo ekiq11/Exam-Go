@@ -199,6 +199,7 @@ class _HomeScreenState extends State<HomeScreen>
     }
 
     // Langsung buka WebView dengan URL dari sesi sebelumnya
+    if (!mounted) return;
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -345,6 +346,7 @@ class _HomeScreenState extends State<HomeScreen>
     }
 
     // Arahkan ke WebView dengan URL yang sudah mengandung identitas
+    if (!mounted) return;
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
