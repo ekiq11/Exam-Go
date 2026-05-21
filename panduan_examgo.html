@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Panduan Pengguna — ExamGO v4.0.0</title>
+  <title>Panduan Pengguna — ExamGO v5.0.0</title>
   <style>
     /* ── Google Fonts ── */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
@@ -510,10 +510,10 @@
       <span class="cover-tag">📱 Android &amp; iOS</span>
       <span class="cover-tag">🔒 Browser Ujian Aman</span>
       <span class="cover-tag">🏫 Institusi Pendidikan</span>
-      <span class="cover-tag">⚡ Versi 4.0.0</span>
+      <span class="cover-tag">⚡ Versi 5.0.0</span>
     </div>
     <div class="cover-meta">
-      Dokumen ini berlaku untuk ExamGO v4.0.0 &nbsp;|&nbsp; Mei 2026<br>
+      Dokumen ini berlaku untuk ExamGO v5.0.0 &nbsp;|&nbsp; Mei 2026<br>
       Dikembangkan oleh Tim Pengembang ExamGO
     </div>
   </div>
@@ -537,6 +537,7 @@
       <li><a href="#notifikasi">Notifikasi Pelanggaran (FCM)</a></li>
       <li><a href="#troubleshoot">Penyelesaian Masalah Umum</a></li>
       <li><a href="#faq">Pertanyaan yang Sering Diajukan</a></li>
+      <li><a href="#whats-new">Yang Baru di Versi 5.0.0</a></li>
     </ol>
   </div>
 
@@ -1674,11 +1675,58 @@
   </div>
 
   <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 12. YANG BARU DI VERSI 5.0.0                            -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="section-header" id="whats-new">
+    <div class="section-num">12</div>
+    <h2 class="section-title">Yang Baru di Versi 5.0.0</h2>
+  </div>
+
+  <div class="card">
+    <p>Pada pembaruan utama <strong>ExamGO versi 5.0.0</strong>, kami telah menambahkan fitur krusial dan memperbaiki stabilitas sistem secara menyeluruh untuk menjamin keamanan yang tak tertembus dan pemantauan tanpa kendala.</p>
+    
+    <div class="grid-2">
+      <div>
+        <h4>🔔 Notifikasi FCM Multi-Pengawas</h4>
+        <ul style="padding-left:18px; color:var(--text-mid); font-size:13px;">
+          <li>Mendukung beberapa pengawas secara bersamaan tanpa saling menimpa token.</li>
+          <li>Setiap pelanggaran memiliki ID Notifikasi unik (Timestamp) sehingga notifikasi berturut-turut akan muncul berjajar rapi dan tidak hilang di perangkat pengawas.</li>
+        </ul>
+      </div>
+      <div>
+        <h4>🔄 Pemisahan Sinkronisasi Data</h4>
+        <ul style="padding-left:18px; color:var(--text-mid); font-size:13px;">
+          <li>Perbaikan Race Condition: Aksi guru membuka blokir siswa (unblock) kini berjalan independen dan tidak akan menimpa indikator baterai siswa maupun waktu `last_ping`.</li>
+          <li>Sinkronisasi status antara siswa dan guru kini lebih akurat dan terisolasi secara data.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top: 16px;">
+      <div>
+        <h4>🛡️ Stabilisasi Kiosk & Anti-Cheat</h4>
+        <ul style="padding-left:18px; color:var(--text-mid); font-size:13px;">
+          <li>Perbaikan logika deteksi "Keluar Aplikasi": Siswa yang layarnya telah diblokir otomatis (Frozen) tidak akan mendapatkan hitungan pelanggaran ganda saat tidak sengaja menekan tombol Home.</li>
+          <li>Siswa tidak bisa membatalkan pembekuan tanpa izin guru (Bug Firebase Stream "aktif paksa" telah ditambal).</li>
+        </ul>
+      </div>
+      <div>
+        <h4>⚙️ Optimalisasi Sistem (Under the hood)</h4>
+        <ul style="padding-left:18px; color:var(--text-mid); font-size:13px;">
+          <li>Mendukung 16KB Page Size (NDK Android 15).</li>
+          <li>Peningkatan pelacakan performa & crash menggunakan Firebase Crashlytics yang lolos dari perusakan sistem obfuscation (ProGuard).</li>
+          <li>Bebas kebocoran data di konsol produksi.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
   <!-- FOOTER                                                -->
   <!-- ══════════════════════════════════════════════════════ -->
   <div class="footer">
     <p>🎓 <strong>Hak Cipta &copy; 2026 ExamGO Project.</strong> Semua Hak Dilindungi.<br>
-    <p style="margin-top:6px;">Versi 4.0.0</p>
+    <p style="margin-top:6px;">Versi 5.0.0</p>
     <p style="margin-top:6px;">Panduan Pengguna — Edisi Mei 2026</p>
     <p style="margin-top:12px; font-size:11px; color:#9CA3AF;">
       Dokumen ini dibuat untuk keperluan internal. Dilarang memperbanyak atau menyebarluaskan 
