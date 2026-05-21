@@ -12,8 +12,62 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+
+// ── FCM Background Handler ────────────────────────────────────────────
+// WAJIB berupa top-level function (bukan method class) dan diberi
+// @pragma('vm:entry-point') agar tidak di-tree-shake oleh compiler.
+// Flutter menjalankan ini di Isolate terpisah saat app di-background/terminated.
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Firebase harus diinisialisasi ulang di isolate background
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Tampilkan notifikasi lokal agar muncul di notification tray
+  await _showLocalNotification(message);
+}
+
+// Plugin notifikasi lokal — digunakan untuk foreground & background
+final FlutterLocalNotificationsPlugin _localNotif = FlutterLocalNotificationsPlugin();
+
+// Channel Android untuk notifikasi pelanggaran ujian (high priority)
+const AndroidNotificationChannel _examChannel = AndroidNotificationChannel(
+  'exam_violations',            // harus sama dengan channelId di GAS kode.gs
+  'Pelanggaran Ujian',
+  description: 'Notifikasi saat siswa melanggar aturan ujian',
+  importance: Importance.max,
+  playSound: true,
+  enableVibration: true,
+);
+
+/// Tampilkan notifikasi lokal dari RemoteMessage FCM.
+Future<void> _showLocalNotification(RemoteMessage message) async {
+  final notification = message.notification;
+  if (notification == null) return;
+  await _localNotif.show(
+    notification.hashCode,
+    notification.title,
+    notification.body,
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        _examChannel.id,
+        _examChannel.name,
+        channelDescription: _examChannel.description,
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound: true,
+        enableVibration: true,
+        icon: '@mipmap/ic_launcher',
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    ),
+  );
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,6 +121,44 @@ void main() async {
   // Dengan allowRuntimeFetching = false, font diambil dari cache/bundle saja
   // dan fallback ke system font jika tidak ada — TIDAK ada crash.
   GoogleFonts.config.allowRuntimeFetching = false;
+
+  // ── FCM: Background handler (WAJIB sebelum runApp) ─────────────
+  // Mendaftarkan top-level handler untuk pesan FCM saat app di-background
+  // atau terminated. Tanpa ini, notifikasi hanya bekerja di foreground.
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // ── flutter_local_notifications: inisialisasi plugin ───────────
+  // Diperlukan agar notifikasi muncul saat app di foreground (FCM tidak
+  // menampilkan notifikasi otomatis di foreground — harus manual via plugin).
+  await _localNotif.initialize(
+    const InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      iOS: DarwinInitializationSettings(
+        requestAlertPermission: false, // diminta manual saat guru login
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      ),
+    ),
+  );
+
+  // Buat channel Android (required Android 8+)
+  await _localNotif
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(_examChannel);
+
+  // ── FCM: Foreground message handler ────────────────────────────
+  // FCM tidak menampilkan heads-up notification saat app di foreground.
+  // Kita tampilkan manual via flutter_local_notifications.
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+    await _showLocalNotification(message);
+  });
+
+  // ── FCM: Tap notifikasi saat app di background (tidak terminated) ─
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    // App sudah buka — tidak perlu aksi tambahan untuk ExamGO
+    // (guru cukup buka app untuk melihat panel monitoring)
+  });
 
   // FIX FCM-4: Auto-update GAS saat Firebase merotasi FCM token guru.
   // Token bisa berubah kapan saja (factory reset, clear data, dll).

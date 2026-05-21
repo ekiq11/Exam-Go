@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panduan Pengguna — ExamGO v2.1.4</title>
+  <style>
+    /* ── Google Fonts ── */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
+
+    /* ── CSS Variables ── */
+    :root {
+      --green-dark:    #1B5E20;
+      --green-primary: #2E7D32;
+      --green-medium:  #388E3C;
+      --green-light:   #81C784;
+      --green-pale:    #E8F5E9;
+      --green-pastel:  #C8E6C9;
+      --orange:        #FF6F00;
+      --red:           #C62828;
+      --blue:          #1565C0;
+      --text-dark:     #1A1A2E;
+      --text-mid:      #374151;
+      --text-muted:    #6B7280;
+      --border:        #E5E7EB;
+      --bg-page:       #F8FAF8;
+      --bg-white:      #FFFFFF;
+      --radius-card:   14px;
+      --shadow-card:   0 2px 12px rgba(46,125,50,0.08), 0 1px 4px rgba(0,0,0,0.05);
+    }
+
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 14px; }
+
+    body {
+      font-family: 'Inter', 'Poppins', system-ui, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-dark);
+      line-height: 1.7;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* ── Print Setup ── */
+    @media print {
+      body { background: #fff; font-size: 11pt; }
+      .no-print { display: none !important; }
+      .page-break { page-break-before: always; }
+      .card { box-shadow: none !important; border: 1px solid #e0e0e0 !important; }
+      a { color: inherit; text-decoration: none; }
+      .cover { height: 100vh; }
+    }
+
+    @page {
+      size: A4;
+      margin: 18mm 16mm 18mm 16mm;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 24px 48px;
+    }
+
+    /* ── Print Button (screen only) ── */
+    .print-btn {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: linear-gradient(135deg, var(--green-primary), var(--green-medium));
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: 14px 28px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(46,125,50,0.35);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 999;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .print-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(46,125,50,0.4); }
+    .print-btn svg { width: 18px; height: 18px; }
+
+    /* ── Cover Page ── */
+    .cover {
+      min-height: 96vh;
+      background: linear-gradient(145deg, var(--green-dark) 0%, var(--green-primary) 55%, var(--green-light) 100%);
+      border-radius: 0 0 48px 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 40px;
+      position: relative;
+      overflow: hidden;
+      margin: 0 -24px 48px;
+    }
+    .cover::before {
+      content: '';
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 320px; height: 320px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+    }
+    .cover::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; left: -60px;
+      width: 240px; height: 240px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+    }
+    .cover-badge {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      padding: 6px 18px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .cover-icon {
+      width: 96px; height: 96px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 28px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 28px;
+      border: 2px solid rgba(255,255,255,0.25);
+      font-size: 48px;
+    }
+    .cover h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 52px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -1.5px;
+      line-height: 1.0;
+      margin-bottom: 12px;
+    }
+    .cover-sub {
+      font-size: 17px;
+      color: rgba(255,255,255,0.80);
+      font-weight: 400;
+      margin-bottom: 36px;
+    }
+    .cover-tags {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 48px;
+    }
+    .cover-tag {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .cover-meta {
+      margin-top: auto;
+      color: rgba(255,255,255,0.55);
+      font-size: 12px;
+    }
+    .cover-divider {
+      width: 60px;
+      height: 4px;
+      background: rgba(255,255,255,0.4);
+      border-radius: 2px;
+      margin: 0 auto 36px;
+    }
+
+    /* ── Table of Contents ── */
+    .toc {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 28px 32px;
+      margin-bottom: 40px;
+      box-shadow: var(--shadow-card);
+    }
+    .toc-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--green-primary);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toc ol {
+      list-style: none;
+      counter-reset: toc-counter;
+    }
+    .toc ol li {
+      counter-increment: toc-counter;
+      margin-bottom: 8px;
+    }
+    .toc ol li::before {
+      content: counter(toc-counter) '.';
+      color: var(--green-primary);
+      font-weight: 700;
+      margin-right: 10px;
+      min-width: 20px;
+      display: inline-block;
+    }
+    .toc a {
+      color: var(--text-mid);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .toc a:hover { color: var(--green-primary); }
+
+    /* ── Section Headers ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 48px 0 24px;
+    }
+    .section-num {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--green-primary), var(--green-medium));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-card);
+    }
+    .card-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-title .icon-box {
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .card p { color: var(--text-mid); margin-bottom: 10px; }
+    .card p:last-child { margin-bottom: 0; }
+
+    /* ── Steps ── */
+    .steps { counter-reset: step-counter; list-style: none; }
+    .steps li {
+      counter-increment: step-counter;
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      align-items: flex-start;
+    }
+    .steps li::before {
+      content: counter(step-counter);
+      width: 30px; height: 30px;
+      background: linear-gradient(135deg, var(--green-primary), var(--green-medium));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .steps li > div { flex: 1; }
+    .steps li strong { color: var(--text-dark); display: block; margin-bottom: 3px; }
+    .steps li span { color: var(--text-muted); font-size: 13px; }
+
+    /* ── Info Boxes ── */
+    .info-box {
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .info-box .ib-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .info-box .ib-content strong { display: block; margin-bottom: 4px; font-size: 14px; }
+    .info-box .ib-content p { font-size: 13px; color: var(--text-mid); margin: 0; }
+    .info-green  { background: var(--green-pale);    border-left: 4px solid var(--green-primary); }
+    .info-orange { background: #FFF8E1;               border-left: 4px solid var(--orange); }
+    .info-red    { background: #FFEBEE;               border-left: 4px solid var(--red); }
+    .info-blue   { background: #E3F2FD;               border-left: 4px solid var(--blue); }
+
+    /* ── Two-Column Grid ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 580px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    /* ── Feature Pills ── */
+    .feature-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .feature-pill {
+      background: var(--green-pale);
+      border: 1px solid var(--green-pastel);
+      color: var(--green-dark);
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+    th {
+      background: linear-gradient(135deg, var(--green-primary), var(--green-medium));
+      color: #fff;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+    }
+    th:first-child { border-radius: 8px 0 0 0; }
+    th:last-child  { border-radius: 0 8px 0 0; }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-mid);
+      vertical-align: top;
+    }
+    tr:nth-child(even) td { background: var(--bg-page); }
+    tr:hover td { background: var(--green-pale); }
+
+    /* ── Status Badges ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-green  { background: #DCFCE7; color: #166534; }
+    .badge-orange { background: #FEF3C7; color: #92400E; }
+    .badge-red    { background: #FEE2E2; color: #991B1B; }
+    .badge-blue   { background: #DBEAFE; color: #1E40AF; }
+    .badge-gray   { background: #F3F4F6; color: #374151; }
+
+    /* ── Warning Box ── */
+    .warning {
+      background: #FFFBEB;
+      border: 1px solid #FCD34D;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13px;
+      color: #78350F;
+    }
+    .warning strong { color: #92400E; }
+
+    /* ── Divider ── */
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 32px 0;
+    }
+
+    /* ── Sub headings ── */
+    h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin: 20px 0 12px;
+    }
+    h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--green-primary);
+      margin: 16px 0 8px;
+    }
+
+    /* ── Small caption ── */
+    .caption {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    /* ── Code / Mono ── */
+    code {
+      background: #F1F5F1;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: var(--green-dark);
+    }
+
+    /* ── Diagram box ── */
+    .diagram {
+      background: linear-gradient(135deg, var(--green-dark), var(--green-primary));
+      border-radius: 16px;
+      padding: 28px;
+      margin: 20px 0;
+      color: #fff;
+      text-align: center;
+    }
+    .diagram-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .diagram-flow .node {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 10px;
+      padding: 8px 16px;
+    }
+    .diagram-flow .arrow { font-size: 18px; opacity: 0.7; }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      padding: 32px 0 48px;
+      color: var(--text-muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+      margin-top: 48px;
+    }
+    .footer strong { color: var(--green-primary); }
+  </style>
+</head>
+<body>
+
+<!-- Print Button (hidden when printing) -->
+<button class="print-btn no-print" onclick="window.print()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+    <rect x="6" y="14" width="12" height="8"/>
+  </svg>
+  Simpan / Cetak PDF
+</button>
+
+<div class="container">
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- COVER PAGE                                           -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="cover">
+    <div class="cover-badge">📘 Panduan Pengguna Resmi</div>
+    <div class="cover-icon">🎓</div>
+    <h1>ExamGO</h1>
+    <p class="cover-sub">Secure Exam Browser — Panduan Lengkap Penggunaan</p>
+    <div class="cover-divider"></div>
+    <div class="cover-tags">
+      <span class="cover-tag">📱 Android &amp; iOS</span>
+      <span class="cover-tag">🔒 Browser Ujian Aman</span>
+      <span class="cover-tag">🏫 Kemenag RI</span>
+      <span class="cover-tag">⚡ Versi 2.1.4</span>
+    </div>
+    <div class="cover-meta">
+      Dokumen ini berlaku untuk ExamGO v2.1.4 &nbsp;|&nbsp; Mei 2026<br>
+      Dikembangkan oleh Tim Teknologi Pendidikan — Kemenag RI
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- TABLE OF CONTENTS                                     -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="toc">
+    <div class="toc-title">
+      <span>📋</span> Daftar Isi
+    </div>
+    <ol>
+      <li><a href="#intro">Pengenalan ExamGO</a></li>
+      <li><a href="#persyaratan">Persyaratan Sistem</a></li>
+      <li><a href="#instalasi">Instalasi Aplikasi</a></li>
+      <li><a href="#siswa">Panduan untuk Siswa</a></li>
+      <li><a href="#guru">Panduan untuk Guru / Pengawas</a></li>
+      <li><a href="#monitoring">Fitur Monitoring Real-Time</a></li>
+      <li><a href="#qr-generator">Generator QR Ujian</a></li>
+      <li><a href="#keamanan">Sistem Keamanan &amp; Anti-Kecurangan</a></li>
+      <li><a href="#notifikasi">Notifikasi Pelanggaran (FCM)</a></li>
+      <li><a href="#troubleshoot">Penyelesaian Masalah Umum</a></li>
+      <li><a href="#faq">Pertanyaan yang Sering Diajukan</a></li>
+    </ol>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 1. PENGENALAN                                         -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="section-header" id="intro">
+    <div class="section-num">1</div>
+    <h2 class="section-title">Pengenalan ExamGO</h2>
+  </div>
+
+  <div class="card">
+    <p>
+      <strong>ExamGO</strong> adalah aplikasi <em>Secure Exam Browser</em> yang dirancang khusus untuk 
+      pelaksanaan ujian digital yang aman, terpercaya, dan terintegrasi. Aplikasi ini memastikan 
+      bahwa siswa tidak dapat keluar dari sesi ujian, membuka aplikasi lain, mengambil screenshot, 
+      atau melakukan kecurangan selama ujian berlangsung.
+    </p>
+    <p>
+      ExamGO dikembangkan oleh Kementerian Agama Republik Indonesia sebagai standar resmi 
+      pelaksanaan ujian berbasis digital di lingkungan pendidikan keagamaan.
+    </p>
+  </div>
+
+  <h3>Keunggulan ExamGO</h3>
+  <div class="feature-grid">
+    <span class="feature-pill">🔐 QR Terenkripsi HMAC-SHA256</span>
+    <span class="feature-pill">🔒 Mode Kiosk (Lock Task)</span>
+    <span class="feature-pill">📡 Monitoring Real-Time via Firestore</span>
+    <span class="feature-pill">🔔 Notifikasi Pelanggaran FCM</span>
+    <span class="feature-pill">🛡️ Anti-Screenshot</span>
+    <span class="feature-pill">🖐️ Autentikasi Biometrik Guru</span>
+    <span class="feature-pill">📲 Android &amp; iOS</span>
+    <span class="feature-pill">🔄 Pemulihan Sesi Otomatis</span>
+    <span class="feature-pill">📊 Log Aktivitas Siswa</span>
+    <span class="feature-pill">⚡ Remote Config Firebase</span>
+  </div>
+
+  <div class="info-box info-blue">
+    <span class="ib-icon">ℹ️</span>
+    <div class="ib-content">
+      <strong>Untuk Siapa Panduan Ini?</strong>
+      <p>Panduan ini ditujukan untuk dua peran: <strong>Siswa</strong> (peserta ujian) dan 
+      <strong>Guru / Pengawas</strong> (pengelola dan pemantau ujian).</p>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 2. PERSYARATAN SISTEM                                 -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="section-header" id="persyaratan">
+    <div class="section-num">2</div>
+    <h2 class="section-title">Persyaratan Sistem</h2>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">
+        <div class="icon-box" style="background:#E3F2FD;">🤖</div>
+        Android
+      </div>
+      <table style="margin:0;">
+        <tr><td><strong>Versi OS</strong></td><td>Android 6.0+</td></tr>
+        <tr><td><strong>RAM</strong></td><td>Minimal 2 GB</td></tr>
+        <tr><td><strong>Penyimpanan</strong></td><td>50 MB kosong</td></tr>
+        <tr><td><strong>Kamera</strong></td><td>Diperlukan (QR scan)</td></tr>
+        <tr><td><strong>Internet</strong></td><td>Wajib aktif</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <div class="icon-box" style="background:#F3E5F5;">🍎</div>
+        iOS (iPhone / iPad)
+      </div>
+      <table style="margin:0;">
+        <tr><td><strong>Versi OS</strong></td><td>iOS 13.0+</td></tr>
+        <tr><td><strong>RAM</strong></td><td>Minimal 2 GB</td></tr>
+        <tr><td><strong>Penyimpanan</strong></td><td>50 MB kosong</td></tr>
+        <tr><td><strong>Kamera</strong></td><td>Diperlukan (QR scan)</td></tr>
+        <tr><td><strong>Internet</strong></td><td>Wajib aktif</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="info-box info-orange">
+    <span class="ib-icon">⚠️</span>
+    <div class="ib-content">
+      <strong>Perhatian Penting</strong>
+      <p>Perangkat yang telah di-<strong>root</strong> (Android) atau di-<strong>jailbreak</strong> (iOS) 
+      tidak dapat digunakan untuk ujian. ExamGO secara otomatis mendeteksi kondisi ini dan akan 
+      memblokir akses ujian.</p>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 3. INSTALASI                                          -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="section-header" id="instalasi">
+    <div class="section-num">3</div>
+    <h2 class="section-title">Instalasi Aplikasi</h2>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">
+        <div class="icon-box" style="background:#E3F2FD;">🤖</div>
+        Instalasi di Android
+      </div>
+      <ol class="steps">
+        <li>
+          <div>
+            <strong>Unduh APK</strong>
+            <span>Unduh file APK ExamGO dari tautan resmi yang diberikan oleh sekolah/madrasah Anda.</span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Aktifkan Sumber Tidak Dikenal</strong>
+            <span>Buka <em>Pengaturan → Keamanan → Izinkan sumber tidak dikenal</em> (Android 7 ke bawah) atau izinkan instalasi dari file manager yang Anda gunakan (Android 8+).</span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Instal APK</strong>
+            <span>Ketuk file APK yang telah diunduh dan ikuti petunjuk instalasi.</span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Buka ExamGO</strong>
+            <span>Temukan ikon ExamGO di layar utama dan ketuk untuk membukanya.</span>
+          </div>
+        </li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <div class="icon-box" style="background:#F3E5F5;">🍎</div>
+        Instalasi di iOS
+      </div>
+      <ol class="steps">
+        <li>
+          <div>
+            <strong>Minta Tautan Instalasi</strong>
+            <span>Hubungi administrator IT sekolah untuk mendapatkan tautan instalasi TestFlight atau profil konfigurasi.</span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Instal via TestFlight / Tautan</strong>
+            <span>Ikuti petunjuk instalasi yang dikirimkan melalui TestFlight atau metode enterprise distribution.</span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Percayai Pengembang</strong>
+            <span>Di <em>Pengaturan → Umum → Manajemen Perangkat</em>, percayai profil ExamGO jika diminta.</span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Buka ExamGO</strong>
+            <span>Temukan ikon ExamGO di layar utama dan ketuk untuk membukanya.</span>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="info-box info-green">
+    <span class="ib-icon">✅</span>
+    <div class="ib-content">
+      <strong>Pembaruan Otomatis</strong>
+      <p>ExamGO akan secara otomatis mengecek pembaruan saat aplikasi dibuka. Jika versi baru tersedia, 
+      Anda akan diminta untuk memperbarui sebelum dapat menggunakannya.</p>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 4. PANDUAN SISWA                                      -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="page-break"></div>
+  <div class="section-header" id="siswa">
+    <div class="section-num">4</div>
+    <h2 class="section-title">Panduan untuk Siswa</h2>
+  </div>
+
+  <div class="info-box info-blue">
+    <span class="ib-icon">📖</span>
+    <div class="ib-content">
+      <strong>Alur Ujian Siswa (Ringkasan)</strong>
+      <p>Buka App → Scan QR → Isi Identitas → Cek Kondisi → Mulai Ujian → Selesai</p>
+    </div>
+  </div>
+
+  <h3>4.1 Halaman Utama (Beranda)</h3>
+  <div class="card">
+    <p>Saat membuka ExamGO, Anda akan melihat halaman utama dengan beberapa elemen:</p>
+    <table>
+      <tr>
+        <th>Elemen</th>
+        <th>Fungsi</th>
+      </tr>
+      <tr>
+        <td>🟢 Indikator Online/Offline</td>
+        <td>Menampilkan status koneksi internet perangkat saat ini</td>
+      </tr>
+      <tr>
+        <td>📷 Tombol "Scan QR Ujian"</td>
+        <td>Membuka kamera untuk memindai QR Code ujian yang diberikan guru</td>
+      </tr>
+      <tr>
+        <td>🔑 Input Token Manual</td>
+        <td>Memasukkan kode token ujian jika QR tidak dapat dipindai</td>
+      </tr>
+      <tr>
+        <td>📜 Riwayat Scan</td>
+        <td>Menampilkan sesi ujian yang pernah diikuti sebelumnya</td>
+      </tr>
+      <tr>
+        <td>🕐 Jam Digital</td>
+        <td>Menampilkan waktu dan tanggal saat ini</td>
+      </tr>
+    </table>
+    <div class="caption">💡 Ketuk logo ExamGO sebanyak 7 kali untuk membuka Mode Guru (khusus pengajar)</div>
+  </div>
+
+  <h3>4.2 Memindai QR Code Ujian</h3>
+  <div class="card">
+    <ol class="steps">
+      <li>
+        <div>
+          <strong>Pastikan Koneksi Internet Aktif</strong>
+          <span>Periksa indikator koneksi di pojok kanan atas. Jika offline, ujian tidak dapat dimulai.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Ketuk "Scan QR Ujian"</strong>
+          <span>Tombol hijau besar di tengah halaman. Kamera akan terbuka secara otomatis.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Arahkan ke QR Code</strong>
+          <span>Arahkan kamera ke QR Code yang ditampilkan guru di papan tulis atau layar proyektor. Pastikan QR Code terlihat jelas dan tidak blur.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>QR Berhasil Dipindai</strong>
+          <span>Aplikasi akan memverifikasi keaslian QR secara otomatis. QR yang tidak berasal dari ExamGO akan ditolak.</span>
+        </div>
+      </li>
+    </ol>
+    <div class="info-box info-orange" style="margin-top:16px; margin-bottom:0;">
+      <span class="ib-icon">📁</span>
+      <div class="ib-content">
+        <strong>Alternatif: Scan dari Galeri</strong>
+        <p>Jika guru membagikan gambar QR secara digital, ketuk ikon galeri 🖼️ di pojok kanan atas layar scanner untuk memilih gambar dari penyimpanan perangkat.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>4.3 Dialog Persiapan Ujian</h3>
+  <div class="card">
+    <p>Setelah QR berhasil dipindai, aplikasi akan menampilkan dialog <strong>Persiapan Ujian</strong> yang berisi pemeriksaan otomatis:</p>
+    <table>
+      <tr>
+        <th>Pemeriksaan</th>
+        <th>Keterangan</th>
+        <th>Status</th>
+      </tr>
+      <tr>
+        <td>🔋 Level Baterai</td>
+        <td>Ditampilkan untuk memastikan baterai cukup</td>
+        <td><span class="badge badge-orange">Peringatan jika &lt;20%</span></td>
+      </tr>
+      <tr>
+        <td>🛡️ Integritas Perangkat</td>
+        <td>Cek root/jailbreak &amp; developer mode</td>
+        <td><span class="badge badge-red">Blokir jika terdeteksi</span></td>
+      </tr>
+      <tr>
+        <td>👤 Identitas Peserta</td>
+        <td>Nama lengkap dan NIS harus diisi</td>
+        <td><span class="badge badge-green">Wajib diisi</span></td>
+      </tr>
+    </table>
+    <div class="warning">
+      <strong>⚠️ Penting:</strong> Isi Nama Lengkap dan NIS/Nomor Peserta dengan benar. 
+      Data ini akan dikirimkan ke server ujian dan tercatat dalam laporan. 
+      Data yang pernah diisi akan tersimpan secara otomatis untuk pengisian berikutnya.
+    </div>
+  </div>
+
+  <h3>4.4 Saat Ujian Berlangsung</h3>
+  <div class="card">
+    <p>Setelah menekan <strong>"Mulai Ujian"</strong>, aplikasi akan masuk ke <strong>Mode Kiosk</strong> (mode kunci) dengan fitur keamanan penuh:</p>
+    <table>
+      <tr>
+        <th>Larangan Selama Ujian</th>
+        <th>Konsekuensi</th>
+      </tr>
+      <tr>
+        <td>🚫 Keluar dari aplikasi / Meminimize</td>
+        <td>Dicatat sebagai pelanggaran, guru mendapat notifikasi</td>
+      </tr>
+      <tr>
+        <td>🚫 Mengambil screenshot</td>
+        <td>Diblokir otomatis, dicatat dalam log</td>
+      </tr>
+      <tr>
+        <td>🚫 Merekam layar</td>
+        <td>Layar ditutup dengan overlay hitam</td>
+      </tr>
+      <tr>
+        <td>🚫 Membuka tab/browser lain</td>
+        <td>Navigasi ke domain lain diblokir</td>
+      </tr>
+      <tr>
+        <td>🚫 Copy-paste dari halaman ujian</td>
+        <td>Fungsi salin/tempel dinonaktifkan</td>
+      </tr>
+    </table>
+    <div class="info-box info-red" style="margin-top:16px; margin-bottom:0;">
+      <span class="ib-icon">🚨</span>
+      <div class="ib-content">
+        <strong>Sistem Pelanggaran Berjenjang</strong>
+        <p>Jika Anda keluar dari aplikasi lebih dari ambang batas yang ditentukan (default: 3×), layar ujian 
+        akan <strong>dikunci otomatis</strong> dan guru/pengawas akan mendapat notifikasi langsung ke 
+        perangkat mereka. Guru dapat membuka kunci dari Panel Monitoring.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>4.5 Mengakhiri Ujian</h3>
+  <div class="card">
+    <ol class="steps">
+      <li>
+        <div>
+          <strong>Tekan Tombol Keluar</strong>
+          <span>Tombol "Keluar Ujian" tersedia di sudut layar, atau tombol kembali fisik (Android).</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Konfirmasi Tiga Kali</strong>
+          <span>Untuk mencegah exit tidak sengaja, Anda harus menekan konfirmasi sebanyak 3 kali dalam 3 detik.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Ujian Selesai</strong>
+          <span>Aplikasi akan keluar dari mode kiosk dan kembali ke halaman utama. Sesi ujian otomatis dihapus dari perangkat.</span>
+        </div>
+      </li>
+    </ol>
+  </div>
+
+  <h3>4.6 Pemulihan Sesi (Crash Recovery)</h3>
+  <div class="card">
+    <p>Jika aplikasi ditutup paksa atau perangkat restart saat ujian sedang berlangsung, 
+    ExamGO akan mendeteksi sesi yang belum selesai secara otomatis saat dibuka kembali.</p>
+    <div class="info-box info-green" style="margin-bottom:0;">
+      <span class="ib-icon">🔄</span>
+      <div class="ib-content">
+        <strong>Dialog Lanjutkan Ujian</strong>
+        <p>Akan muncul dialog "Sesi Tidak Selesai" yang menawarkan pilihan untuk <strong>melanjutkan</strong> 
+        atau <strong>mengabaikan</strong> sesi ujian sebelumnya. Pilih "Lanjutkan" untuk kembali ke ujian.</p>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 5. PANDUAN GURU                                       -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="page-break"></div>
+  <div class="section-header" id="guru">
+    <div class="section-num">5</div>
+    <h2 class="section-title">Panduan untuk Guru / Pengawas</h2>
+  </div>
+
+  <div class="info-box info-blue">
+    <span class="ib-icon">🎓</span>
+    <div class="ib-content">
+      <strong>Fitur Khusus Guru</strong>
+      <p>Mode Guru memberikan akses ke pembuatan QR ujian, monitoring real-time siswa, notifikasi 
+      pelanggaran, dan pengaturan keamanan tambahan. Mode ini dilindungi PIN dan biometrik.</p>
+    </div>
+  </div>
+
+  <h3>5.1 Membuka Mode Guru</h3>
+  <div class="card">
+    <p>Mode Guru disembunyikan dari tampilan utama untuk mencegah akses tidak sah oleh siswa. Terdapat dua cara untuk membukanya:</p>
+
+    <h4>Cara 1: Ketuk Logo 7 Kali</h4>
+    <ol class="steps">
+      <li>
+        <div>
+          <strong>Ketuk Logo ExamGO</strong>
+          <span>Ketuk ikon sekolah (🎓) di pojok kiri atas halaman utama sebanyak 7 kali berturut-turut.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Petunjuk Muncul</strong>
+          <span>Saat 3 ketukan terakhir, akan muncul notifikasi singkat "X lagi untuk mode guru".</span>
+        </div>
+      </li>
+    </ol>
+
+    <h4>5.2 Login dengan PIN</h4>
+    <div class="grid-2">
+      <div>
+        <p><strong>Pertama Kali (Buat PIN)</strong></p>
+        <ol class="steps">
+          <li><div><strong>Buat PIN 4 Digit</strong><span>Masukkan PIN yang akan digunakan untuk login ke Mode Guru.</span></div></li>
+          <li><div><strong>Konfirmasi PIN</strong><span>Masukkan PIN yang sama sekali lagi untuk konfirmasi.</span></div></li>
+          <li><div><strong>PIN Tersimpan</strong><span>PIN tersimpan secara terenkripsi di perangkat (SHA-256).</span></div></li>
+        </ol>
+      </div>
+      <div>
+        <p><strong>Login Berikutnya</strong></p>
+        <ol class="steps">
+          <li><div><strong>Masukkan PIN</strong><span>Ketukkan 4 digit PIN yang sudah dibuat.</span></div></li>
+          <li><div><strong>Atau Gunakan Biometrik</strong><span>Ketuk ikon sidik jari 🖐️ untuk autentikasi dengan sidik jari atau Face ID.</span></div></li>
+          <li><div><strong>Dashboard Guru Terbuka</strong><span>Setelah berhasil, Token FCM perangkat Anda otomatis terdaftar untuk notifikasi.</span></div></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <h3>5.3 Dashboard Guru</h3>
+  <div class="card">
+    <p>Dashboard Guru menampilkan menu-menu berikut:</p>
+    <table>
+      <tr>
+        <th>Menu</th>
+        <th>Fungsi</th>
+      </tr>
+      <tr>
+        <td>📱 Buat QR Ujian</td>
+        <td>Membuat QR Code terenkripsi untuk sesi ujian baru</td>
+      </tr>
+      <tr>
+        <td>📊 Monitoring Ujian</td>
+        <td>Memantau aktivitas siswa secara real-time</td>
+      </tr>
+      <tr>
+        <td>🖐️ Pengaturan Biometrik</td>
+        <td>Mengaktifkan/menonaktifkan login sidik jari atau Face ID</td>
+      </tr>
+      <tr>
+        <td>ℹ️ Tentang Aplikasi</td>
+        <td>Informasi versi dan lisensi aplikasi</td>
+      </tr>
+      <tr>
+        <td>🚪 Keluar Mode Guru</td>
+        <td>Kembali ke tampilan siswa</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>5.4 Pengaturan Biometrik</h3>
+  <div class="card">
+    <ol class="steps">
+      <li>
+        <div>
+          <strong>Buka "Pengaturan Biometrik"</strong>
+          <span>Dari Dashboard Guru, ketuk menu "Pengaturan Biometrik".</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Aktifkan Toggle</strong>
+          <span>Geser toggle "Gunakan Biometrik" ke posisi aktif. Aplikasi akan meminta verifikasi biometrik terlebih dahulu untuk konfirmasi.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Biometrik Aktif</strong>
+          <span>Mulai dari login berikutnya, Anda dapat menggunakan sidik jari atau Face ID sebagai pengganti PIN.</span>
+        </div>
+      </li>
+    </ol>
+    <div class="info-box info-orange" style="margin-top:12px; margin-bottom:0;">
+      <span class="ib-icon">📱</span>
+      <div class="ib-content">
+        <strong>Persyaratan Biometrik</strong>
+        <p>Fitur biometrik hanya tersedia jika perangkat mendukung sidik jari atau Face ID dan 
+        Anda sudah mendaftarkannya di pengaturan perangkat.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>5.5 Reset PIN Guru</h3>
+  <div class="card">
+    <ol class="steps">
+      <li><div><strong>Masuk ke Dashboard Guru</strong><span>Login menggunakan PIN yang masih aktif.</span></div></li>
+      <li><div><strong>Ketuk Ikon Kunci di Pojok Kanan Atas</strong><span>Ikon 🔑 pada AppBar dashboard guru.</span></div></li>
+      <li><div><strong>Konfirmasi Reset</strong><span>Ketuk "Reset" pada dialog konfirmasi yang muncul.</span></div></li>
+      <li><div><strong>Buat PIN Baru</strong><span>Aplikasi akan mengarahkan Anda ke layar pembuatan PIN baru.</span></div></li>
+    </ol>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 6. MONITORING REAL-TIME                               -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="page-break"></div>
+  <div class="section-header" id="monitoring">
+    <div class="section-num">6</div>
+    <h2 class="section-title">Fitur Monitoring Real-Time</h2>
+  </div>
+
+  <div class="info-box info-green">
+    <span class="ib-icon">📡</span>
+    <div class="ib-content">
+      <strong>Didukung Firebase Firestore</strong>
+      <p>Data monitoring siswa disinkronkan secara real-time menggunakan Google Cloud Firestore. 
+      Guru dapat memantau kondisi semua siswa secara bersamaan dari satu layar.</p>
+    </div>
+  </div>
+
+  <h3>6.1 Membuka Monitoring</h3>
+  <div class="card">
+    <ol class="steps">
+      <li><div><strong>Masuk Mode Guru</strong><span>Login dengan PIN atau biometrik.</span></div></li>
+      <li><div><strong>Ketuk "Monitoring Ujian"</strong><span>Dari Dashboard Guru, ketuk menu monitoring.</span></div></li>
+      <li><div><strong>Pilih Sesi Ujian</strong><span>Daftar QR ujian yang pernah dibuat akan tampil. Pilih sesi yang ingin dipantau.</span></div></li>
+      <li><div><strong>Lihat Daftar Siswa</strong><span>Semua siswa yang telah scan QR akan muncul dengan status real-time.</span></div></li>
+    </ol>
+  </div>
+
+  <h3>6.2 Status Siswa</h3>
+  <div class="card">
+    <table>
+      <tr>
+        <th>Status</th>
+        <th>Ikon</th>
+        <th>Keterangan</th>
+      </tr>
+      <tr>
+        <td><span class="badge badge-green">ACTIVE</span></td>
+        <td>🟢 WiFi</td>
+        <td>Siswa sedang mengerjakan ujian dan terhubung</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-orange">PAUSED</span></td>
+        <td>🟡 Pause</td>
+        <td>Siswa sempat keluar dari aplikasi (pelanggaran)</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-red">BLOCKED</span></td>
+        <td>🔴 Block</td>
+        <td>Siswa telah mencapai batas pelanggaran, layar dikunci</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-blue">FINISHED</span></td>
+        <td>🔵 Check</td>
+        <td>Siswa telah selesai dan keluar dari ujian dengan normal</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-gray">OFFLINE</span></td>
+        <td>⚫ Cloud Off</td>
+        <td>Siswa terputus dari internet (tidak ping &gt;2 menit)</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>6.3 Log Aktivitas Siswa</h3>
+  <div class="card">
+    <p>Ketuk nama siswa untuk melihat log aktivitas secara detail:</p>
+    <table>
+      <tr>
+        <th>Jenis Aktivitas</th>
+        <th>Deskripsi</th>
+      </tr>
+      <tr>
+        <td>🚪 Keluar Aplikasi</td>
+        <td>Meninggalkan ExamGO (meminimize atau pindah ke app lain)</td>
+      </tr>
+      <tr>
+        <td>⚠️ Percobaan Keluar</td>
+        <td>Menekan tombol Keluar Ujian</td>
+      </tr>
+      <tr>
+        <td>📷 Percobaan Screenshot</td>
+        <td>Mencoba mengambil tangkapan layar</td>
+      </tr>
+      <tr>
+        <td>👁️ Layar Tersembunyi</td>
+        <td>Halaman tidak terlihat (visibilitychange)</td>
+      </tr>
+      <tr>
+        <td>✅ Mulai Ujian</td>
+        <td>Siswa pertama kali bergabung dan ujian dimulai</td>
+      </tr>
+      <tr>
+        <td>🔵 Selesai Ujian</td>
+        <td>Siswa keluar dari ujian dengan normal</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>6.4 Membuka Kunci Layar Siswa</h3>
+  <div class="card">
+    <p>Jika siswa terkena blokir (status BLOCKED) dan menurut pengawas ada alasan yang sah, guru dapat membuka kunci layar dari jarak jauh:</p>
+    <ol class="steps">
+      <li><div><strong>Buka Log Aktivitas Siswa</strong><span>Ketuk nama siswa yang berstatus BLOCKED.</span></div></li>
+      <li><div><strong>Ketuk Ikon Kunci Terbuka 🔓</strong><span>Ada di pojok kanan atas layar log aktivitas (hanya muncul untuk siswa BLOCKED).</span></div></li>
+      <li><div><strong>Layar Siswa Terbuka</strong><span>Dalam 1-3 detik, layar siswa akan terbuka dan status berubah ke ACTIVE secara real-time.</span></div></li>
+    </ol>
+  </div>
+
+  <h3>6.5 Menghapus Sesi Ujian</h3>
+  <div class="card">
+    <ol class="steps">
+      <li><div><strong>Di Halaman Daftar Monitoring</strong><span>Geser kartu sesi ujian ke kiri untuk memunculkan opsi hapus.</span></div></li>
+      <li><div><strong>Atau Ketuk Ikon Hapus 🗑️</strong><span>Ikon hapus berada di sebelah kanan setiap item sesi.</span></div></li>
+      <li><div><strong>Konfirmasi Penghapusan</strong><span>Ketuk "Ya, Hapus" pada dialog konfirmasi. Data Firestore akan dihapus permanen.</span></div></li>
+    </ol>
+    <div class="warning">
+      <strong>⚠️ Peringatan:</strong> Penghapusan sesi ujian bersifat <strong>permanen</strong>. 
+      Semua data siswa dan log aktivitas untuk sesi tersebut akan dihapus dari Firestore dan 
+      tidak dapat dipulihkan.
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 7. GENERATOR QR                                       -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="page-break"></div>
+  <div class="section-header" id="qr-generator">
+    <div class="section-num">7</div>
+    <h2 class="section-title">Generator QR Ujian</h2>
+  </div>
+
+  <div class="info-box info-green">
+    <span class="ib-icon">🔐</span>
+    <div class="ib-content">
+      <strong>QR Terenkripsi HMAC-SHA256</strong>
+      <p>Setiap QR yang dihasilkan ExamGO mengandung tanda tangan digital menggunakan algoritma 
+      HMAC-SHA256. QR yang tidak dibuat oleh ExamGO tidak akan bisa dipindai dan digunakan 
+      oleh aplikasi siswa.</p>
+    </div>
+  </div>
+
+  <h3>7.1 Membuat QR Ujian Baru</h3>
+  <div class="card">
+    <ol class="steps">
+      <li>
+        <div>
+          <strong>Masuk Mode Guru → "Buat QR Ujian"</strong>
+          <span>Ketuk menu "Buat QR Ujian" dari Dashboard Guru.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Isi Judul Ujian (Opsional)</strong>
+          <span>Contoh: "UTS Matematika Kelas X-A". Judul ini akan terlihat di monitoring dan laporan.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Masukkan URL Ujian (Wajib)</strong>
+          <span>URL halaman ujian, contoh: <code>https://forms.gle/ujian123</code> atau URL LMS sekolah. Protokol <code>https://</code> akan ditambahkan otomatis jika tidak diisi.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Ketuk "Buat QR Code"</strong>
+          <span>QR akan dibuat secara instan dengan enkripsi HMAC-SHA256 dan ID sesi ujian yang unik.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Tampilkan atau Bagikan QR</strong>
+          <span>QR siap ditampilkan ke siswa. Gunakan tombol bagikan untuk mengirim gambar QR ke WhatsApp, email, atau media lain.</span>
+        </div>
+      </li>
+    </ol>
+  </div>
+
+  <h3>7.2 Opsi Setelah QR Dibuat</h3>
+  <div class="card">
+    <table>
+      <tr>
+        <th>Tombol</th>
+        <th>Fungsi</th>
+      </tr>
+      <tr>
+        <td>📤 Bagikan / Simpan</td>
+        <td>Menyimpan QR sebagai gambar PNG dan membagikannya via aplikasi (WhatsApp, email, dll.)</td>
+      </tr>
+      <tr>
+        <td>📋 Salin Data</td>
+        <td>Menyalin data raw QR (enkripsi JSON) ke clipboard untuk keperluan teknis</td>
+      </tr>
+      <tr>
+        <td>🔄 Buat Baru</td>
+        <td>Mereset form untuk membuat QR ujian baru</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>7.3 Riwayat QR Ujian</h3>
+  <div class="card">
+    <p>Di bagian bawah halaman Generator QR, terdapat daftar riwayat QR yang pernah dibuat (maksimal 20 terakhir). Fitur ini memungkinkan guru untuk:</p>
+    <ul style="padding-left: 20px; color: var(--text-mid); margin-top:8px;">
+      <li style="margin-bottom:6px;">Menampilkan ulang QR untuk sesi yang sama tanpa membuat yang baru</li>
+      <li style="margin-bottom:6px;">Melihat URL dan judul ujian yang pernah dibuat</li>
+      <li style="margin-bottom:6px;">Membagikan ulang QR lama jika ada siswa yang belum scan</li>
+    </ul>
+  </div>
+
+  <div class="info-box info-orange">
+    <span class="ib-icon">⏱️</span>
+    <div class="ib-content">
+      <strong>Masa Berlaku QR</strong>
+      <p>QR Code ExamGO memiliki masa berlaku selama <strong>7 hari (10.080 menit)</strong> dari waktu pembuatan. 
+      Setelah masa berlaku habis, QR tidak dapat digunakan lagi dan harus dibuat QR baru.</p>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 8. SISTEM KEAMANAN                                    -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="page-break"></div>
+  <div class="section-header" id="keamanan">
+    <div class="section-num">8</div>
+    <h2 class="section-title">Sistem Keamanan &amp; Anti-Kecurangan</h2>
+  </div>
+
+  <div class="diagram">
+    <p style="margin-bottom:16px; font-weight:600; font-size:14px;">Lapisan Keamanan ExamGO</p>
+    <div class="diagram-flow">
+      <span class="node">🔐 QR Terenkripsi</span>
+      <span class="arrow">→</span>
+      <span class="node">🛡️ Verifikasi Perangkat</span>
+      <span class="arrow">→</span>
+      <span class="node">🔒 Mode Kiosk</span>
+      <span class="arrow">→</span>
+      <span class="node">📡 Monitoring Real-Time</span>
+      <span class="arrow">→</span>
+      <span class="node">🔔 Notifikasi FCM</span>
+    </div>
+  </div>
+
+  <h3>8.1 Verifikasi QR Code</h3>
+  <div class="card">
+    <p>Setiap QR Code ExamGO mengandung:</p>
+    <table>
+      <tr>
+        <th>Komponen</th>
+        <th>Fungsi</th>
+      </tr>
+      <tr>
+        <td>URL Ujian</td>
+        <td>Alamat halaman ujian yang terenkripsi</td>
+      </tr>
+      <tr>
+        <td>Nonce (ID Unik)</td>
+        <td>Identifikasi unik sesi ujian, terhubung ke Firestore</td>
+      </tr>
+      <tr>
+        <td>Timestamp</td>
+        <td>Waktu pembuatan QR untuk cek masa berlaku</td>
+      </tr>
+      <tr>
+        <td>Tanda Tangan HMAC-SHA256</td>
+        <td>Memastikan QR tidak dimanipulasi atau dipalsukan</td>
+      </tr>
+      <tr>
+        <td>Versi Format</td>
+        <td>Kompatibilitas dengan versi aplikasi</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>8.2 Deteksi Perangkat Tidak Aman</h3>
+  <div class="card">
+    <p>Sebelum ujian dimulai, ExamGO memeriksa:</p>
+    <div class="grid-2">
+      <div>
+        <h4>Android</h4>
+        <ul style="padding-left:18px; color:var(--text-mid); font-size:13px;">
+          <li>Akses root (SuperUser)</li>
+          <li>USB Debugging aktif</li>
+          <li>Developer Options aktif</li>
+          <li>Aplikasi berbahaya yang dikenal</li>
+        </ul>
+      </div>
+      <div>
+        <h4>iOS</h4>
+        <ul style="padding-left:18px; color:var(--text-mid); font-size:13px;">
+          <li>Jailbreak</li>
+          <li>Direktori sistem yang mencurigakan</li>
+          <li>Aplikasi yang tidak diizinkan</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>8.3 Mode Kiosk (Lock Task)</h3>
+  <div class="card">
+    <div class="grid-2">
+      <div>
+        <h4>Di Android</h4>
+        <ul style="padding-left:18px; color:var(--text-mid); font-size:13px; line-height:1.8;">
+          <li>Memblokir tombol Recent Apps</li>
+          <li>Memblokir tombol Home</li>
+          <li>Layar tidak mati (WAKE_LOCK)</li>
+          <li>Status bar tidak bisa digeser</li>
+          <li>FLAG_SECURE aktif (blokir screenshot)</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Di iOS</h4>
+        <ul style="padding-left:18px; color:var(--text-mid); font-size:13px; line-height:1.8;">
+          <li>Guided Access aktif</li>
+          <li>Status bar disembunyikan</li>
+          <li>Home indicator disembunyikan</li>
+          <li>Swipe dari tepi layar diblokir</li>
+          <li>Layar diblur saat screen recording</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h3>8.4 Pemantauan Navigasi Domain</h3>
+  <div class="card">
+    <p>Selama ujian berlangsung, siswa hanya dapat mengakses URL dari domain yang sama dengan 
+    URL ujian. Jika siswa mencoba membuka domain lain (misalnya membuka Google dari halaman ujian), 
+    navigasi tersebut akan diblokir dan muncul pesan peringatan.</p>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 9. NOTIFIKASI FCM                                     -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="section-header" id="notifikasi">
+    <div class="section-num">9</div>
+    <h2 class="section-title">Notifikasi Pelanggaran (FCM)</h2>
+  </div>
+
+  <div class="info-box info-blue">
+    <span class="ib-icon">🔔</span>
+    <div class="ib-content">
+      <strong>Firebase Cloud Messaging (FCM)</strong>
+      <p>ExamGO menggunakan FCM untuk mengirimkan notifikasi push langsung ke perangkat guru 
+      ketika siswa melakukan pelanggaran yang melampaui batas yang ditentukan.</p>
+    </div>
+  </div>
+
+  <h3>9.1 Alur Notifikasi</h3>
+  <div class="card">
+    <div class="diagram" style="margin:0;">
+      <div class="diagram-flow">
+        <span class="node">📱 Siswa Pelanggaran</span>
+        <span class="arrow">→</span>
+        <span class="node">⚙️ Backend GAS</span>
+        <span class="arrow">→</span>
+        <span class="node">🔔 FCM Google</span>
+        <span class="arrow">→</span>
+        <span class="node">📳 HP Guru</span>
+      </div>
+    </div>
+    <div style="margin-top:16px;">
+      <ol class="steps">
+        <li>
+          <div>
+            <strong>Siswa Mencapai Batas Pelanggaran</strong>
+            <span>Ketika jumlah keluar aplikasi siswa mencapai ambang batas (default 3×).</span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>App Siswa Kirim Laporan ke Backend GAS</strong>
+            <span>Data pelanggaran (nama siswa, NIS, judul ujian) dikirim ke Google Apps Script.</span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>GAS Kirim via FCM API v1</strong>
+            <span>Backend GAS menggunakan Service Account untuk memanggil FCM API dan mengirim push notification.</span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Guru Terima Notifikasi</strong>
+            <span>Notifikasi muncul di HP guru dengan informasi: nama siswa, NIS, dan judul ujian yang dilanggar.</span>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <h3>9.2 Mengaktifkan Notifikasi (Guru)</h3>
+  <div class="card">
+    <ol class="steps">
+      <li>
+        <div>
+          <strong>Login ke Mode Guru di HP Anda</strong>
+          <span>Notifikasi secara otomatis diaktifkan saat guru berhasil login ke Mode Guru. Tidak ada langkah manual tambahan.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Izinkan Notifikasi Saat Diminta</strong>
+          <span>Pada Android 13+ dan iOS, sistem akan meminta izin notifikasi. Ketuk "Izinkan" atau "Allow".</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Token Terdaftar Otomatis</strong>
+          <span>Token FCM perangkat guru dikirim dan disimpan di backend GAS secara otomatis.</span>
+        </div>
+      </li>
+    </ol>
+    <div class="info-box info-green" style="margin-top:12px; margin-bottom:0;">
+      <span class="ib-icon">🔄</span>
+      <div class="ib-content">
+        <strong>Token Otomatis Diperbarui</strong>
+        <p>Jika token FCM guru berubah (karena reset pabrik, hapus data, dll.), aplikasi akan 
+        secara otomatis memperbarui token ke backend tanpa perlu intervensi manual.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>9.3 Isi Notifikasi Pelanggaran</h3>
+  <div class="card">
+    <table>
+      <tr>
+        <th>Elemen Notifikasi</th>
+        <th>Contoh Isi</th>
+      </tr>
+      <tr>
+        <td>Judul Notifikasi</td>
+        <td>⚠️ Pelanggaran Ujian ke-3</td>
+      </tr>
+      <tr>
+        <td>Pesan Notifikasi</td>
+        <td>Budi Santoso (12345) keluar dari: UTS Matematika Kelas X</td>
+      </tr>
+      <tr>
+        <td>Prioritas</td>
+        <td>High Priority (langsung berbunyi meski HP diam)</td>
+      </tr>
+    </table>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 10. TROUBLESHOOTING                                   -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="page-break"></div>
+  <div class="section-header" id="troubleshoot">
+    <div class="section-num">10</div>
+    <h2 class="section-title">Penyelesaian Masalah Umum</h2>
+  </div>
+
+  <h3>10.1 Masalah pada Siswa</h3>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="icon-box" style="background:#FEE2E2;">❌</div>
+      "QR Tidak Valid" atau QR Tidak Terbaca
+    </div>
+    <table style="margin:0;">
+      <tr><th>Kemungkinan Penyebab</th><th>Solusi</th></tr>
+      <tr><td>Kamera kotor/buram</td><td>Bersihkan lensa kamera dan pastikan QR fokus</td></tr>
+      <tr><td>QR terlalu jauh/dekat</td><td>Jaga jarak kamera 15-30 cm dari QR Code</td></tr>
+      <tr><td>QR bukan dari ExamGO</td><td>Minta guru untuk memastikan menggunakan ExamGO</td></tr>
+      <tr><td>QR sudah kadaluarsa (&gt;7 hari)</td><td>Minta guru membuat QR baru</td></tr>
+      <tr><td>Pencahayaan redup</td><td>Pindah ke area yang lebih terang</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="icon-box" style="background:#FEE2E2;">❌</div>
+      "Akses Ditolak — Perangkat Terdeteksi Tidak Aman"
+    </div>
+    <p style="color:var(--text-mid);">Perangkat Anda terdeteksi dalam kondisi tidak aman. Kemungkinan penyebab:</p>
+    <ul style="padding-left:20px; color:var(--text-mid); margin-top:8px; font-size:13px;">
+      <li style="margin-bottom:6px;">Developer Options aktif → Matikan di <em>Pengaturan → Opsi Pengembang</em></li>
+      <li style="margin-bottom:6px;">USB Debugging aktif → Nonaktifkan di Developer Options</li>
+      <li style="margin-bottom:6px;">Perangkat di-root atau di-jailbreak → Tidak dapat digunakan untuk ujian</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="icon-box" style="background:#FFF8E1;">⚠️</div>
+      Ujian Gagal Dimuat / "Koneksi Gagal"
+    </div>
+    <ol class="steps">
+      <li><div><strong>Cek Koneksi Internet</strong><span>Pastikan WiFi atau data seluler aktif dan stabil.</span></div></li>
+      <li><div><strong>Coba Muat Ulang</strong><span>Ketuk "Muat Ulang" pada dialog error. ExamGO akan mencoba hingga 3 kali.</span></div></li>
+      <li><div><strong>Hubungi Pengawas</strong><span>Jika masih gagal setelah 3 percobaan, beritahu guru/pengawas ujian.</span></div></li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="icon-box" style="background:#FEE2E2;">🔒</div>
+      Layar Ujian Terkunci
+    </div>
+    <p style="color:var(--text-mid);">Layar terkunci karena Anda telah mencapai batas pelanggaran. <strong>Jangan panik.</strong> Langkah yang harus dilakukan:</p>
+    <ol class="steps" style="margin-top:12px;">
+      <li><div><strong>Tetap Tenang</strong><span>Jangan mencoba menutup paksa aplikasi.</span></div></li>
+      <li><div><strong>Hubungi Pengawas</strong><span>Beritahu guru/pengawas bahwa layar Anda terkunci.</span></div></li>
+      <li><div><strong>Tunggu Pembukaan Jarak Jauh</strong><span>Guru akan membuka kunci layar Anda dari Panel Monitoring dalam hitungan detik.</span></div></li>
+    </ol>
+  </div>
+
+  <h3>10.2 Masalah pada Guru</h3>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="icon-box" style="background:#FEE2E2;">❌</div>
+      Lupa PIN Guru
+    </div>
+    <p style="color:var(--text-mid);">Jika Anda benar-benar lupa PIN dan tidak bisa login, solusinya adalah:</p>
+    <ol class="steps" style="margin-top:12px;">
+      <li><div><strong>Hapus Data Aplikasi</strong><span>Di Pengaturan perangkat, cari ExamGO → Penyimpanan → Hapus Data. <strong>PERHATIAN:</strong> ini akan menghapus semua riwayat ujian lokal.</span></div></li>
+      <li><div><strong>Buka ExamGO dan Buat PIN Baru</strong><span>Setelah data dihapus, Mode Guru akan meminta pembuatan PIN baru dari awal.</span></div></li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="icon-box" style="background:#FFF8E1;">⚠️</div>
+      Notifikasi Tidak Muncul di HP Guru
+    </div>
+    <table style="margin:0;">
+      <tr><th>Penyebab</th><th>Solusi</th></tr>
+      <tr><td>Belum login ke Mode Guru</td><td>Login sekali ke Mode Guru untuk mendaftarkan token FCM</td></tr>
+      <tr><td>Izin notifikasi ditolak</td><td>Aktifkan notifikasi untuk ExamGO di Pengaturan perangkat</td></tr>
+      <tr><td>Mode Jangan Ganggu aktif</td><td>Nonaktifkan DND atau tambahkan ExamGO ke pengecualian</td></tr>
+      <tr><td>Koneksi internet tidak stabil</td><td>Pastikan HP guru terhubung ke internet</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="icon-box" style="background:#FFF8E1;">⚠️</div>
+      Siswa Tidak Muncul di Monitoring
+    </div>
+    <ul style="padding-left:20px; color:var(--text-mid); font-size:13px;">
+      <li style="margin-bottom:6px;">Pastikan siswa menggunakan QR dari sesi ujian yang Anda buka di monitoring</li>
+      <li style="margin-bottom:6px;">Siswa harus melewati dialog Persiapan Ujian dan mengisi identitas terlebih dahulu</li>
+      <li style="margin-bottom:6px;">Pastikan koneksi internet siswa stabil (cek indikator Online/Offline)</li>
+      <li style="margin-bottom:6px;">Refresh halaman monitoring dengan kembali dan masuk lagi ke sesi tersebut</li>
+    </ul>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 11. FAQ                                               -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="section-header" id="faq">
+    <div class="section-num">11</div>
+    <h2 class="section-title">Pertanyaan yang Sering Diajukan</h2>
+  </div>
+
+  <div class="card">
+    <h4>Q: Apakah ExamGO bisa digunakan tanpa internet?</h4>
+    <p>Tidak. ExamGO memerlukan koneksi internet aktif untuk memuat halaman ujian, 
+    mengirimkan status monitoring ke Firestore, dan menerima perintah guru (seperti buka kunci layar). 
+    Pastikan perangkat terhubung ke jaringan yang stabil sebelum memulai ujian.</p>
+  </div>
+
+  <div class="card">
+    <h4>Q: Apakah data ujian siswa tersimpan di aplikasi?</h4>
+    <p>Data yang tersimpan di perangkat siswa hanya mencakup: nama, NIS (untuk kemudahan pengisian ulang), 
+    dan URL sesi ujian (untuk crash recovery). Semua data monitoring dan log aktivitas disimpan di 
+    Google Cloud Firestore dan dapat diakses oleh guru melalui Mode Guru.</p>
+  </div>
+
+  <div class="card">
+    <h4>Q: Bisakah satu guru memantau banyak siswa sekaligus?</h4>
+    <p>Ya. Panel Monitoring ExamGO dirancang untuk menampilkan semua siswa dalam satu sesi ujian 
+    secara bersamaan dengan pembaruan real-time. Tidak ada batasan jumlah siswa yang dapat dipantau 
+    dalam satu sesi.</p>
+  </div>
+
+  <div class="card">
+    <h4>Q: Apa yang terjadi jika siswa restart HP saat ujian?</h4>
+    <p>ExamGO menyimpan data sesi ujian secara lokal. Saat aplikasi dibuka kembali, akan muncul 
+    dialog "Sesi Tidak Selesai" yang menawarkan opsi untuk melanjutkan ujian dari sesi yang sama. 
+    Siswa tidak perlu scan QR ulang.</p>
+  </div>
+
+  <div class="card">
+    <h4>Q: Bisakah siswa mengakses kalkulator atau aplikasi lain saat ujian?</h4>
+    <p>Tidak. Mode Kiosk yang aktif saat ujian akan memblokir akses ke aplikasi lain. Jika ujian 
+    memerlukan kalkulator, guru dapat memilih halaman ujian yang menyediakan kalkulator bawaan 
+    dalam antarmuka web ujian tersebut.</p>
+  </div>
+
+  <div class="card">
+    <h4>Q: Berapa lama QR Code berlaku?</h4>
+    <p>QR Code ExamGO berlaku selama <strong>7 hari</strong> sejak dibuat. Setelah masa berlaku habis, 
+    QR tidak dapat digunakan dan guru perlu membuat QR baru untuk sesi ujian berikutnya.</p>
+  </div>
+
+  <div class="card">
+    <h4>Q: Apakah satu QR bisa digunakan untuk beberapa kelas?</h4>
+    <p>Ya, satu QR Code bisa digunakan oleh banyak siswa dari kelas yang berbeda selama masa 
+    berlakunya masih aktif. Semua siswa yang scan QR yang sama akan terdaftar dalam satu sesi 
+    ujian yang sama di Panel Monitoring.</p>
+  </div>
+
+  <div class="card">
+    <h4>Q: Apakah ExamGO bisa digunakan di tablet?</h4>
+    <p>Ya. ExamGO mendukung penggunaan di tablet Android dan iPad. Antarmuka telah dioptimalkan 
+    untuk layar yang lebih besar dengan padding dan ukuran teks yang menyesuaikan secara otomatis.</p>
+  </div>
+
+  <div class="card">
+    <h4>Q: Bagaimana jika server ujian (LMS) mengalami gangguan?</h4>
+    <p>ExamGO akan mencoba memuat ulang halaman ujian secara otomatis hingga 3 kali dengan jeda 
+    5 detik. Jika masih gagal setelah 3 percobaan, akan muncul dialog error dengan opsi "Muat Ulang" 
+    manual. Keputusan untuk melanjutkan atau menghentikan ujian ada di tangan guru/pengawas.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- FOOTER                                                -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="footer">
+    <p>🎓 <strong>ExamGO — Secure Exam Browser</strong></p>
+    <p style="margin-top:6px;">Versi 2.1.4 &nbsp;|&nbsp; Kementerian Agama Republik Indonesia</p>
+    <p style="margin-top:6px;">Panduan Pengguna — Edisi Mei 2026</p>
+    <p style="margin-top:12px; font-size:11px; color:#9CA3AF;">
+      Dokumen ini dibuat untuk keperluan internal. Dilarang memperbanyak atau menyebarluaskan 
+      tanpa izin dari tim pengembang ExamGO.
+    </p>
+  </div>
+
+</div><!-- /container -->
+</body>
+</html>

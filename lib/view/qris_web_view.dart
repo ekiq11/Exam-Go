@@ -107,7 +107,11 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     if (widget.examId.isNotEmpty && widget.studentNis.isNotEmpty) {
       _sendMonitoringStatus('ACTIVE');
       _pingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-        _sendMonitoringStatus('ACTIVE');
+        // FIX BUG-FREEZE: Jangan kirim 'ACTIVE' saat layar sedang dibekukan
+        // oleh guru (BLOCKED). Ping ini akan menimpa status BLOCKED di Firestore
+        // dan memicu stream listener untuk membuka freeze secara otomatis
+        // tanpa persetujuan guru.
+        if (!_isFrozen) _sendMonitoringStatus('ACTIVE');
       });
       _statusSub = MonitoringService.instance
           .streamStudentStatus(widget.examId, widget.studentNis)
@@ -137,6 +141,11 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                   setState(() {
                     _isFrozen = true;
                   });
+                  // FIX BUG-FREEZE: Hentikan ping timer saat layar dibekukan
+                  // agar tidak ada kiriman status 'ACTIVE' yang menimpa 'BLOCKED'
+                  // di Firestore selama guru belum membuka kunci.
+                  _pingTimer?.cancel();
+                  _pingTimer = null;
                 }
               }
             },
@@ -604,6 +613,12 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       await androidController.setOnPlatformPermissionRequest(
         (request) => request.grant(),
       );
+      // Nonaktifkan tawaran translate dari Android WebView dengan mengirimkan
+      // header Accept-Language yang menyamakan bahasa konten dengan locale device.
+      // Android WebView hanya menampilkan translate bar jika mendeteksi bahasa
+      // halaman berbeda dari Accept-Language — dengan menerima semua bahasa
+      // (*) tanpa preferensi, bar translate tidak akan dimunculkan.
+      await androidController.setCustomHeaders({'Accept-Language': 'id-ID,id;q=0.9,*;q=0.5'});
     }
 
     // ── iOS: konfigurasi tambahan WKWebView ─────────────────
@@ -665,6 +680,28 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         window.addEventListener('beforeunload', function(e) {
           e.stopImmediatePropagation();
         }, true);
+        // --- Nonaktifkan fitur Translate browser ---
+        // Mencegah siswa menerjemahkan soal berbahasa Inggris via
+        // Google Translate bar (Android WebView/Chrome) atau popup translate.
+        // Cara 1: set meta tag "google" notranslate
+        (function() {
+          var meta = document.querySelector('meta[name="google"]');
+          if (!meta) {
+            meta = document.createElement('meta');
+            meta.name = 'google';
+            document.head.appendChild(meta);
+          }
+          meta.content = 'notranslate';
+        })();
+        // Cara 2: tambahkan class "notranslate" ke <html> — dikenali WebView & Chrome
+        try { document.documentElement.classList.add('notranslate'); } catch(_){}
+        // Cara 3: set lang ke bahasa halaman agar WebView tidak menawarkan translate
+        // (WebView hanya menawarkan translate jika lang berbeda dari locale device)
+        try {
+          if (!document.documentElement.getAttribute('translate')) {
+            document.documentElement.setAttribute('translate', 'no');
+          }
+        } catch(_){}
         // Keep-alive ping ke server ujian
         if (!window.__examgoKA) {
           window.__examgoKA = setInterval(function() {

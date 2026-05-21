@@ -39,16 +39,52 @@ function doPost(e) {
   // ── Guru daftar FCM token ───────────────────────────────────────
   if (action === 'registerToken') {
     if (!data.token) return _json({ error: 'missing_token' });
+
+    // FIX FCM-LEAK: Simpan token PER examId, bukan satu token global.
+    // Dulu: props.setProperty('TEACHER_FCM_TOKEN', token)
+    //   → token guru A ditimpa guru B → notif ke HP yang salah.
+    // Sekarang: props.setProperty('TEACHER_TOKEN_<examId>', token)
+    //   → setiap ujian punya token guru-nya sendiri.
+    if (data.examId) {
+      var key = 'TEACHER_TOKEN_' + data.examId;
+      props.setProperty(key, data.token);
+      // Simpan timestamp agar bisa di-cleanup setelah 7 hari
+      props.setProperty(key + '_TS', String(Date.now()));
+      Logger.log('✅ Token registered for examId [' + data.examId + ']: ' + data.token.substring(0, 20) + '...');
+    }
+
+    // Tetap simpan token global sebagai fallback (backward-compat)
     props.setProperty('TEACHER_FCM_TOKEN', data.token);
-    Logger.log('✅ Teacher token registered: ' + data.token.substring(0, 20) + '...');
+    Logger.log('✅ Global teacher token updated: ' + data.token.substring(0, 20) + '...');
+
+    // Bersihkan token lama (>7 hari) agar Script Properties tidak penuh
+    _cleanupStaleTokens(props);
+
     return _json({ success: true, action: 'registerToken' });
   }
 
   // ── Siswa melanggar → kirim notifikasi ke guru ──────────────────
   if (action === 'notify') {
-    var teacherToken = props.getProperty('TEACHER_FCM_TOKEN');
+    var examId = data.examId || '';
+
+    // FIX FCM-LEAK: Cari token berdasarkan examId terlebih dahulu.
+    // Hanya jika tidak ada → fallback ke token global.
+    var teacherToken = null;
+    if (examId) {
+      teacherToken = props.getProperty('TEACHER_TOKEN_' + examId);
+      if (teacherToken) {
+        Logger.log('✅ Menggunakan token spesifik untuk examId: ' + examId);
+      } else {
+        Logger.log('⚠️ Token untuk examId [' + examId + '] tidak ditemukan, coba token global.');
+      }
+    }
+
     if (!teacherToken) {
-      Logger.log('⚠️ No teacher FCM token registered. Guru belum membuka Teacher Mode.');
+      teacherToken = props.getProperty('TEACHER_FCM_TOKEN');
+    }
+
+    if (!teacherToken) {
+      Logger.log('⚠️ Tidak ada teacher FCM token. Guru belum membuka Teacher Mode.');
       return _json({ error: 'no_teacher_token' });
     }
 
@@ -56,7 +92,6 @@ function doPost(e) {
     var studentName = data.studentName || 'Siswa';
     var studentNis  = data.studentNis  || '-';
     var examTitle   = data.examTitle   || 'Ujian';
-    var examId      = data.examId      || '-';
 
     var title = '⚠️ Pelanggaran Ujian ke-' + violations;
     var body  = studentName + ' (' + studentNis + ') keluar dari: ' + examTitle;
@@ -76,6 +111,29 @@ function doPost(e) {
 
   return _json({ error: 'unknown_action', action: action });
 }
+
+// ── Hapus token examId yang sudah lebih dari 7 hari ────────────────
+function _cleanupStaleTokens(props) {
+  try {
+    var allProps = props.getProperties();
+    var now = Date.now();
+    var sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+    Object.keys(allProps).forEach(function(key) {
+      if (key.indexOf('TEACHER_TOKEN_') === 0 && key.indexOf('_TS') === -1) {
+        var tsKey = key + '_TS';
+        var ts = parseInt(allProps[tsKey] || '0');
+        if (ts > 0 && (now - ts) > sevenDaysMs) {
+          props.deleteProperty(key);
+          props.deleteProperty(tsKey);
+          Logger.log('🧹 Token kadaluarsa dihapus: ' + key);
+        }
+      }
+    });
+  } catch (e) {
+    Logger.log('⚠️ Cleanup error (abaikan): ' + e.message);
+  }
+}
+
 
 // ── GET: health check (opsional) ───────────────────────────────────
 function doGet(e) {
