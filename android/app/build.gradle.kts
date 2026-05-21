@@ -93,7 +93,7 @@ android {
 
 dependencies {
     // FIX BUG: flutter_local_notifications requires core library desugaring
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     
     // FIX: app-update dan asset-delivery DIHAPUS — tidak dipakai di kode
     // native maupun Flutter. Keduanya menambah ~2MB ke AAB tanpa manfaat.
