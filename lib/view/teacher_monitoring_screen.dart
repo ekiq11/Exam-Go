@@ -570,7 +570,6 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
                 backgroundColor: _kGreen,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                title: Text(widget.title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
                 bottom: PreferredSize(
                   preferredSize: const Size.fromHeight(20),
                   child: Container(
@@ -581,9 +580,21 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
                     ),
                   ),
                 ),
-                flexibleSpace: FlexibleSpaceBar(
-                  collapseMode: CollapseMode.pin,
-                  background: Stack(
+                flexibleSpace: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final top = constraints.biggest.height;
+                    // tolerance of 40px for the bottom curve
+                    final isCollapsed = top <= kToolbarHeight + MediaQuery.of(context).padding.top + 40;
+                    return FlexibleSpaceBar(
+                      collapseMode: CollapseMode.pin,
+                      centerTitle: false,
+                      titlePadding: const EdgeInsets.only(left: 56, bottom: 26),
+                      title: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 200),
+                        opacity: isCollapsed ? 1.0 : 0.0,
+                        child: Text(widget.title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                      ),
+                      background: Stack(
                     children: [
                       // Elegant Background Pattern / Gradient
                       Container(
@@ -653,8 +664,10 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
                       ),
                     ],
                   ),
-                ),
-              ),
+                );
+              },
+            ),
+          ),
             ],
             body: Column(
               children: [
@@ -800,7 +813,7 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
             icon: Icons.warning_amber_rounded,
             color: Colors.orange.shade700,
             bg: Colors.orange.shade50,
-            label: 'Total Pelanggaran',
+            label: 'Pelanggaran',
             value: violations.toString(),
             subtitle: 'dari $total siswa',
           ),
@@ -811,7 +824,7 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
             icon: Icons.battery_alert_rounded,
             color: Colors.red.shade600,
             bg: Colors.red.shade50,
-            label: 'Baterai Lemah',
+            label: 'Baterai',
             value: lowBattery.toString(),
             subtitle: 'di bawah 20%',
           ),
@@ -822,7 +835,7 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
             icon: Icons.people_alt_rounded,
             color: Colors.indigo.shade600,
             bg: Colors.indigo.shade50,
-            label: 'Total Peserta',
+            label:'Peserta',
             value: total.toString(),
             subtitle: 'terdaftar',
           ),
@@ -1246,7 +1259,6 @@ class _StudentActivityLogScreenState extends State<StudentActivityLogScreen> {
             backgroundColor: const Color(0xFF2E7D32),
             foregroundColor: Colors.white,
             elevation: 0,
-            title: Text(widget.name, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(20),
               child: Container(
@@ -1257,9 +1269,20 @@ class _StudentActivityLogScreenState extends State<StudentActivityLogScreen> {
                 ),
               ),
             ),
-            flexibleSpace: FlexibleSpaceBar(
-              collapseMode: CollapseMode.pin,
-              background: Stack(
+            flexibleSpace: LayoutBuilder(
+              builder: (context, constraints) {
+                final top = constraints.biggest.height;
+                final isCollapsed = top <= kToolbarHeight + MediaQuery.of(context).padding.top + 40;
+                return FlexibleSpaceBar(
+                  collapseMode: CollapseMode.pin,
+                  centerTitle: false,
+                  titlePadding: const EdgeInsets.only(left: 56, bottom: 26),
+                  title: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: isCollapsed ? 1.0 : 0.0,
+                    child: Text(widget.name, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                  ),
+                  background: Stack(
                 children: [
                   // Elegant Background Pattern / Gradient
                   Container(
@@ -1363,8 +1386,10 @@ class _StudentActivityLogScreenState extends State<StudentActivityLogScreen> {
                 ),
               ],
             ),
-          ),
-        ),
+          );
+        },
+      ),
+    ),
 
           // ── Log Timeline Header ───────────────────────────
           SliverToBoxAdapter(
