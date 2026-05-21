@@ -588,6 +588,8 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
                     return FlexibleSpaceBar(
                       collapseMode: CollapseMode.pin,
                       centerTitle: false,
+                      titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+                      expandedTitleScale: 1.0,
                       title: AnimatedOpacity(
                         duration: const Duration(milliseconds: 200),
                         opacity: isCollapsed ? 1.0 : 0.0,
@@ -1275,6 +1277,8 @@ class _StudentActivityLogScreenState extends State<StudentActivityLogScreen> {
                 return FlexibleSpaceBar(
                   collapseMode: CollapseMode.pin,
                   centerTitle: false,
+                  titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+                  expandedTitleScale: 1.0,
                   title: AnimatedOpacity(
                     duration: const Duration(milliseconds: 200),
                     opacity: isCollapsed ? 1.0 : 0.0,
