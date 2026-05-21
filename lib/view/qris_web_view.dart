@@ -318,7 +318,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
           if (_minimizeCount >= maxViolations) {
             _logActivity(
               'EXIT_APP',
-              'Keluar aplikasi (ke-$_minimizeCount×) — Status: BLOCKED',
+              'Keluar aplikasi (ke-$_minimizeCount×) — Diblokir karena membuka aplikasi lain (Browser/Chat/dll)',
             );
             _sendMonitoringStatus('BLOCKED');
             // FIX FCM-1: Kirim notifikasi ke guru hanya sekali saat threshold pertama kali tercapai.
@@ -336,7 +336,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
           } else {
             _logActivity(
               'EXIT_APP',
-              'Keluar aplikasi (ke-$_minimizeCount×) — Peringatan',
+              'Keluar aplikasi (ke-$_minimizeCount×) — Peringatan membuka aplikasi lain',
             );
             _sendMonitoringStatus('PAUSED');
             _showMinimizeWarning();
@@ -598,12 +598,15 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             // Dicatat tapi tidak trigger pelanggaran — bisa jadi notifikasi
             _logActivity(
               'SCREEN_HIDDEN',
-              'Halaman tidak terlihat (mungkin switching apps)',
+              'Layar disembunyikan (Siswa terdeteksi berpindah ke aplikasi lain / Home Screen)',
             );
           }
         },
       )
-      ..loadRequest(Uri.parse(_resolvedUrl));
+      ..loadRequest(
+        Uri.parse(_resolvedUrl),
+        headers: {'Accept-Language': 'id-ID,id;q=0.9,*;q=0.5'},
+      );
 
     // ── Android: konfigurasi tambahan ─────────────────────────
     if (!kIsWeb && Platform.isAndroid) {
@@ -615,10 +618,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       );
       // Nonaktifkan tawaran translate dari Android WebView dengan mengirimkan
       // header Accept-Language yang menyamakan bahasa konten dengan locale device.
-      // Android WebView hanya menampilkan translate bar jika mendeteksi bahasa
-      // halaman berbeda dari Accept-Language — dengan menerima semua bahasa
-      // (*) tanpa preferensi, bar translate tidak akan dimunculkan.
-      await androidController.setCustomHeaders({'Accept-Language': 'id-ID,id;q=0.9,*;q=0.5'});
+      // (Header diset via loadRequest di atas).
     }
 
     // ── iOS: konfigurasi tambahan WKWebView ─────────────────

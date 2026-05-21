@@ -46,10 +46,10 @@ Future<void> _showLocalNotification(RemoteMessage message) async {
   final notification = message.notification;
   if (notification == null) return;
   await _localNotif.show(
-    notification.hashCode,
-    notification.title,
-    notification.body,
-    NotificationDetails(
+    id: notification.hashCode,
+    title: notification.title,
+    body: notification.body,
+    notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
         _examChannel.id,
         _examChannel.name,
@@ -131,7 +131,7 @@ void main() async {
   // Diperlukan agar notifikasi muncul saat app di foreground (FCM tidak
   // menampilkan notifikasi otomatis di foreground — harus manual via plugin).
   await _localNotif.initialize(
-    const InitializationSettings(
+    settings: const InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(
         requestAlertPermission: false, // diminta manual saat guru login
