@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:examgo/constant/app_config.dart';
 import 'package:examgo/services/monitoring_service.dart';
+import 'package:examgo/widget/slide_to_unblock.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -563,88 +564,63 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
             headerSliverBuilder: (context, innerBoxIsScrolled) => [
               // ── Custom SliverAppBar ──────────────────────────
               SliverAppBar(
-                expandedHeight: 200,
+                expandedHeight: 160,
                 pinned: true,
                 stretch: true,
-                backgroundColor: _kGreen,
-                foregroundColor: Colors.white,
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black87,
                 elevation: 0,
                 bottom: PreferredSize(
-                  preferredSize: const Size.fromHeight(0),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: _kBg,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                    ),
-                    height: 24,
-                  ),
+                  preferredSize: const Size.fromHeight(1),
+                  child: Container(color: Colors.grey.shade200, height: 1),
                 ),
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.pin,
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Container(
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Color(0xFF1B5E20), _kGreen, _kGreenL],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                      ),
-                      Positioned(top: -50, right: -50,
-                        child: Container(width: 220, height: 220,
-                          decoration: BoxDecoration(shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.05)))),
-                      // Title & Info
-                      SafeArea(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(60, 12, 20, 44),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.end,
+                  background: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(60, 12, 20, 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Row(
                             children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(width: 6, height: 6,
-                                          decoration: const BoxDecoration(color: Color(0xFF69F0AE), shape: BoxShape.circle)),
-                                        const SizedBox(width: 5),
-                                        Text('LIVE', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  const _LiveClockText(),
-                                ],
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade50,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Colors.green.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(width: 6, height: 6,
+                                      decoration: const BoxDecoration(color: Color(0xFF2E7D32), shape: BoxShape.circle)),
+                                    const SizedBox(width: 5),
+                                    Text('LIVE', style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF2E7D32))),
+                                  ],
+                                ),
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                widget.title,
-                                style: GoogleFonts.poppins(fontSize: 19, fontWeight: FontWeight.w700, color: Colors.white, height: 1.2),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${docs.length} Peserta Terdaftar',
-                                style: GoogleFonts.poppins(fontSize: 12, color: Colors.white.withValues(alpha: 0.7)),
-                              ),
+                              const SizedBox(width: 10),
+                              const _LiveClockText(color: Colors.black54),
                             ],
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          Text(
+                            widget.title,
+                            style: GoogleFonts.poppins(fontSize: 19, fontWeight: FontWeight.w700, color: Colors.black87, height: 1.2),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${docs.length} Peserta Terdaftar',
+                            style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade600),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -1152,20 +1128,12 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
 
                 // ── Unblock Button ─────────────────────────
                 if (isBlocked) ...[
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () => _showUnblockConfirmation(context, widget.examId, nis, name),
-                      icon: const Icon(Icons.lock_open_rounded, color: Colors.white, size: 18),
-                      label: Text('Buka Akses Ujian', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.shade600,
-                        padding: const EdgeInsets.symmetric(vertical: 11),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                      ),
-                    ),
+                  const SizedBox(height: 12),
+                  SlideToUnblock(
+                    onAction: () => _showUnblockConfirmation(context, widget.examId, nis, name),
+                    text: 'Geser untuk Buka Akses',
+                    backgroundColor: Colors.red.shade50,
+                    sliderColor: Colors.red.shade600,
                   ),
                 ],
               ],
@@ -1223,47 +1191,41 @@ class _StudentActivityLogScreenState extends State<StudentActivityLogScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _kBg,
+      bottomNavigationBar: widget.status == 'BLOCKED'
+          ? Container(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, -4)),
+                ],
+              ),
+              child: SlideToUnblock(
+                onAction: () => _unblockStudent(context),
+              ),
+            )
+          : null,
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
           // ── AppBar ─────────────────────────────────────────
           SliverAppBar(
-            expandedHeight: 180,
+            expandedHeight: 220,
             pinned: true,
-            backgroundColor: _statusColor,
-            foregroundColor: Colors.white,
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black87,
             elevation: 0,
-            actions: [
-              if (widget.status == 'BLOCKED')
-                Container(
-                  margin: const EdgeInsets.only(right: 12),
-                  child: ElevatedButton.icon(
-                    onPressed: () => _unblockStudent(context),
-                    icon: const Icon(Icons.lock_open_rounded, size: 16),
-                    label: Text('Buka', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w700)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: _statusColor,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    ),
-                  ),
-                ),
-            ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Container(color: Colors.grey.shade200, height: 1),
+            ),
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.pin,
               background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [_statusColor.withValues(alpha: 0.85), _statusColor],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
+                color: Colors.white,
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(60, 16, 20, 48),
+                    padding: const EdgeInsets.fromLTRB(24, 16, 20, 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -1272,65 +1234,66 @@ class _StudentActivityLogScreenState extends State<StudentActivityLogScreen> {
                         Row(
                           children: [
                             Container(
-                              width: 52,
-                              height: 52,
+                              width: 64,
+                              height: 64,
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
+                                color: _statusColor.withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2),
+                                border: Border.all(color: _statusColor.withValues(alpha: 0.3), width: 1.5),
                               ),
                               child: Center(
                                 child: Text(
                                   widget.name.isNotEmpty ? widget.name[0].toUpperCase() : '?',
-                                  style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white),
+                                  style: GoogleFonts.poppins(fontSize: 26, fontWeight: FontWeight.w700, color: _statusColor),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 14),
+                            const SizedBox(width: 16),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(widget.name,
-                                      style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white),
+                                      style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.black87, height: 1.2),
                                       maxLines: 1, overflow: TextOverflow.ellipsis),
-                                  const SizedBox(height: 2),
+                                  const SizedBox(height: 4),
                                   Text('NIS: ${widget.nis}',
-                                      style: GoogleFonts.poppins(fontSize: 12, color: Colors.white.withValues(alpha: 0.8))),
+                                      style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade600)),
                                 ],
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 20),
                         // Status & Violation Badges
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
+                                color: _statusColor,
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+                                boxShadow: [BoxShadow(color: _statusColor.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))],
                               ),
                               child: Text(_statusLabel,
                                   style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 10),
                             if (widget.violations > 0)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: Colors.red.shade800.withValues(alpha: 0.5),
+                                  color: Colors.red.shade50,
+                                  border: Border.all(color: Colors.red.shade200),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.warning_rounded, size: 12, color: Colors.white),
-                                    const SizedBox(width: 4),
+                                    Icon(Icons.warning_rounded, size: 14, color: Colors.red.shade700),
+                                    const SizedBox(width: 6),
                                     Text('${widget.violations} Pelanggaran',
-                                        style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                                        style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.red.shade700)),
                                   ],
                                 ),
                               ),
@@ -1622,7 +1585,8 @@ class _LogItem extends StatelessWidget {
 
 // ─── Widget Jam Real-Time ─────────────────────────────────────────────────────
 class _LiveClockText extends StatefulWidget {
-  const _LiveClockText();
+  final Color? color;
+  const _LiveClockText({this.color});
 
   @override
   State<_LiveClockText> createState() => _LiveClockTextState();
@@ -1653,7 +1617,7 @@ class _LiveClockTextState extends State<_LiveClockText> {
     final s = _now.second.toString().padLeft(2, '0');
     return Text(
       '$h:$m:$s',
-      style: GoogleFonts.poppins(fontSize: 13, color: Colors.white.withValues(alpha: 0.85)),
+      style: GoogleFonts.poppins(fontSize: 13, color: widget.color ?? Colors.white.withValues(alpha: 0.85)),
     );
   }
 }
