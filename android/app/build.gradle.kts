@@ -27,6 +27,7 @@ android {
 
     compileOptions {
         // VERSION_1_8 kompatibel dengan semua device target (minSdk Flutter default)
+        coreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
@@ -91,6 +92,9 @@ android {
 }
 
 dependencies {
+    // FIX BUG: flutter_local_notifications requires core library desugaring
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    
     // FIX: app-update dan asset-delivery DIHAPUS — tidak dipakai di kode
     // native maupun Flutter. Keduanya menambah ~2MB ke AAB tanpa manfaat.
     // Update sudah ditangani via HTTP ke GitHub Releases (update.dart).
