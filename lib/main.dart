@@ -52,7 +52,11 @@ Future<void> _showLocalNotification(RemoteMessage message) async {
   final notification = message.notification;
   if (notification == null) return;
   await _localNotif.show(
-    id: notification.hashCode,
+    // FIX WARN-1: Gunakan timestamp sebagai ID agar setiap notifikasi pelanggaran
+    // muncul sebagai entry terpisah di notification tray. notification.hashCode
+    // bisa menghasilkan nilai sama → notifikasi lama tertimpa notifikasi baru.
+    // Modulo 2147483647 (max int32) agar tidak overflow di Android.
+    id: DateTime.now().millisecondsSinceEpoch % 2147483647,
     title: notification.title,
     body: notification.body,
     notificationDetails: NotificationDetails(

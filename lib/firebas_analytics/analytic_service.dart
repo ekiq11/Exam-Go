@@ -1,6 +1,6 @@
 // lib/analytics_service.dart
-// ignore_for_file: avoid_print
 
+import 'package:flutter/foundation.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
@@ -34,7 +34,7 @@ class AnalyticsService {
       // Format: "NIS - Nama" agar mudah dibaca saat debugging crash
       await FirebaseCrashlytics.instance.setUserIdentifier('$nis - $name');
     } catch (e) {
-      print('Analytics setUserIdentity error: $e');
+      debugPrint('[Analytics] setUserIdentity error: $e');
     }
   }
 
@@ -45,7 +45,7 @@ class AnalyticsService {
     try {
       await _analytics.logAppOpen();
     } catch (e) {
-      print('Analytics error: $e');
+      debugPrint('[Analytics] error: $e');
     }
   }
 
@@ -71,7 +71,7 @@ class AnalyticsService {
         },
       );
     } catch (e) {
-      print('Analytics error: $e');
+      debugPrint('[Analytics] error: $e');
     }
   }
 
@@ -83,7 +83,7 @@ class AnalyticsService {
         parameters: {'reason': reason},
       );
     } catch (e) {
-      print('Analytics error: $e');
+      debugPrint('[Analytics] error: $e');
     }
   }
 
@@ -109,7 +109,7 @@ class AnalyticsService {
       // Set user property untuk segmentasi
       await _analytics.setUserProperty(name: 'last_exam_host', value: host);
     } catch (e) {
-      print('Analytics error: $e');
+      debugPrint('[Analytics] error: $e');
     }
   }
 
@@ -132,7 +132,7 @@ class AnalyticsService {
         },
       );
     } catch (e) {
-      print('Analytics error: $e');
+      debugPrint('[Analytics] error: $e');
     }
   }
 
@@ -150,7 +150,7 @@ class AnalyticsService {
         },
       );
     } catch (e) {
-      print('Analytics error: $e');
+      debugPrint('[Analytics] error: $e');
     }
   }
 
@@ -171,7 +171,7 @@ class AnalyticsService {
         },
       );
     } catch (e) {
-      print('Analytics error: $e');
+      debugPrint('[Analytics] error: $e');
     }
   }
 
@@ -200,7 +200,7 @@ class AnalyticsService {
         },
       );
     } catch (e) {
-      print('Analytics error: $e');
+      debugPrint('[Analytics] error: $e');
     }
   }
 
@@ -214,7 +214,7 @@ class AnalyticsService {
         parameters: {'has_title': hasTitle ? 'true' : 'false'},
       );
     } catch (e) {
-      print('Analytics error: $e');
+      debugPrint('[Analytics] error: $e');
     }
   }
 
@@ -223,7 +223,7 @@ class AnalyticsService {
     try {
       await _analytics.logEvent(name: 'qr_shared');
     } catch (e) {
-      print('Analytics error: $e');
+      debugPrint('[Analytics] error: $e');
     }
   }
 
@@ -234,7 +234,7 @@ class AnalyticsService {
     try {
       await _analytics.logEvent(name: 'offline_scan_attempt');
     } catch (e) {
-      print('Analytics error: $e');
+      debugPrint('[Analytics] error: $e');
     }
   }
 
@@ -244,7 +244,7 @@ class AnalyticsService {
     try {
       await _analytics.logScreenView(screenName: screenName);
     } catch (e) {
-      print('Analytics error: $e');
+      debugPrint('[Analytics] error: $e');
     }
   }
 }

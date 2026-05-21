@@ -1,7 +1,5 @@
 // lib/services/app_remote_config.dart
-// ignore_for_file: avoid_print
 import 'package:firebase_remote_config/firebase_remote_config.dart';
-
 import 'package:flutter/foundation.dart';
 
 /// Wrapper singleton untuk Firebase Remote Config.
@@ -43,9 +41,9 @@ class AppRemoteConfig {
       await _rc.setDefaults(_defaults.map((k, v) => MapEntry(k, v)));
       await _rc.fetchAndActivate();
       _initialized = true;
-      print('✅ RemoteConfig: fetched & activated');
+      debugPrint('[RemoteConfig] fetched & activated');
     } catch (e) {
-      print('⚠️ RemoteConfig: failed ($e), using defaults');
+      debugPrint('[RemoteConfig] failed ($e), using defaults');
       _initialized = true; // tetap set agar tidak retry terus
     }
   }

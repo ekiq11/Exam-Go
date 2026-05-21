@@ -53,3 +53,26 @@
 ## Keep WebView platform (webview_flutter_android)
 -keep class io.flutter.plugins.webviewflutter.** { *; }
 -keepclassmembers class io.flutter.plugins.webviewflutter.** { *; }
+
+## FIX WARN-4: Explicitly keep Firebase SDK classes sebagai failsafe.
+## Firebase AAR sudah include consumer-rules.pro internal, tapi aturan eksplisit
+## di sini memastikan tidak ada class yang hilang meski versi SDK berubah.
+
+## Firebase Core & Messaging (FCM)
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.firebase.**
+-dontwarn com.google.android.gms.**
+
+## Firebase Crashlytics — wajib untuk stack trace yang readable
+-keepattributes SourceFile,LineNumberTable
+-keep public class * extends java.lang.Exception
+-keep class com.google.firebase.crashlytics.** { *; }
+
+## Firebase Analytics
+-keep class com.google.android.datatransport.** { *; }
+
+## Cloud Firestore
+-keep class com.google.cloud.** { *; }
+-keep class io.grpc.** { *; }
+-dontwarn io.grpc.**
