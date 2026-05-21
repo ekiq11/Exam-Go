@@ -130,6 +130,11 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
                     // FIX FCM-3: Reset flag agar FCM bisa terkirim lagi
                     // jika siswa melanggar lagi setelah guru membuka blokir.
                     _teacherNotified = false;
+                    // FIX BUG-B: Reset _kickedOut agar dispose() bisa mengirim
+                    // status FINISHED ke Firestore saat siswa keluar secara normal
+                    // setelah guru membuka blokir. Tanpa ini, status siswa
+                    // akan tetap BLOCKED meski ujian sudah selesai.
+                    _kickedOut = false;
                   });
                   ExamSessionService.instance.updateViolations(0);
                   _sendMonitoringStatus('ACTIVE');
@@ -293,6 +298,10 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         _pauseDebounce = Timer(const Duration(milliseconds: 300), () async {
           if (!mounted || _isExiting || !_securityEnabled) return;
           if (!_wasActuallyPaused) return;
+          // FIX BUG-A: Jangan tambah violation saat layar sudah dibekukan guru.
+          // Siswa menekan HOME saat melihat layar terkunci adalah wajar —
+          // bukan pelanggaran baru.
+          if (_isFrozen) return;
 
           final isScreenOn = await SecurityService.instance.isScreenOn();
           if (!isScreenOn && mounted) return;
