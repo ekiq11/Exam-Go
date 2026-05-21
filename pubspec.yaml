@@ -2,7 +2,7 @@ name: examgo
 description: "ExamGO — Secure Exam Browser for Android & iOS"
 publish_to: 'none'
 
-version: 3.0.0+31
+version: 4.0.0+32
 
 environment:
   sdk: ^3.9.2
