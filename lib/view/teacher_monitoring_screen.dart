@@ -1772,10 +1772,11 @@ Future<void> _showUnblockConfirmation(BuildContext context, String examId, Strin
   if (confirmed != true) return;
   if (!context.mounted) return;
 
-  MonitoringService.instance.updateStudentStatus(
+  MonitoringService.instance.setStudentStatusByTeacher(
     examId: examId,
-    nis: nis, name: name,
-    status: 'ACTIVE', violations: 0,
+    nis: nis,
+    status: 'ACTIVE',
+    violations: 0,
   );
   MonitoringService.instance.logActivity(
     examId: examId,

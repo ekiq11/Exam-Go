@@ -49,6 +49,34 @@ class MonitoringService {
     }
   }
 
+  /// Dipanggil oleh guru untuk mengubah status siswa (misal: buka blokir).
+  /// Hanya mengupdate field tertentu agar tidak menimpa data device siswa
+  /// (seperti battery_level dan last_ping).
+  Future<void> setStudentStatusByTeacher({
+    required String examId,
+    required String nis,
+    required String status,
+    required int violations,
+  }) async {
+    try {
+      if (examId.isEmpty || nis.isEmpty) return;
+
+      final docRef = _db
+          .collection('exam_sessions')
+          .doc(examId)
+          .collection('students')
+          .doc(nis);
+
+      // Hanya update field yang relevan untuk aksi guru
+      await docRef.set({
+        'status': status,
+        'violations': violations,
+      }, SetOptions(merge: true));
+    } catch (e) {
+      // Abaikan error
+    }
+  }
+
   /// Menyimpan log aktivitas pelanggaran ke Firestore
   Future<void> logActivity({
     required String examId,
