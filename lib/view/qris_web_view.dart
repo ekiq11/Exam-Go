@@ -349,20 +349,13 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         break;
 
       case AppLifecycleState.inactive:
-        // Pada iOS, notification center membuat app masuk ke inactive.
-        // Beri waktu 1.5 detik. Jika masih inactive, anggap pelanggaran.
-        _inactiveTimer?.cancel();
-        _inactiveTimer = Timer(const Duration(milliseconds: 1500), () {
-          if (!mounted || _isExiting || !_securityEnabled) return;
-          // FIX BUG-09: Cegah double-trigger violation.
-          // Jika paused debounce sudah aktif (dari transition inactive→paused),
-          // atau jika wasActuallyPaused sudah di-set true oleh paused handler,
-          // jangan mulai violation baru dari inactive timer.
-          if (_pauseDebounce?.isActive == true) return;
-          if (_wasActuallyPaused) return;
-          _wasActuallyPaused = true;
-          didChangeAppLifecycleState(AppLifecycleState.paused);
-        });
+        // FIX: Banyak siswa terblokir otomatis ("False Positive") karena status 'inactive'.
+        // Inactive terjadi saat:
+        // 1. Ada notifikasi masuk (WhatsApp, dll) muncul dari atas layar.
+        // 2. Muncul pop-up sistem (Peringatan Baterai Lemah, Alarm).
+        // 3. Siswa tidak sengaja menyentuh ujung atas layar.
+        // Kita TIDAK BOLEH menghukum siswa untuk hal ini. Pelanggaran hanya dihitung
+        // saat aplikasi benar-benar di-minimize (masuk ke state 'paused').
         break;
 
       case AppLifecycleState.resumed:
