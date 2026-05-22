@@ -145,13 +145,22 @@ function _cleanupStaleTokens(props) {
 }
 
 
-// ── GET: health check (opsional) ───────────────────────────────────
+// ── GET: Render Dashboard HTML ───────────────────────────────────
 function doGet(e) {
-  return ContentService.createTextOutput(JSON.stringify({
-    status: 'ok',
-    service: 'ExamGO GAS FCM Backend',
-    timestamp: new Date().toISOString(),
-  })).setMimeType(ContentService.MimeType.JSON);
+  // Untuk kompatibilitas jika ada yang ping GET, kita bisa kembalikan JSON,
+  // tapi secara default kita kembalikan halaman Web App Dashboard.
+  if (e.parameter.api === 'true') {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'ok',
+      service: 'ExamGO GAS Backend',
+      timestamp: new Date().toISOString(),
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  // Render file admin.html
+  return HtmlService.createHtmlOutputFromFile('admin')
+    .setTitle('ExamGO Administrator')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -356,4 +365,138 @@ function testGetToken() {
   } catch (e) {
     Logger.log('❌ Error: ' + e.message);
   }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ADMIN DASHBOARD FUNCTIONS (Dipanggil via google.script.run)
+// ══════════════════════════════════════════════════════════════════
+
+/**
+ * Mengambil daftar sesi ujian dari Firestore
+ */
+function getExamSessions() {
+  var props = PropertiesService.getScriptProperties();
+  var projectId = props.getProperty('PROJECT_ID');
+  if (!projectId) return { error: 'PROJECT_ID belum di-set.' };
+  
+  var url = 'https://firestore.googleapis.com/v1/projects/' + projectId + '/databases/(default)/documents/exam_sessions?pageSize=300';
+  
+  try {
+    var accessToken = _getAccessToken();
+    var resp = UrlFetchApp.fetch(url, {
+      method: 'get',
+      headers: { Authorization: 'Bearer ' + accessToken },
+      muteHttpExceptions: true
+    });
+    
+    if (resp.getResponseCode() === 200) {
+      var data = JSON.parse(resp.getContentText());
+      var documents = data.documents || [];
+      return documents.map(function(doc) {
+        var parts = doc.name.split('/');
+        var examId = parts[parts.length - 1];
+        
+        return {
+          id: examId,
+          title: doc.fields && doc.fields.title && doc.fields.title.stringValue ? doc.fields.title.stringValue : 'Tanpa Judul',
+          createdAt: doc.createTime
+        };
+      }).sort(function(a, b) {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+    } else {
+      return { error: 'Gagal memuat data: ' + resp.getContentText() };
+    }
+  } catch (e) {
+    return { error: 'Server error: ' + e.message };
+  }
+}
+
+/**
+ * Menghapus satu sesi ujian beserta subkoleksinya (Recursive Delete)
+ */
+function deleteExamSession(examId) {
+  var props = PropertiesService.getScriptProperties();
+  var projectId = props.getProperty('PROJECT_ID');
+  var accessToken = _getAccessToken();
+  var baseUrl = 'https://firestore.googleapis.com/v1/projects/' + projectId + '/databases/(default)/documents/exam_sessions/' + examId;
+  
+  try {
+    // 1. Ambil semua siswa
+    var studentsResp = UrlFetchApp.fetch(baseUrl + '/students?pageSize=300', {
+      method: 'get',
+      headers: { Authorization: 'Bearer ' + accessToken },
+      muteHttpExceptions: true
+    });
+    
+    if (studentsResp.getResponseCode() === 200) {
+      var studentsData = JSON.parse(studentsResp.getContentText());
+      var students = studentsData.documents || [];
+      
+      // 2. Loop hapus data log & siswa
+      students.forEach(function(student) {
+        var studentPath = student.name;
+        
+        // Hapus Logs siswa tersebut
+        var logsUrl = 'https://firestore.googleapis.com/v1/' + studentPath + '/logs?pageSize=300';
+        var logsResp = UrlFetchApp.fetch(logsUrl, {
+          method: 'get',
+          headers: { Authorization: 'Bearer ' + accessToken },
+          muteHttpExceptions: true
+        });
+        if (logsResp.getResponseCode() === 200) {
+          var logsData = JSON.parse(logsResp.getContentText());
+          var logs = logsData.documents || [];
+          logs.forEach(function(log) {
+            UrlFetchApp.fetch('https://firestore.googleapis.com/v1/' + log.name, {
+              method: 'delete',
+              headers: { Authorization: 'Bearer ' + accessToken },
+              muteHttpExceptions: true
+            });
+          });
+        }
+        
+        // Hapus dokumen siswa
+        UrlFetchApp.fetch('https://firestore.googleapis.com/v1/' + studentPath, {
+          method: 'delete',
+          headers: { Authorization: 'Bearer ' + accessToken },
+          muteHttpExceptions: true
+        });
+      });
+    }
+    
+    // 3. Hapus dokumen root (sesi ujian)
+    var delResp = UrlFetchApp.fetch(baseUrl, {
+      method: 'delete',
+      headers: { Authorization: 'Bearer ' + accessToken },
+      muteHttpExceptions: true
+    });
+    
+    // Bersihkan script properties yang terkait
+    props.deleteProperty('TEACHER_TOKENS_' + examId);
+    props.deleteProperty('TEACHER_TOKENS_' + examId + '_TS');
+    
+    if (delResp.getResponseCode() === 200) {
+      return { success: true };
+    } else {
+      return { error: 'Gagal hapus dokumen root: ' + delResp.getContentText() };
+    }
+  } catch(e) {
+    return { error: e.message };
+  }
+}
+
+/**
+ * Menghapus SELURUH sesi ujian (Mass Clean Up)
+ */
+function deleteAllExams() {
+  var exams = getExamSessions();
+  if (exams.error) return exams;
+  
+  var count = 0;
+  for (var i = 0; i < exams.length; i++) {
+    var res = deleteExamSession(exams[i].id);
+    if (res.success) count++;
+  }
+  return { success: true, count: count };
 }
