@@ -47,7 +47,7 @@
   </nav>
 
   <!-- Main Content -->
-  <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <main id="main-content" class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden">
     
     <!-- Header & Stats -->
     <div class="md:flex md:items-center md:justify-between mb-8">
@@ -125,6 +125,30 @@
 
   </main>
 
+  <!-- Login Modal -->
+  <div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 transform transition-all">
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4">
+          <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900">Akses Terkunci</h3>
+        <p class="text-sm text-gray-500 mt-2">Masukkan PIN Administrator untuk mengelola database.</p>
+      </div>
+      
+      <div class="space-y-4">
+        <div>
+          <input type="password" id="pin-input" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-center text-xl tracking-widest outline-none transition-shadow" placeholder="••••••••" autocomplete="off">
+        </div>
+        <button id="login-btn" onclick="attemptLogin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg shadow transition-colors flex justify-center items-center">
+          Buka Kunci
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Notification Toast -->
   <div id="toast" class="fixed bottom-5 right-5 transform transition-all duration-300 translate-y-20 opacity-0 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center">
     <span id="toast-icon" class="mr-3"></span>
@@ -163,8 +187,50 @@
       return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     }
 
+    let currentPin = '';
+
+    // Login Logic
+    function attemptLogin() {
+      const pinInput = document.getElementById('pin-input').value;
+      if (!pinInput) return showToast('PIN tidak boleh kosong', 'error');
+      
+      const btn = document.getElementById('login-btn');
+      btn.innerHTML = '<div class="loader w-5 h-5 border-2 border-white border-t-emerald-600 mr-2"></div> Memverifikasi...';
+      btn.disabled = true;
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          btn.innerHTML = 'Buka Kunci';
+          btn.disabled = false;
+          
+          if (response && response.error === 'unauthorized') {
+            showToast('PIN Salah! Akses ditolak.', 'error');
+            document.getElementById('pin-input').value = '';
+          } else {
+            // Login sukses
+            currentPin = pinInput;
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            showToast('Akses Diberikan');
+            renderTableData(response);
+          }
+        })
+        .withFailureHandler(function(err) {
+          btn.innerHTML = 'Buka Kunci';
+          btn.disabled = false;
+          showToast('Koneksi ke server gagal', 'error');
+        })
+        .getExamSessions(pinInput);
+    }
+
+    // Tangkap Enter pada input PIN
+    document.getElementById('pin-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') attemptLogin();
+    });
+
     // Load Data
     function loadData() {
+      if (!currentPin) return;
       const tbody = document.getElementById('table-body');
       const loader = document.getElementById('table-loader');
       
@@ -174,52 +240,67 @@
 
       google.script.run
         .withSuccessHandler(function(response) {
-          loader.classList.add('hidden');
-          if (response.error) {
-            showToast(response.error, 'error');
-            tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-sm text-red-500">Error: ${response.error}</td></tr>`;
-            return;
+          if (response && response.error === 'unauthorized') {
+            // Sesi kedaluwarsa / PIN diubah
+            currentPin = '';
+            document.getElementById('main-content').classList.add('hidden');
+            document.getElementById('login-modal').classList.remove('hidden');
+            return showToast('Sesi ditolak. Silakan login ulang.', 'error');
           }
-
-          document.getElementById('stat-total').innerText = response.length;
-          
-          if (response.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-10 text-center text-sm text-gray-500 flex-col items-center"><svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>Tidak ada data ujian di Firestore.</td></tr>';
-            return;
-          }
-
-          let html = '';
-          response.forEach(function(exam) {
-            html += `
-              <tr class="hover:bg-gray-50 transition-colors" id="row-${exam.id}">
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm font-semibold text-gray-900">${exam.title}</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-100 text-emerald-800 font-mono">
-                    ${exam.id}
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  ${formatDate(exam.createdAt)}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button onclick="deleteExam('${exam.id}', this)" class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors inline-flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    Hapus
-                  </button>
-                </td>
-              </tr>
-            `;
-          });
-          tbody.innerHTML = html;
+          renderTableData(response);
         })
         .withFailureHandler(function(err) {
           loader.classList.add('hidden');
           showToast('Koneksi ke server gagal', 'error');
           tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-sm text-red-500">Gagal terhubung ke GAS.</td></tr>`;
         })
-        .getExamSessions();
+        .getExamSessions(currentPin);
+    }
+
+    // Render tabel HTML
+    function renderTableData(response) {
+      const tbody = document.getElementById('table-body');
+      const loader = document.getElementById('table-loader');
+      loader.classList.add('hidden');
+
+      if (response.error) {
+        showToast(response.error, 'error');
+        tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-sm text-red-500">Error: ${response.error}</td></tr>`;
+        return;
+      }
+
+      document.getElementById('stat-total').innerText = response.length;
+      
+      if (response.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-10 text-center text-sm text-gray-500 flex-col items-center"><svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>Tidak ada data ujian di Firestore.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      response.forEach(function(exam) {
+        html += `
+          <tr class="hover:bg-gray-50 transition-colors" id="row-${exam.id}">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-semibold text-gray-900">${exam.title}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-100 text-emerald-800 font-mono">
+                ${exam.id}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              ${formatDate(exam.createdAt)}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <button onclick="deleteExam('${exam.id}', this)" class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors inline-flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                Hapus
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
     }
 
     // Delete Single
@@ -248,7 +329,7 @@
           btnElement.innerHTML = originalHtml;
           btnElement.disabled = false;
         })
-        .deleteExamSession(id);
+        .deleteExamSession(id, currentPin);
     }
 
     // Delete All
@@ -278,11 +359,13 @@
           showToast('Server error', 'error');
           document.getElementById('table-loader').classList.add('hidden');
         })
-        .deleteAllExams();
+        .deleteAllExams(currentPin);
     }
 
-    // Auto-load on init
-    window.onload = loadData;
+    // Ffokuskan input pin saat init (jangan loadData otomatis)
+    window.onload = () => {
+      document.getElementById('pin-input').focus();
+    };
   </script>
 </body>
 </html>
