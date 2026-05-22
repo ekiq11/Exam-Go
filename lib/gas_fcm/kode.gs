@@ -436,50 +436,9 @@ function deleteExamSession(examId, pin) {
   var baseUrl = 'https://firestore.googleapis.com/v1/projects/' + projectId + '/databases/(default)/documents/exam_sessions/' + examId;
   
   try {
-    // 1. Ambil semua siswa
-    var studentsResp = UrlFetchApp.fetch(baseUrl + '/students?pageSize=300', {
-      method: 'get',
-      headers: { Authorization: 'Bearer ' + accessToken },
-      muteHttpExceptions: true
-    });
-    
-    if (studentsResp.getResponseCode() === 200) {
-      var studentsData = JSON.parse(studentsResp.getContentText());
-      var students = studentsData.documents || [];
-      
-      // 2. Loop hapus data log & siswa
-      students.forEach(function(student) {
-        var studentPath = student.name;
-        
-        // Hapus Logs siswa tersebut
-        var logsUrl = 'https://firestore.googleapis.com/v1/' + studentPath + '/logs?pageSize=300';
-        var logsResp = UrlFetchApp.fetch(logsUrl, {
-          method: 'get',
-          headers: { Authorization: 'Bearer ' + accessToken },
-          muteHttpExceptions: true
-        });
-        if (logsResp.getResponseCode() === 200) {
-          var logsData = JSON.parse(logsResp.getContentText());
-          var logs = logsData.documents || [];
-          logs.forEach(function(log) {
-            UrlFetchApp.fetch('https://firestore.googleapis.com/v1/' + log.name, {
-              method: 'delete',
-              headers: { Authorization: 'Bearer ' + accessToken },
-              muteHttpExceptions: true
-            });
-          });
-        }
-        
-        // Hapus dokumen siswa
-        UrlFetchApp.fetch('https://firestore.googleapis.com/v1/' + studentPath, {
-          method: 'delete',
-          headers: { Authorization: 'Bearer ' + accessToken },
-          muteHttpExceptions: true
-        });
-      });
-    }
-    
-    // 3. Hapus dokumen root (sesi ujian)
+    // 1. HAPUS DOKUMEN ROOT TERLEBIH DAHULU!
+    // Ini memastikan bahwa meskipun nanti gagal saat menghapus subkoleksi karena limit kuota harian (RESOURCE_EXHAUSTED),
+    // ujian ini sudah hilang dari UI dan aplikasi Flutter.
     var delResp = UrlFetchApp.fetch(baseUrl, {
       method: 'delete',
       headers: { Authorization: 'Bearer ' + accessToken },
@@ -489,12 +448,65 @@ function deleteExamSession(examId, pin) {
     // Bersihkan script properties yang terkait
     props.deleteProperty('TEACHER_TOKENS_' + examId);
     props.deleteProperty('TEACHER_TOKENS_' + examId + '_TS');
-    
-    if (delResp.getResponseCode() === 200) {
-      return { success: true };
-    } else {
-      return { error: 'Gagal hapus dokumen root: ' + delResp.getContentText() };
+
+    if (delResp.getResponseCode() !== 200) {
+       var errData = JSON.parse(delResp.getContentText());
+       var isQuotaError = errData.error && errData.error.status === 'RESOURCE_EXHAUSTED';
+       if (isQuotaError) {
+         return { error: 'Kuota Firebase Gratis Anda habis untuk hari ini (Limit 20.000 hapus/hari). Silakan coba lagi besok.' };
+       }
+       return { error: 'Gagal hapus dokumen root: ' + delResp.getContentText() };
     }
+    
+    // 2. Ambil semua siswa & coba hapus subkoleksinya (Best Effort)
+    try {
+      var studentsResp = UrlFetchApp.fetch(baseUrl + '/students?pageSize=300', {
+        method: 'get',
+        headers: { Authorization: 'Bearer ' + accessToken },
+        muteHttpExceptions: true
+      });
+      
+      if (studentsResp.getResponseCode() === 200) {
+        var studentsData = JSON.parse(studentsResp.getContentText());
+        var students = studentsData.documents || [];
+        
+        students.forEach(function(student) {
+          var studentPath = student.name;
+          
+          // Hapus Logs siswa tersebut
+          var logsUrl = 'https://firestore.googleapis.com/v1/' + studentPath + '/logs?pageSize=300';
+          var logsResp = UrlFetchApp.fetch(logsUrl, {
+            method: 'get',
+            headers: { Authorization: 'Bearer ' + accessToken },
+            muteHttpExceptions: true
+          });
+          if (logsResp.getResponseCode() === 200) {
+            var logsData = JSON.parse(logsResp.getContentText());
+            var logs = logsData.documents || [];
+            logs.forEach(function(log) {
+              UrlFetchApp.fetch('https://firestore.googleapis.com/v1/' + log.name, {
+                method: 'delete',
+                headers: { Authorization: 'Bearer ' + accessToken },
+                muteHttpExceptions: true
+              });
+            });
+          }
+          
+          // Hapus dokumen siswa
+          UrlFetchApp.fetch('https://firestore.googleapis.com/v1/' + studentPath, {
+            method: 'delete',
+            headers: { Authorization: 'Bearer ' + accessToken },
+            muteHttpExceptions: true
+          });
+        });
+      }
+    } catch (ignored) {
+      // Abaikan jika gagal menghapus subkoleksi (biasanya karena limit kuota), 
+      // karena dokumen root sudah berhasil dihapus.
+      Logger.log('Gagal menghapus subkoleksi (kemungkinan limit kuota), tapi root berhasil dihapus.');
+    }
+    
+    return { success: true };
   } catch(e) {
     return { error: e.message };
   }
