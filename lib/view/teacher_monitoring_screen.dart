@@ -192,6 +192,14 @@ class _TeacherMonitoringListScreenState extends State<TeacherMonitoringListScree
             backgroundColor: _kGreen,
             foregroundColor: Colors.white,
             elevation: 0,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+                tooltip: 'Segarkan Riwayat',
+                onPressed: _loadHistory,
+              ),
+              const SizedBox(width: 8),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
               title: Text(
@@ -584,6 +592,16 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
                       opacity: isCollapsed ? 1.0 : 0.0,
                       child: Text(widget.title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
                     ),
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+                        tooltip: 'Segarkan Data',
+                        onPressed: () {
+                          setState(() {});
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                     bottom: PreferredSize(
                       preferredSize: const Size.fromHeight(20),
                       child: Container(
