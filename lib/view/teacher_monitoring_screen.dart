@@ -491,9 +491,14 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _kBg,
-      body: StreamBuilder<QuerySnapshot>(
-        stream: MonitoringService.instance.streamExamStudents(widget.examId),
-        builder: (context, snapshot) {
+      body: RefreshIndicator(
+        onRefresh: () async {
+          setState(() {}); // Memicu ulang FutureBuilder
+        },
+        color: _kGreen,
+        child: FutureBuilder<QuerySnapshot>(
+          future: MonitoringService.instance.getExamStudents(widget.examId),
+          builder: (context, snapshot) {
           final docs = snapshot.data?.docs ?? [];
 
           // ── Hitung Metrik ────────────────────────────────────
@@ -756,6 +761,7 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
             ),
           );
         },
+      ),
       ),
     );
   }
@@ -1417,9 +1423,11 @@ class _StudentActivityLogScreenState extends State<StudentActivityLogScreen> {
             ),
           ),
 
-          // ── Log Stream ────────────────────────────────────
-          StreamBuilder<QuerySnapshot>(
-            stream: MonitoringService.instance.streamStudentActivityLog(widget.examId, widget.nis),
+          // ── Log Polling (Tarik Manual) ────────────────────────────────────
+          // FIX OPTIMISASI KUOTA: Mengganti StreamBuilder ke FutureBuilder agar 
+          // guru harus me-refresh manual untuk menghemat bacaan Firestore.
+          FutureBuilder<QuerySnapshot>(
+            future: MonitoringService.instance.getStudentActivityLog(widget.examId, widget.nis),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const SliverFillRemaining(

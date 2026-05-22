@@ -104,13 +104,8 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     // saat dispose() dipanggil sebelum stream fully connected.
     if (widget.examId.isNotEmpty && widget.studentNis.isNotEmpty) {
       _sendMonitoringStatus('ACTIVE');
-      _pingTimer = Timer.periodic(const Duration(minutes: 5), (_) {
-        // FIX BUG-FREEZE: Jangan kirim 'ACTIVE' saat layar sedang dibekukan
-        // oleh guru (BLOCKED). Ping ini akan menimpa status BLOCKED di Firestore
-        // dan memicu stream listener untuk membuka freeze secara otomatis
-        // tanpa persetujuan guru.
-        if (!_isFrozen) _sendMonitoringStatus('ACTIVE');
-      });
+      // FIX OPTIMISASI KUOTA: Ping periodik setiap 5 menit dihapus agar tidak
+      // menghabiskan kuota Write Firestore (20.000/hari) secara sia-sia.
       _statusSub = MonitoringService.instance
           .streamStudentStatus(widget.examId, widget.studentNis)
           .listen(

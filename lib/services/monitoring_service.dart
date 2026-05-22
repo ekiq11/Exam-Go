@@ -113,6 +113,16 @@ class MonitoringService {
         .snapshots();
   }
 
+  /// Mengambil daftar siswa (One-off/Manual) untuk menghemat kuota Read
+  Future<QuerySnapshot> getExamStudents(String examId) {
+    return _db
+        .collection('exam_sessions')
+        .doc(examId)
+        .collection('students')
+        .orderBy('last_ping', descending: true)
+        .get(const GetOptions(source: Source.serverAndCache));
+  }
+
   /// Stream log aktivitas pelanggaran untuk satu siswa (real-time ke guru)
   Stream<QuerySnapshot> streamStudentActivityLog(String examId, String nis) {
     return _db
@@ -123,6 +133,18 @@ class MonitoringService {
         .collection('logs')
         .orderBy('timestamp', descending: true)
         .snapshots();
+  }
+
+  /// Mengambil log aktivitas (One-off/Manual)
+  Future<QuerySnapshot> getStudentActivityLog(String examId, String nis) {
+    return _db
+        .collection('exam_sessions')
+        .doc(examId)
+        .collection('students')
+        .doc(nis)
+        .collection('logs')
+        .orderBy('timestamp', descending: true)
+        .get(const GetOptions(source: Source.serverAndCache));
   }
 
   /// Stream status satu siswa tertentu (digunakan oleh siswa untuk mendengarkan perubahan status dari guru)
