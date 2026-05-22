@@ -265,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen>
                   }
                 }
               }
-              if (mounted) Navigator.of(ctx).pop(true);
+              if (ctx.mounted) Navigator.of(ctx).pop(true);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
             child: Text('Lanjutkan', style: GoogleFonts.poppins(color: Colors.white)),
