@@ -501,6 +501,21 @@ function deleteExamSession(examId, pin) {
 }
 
 /**
+ * Menghapus beberapa sesi ujian sekaligus (Bulk Delete)
+ */
+function deleteMultipleExams(examIds, pin) {
+  if (!_checkAdminPin(pin)) return { error: 'unauthorized' };
+  if (!Array.isArray(examIds)) return { error: 'Invalid input' };
+
+  var count = 0;
+  for (var i = 0; i < examIds.length; i++) {
+    var res = deleteExamSession(examIds[i], pin);
+    if (res.success) count++;
+  }
+  return { success: true, count: count };
+}
+
+/**
  * Menghapus SELURUH sesi ujian (Mass Clean Up)
  */
 function deleteAllExams(pin) {

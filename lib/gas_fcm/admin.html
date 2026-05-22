@@ -57,12 +57,18 @@
         </h2>
         <p class="mt-1 text-sm text-gray-500">Kelola dan bersihkan data ujian untuk menjaga kapasitas penyimpanan.</p>
       </div>
-      <div class="mt-4 flex md:mt-0 md:ml-4 space-x-3">
+      <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 space-x-3 gap-y-2 justify-end">
         <button onclick="loadData()" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
           <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
           Refresh
+        </button>
+        <button id="btn-delete-selected" onclick="deleteSelected()" class="hidden inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 transition-colors">
+          <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          Hapus Terpilih (<span id="selected-count">0</span>)
         </button>
         <button onclick="confirmDeleteAll()" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors">
           <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,6 +112,9 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                <input type="checkbox" id="checkbox-all" onchange="toggleAllCheckboxes(this)" class="focus:ring-emerald-500 h-4 w-4 text-emerald-600 border-gray-300 rounded">
+              </th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul Ujian</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Token (ID)</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dibuat Pada</th>
@@ -114,7 +123,7 @@
           </thead>
           <tbody id="table-body" class="bg-white divide-y divide-gray-200">
             <tr>
-              <td colspan="4" class="px-6 py-10 text-center text-sm text-gray-500">
+              <td colspan="5" class="px-6 py-10 text-center text-sm text-gray-500">
                 Memuat data dari Firestore...
               </td>
             </tr>
@@ -237,6 +246,8 @@
       loader.classList.remove('hidden');
       tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500">Sedang mengambil data dari Firestore...</td></tr>';
       document.getElementById('stat-total').innerText = '...';
+      document.getElementById('checkbox-all').checked = false;
+      updateSelectedCount();
 
       google.script.run
         .withSuccessHandler(function(response) {
@@ -265,14 +276,14 @@
 
       if (response.error) {
         showToast(response.error, 'error');
-        tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-sm text-red-500">Error: ${response.error}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-sm text-red-500">Error: ${response.error}</td></tr>`;
         return;
       }
 
       document.getElementById('stat-total').innerText = response.length;
       
       if (response.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-10 text-center text-sm text-gray-500 flex-col items-center"><svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>Tidak ada data ujian di Firestore.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-10 text-center text-sm text-gray-500 flex-col items-center"><svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>Tidak ada data ujian di Firestore.</td></tr>';
         return;
       }
 
@@ -280,6 +291,9 @@
       response.forEach(function(exam) {
         html += `
           <tr class="hover:bg-gray-50 transition-colors" id="row-${exam.id}">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <input type="checkbox" value="${exam.id}" class="row-checkbox focus:ring-emerald-500 h-4 w-4 text-emerald-600 border-gray-300 rounded" onchange="updateSelectedCount()">
+            </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="text-sm font-semibold text-gray-900">${exam.title}</div>
             </td>
@@ -350,6 +364,7 @@
         .withSuccessHandler(function(res) {
           if (res.error) {
             showToast(res.error, 'error');
+            document.getElementById('table-loader').classList.add('hidden');
           } else {
             showToast(`Berhasil menghapus ${res.count} sesi ujian!`);
             loadData();
@@ -360,6 +375,62 @@
           document.getElementById('table-loader').classList.add('hidden');
         })
         .deleteAllExams(currentPin);
+    }
+
+    // Checkbox Logic
+    function toggleAllCheckboxes(source) {
+      const checkboxes = document.querySelectorAll('.row-checkbox');
+      checkboxes.forEach(cb => cb.checked = source.checked);
+      updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+      const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+      const count = checkboxes.length;
+      document.getElementById('selected-count').innerText = count;
+      
+      const btn = document.getElementById('btn-delete-selected');
+      if (count > 0) {
+        btn.classList.remove('hidden');
+      } else {
+        btn.classList.add('hidden');
+      }
+
+      const allCheckboxes = document.querySelectorAll('.row-checkbox');
+      document.getElementById('checkbox-all').checked = (allCheckboxes.length > 0 && count === allCheckboxes.length);
+    }
+
+    // Delete Selected
+    function deleteSelected() {
+      const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+      if (checkedBoxes.length === 0) return;
+
+      const examIds = Array.from(checkedBoxes).map(cb => cb.value);
+      
+      if (!confirm(`Hapus ${examIds.length} sesi ujian terpilih beserta seluruh isinya? (Tindakan ini tidak bisa dibatalkan)`)) return;
+      
+      const btn = document.getElementById('btn-delete-selected');
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '<div class="loader w-4 h-4 border-2 border-white border-t-transparent mr-2"></div> Menghapus...';
+      btn.disabled = true;
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res.error) {
+            showToast(res.error, 'error');
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+          } else {
+            showToast(`Berhasil menghapus ${res.count} sesi ujian!`);
+            loadData();
+          }
+        })
+        .withFailureHandler(function(err) {
+          showToast('Server error', 'error');
+          btn.innerHTML = originalHtml;
+          btn.disabled = false;
+        })
+        .deleteMultipleExams(examIds, currentPin);
     }
 
     // Ffokuskan input pin saat init (jangan loadData otomatis)
