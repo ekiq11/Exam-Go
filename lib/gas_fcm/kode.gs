@@ -237,8 +237,8 @@ function _getAccessToken() {
 
   // FIX FCM-2: Cek cached token sebelum generate baru.
   // Token valid 1 jam, kita cache dengan buffer 60 detik untuk keamanan.
-  var cached = props.getProperty('ACCESS_TOKEN');
-  var expiry = props.getProperty('ACCESS_TOKEN_EXP');
+  var cached = props.getProperty('ACCESS_TOKEN_V2');
+  var expiry = props.getProperty('ACCESS_TOKEN_EXP_V2');
   var now    = Math.floor(Date.now() / 1000);
   if (cached && expiry && parseInt(expiry) > now + 60) {
     Logger.log('✅ Menggunakan cached access token');
@@ -259,7 +259,7 @@ function _getAccessToken() {
   var claim = Utilities.base64EncodeWebSafe(
     JSON.stringify({
       iss:   email,
-      scope: 'https://www.googleapis.com/auth/firebase.messaging',
+      scope: 'https://www.googleapis.com/auth/firebase.messaging https://www.googleapis.com/auth/datastore',
       aud:   'https://oauth2.googleapis.com/token',
       exp:   now + 3600,
       iat:   now,
@@ -287,8 +287,8 @@ function _getAccessToken() {
   }
 
   // Simpan ke cache dengan expiry
-  props.setProperty('ACCESS_TOKEN',     tokenData.access_token);
-  props.setProperty('ACCESS_TOKEN_EXP', String(now + 3600));
+  props.setProperty('ACCESS_TOKEN_V2',     tokenData.access_token);
+  props.setProperty('ACCESS_TOKEN_EXP_V2', String(now + 3600));
   Logger.log('✅ Access token baru berhasil di-cache');
 
   return tokenData.access_token;
@@ -372,9 +372,21 @@ function testGetToken() {
 // ══════════════════════════════════════════════════════════════════
 
 /**
+ * Validasi PIN Admin. 
+ * Default: 'admin123' jika DASHBOARD_PIN belum di-set di Script Properties.
+ */
+function _checkAdminPin(pin) {
+  var props = PropertiesService.getScriptProperties();
+  var correctPin = props.getProperty('DASHBOARD_PIN') || 'admin123';
+  return pin === correctPin;
+}
+
+/**
  * Mengambil daftar sesi ujian dari Firestore
  */
-function getExamSessions() {
+function getExamSessions(pin) {
+  if (!_checkAdminPin(pin)) return { error: 'unauthorized' };
+
   var props = PropertiesService.getScriptProperties();
   var projectId = props.getProperty('PROJECT_ID');
   if (!projectId) return { error: 'PROJECT_ID belum di-set.' };
@@ -415,7 +427,9 @@ function getExamSessions() {
 /**
  * Menghapus satu sesi ujian beserta subkoleksinya (Recursive Delete)
  */
-function deleteExamSession(examId) {
+function deleteExamSession(examId, pin) {
+  if (!_checkAdminPin(pin)) return { error: 'unauthorized' };
+
   var props = PropertiesService.getScriptProperties();
   var projectId = props.getProperty('PROJECT_ID');
   var accessToken = _getAccessToken();
@@ -489,8 +503,10 @@ function deleteExamSession(examId) {
 /**
  * Menghapus SELURUH sesi ujian (Mass Clean Up)
  */
-function deleteAllExams() {
-  var exams = getExamSessions();
+function deleteAllExams(pin) {
+  if (!_checkAdminPin(pin)) return { error: 'unauthorized' };
+
+  var exams = getExamSessions(pin);
   if (exams.error) return exams;
   
   var count = 0;
