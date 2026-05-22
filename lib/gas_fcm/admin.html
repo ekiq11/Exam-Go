@@ -212,6 +212,22 @@
     </div>
   </div>
 
+  <!-- Progress Modal -->
+  <div id="progress-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity opacity-0">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center transform transition-transform scale-95" id="progress-modal-box">
+      <div class="mb-4">
+        <div class="loader inline-block border-examgo-primary border-t-examgo-primary/30 w-12 h-12"></div>
+      </div>
+      <h3 class="text-xl font-bold text-gray-900 mb-2">Menghapus Data...</h3>
+      <p id="progress-text" class="text-sm text-gray-500 mb-6 font-medium">Memulai proses...</p>
+      
+      <div class="w-full bg-gray-100 rounded-full h-3 mb-2 overflow-hidden shadow-inner">
+        <div id="progress-bar" class="bg-examgo-primary h-3 rounded-full transition-all duration-300 shadow-sm" style="width: 0%"></div>
+      </div>
+      <p id="progress-percent" class="text-xs text-gray-400 font-bold tracking-widest mt-2">0%</p>
+    </div>
+  </div>
+
   <!-- Custom Confirm Modal -->
   <div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity opacity-0">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 transform transition-transform scale-95" id="confirm-modal-box">
@@ -497,8 +513,77 @@
     }
 
     // ─────────────────────────────────────────────────────────
-    // Deletion Actions
+    // Deletion Actions (With Progress Indicator)
     // ─────────────────────────────────────────────────────────
+    
+    async function executeBatchDelete(examIds) {
+      const progressModal = document.getElementById('progress-modal');
+      const progressBox = document.getElementById('progress-modal-box');
+      const progressBar = document.getElementById('progress-bar');
+      const progressText = document.getElementById('progress-text');
+      const progressPercent = document.getElementById('progress-percent');
+      
+      // Show Progress Modal
+      progressModal.classList.replace('hidden', 'flex');
+      void progressModal.offsetWidth; // trigger reflow
+      progressModal.classList.remove('opacity-0');
+      progressBox.classList.remove('scale-95');
+      progressBox.classList.add('scale-100');
+      
+      let successCount = 0;
+      let failCount = 0;
+      let isQuotaError = false;
+      
+      progressBar.style.width = '0%';
+      progressText.innerText = `Menghapus 0 dari ${examIds.length}`;
+      progressPercent.innerText = '0%';
+      
+      for (let i = 0; i < examIds.length; i++) {
+        if (isQuotaError) break; // Stop loop if quota limit hit
+        
+        const id = examIds[i];
+        progressText.innerText = `Memproses: ${id}`;
+        
+        await new Promise((resolve) => {
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if (res.error) {
+                if (res.error.includes('Kuota')) isQuotaError = true;
+                failCount++;
+              } else {
+                successCount++;
+              }
+              resolve();
+            })
+            .withFailureHandler(function() {
+              failCount++;
+              resolve();
+            })
+            .deleteExamSession(id, currentPin);
+        });
+        
+        // Update progress
+        const percent = Math.round(((i + 1) / examIds.length) * 100);
+        progressBar.style.width = percent + '%';
+        progressText.innerText = `${i + 1} dari ${examIds.length} selesai`;
+        progressPercent.innerText = percent + '%';
+      }
+      
+      // Hide Progress Modal
+      progressModal.classList.add('opacity-0');
+      progressBox.classList.remove('scale-100');
+      progressBox.classList.add('scale-95');
+      setTimeout(() => progressModal.classList.replace('flex', 'hidden'), 300);
+      
+      if (isQuotaError) {
+        showToast('Proses terhenti karena limit kuota Firestore harian', 'error');
+      } else {
+        showToast(`Selesai! ${successCount} dihapus, ${failCount} gagal.`);
+      }
+      
+      loadData();
+    }
+
     function executeSingleDelete(id) {
       showConfirmModal({
         title: 'Hapus Ujian?',
@@ -506,17 +591,7 @@
         type: 'warning',
         confirmText: 'Ya, Hapus',
         onConfirm: () => {
-          showToast('Menghapus data...', 'success'); // Just to inform starting
-          google.script.run
-            .withSuccessHandler(function(res) {
-              if (res.error) showToast(res.error, 'error');
-              else {
-                showToast('Sesi ujian berhasil dihapus');
-                loadData();
-              }
-            })
-            .withFailureHandler(() => showToast('Server error', 'error'))
-            .deleteExamSession(id, currentPin);
+          executeBatchDelete([id]);
         }
       });
     }
@@ -532,27 +607,7 @@
         type: 'warning',
         confirmText: `Hapus ${examIds.length} Ujian`,
         onConfirm: () => {
-          const btn = document.getElementById('btn-delete-selected');
-          const originalHtml = btn.innerHTML;
-          btn.innerHTML = '<div class="loader w-4 h-4 border-t-white border-2 border-transparent mr-2"></div> Memproses...';
-          btn.disabled = true;
-
-          google.script.run
-            .withSuccessHandler(function(res) {
-              btn.innerHTML = originalHtml;
-              btn.disabled = false;
-              if (res.error) showToast(res.error, 'error');
-              else {
-                showToast(`Berhasil menghapus ${res.count} sesi ujian!`);
-                loadData();
-              }
-            })
-            .withFailureHandler(() => {
-              btn.innerHTML = originalHtml;
-              btn.disabled = false;
-              showToast('Server error', 'error');
-            })
-            .deleteMultipleExams(examIds, currentPin);
+          executeBatchDelete(examIds);
         }
       });
     }
@@ -560,6 +615,9 @@
     function openDeleteAllModal() {
       const total = document.getElementById('stat-total').innerText;
       if (total === '0' || total === '...') return showToast('Tidak ada data yang bisa dihapus', 'error');
+      
+      if (currentData.length === 0) return;
+      const examIds = currentData.map(e => e.id);
 
       showConfirmModal({
         title: 'Peringatan Bahaya!',
@@ -568,23 +626,7 @@
         requireInput: 'BERSIHKAN',
         confirmText: 'Hapus Semua Data',
         onConfirm: () => {
-          showToast('Memulai pembersihan massal. Harap tunggu...');
-          renderSkeleton(5);
-          google.script.run
-            .withSuccessHandler(function(res) {
-              if (res.error) {
-                showToast(res.error, 'error');
-                loadData();
-              } else {
-                showToast(`Pembersihan tuntas! ${res.count} sesi dihapus.`);
-                loadData();
-              }
-            })
-            .withFailureHandler(() => {
-              showToast('Server error', 'error');
-              loadData();
-            })
-            .deleteAllExams(currentPin);
+          executeBatchDelete(examIds);
         }
       });
     }
