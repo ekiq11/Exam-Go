@@ -283,7 +283,10 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       case AppLifecycleState.paused:
         _inactiveTimer?.cancel();
         _pauseDebounce?.cancel();
-        _pauseDebounce = Timer(const Duration(milliseconds: 300), () async {
+        // FIX BUG: Perpanjang jeda menjadi 1500ms agar PowerManager OS sempat 
+        // meng-update status isInteractive menjadi false saat layar dimatikan.
+        // Mencegah "False Positive" pelanggaran saat mematikan layar sekejap.
+        _pauseDebounce = Timer(const Duration(milliseconds: 1500), () async {
           if (!mounted || _isExiting || !_securityEnabled) return;
           if (!_wasActuallyPaused) return;
           // FIX BUG-A: Jangan tambah violation saat layar sudah dibekukan guru.
