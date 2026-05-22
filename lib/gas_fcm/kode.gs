@@ -538,7 +538,8 @@ function deleteAllExams(pin) {
   
   var count = 0;
   for (var i = 0; i < exams.length; i++) {
-    var res = deleteExamSession(exams[i].id);
+    // FIX BUG: Terlupa mengirim parameter pin saat loop hapus
+    var res = deleteExamSession(exams[i].id, pin);
     if (res.success) count++;
   }
   return { success: true, count: count };
