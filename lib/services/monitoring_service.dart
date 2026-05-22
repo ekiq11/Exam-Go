@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'dart:io';
 
 class MonitoringService {
   static final MonitoringService instance = MonitoringService._();
@@ -29,6 +31,8 @@ class MonitoringService {
       try {
         batteryLevel = await Battery().batteryLevel;
       } catch (_) {}
+      
+      final String deviceId = await getDeviceId();
 
       final docRef = _db
           .collection('exam_sessions')
@@ -42,6 +46,7 @@ class MonitoringService {
         'status': status,
         'violations': violations,
         'battery_level': batteryLevel,
+        'device_id': deviceId,
         'last_ping': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {
@@ -157,8 +162,23 @@ class MonitoringService {
         .snapshots();
   }
 
+  /// Mendapatkan Device ID Unik HP
+  Future<String> getDeviceId() async {
+    final deviceInfo = DeviceInfoPlugin();
+    try {
+      if (Platform.isAndroid) {
+        final info = await deviceInfo.androidInfo;
+        return info.id; // Unique hardware ID
+      } else if (Platform.isIOS) {
+        final info = await deviceInfo.iosInfo;
+        return info.identifierForVendor ?? 'unknown_ios';
+      }
+    } catch (_) {}
+    return 'unknown_device';
+  }
+
   /// Get status satu siswa secara one-off (cek lokal dulu sebagai fallback kuota Firestore)
-  Future<String?> getStudentStatus(String examId, String nis) async {
+  Future<Map<String, dynamic>?> getStudentData(String examId, String nis) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final localBlocked = prefs.getBool('blocked_${examId}_$nis') ?? false;
@@ -171,7 +191,8 @@ class MonitoringService {
           .get();
           
       if (doc.exists) {
-        final status = doc.data()?['status'] as String?;
+        final data = doc.data() as Map<String, dynamic>;
+        final status = data['status'] as String?;
         // Jika di server ACTIVE, hapus blokir lokal
         if (status == 'ACTIVE' && localBlocked) {
           await prefs.remove('blocked_${examId}_$nis');
@@ -180,15 +201,15 @@ class MonitoringService {
         if (status == 'BLOCKED' && !localBlocked) {
           await prefs.setBool('blocked_${examId}_$nis', true);
         }
-        return status;
+        return data;
       } else if (localBlocked) {
         // Fallback jika dokumen tidak ada atau error quota tapi lokal terblokir
-        return 'BLOCKED';
+        return {'status': 'BLOCKED'};
       }
     } catch (_) {
       // Jika Firestore error (misal Quota Exceeded), gunakan status lokal
       final prefs = await SharedPreferences.getInstance();
-      if (prefs.getBool('blocked_${examId}_$nis') == true) return 'BLOCKED';
+      if (prefs.getBool('blocked_${examId}_$nis') == true) return {'status': 'BLOCKED'};
     }
     return null;
   }

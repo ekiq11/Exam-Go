@@ -20,6 +20,7 @@ class AppRemoteConfig {
   static const _kExitRequired   = 'exit_press_required';
   static const _kMaxViolations  = 'max_violations';
   static const _kMaxHistory     = 'max_scan_history';
+  static const _kMinAppBuild    = 'min_app_build';
 
   // ─── Defaults (sama dengan AppConfig) ─────────────────────────
   static const _defaults = {
@@ -28,6 +29,7 @@ class AppRemoteConfig {
     _kExitRequired:  3,
     _kMaxViolations: 3,
     _kMaxHistory:    10,
+    _kMinAppBuild:   35, // Default tidak memaksa update jika belum diset di Firebase
   };
 
   Future<void> init() async {
@@ -61,4 +63,7 @@ class AppRemoteConfig {
 
   /// Maksimal riwayat scan yang disimpan
   int get maxScanHistory => _rc.getInt(_kMaxHistory);
+
+  /// Minimal build number yang diizinkan untuk membuka ujian
+  int get minAppBuild => _rc.getInt(_kMinAppBuild);
 }

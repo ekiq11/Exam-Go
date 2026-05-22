@@ -1,5 +1,6 @@
 import 'package:examgo/firebas_analytics/analytic_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/app_remote_config.dart';
 import 'package:examgo/services/exam_session_service.dart';
 import 'package:examgo/services/monitoring_service.dart';
 import 'package:examgo/view/pre_exam_checklist.dart';
@@ -81,8 +82,51 @@ class _HomeScreenState extends State<HomeScreen>
     _listenConnectivity();
     _loadHistory();
     // Cek apakah ada sesi ujian yang tidak selesai (crash recovery)
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkCrashRecovery());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkForceUpdate().then((_) {
+        _checkCrashRecovery();
+      });
+    });
     // FIX BUG-07: Clock dikelola oleh _ClockWidget — tidak perlu timer di sini.
+  }
+
+  Future<void> _checkForceUpdate() async {
+    // Tunggu Remote Config ready
+    await AppRemoteConfig.instance.init();
+    if (AppConfig.appBuildNumber < AppRemoteConfig.instance.minAppBuild) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => PopScope(
+          canPop: false,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            title: Row(
+              children: [
+                const Icon(Icons.system_update_rounded, color: Colors.blue),
+                const SizedBox(width: 8),
+                Text('Update Tersedia', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
+              ],
+            ),
+            content: Text(
+              'Versi aplikasi ExamGO Anda sudah usang dan memiliki celah keamanan.\n\nHarap perbarui aplikasi Anda ke versi terbaru untuk melanjutkan ujian.',
+              style: GoogleFonts.poppins(fontSize: 13),
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  // Arahkan ke Play Store / URL Download sekolah (Bisa diganti URL aktual)
+                  // launchUrl(Uri.parse('market://details?id=com.examgo.app'));
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                child: Text('Update Sekarang', style: GoogleFonts.poppins(color: Colors.white)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -145,7 +189,36 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // ─── Crash Recovery ───────────────────────────────────────────
+  void _showDeviceBlockedPopup() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.phonelink_lock_rounded, color: Colors.red),
+            const SizedBox(width: 8),
+            Text('Perangkat Ditolak', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16)),
+          ],
+        ),
+        content: Text(
+          'Nomor NIS Anda sudah terdaftar dan masuk ujian menggunakan perangkat (HP) lain.\n\nSistem ExamGO mencegah login ganda untuk menghindari perjokian. Hubungi pengawas untuk mereset perangkat Anda.',
+          style: GoogleFonts.poppins(fontSize: 13),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text('Tutup', style: GoogleFonts.poppins(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Teacher Mode Request ───────────────────────────────────────────
 
   Future<void> _checkCrashRecovery() async {
     final session = await ExamSessionService.instance.getActiveSession();
@@ -176,7 +249,24 @@ class _HomeScreenState extends State<HomeScreen>
             child: Text('Abaikan', style: GoogleFonts.poppins(color: Colors.grey)),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
+            onPressed: () async {
+              // Cek apakah siswa masih diblokir oleh pengawas atau pindah device
+              if (session.examId.isNotEmpty && session.studentNis.isNotEmpty) {
+                final studentData = await MonitoringService.instance.getStudentData(session.examId, session.studentNis);
+                if (studentData != null) {
+                  if (studentData['status'] == 'BLOCKED') {
+                    if (mounted) _showViolationPopup();
+                    return;
+                  }
+                  final currentDeviceId = await MonitoringService.instance.getDeviceId();
+                  if (studentData['device_id'] != null && studentData['device_id'] != currentDeviceId) {
+                    if (mounted) _showDeviceBlockedPopup();
+                    return;
+                  }
+                }
+              }
+              if (mounted) Navigator.of(ctx).pop(true);
+            },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
             child: Text('Lanjutkan', style: GoogleFonts.poppins(color: Colors.white)),
           ),
@@ -189,12 +279,19 @@ class _HomeScreenState extends State<HomeScreen>
       return;
     }
 
-    // Cek apakah siswa masih diblokir oleh pengawas
+    // Cek apakah siswa masih diblokir oleh pengawas atau pindah device
     if (session.examId.isNotEmpty && session.studentNis.isNotEmpty) {
-      final status = await MonitoringService.instance.getStudentStatus(session.examId, session.studentNis);
-      if (status == 'BLOCKED') {
-        if (mounted) _showViolationPopup();
-        return;
+      final studentData = await MonitoringService.instance.getStudentData(session.examId, session.studentNis);
+      if (studentData != null) {
+        if (studentData['status'] == 'BLOCKED') {
+          if (mounted) _showViolationPopup();
+          return;
+        }
+        final currentDeviceId = await MonitoringService.instance.getDeviceId();
+        if (studentData['device_id'] != null && studentData['device_id'] != currentDeviceId) {
+          if (mounted) _showDeviceBlockedPopup();
+          return;
+        }
       }
     }
 
@@ -338,10 +435,17 @@ class _HomeScreenState extends State<HomeScreen>
 
     // Cek apakah siswa masih diblokir oleh pengawas
     if (examId.isNotEmpty && nis.isNotEmpty) {
-      final status = await MonitoringService.instance.getStudentStatus(examId, nis);
-      if (status == 'BLOCKED') {
-        if (mounted) _showViolationPopup();
-        return;
+      final studentData = await MonitoringService.instance.getStudentData(examId, nis);
+      if (studentData != null) {
+        if (studentData['status'] == 'BLOCKED') {
+          if (mounted) _showViolationPopup();
+          return;
+        }
+        final currentDeviceId = await MonitoringService.instance.getDeviceId();
+        if (studentData['device_id'] != null && studentData['device_id'] != currentDeviceId) {
+          if (mounted) _showDeviceBlockedPopup();
+          return;
+        }
       }
     }
 
