@@ -5,72 +5,115 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ExamGO Administrator</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            examgo: {
+              primary: '#2E7D32',
+              primaryHover: '#1B5E20',
+              pale: '#E8F5E9',
+              dark: '#212121',
+              light: '#FAFAFA'
+            }
+          },
+          animation: {
+            'shimmer': 'shimmer 1.5s infinite linear',
+          },
+          keyframes: {
+            shimmer: {
+              '0%': { backgroundPosition: '-1000px 0' },
+              '100%': { backgroundPosition: '1000px 0' },
+            }
+          }
+        }
+      }
+    }
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Poppins', sans-serif;
-      background-color: #f3f4f6;
+      background-color: #f0f2f5;
     }
     .glass-card {
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
     }
     .loader {
-      border: 3px solid #f3f3f3;
-      border-top: 3px solid #10b981;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top: 3px solid white;
       border-radius: 50%;
       width: 20px;
       height: 20px;
       animation: spin 1s linear infinite;
     }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .skeleton-box {
+      background: #f6f7f8;
+      background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+      background-repeat: no-repeat;
+      background-size: 1000px 100%; 
     }
+    /* Hide scrollbar for clean look */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
 </head>
-<body class="text-gray-800 antialiased min-h-screen flex flex-col">
+<body class="text-examgo-dark antialiased min-h-screen flex flex-col selection:bg-examgo-pale selection:text-examgo-primary">
 
   <!-- Navbar -->
-  <nav class="bg-emerald-600 shadow-lg">
+  <nav class="bg-gradient-to-r from-examgo-primary to-[#43A047] shadow-lg sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16">
-        <div class="flex items-center">
-          <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-          </svg>
-          <span class="ml-3 text-xl font-bold text-white tracking-wide">ExamGO Admin</span>
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center">
+            <svg class="h-6 w-6 text-examgo-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <span class="text-xl font-bold text-white tracking-wide">ExamGO <span class="font-normal opacity-80">Admin</span></span>
+        </div>
+        <div class="flex items-center hidden" id="nav-user">
+          <div class="h-8 w-8 rounded-full bg-examgo-pale text-examgo-primary flex items-center justify-center font-bold">
+            A
+          </div>
         </div>
       </div>
     </div>
   </nav>
 
   <!-- Main Content -->
-  <main id="main-content" class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden">
+  <main id="main-content" class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden transition-opacity duration-500 opacity-0">
     
     <!-- Header & Stats -->
     <div class="md:flex md:items-center md:justify-between mb-8">
       <div class="flex-1 min-w-0">
-        <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-          Database Ujian (Firestore)
+        <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate flex items-center">
+          Database Ujian
+          <span class="ml-3 inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium bg-examgo-pale text-examgo-primary">
+            Firestore
+          </span>
         </h2>
-        <p class="mt-1 text-sm text-gray-500">Kelola dan bersihkan data ujian untuk menjaga kapasitas penyimpanan.</p>
+        <p class="mt-2 text-sm text-gray-500">Kelola dan bersihkan data ujian untuk menjaga kapasitas penyimpanan cloud Anda.</p>
       </div>
       <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 space-x-3 gap-y-2 justify-end">
-        <button onclick="loadData()" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-          <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button onclick="loadData()" class="inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
+          <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
           Refresh
         </button>
-        <button id="btn-delete-selected" onclick="deleteSelected()" class="hidden inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 transition-colors">
+        <button id="btn-delete-selected" onclick="openDeleteSelectedModal()" class="hidden inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 transition-all transform hover:scale-105">
           <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
           Hapus Terpilih (<span id="selected-count">0</span>)
         </button>
-        <button onclick="confirmDeleteAll()" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors">
+        <button onclick="openDeleteAllModal()" class="inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-all transform hover:scale-105">
           <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
@@ -79,21 +122,21 @@
       </div>
     </div>
 
-    <!-- Stat Cards -->
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
-      <div class="glass-card overflow-hidden shadow rounded-xl">
-        <div class="p-5">
+      <!-- Stat Card -->
+      <div class="glass-card shadow-sm rounded-2xl overflow-hidden transform transition-all hover:-translate-y-1 hover:shadow-md">
+        <div class="p-6">
           <div class="flex items-center">
-            <div class="flex-shrink-0 bg-emerald-100 rounded-md p-3">
-              <svg class="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex-shrink-0 bg-examgo-pale rounded-xl p-3">
+              <svg class="h-7 w-7 text-examgo-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
             <div class="ml-5 w-0 flex-1">
               <dl>
-                <dt class="text-sm font-medium text-gray-500 truncate">Total Sesi Ujian</dt>
-                <dd class="flex items-baseline">
-                  <div class="text-2xl font-bold text-gray-900" id="stat-total">-</div>
+                <dt class="text-sm font-medium text-gray-500 truncate">Total Sesi Ujian Aktif</dt>
+                <dd class="flex items-baseline mt-1">
+                  <div class="text-3xl font-bold text-gray-900" id="stat-total">-</div>
                 </dd>
               </dl>
             </div>
@@ -102,31 +145,41 @@
       </div>
     </div>
 
-    <!-- Data Table -->
-    <div class="glass-card shadow rounded-xl overflow-hidden">
-      <div class="px-4 py-5 border-b border-gray-200 sm:px-6 flex justify-between items-center">
-        <h3 class="text-lg leading-6 font-medium text-gray-900">Daftar Sesi Ujian Aktif</h3>
-        <div id="table-loader" class="loader hidden"></div>
+    <!-- Data Table Card -->
+    <div class="glass-card shadow-sm rounded-2xl overflow-hidden">
+      <div class="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h3 class="text-lg leading-6 font-semibold text-gray-900">Daftar Sesi Ujian</h3>
+        
+        <!-- Search Bar -->
+        <div class="relative max-w-sm w-full">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input type="text" id="search-input" onkeyup="filterTable()" class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-examgo-primary focus:border-examgo-primary focus:bg-white sm:text-sm transition-colors" placeholder="Cari judul ujian atau ID...">
+        </div>
       </div>
+      
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+        <table class="min-w-full divide-y divide-gray-100">
+          <thead class="bg-gray-50/50">
             <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
-                <input type="checkbox" id="checkbox-all" onchange="toggleAllCheckboxes(this)" class="focus:ring-emerald-500 h-4 w-4 text-emerald-600 border-gray-300 rounded">
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-10">
+                <input type="checkbox" id="checkbox-all" onchange="toggleAllCheckboxes(this)" class="focus:ring-examgo-primary h-4 w-4 text-examgo-primary border-gray-300 rounded cursor-pointer transition-all">
               </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul Ujian</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Token (ID)</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dibuat Pada</th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Judul Ujian</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Token (ID)</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Dibuat Pada</th>
+              <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
             </tr>
           </thead>
-          <tbody id="table-body" class="bg-white divide-y divide-gray-200">
-            <tr>
-              <td colspan="5" class="px-6 py-10 text-center text-sm text-gray-500">
-                Memuat data dari Firestore...
-              </td>
-            </tr>
+          <tbody id="table-body" class="bg-white divide-y divide-gray-50">
+            <!-- Skeleton Loading Default -->
+            <tr id="initial-skeleton"><td colspan="5" class="px-6 py-8">
+              <div class="animate-shimmer skeleton-box h-4 w-3/4 rounded mb-4"></div>
+              <div class="animate-shimmer skeleton-box h-4 w-1/2 rounded"></div>
+            </td></tr>
           </tbody>
         </table>
       </div>
@@ -135,59 +188,78 @@
   </main>
 
   <!-- Login Modal -->
-  <div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 transform transition-all">
-      <div class="text-center mb-6">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4">
-          <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+  <div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-md">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 transform transition-all scale-100">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-examgo-pale mb-5 shadow-inner">
+          <svg class="w-10 h-10 text-examgo-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
           </svg>
         </div>
         <h3 class="text-2xl font-bold text-gray-900">Akses Terkunci</h3>
         <p class="text-sm text-gray-500 mt-2">Masukkan PIN Administrator untuk mengelola database.</p>
       </div>
       
-      <div class="space-y-4">
-        <div>
-          <input type="password" id="pin-input" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-center text-xl tracking-widest outline-none transition-shadow" placeholder="••••••••" autocomplete="off">
+      <div class="space-y-5">
+        <div class="relative">
+          <input type="password" id="pin-input" class="w-full px-5 py-4 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-examgo-primary/20 focus:border-examgo-primary focus:bg-white text-center text-2xl tracking-[0.5em] font-mono outline-none transition-all placeholder-gray-300" placeholder="••••••••" autocomplete="off">
         </div>
-        <button id="login-btn" onclick="attemptLogin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg shadow transition-colors flex justify-center items-center">
+        <button id="login-btn" onclick="attemptLogin()" class="w-full bg-examgo-primary hover:bg-examgo-primaryHover text-white font-semibold py-4 px-4 rounded-xl shadow-md hover:shadow-lg transition-all flex justify-center items-center">
           Buka Kunci
         </button>
       </div>
     </div>
   </div>
 
+  <!-- Custom Confirm Modal -->
+  <div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity opacity-0">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 transform transition-transform scale-95" id="confirm-modal-box">
+      <div class="flex items-center justify-center w-12 h-12 rounded-full mb-4 mx-auto" id="confirm-icon-container">
+        <!-- Icon injected via JS -->
+      </div>
+      <h3 class="text-xl font-bold text-center text-gray-900" id="confirm-title">Konfirmasi</h3>
+      <p class="text-sm text-center text-gray-500 mt-2 mb-6" id="confirm-msg">Apakah Anda yakin?</p>
+      
+      <!-- Password Input for Mass Delete -->
+      <div id="confirm-input-container" class="hidden mb-6">
+        <input type="text" id="confirm-input" class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-center font-bold outline-none transition-all" placeholder="Ketik BERSIHKAN" autocomplete="off">
+      </div>
+
+      <div class="flex space-x-3">
+        <button onclick="closeConfirmModal()" class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors">Batal</button>
+        <button id="confirm-action-btn" class="flex-1 px-4 py-3 text-white font-medium rounded-xl transition-colors shadow-sm flex justify-center items-center">Hapus</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Notification Toast -->
-  <div id="toast" class="fixed bottom-5 right-5 transform transition-all duration-300 translate-y-20 opacity-0 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center">
+  <div id="toast" class="fixed bottom-5 right-5 transform transition-all duration-300 translate-y-20 opacity-0 text-white px-6 py-4 rounded-xl shadow-xl z-[60] flex items-center min-w-[300px]">
     <span id="toast-icon" class="mr-3"></span>
-    <span id="toast-msg">Notifikasi</span>
+    <span id="toast-msg" class="font-medium text-sm">Notifikasi</span>
   </div>
 
   <script>
-    // Utils
+    let currentPin = '';
+    let currentData = []; // Store data for local search filtering
+
+    // ─────────────────────────────────────────────────────────
+    // UI Helpers
+    // ─────────────────────────────────────────────────────────
     function showToast(msg, type = 'success') {
       const toast = document.getElementById('toast');
       const icon = document.getElementById('toast-icon');
       document.getElementById('toast-msg').innerText = msg;
       
       if (type === 'success') {
-        toast.className = "fixed bottom-5 right-5 transform transition-all duration-300 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center";
-        icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+        toast.className = "fixed bottom-5 right-5 transform transition-all duration-300 bg-examgo-primary text-white px-6 py-4 rounded-xl shadow-xl z-[60] flex items-center min-w-[300px]";
+        icon.innerHTML = '<div class="bg-white/20 p-1 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>';
       } else {
-        toast.className = "fixed bottom-5 right-5 transform transition-all duration-300 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center";
-        icon.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+        toast.className = "fixed bottom-5 right-5 transform transition-all duration-300 bg-red-600 text-white px-6 py-4 rounded-xl shadow-xl z-[60] flex items-center min-w-[300px]";
+        icon.innerHTML = '<div class="bg-white/20 p-1 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></div>';
       }
       
-      // Animate in
-      setTimeout(() => {
-        toast.classList.remove('translate-y-20', 'opacity-0');
-      }, 10);
-      
-      // Animate out
-      setTimeout(() => {
-        toast.classList.add('translate-y-20', 'opacity-0');
-      }, 3000);
+      setTimeout(() => toast.classList.remove('translate-y-20', 'opacity-0'), 10);
+      setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 4000);
     }
 
     function formatDate(isoString) {
@@ -196,15 +268,97 @@
       return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     }
 
-    let currentPin = '';
+    function renderSkeleton(count = 3) {
+      let html = '';
+      for (let i=0; i<count; i++) {
+        html += `<tr><td colspan="5" class="px-6 py-5 border-b border-gray-50">
+          <div class="flex items-center space-x-4">
+            <div class="animate-shimmer skeleton-box h-4 w-4 rounded"></div>
+            <div class="animate-shimmer skeleton-box h-4 w-1/4 rounded"></div>
+            <div class="animate-shimmer skeleton-box h-4 w-1/4 rounded"></div>
+          </div>
+        </td></tr>`;
+      }
+      document.getElementById('table-body').innerHTML = html;
+    }
 
-    // Login Logic
+    // ─────────────────────────────────────────────────────────
+    // Custom Modal System
+    // ─────────────────────────────────────────────────────────
+    const confirmModal = document.getElementById('confirm-modal');
+    const confirmModalBox = document.getElementById('confirm-modal-box');
+    
+    function closeConfirmModal() {
+      confirmModal.classList.add('opacity-0');
+      confirmModalBox.classList.remove('scale-100');
+      confirmModalBox.classList.add('scale-95');
+      setTimeout(() => confirmModal.classList.replace('flex', 'hidden'), 300);
+    }
+
+    function showConfirmModal({ title, message, type, requireInput, confirmText, onConfirm }) {
+      document.getElementById('confirm-title').innerText = title;
+      document.getElementById('confirm-msg').innerText = message;
+      
+      const iconContainer = document.getElementById('confirm-icon-container');
+      const actionBtn = document.getElementById('confirm-action-btn');
+      const inputContainer = document.getElementById('confirm-input-container');
+      const inputEl = document.getElementById('confirm-input');
+
+      // Style based on type
+      if (type === 'danger') {
+        iconContainer.className = 'flex items-center justify-center w-14 h-14 rounded-full mb-4 mx-auto bg-red-100 text-red-600';
+        iconContainer.innerHTML = '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+        actionBtn.className = 'flex-1 px-4 py-3 text-white font-medium rounded-xl transition-colors shadow-sm flex justify-center items-center bg-red-600 hover:bg-red-700';
+      } else {
+        iconContainer.className = 'flex items-center justify-center w-14 h-14 rounded-full mb-4 mx-auto bg-orange-100 text-orange-500';
+        iconContainer.innerHTML = '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>';
+        actionBtn.className = 'flex-1 px-4 py-3 text-white font-medium rounded-xl transition-colors shadow-sm flex justify-center items-center bg-orange-500 hover:bg-orange-600';
+      }
+
+      actionBtn.innerText = confirmText;
+
+      // Handle Input Requirement
+      if (requireInput) {
+        inputContainer.classList.remove('hidden');
+        inputEl.value = '';
+        inputEl.placeholder = `Ketik "${requireInput}"`;
+        actionBtn.onclick = () => {
+          if (inputEl.value !== requireInput) {
+            inputEl.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+            setTimeout(() => inputEl.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20'), 500);
+            return;
+          }
+          closeConfirmModal();
+          onConfirm(actionBtn);
+        };
+      } else {
+        inputContainer.classList.add('hidden');
+        actionBtn.onclick = () => {
+          closeConfirmModal();
+          onConfirm(actionBtn);
+        };
+      }
+
+      // Show Modal
+      confirmModal.classList.replace('hidden', 'flex');
+      // Trigger reflow for transition
+      void confirmModal.offsetWidth;
+      confirmModal.classList.remove('opacity-0');
+      confirmModalBox.classList.remove('scale-95');
+      confirmModalBox.classList.add('scale-100');
+      
+      if (requireInput) setTimeout(() => inputEl.focus(), 100);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Logic
+    // ─────────────────────────────────────────────────────────
     function attemptLogin() {
       const pinInput = document.getElementById('pin-input').value;
       if (!pinInput) return showToast('PIN tidak boleh kosong', 'error');
       
       const btn = document.getElementById('login-btn');
-      btn.innerHTML = '<div class="loader w-5 h-5 border-2 border-white border-t-emerald-600 mr-2"></div> Memverifikasi...';
+      btn.innerHTML = '<div class="loader mr-2"></div> Memverifikasi...';
       btn.disabled = true;
 
       google.script.run
@@ -216,11 +370,17 @@
             showToast('PIN Salah! Akses ditolak.', 'error');
             document.getElementById('pin-input').value = '';
           } else {
-            // Login sukses
             currentPin = pinInput;
-            document.getElementById('login-modal').classList.add('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
+            document.getElementById('login-modal').classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => document.getElementById('login-modal').classList.add('hidden'), 500);
+            
+            const mainContent = document.getElementById('main-content');
+            mainContent.classList.remove('hidden');
+            document.getElementById('nav-user').classList.remove('hidden');
+            setTimeout(() => mainContent.classList.remove('opacity-0'), 50);
+            
             showToast('Akses Diberikan');
+            currentData = response;
             renderTableData(response);
           }
         })
@@ -232,19 +392,14 @@
         .getExamSessions(pinInput);
     }
 
-    // Tangkap Enter pada input PIN
     document.getElementById('pin-input').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') attemptLogin();
     });
 
-    // Load Data
     function loadData() {
       if (!currentPin) return;
-      const tbody = document.getElementById('table-body');
-      const loader = document.getElementById('table-loader');
-      
-      loader.classList.remove('hidden');
-      tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-sm text-gray-500">Sedang mengambil data dari Firestore...</td></tr>';
+      document.getElementById('search-input').value = '';
+      renderSkeleton(5);
       document.getElementById('stat-total').innerText = '...';
       document.getElementById('checkbox-all').checked = false;
       updateSelectedCount();
@@ -252,53 +407,67 @@
       google.script.run
         .withSuccessHandler(function(response) {
           if (response && response.error === 'unauthorized') {
-            // Sesi kedaluwarsa / PIN diubah
             currentPin = '';
-            document.getElementById('main-content').classList.add('hidden');
-            document.getElementById('login-modal').classList.remove('hidden');
+            document.getElementById('main-content').classList.add('hidden', 'opacity-0');
+            const loginModal = document.getElementById('login-modal');
+            loginModal.classList.remove('hidden', 'pointer-events-none');
+            setTimeout(() => loginModal.classList.remove('opacity-0'), 50);
             return showToast('Sesi ditolak. Silakan login ulang.', 'error');
           }
+          currentData = response;
           renderTableData(response);
         })
         .withFailureHandler(function(err) {
-          loader.classList.add('hidden');
           showToast('Koneksi ke server gagal', 'error');
-          tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-sm text-red-500">Gagal terhubung ke GAS.</td></tr>`;
+          document.getElementById('table-body').innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-sm text-red-500 font-medium">Gagal terhubung ke server.</td></tr>`;
         })
         .getExamSessions(currentPin);
     }
 
-    // Render tabel HTML
-    function renderTableData(response) {
+    // Live Search Filter
+    function filterTable() {
+      const term = document.getElementById('search-input').value.toLowerCase();
+      if (!currentData || currentData.error) return;
+      
+      const filtered = currentData.filter(exam => 
+        exam.title.toLowerCase().includes(term) || exam.id.toLowerCase().includes(term)
+      );
+      renderTableData(filtered, true); // true = isFiltering
+    }
+
+    function renderTableData(response, isFiltering = false) {
       const tbody = document.getElementById('table-body');
-      const loader = document.getElementById('table-loader');
-      loader.classList.add('hidden');
 
       if (response.error) {
         showToast(response.error, 'error');
-        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-sm text-red-500">Error: ${response.error}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-sm text-red-500 font-medium">Error: ${response.error}</td></tr>`;
         return;
       }
 
-      document.getElementById('stat-total').innerText = response.length;
+      if (!isFiltering) document.getElementById('stat-total').innerText = response.length;
       
       if (response.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-10 text-center text-sm text-gray-500 flex-col items-center"><svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>Tidak ada data ujian di Firestore.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center flex-col items-center">
+          <div class="bg-gray-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+            <svg class="h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+          </div>
+          <span class="text-gray-500 font-medium">${isFiltering ? 'Tidak ada hasil pencarian.' : 'Tidak ada data ujian di Firestore.'}</span>
+        </td></tr>`;
         return;
       }
 
       let html = '';
       response.forEach(function(exam) {
         html += `
-          <tr class="hover:bg-gray-50 transition-colors" id="row-${exam.id}">
+          <tr class="hover:bg-examgo-pale/30 transition-colors group" id="row-${exam.id}">
             <td class="px-6 py-4 whitespace-nowrap">
-              <input type="checkbox" value="${exam.id}" class="row-checkbox focus:ring-emerald-500 h-4 w-4 text-emerald-600 border-gray-300 rounded" onchange="updateSelectedCount()">
+              <input type="checkbox" value="${exam.id}" class="row-checkbox focus:ring-examgo-primary h-4 w-4 text-examgo-primary border-gray-300 rounded cursor-pointer transition-all" onchange="updateSelectedCount()">
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm font-semibold text-gray-900">${exam.title}</div>
+              <div class="text-sm font-bold text-gray-900 group-hover:text-examgo-primary transition-colors">${exam.title}</div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-100 text-emerald-800 font-mono">
+              <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-md bg-gray-100 text-gray-600 font-mono border border-gray-200">
                 ${exam.id}
               </span>
             </td>
@@ -306,8 +475,8 @@
               ${formatDate(exam.createdAt)}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-              <button onclick="deleteExam('${exam.id}', this)" class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors inline-flex items-center">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              <button onclick="executeSingleDelete('${exam.id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center shadow-sm">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 Hapus
               </button>
             </td>
@@ -315,69 +484,107 @@
         `;
       });
       tbody.innerHTML = html;
-    }
-
-    // Delete Single
-    function deleteExam(id, btnElement) {
-      if (!confirm('Hapus sesi ujian ini beserta semua data siswa dan riwayat log-nya? (Tindakan ini tidak bisa dibatalkan)')) return;
       
-      const originalHtml = btnElement.innerHTML;
-      btnElement.innerHTML = '<div class="loader w-4 h-4 border-2 border-red-200 border-t-red-600 mr-2"></div> Menghapus...';
-      btnElement.disabled = true;
-
-      google.script.run
-        .withSuccessHandler(function(res) {
-          if (res.error) {
-            showToast(res.error, 'error');
-            btnElement.innerHTML = originalHtml;
-            btnElement.disabled = false;
-          } else {
-            showToast('Sesi ujian berhasil dihapus');
-            document.getElementById('row-' + id).remove();
-            let total = parseInt(document.getElementById('stat-total').innerText);
-            if (!isNaN(total)) document.getElementById('stat-total').innerText = total - 1;
-          }
-        })
-        .withFailureHandler(function(err) {
-          showToast('Server error', 'error');
-          btnElement.innerHTML = originalHtml;
-          btnElement.disabled = false;
-        })
-        .deleteExamSession(id, currentPin);
+      // Resync checkboxes state with header checkbox
+      updateSelectedCount();
     }
 
-    // Delete All
-    function confirmDeleteAll() {
+    // ─────────────────────────────────────────────────────────
+    // Deletion Actions
+    // ─────────────────────────────────────────────────────────
+    function executeSingleDelete(id) {
+      showConfirmModal({
+        title: 'Hapus Ujian?',
+        message: 'Aksi ini akan menghapus sesi ujian beserta seluruh data siswa dan riwayat log-nya. Tidak dapat dibatalkan.',
+        type: 'warning',
+        confirmText: 'Ya, Hapus',
+        onConfirm: () => {
+          showToast('Menghapus data...', 'success'); // Just to inform starting
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if (res.error) showToast(res.error, 'error');
+              else {
+                showToast('Sesi ujian berhasil dihapus');
+                loadData();
+              }
+            })
+            .withFailureHandler(() => showToast('Server error', 'error'))
+            .deleteExamSession(id, currentPin);
+        }
+      });
+    }
+
+    function openDeleteSelectedModal() {
+      const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+      if (checkedBoxes.length === 0) return;
+      const examIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+      showConfirmModal({
+        title: 'Hapus Multiple',
+        message: `Anda akan menghapus ${examIds.length} ujian yang dipilih beserta seluruh isinya secara permanen.`,
+        type: 'warning',
+        confirmText: `Hapus ${examIds.length} Ujian`,
+        onConfirm: () => {
+          const btn = document.getElementById('btn-delete-selected');
+          const originalHtml = btn.innerHTML;
+          btn.innerHTML = '<div class="loader w-4 h-4 border-t-white border-2 border-transparent mr-2"></div> Memproses...';
+          btn.disabled = true;
+
+          google.script.run
+            .withSuccessHandler(function(res) {
+              btn.innerHTML = originalHtml;
+              btn.disabled = false;
+              if (res.error) showToast(res.error, 'error');
+              else {
+                showToast(`Berhasil menghapus ${res.count} sesi ujian!`);
+                loadData();
+              }
+            })
+            .withFailureHandler(() => {
+              btn.innerHTML = originalHtml;
+              btn.disabled = false;
+              showToast('Server error', 'error');
+            })
+            .deleteMultipleExams(examIds, currentPin);
+        }
+      });
+    }
+
+    function openDeleteAllModal() {
       const total = document.getElementById('stat-total').innerText;
       if (total === '0' || total === '...') return showToast('Tidak ada data yang bisa dihapus', 'error');
-      
-      const pass = prompt('PERINGATAN BAHAYA!\n\nTindakan ini akan menghapus SELURUH data ujian, siswa, dan log di Firestore.\n\nKetik "BERSIHKAN" untuk melanjutkan:');
-      if (pass !== 'BERSIHKAN') {
-        if (pass !== null) showToast('Verifikasi gagal dibatalkan', 'error');
-        return;
-      }
 
-      showToast('Memulai pembersihan massal. Harap tunggu...');
-      document.getElementById('table-loader').classList.remove('hidden');
-
-      google.script.run
-        .withSuccessHandler(function(res) {
-          if (res.error) {
-            showToast(res.error, 'error');
-            document.getElementById('table-loader').classList.add('hidden');
-          } else {
-            showToast(`Berhasil menghapus ${res.count} sesi ujian!`);
-            loadData();
-          }
-        })
-        .withFailureHandler(function(err) {
-          showToast('Server error', 'error');
-          document.getElementById('table-loader').classList.add('hidden');
-        })
-        .deleteAllExams(currentPin);
+      showConfirmModal({
+        title: 'Peringatan Bahaya!',
+        message: 'Tindakan ini akan menghapus SELURUH data di Firestore tanpa terkecuali.',
+        type: 'danger',
+        requireInput: 'BERSIHKAN',
+        confirmText: 'Hapus Semua Data',
+        onConfirm: () => {
+          showToast('Memulai pembersihan massal. Harap tunggu...');
+          renderSkeleton(5);
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if (res.error) {
+                showToast(res.error, 'error');
+                loadData();
+              } else {
+                showToast(`Pembersihan tuntas! ${res.count} sesi dihapus.`);
+                loadData();
+              }
+            })
+            .withFailureHandler(() => {
+              showToast('Server error', 'error');
+              loadData();
+            })
+            .deleteAllExams(currentPin);
+        }
+      });
     }
 
+    // ─────────────────────────────────────────────────────────
     // Checkbox Logic
+    // ─────────────────────────────────────────────────────────
     function toggleAllCheckboxes(source) {
       const checkboxes = document.querySelectorAll('.row-checkbox');
       checkboxes.forEach(cb => cb.checked = source.checked);
@@ -400,43 +607,7 @@
       document.getElementById('checkbox-all').checked = (allCheckboxes.length > 0 && count === allCheckboxes.length);
     }
 
-    // Delete Selected
-    function deleteSelected() {
-      const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
-      if (checkedBoxes.length === 0) return;
-
-      const examIds = Array.from(checkedBoxes).map(cb => cb.value);
-      
-      if (!confirm(`Hapus ${examIds.length} sesi ujian terpilih beserta seluruh isinya? (Tindakan ini tidak bisa dibatalkan)`)) return;
-      
-      const btn = document.getElementById('btn-delete-selected');
-      const originalHtml = btn.innerHTML;
-      btn.innerHTML = '<div class="loader w-4 h-4 border-2 border-white border-t-transparent mr-2"></div> Menghapus...';
-      btn.disabled = true;
-
-      google.script.run
-        .withSuccessHandler(function(res) {
-          if (res.error) {
-            showToast(res.error, 'error');
-            btn.innerHTML = originalHtml;
-            btn.disabled = false;
-          } else {
-            showToast(`Berhasil menghapus ${res.count} sesi ujian!`);
-            loadData();
-          }
-        })
-        .withFailureHandler(function(err) {
-          showToast('Server error', 'error');
-          btn.innerHTML = originalHtml;
-          btn.disabled = false;
-        })
-        .deleteMultipleExams(examIds, currentPin);
-    }
-
-    // Ffokuskan input pin saat init (jangan loadData otomatis)
-    window.onload = () => {
-      document.getElementById('pin-input').focus();
-    };
+    window.onload = () => document.getElementById('pin-input').focus();
   </script>
 </body>
 </html>
