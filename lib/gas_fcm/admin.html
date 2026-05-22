@@ -170,13 +170,14 @@
               </th>
               <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Judul Ujian</th>
               <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Token (ID)</th>
+              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Peserta</th>
               <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Dibuat Pada</th>
               <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
             </tr>
           </thead>
           <tbody id="table-body" class="bg-white divide-y divide-gray-50">
             <!-- Skeleton Loading Default -->
-            <tr id="initial-skeleton"><td colspan="5" class="px-6 py-8">
+            <tr id="initial-skeleton"><td colspan="6" class="px-6 py-8">
               <div class="animate-shimmer skeleton-box h-4 w-3/4 rounded mb-4"></div>
               <div class="animate-shimmer skeleton-box h-4 w-1/2 rounded"></div>
             </td></tr>
@@ -271,7 +272,7 @@
     function renderSkeleton(count = 3) {
       let html = '';
       for (let i=0; i<count; i++) {
-        html += `<tr><td colspan="5" class="px-6 py-5 border-b border-gray-50">
+        html += `<tr><td colspan="6" class="px-6 py-5 border-b border-gray-50">
           <div class="flex items-center space-x-4">
             <div class="animate-shimmer skeleton-box h-4 w-4 rounded"></div>
             <div class="animate-shimmer skeleton-box h-4 w-1/4 rounded"></div>
@@ -419,7 +420,7 @@
         })
         .withFailureHandler(function(err) {
           showToast('Koneksi ke server gagal', 'error');
-          document.getElementById('table-body').innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-sm text-red-500 font-medium">Gagal terhubung ke server.</td></tr>`;
+          document.getElementById('table-body').innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-sm text-red-500 font-medium">Gagal terhubung ke server.</td></tr>`;
         })
         .getExamSessions(currentPin);
     }
@@ -440,14 +441,14 @@
 
       if (response.error) {
         showToast(response.error, 'error');
-        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-sm text-red-500 font-medium">Error: ${response.error}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-sm text-red-500 font-medium">Error: ${response.error}</td></tr>`;
         return;
       }
 
       if (!isFiltering) document.getElementById('stat-total').innerText = response.length;
       
       if (response.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center flex-col items-center">
+        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center flex-col items-center">
           <div class="bg-gray-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
             <svg class="h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
           </div>
@@ -469,6 +470,12 @@
             <td class="px-6 py-4 whitespace-nowrap">
               <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-md bg-gray-100 text-gray-600 font-mono border border-gray-200">
                 ${exam.id}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="px-2.5 py-1 inline-flex text-sm leading-5 font-semibold rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                <svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                ${exam.studentCount || 0}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

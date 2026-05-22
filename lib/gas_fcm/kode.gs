@@ -404,14 +404,42 @@ function getExamSessions(pin) {
     if (resp.getResponseCode() === 200) {
       var data = JSON.parse(resp.getContentText());
       var documents = data.documents || [];
-      return documents.map(function(doc) {
+      
+      // Fetch student count in parallel for performance
+      var countRequests = documents.map(function(doc) {
+        return {
+          url: 'https://firestore.googleapis.com/v1/' + doc.name + '/students?pageSize=1000',
+          method: 'get',
+          headers: { Authorization: 'Bearer ' + accessToken },
+          muteHttpExceptions: true
+        };
+      });
+      
+      var counts = [];
+      if (countRequests.length > 0) {
+        try {
+          var responses = UrlFetchApp.fetchAll(countRequests);
+          counts = responses.map(function(r) {
+            if (r.getResponseCode() === 200) {
+              var sData = JSON.parse(r.getContentText());
+              return sData.documents ? sData.documents.length : 0;
+            }
+            return 0;
+          });
+        } catch(e) {
+          counts = documents.map(function() { return 0; });
+        }
+      }
+      
+      return documents.map(function(doc, index) {
         var parts = doc.name.split('/');
         var examId = parts[parts.length - 1];
         
         return {
           id: examId,
           title: doc.fields && doc.fields.title && doc.fields.title.stringValue ? doc.fields.title.stringValue : 'Tanpa Judul',
-          createdAt: doc.createTime
+          createdAt: doc.createTime,
+          studentCount: counts[index] || 0
         };
       }).sort(function(a, b) {
         return new Date(b.createdAt) - new Date(a.createdAt);
