@@ -54,6 +54,17 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   late final AnimationController _lineAnim;
   final ImagePicker _picker = ImagePicker();
 
+  // ── CameraUnavailableException retry mechanism ─────────────────
+  // Beberapa device (Advan, Xiaomi entry-level) melaporkan 0 kamera tersedia
+  // saat CameraX init karena HAL issue atau camera service crash sementara.
+  // Solusi: auto-retry hingga 3x dengan delay yang meningkat sebelum menyerah.
+  static const int _kMaxCameraRetry = 3;
+  static const Duration _kRetryBaseDelay = Duration(milliseconds: 1500);
+  int _cameraRetryCount = 0;
+  Timer? _cameraRetryTimer;
+  bool _cameraHardFailed = false; // true setelah semua retry habis
+  String _cameraErrorMessage = '';
+
   @override
   void initState() {
     super.initState();
@@ -71,20 +82,102 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     // Dengarkan perubahan state untuk mendeteksi kapan camera hardware selesai init.
     // onScannerStarted tidak tersedia di mobile_scanner ^7.1.3 — ini alternatif yang benar.
     _controller.addListener(_onScannerStateChanged);
+    // FIX CAMERA-CRASH: Lakukan pre-flight check via native MethodChannel SEBELUM
+    // permission diminta dan CameraX diinisialisasi. Ini mencegah crash fatal
+    // (RuntimeException dari Java) pada device yang melaporkan 0 kamera (HAL issue).
+    _preCheckCamera();
+  }
+
+  /// Pre-flight check ketersediaan kamera via native Android MethodChannel.
+  /// Dipanggil sebelum _requestPermission() agar CameraX tidak pernah disentuh
+  /// jika device benar-benar tidak punya kamera aktif.
+  /// Crash pattern: MobileScanner.start$lambda$18 → ExecutionException → 
+  /// InitializationException → CameraUnavailableException: Available cameras: 0
+  Future<void> _preCheckCamera() async {
+    if (!Platform.isAndroid || _disposed) {
+      // iOS tidak punya masalah ini; langsung lanjut ke permission check
+      _requestPermission();
+      return;
+    }
+    try {
+      const nativeChannel = MethodChannel('com.examgo/locktask');
+      final result = await nativeChannel
+          .invokeMethod<Map<Object?, Object?>>('checkCameraAvailable')
+          .timeout(const Duration(seconds: 3));
+      final available = (result?['available'] as bool?) ?? true;
+      if (!available && mounted) {
+        final reason = (result?['reason'] as String?) ?? 'Kamera tidak terdeteksi';
+        setState(() {
+          _cameraHardFailed = true;
+          _cameraErrorMessage = reason;
+        });
+        return; // STOP — jangan lanjutkan ke permission / scanner init
+      }
+    } catch (_) {
+      // Jika channel error (mis. belum register), lanjut normal —
+      // lebih baik coba scanner daripada blokir user secara salah.
+    }
     _requestPermission();
   }
+
 
   void _onScannerStateChanged() {
     if (!mounted) return;
     final isRunning = _controller.value.isRunning;
     if (_controllerReady != isRunning) {
+      // Kamera berhasil start → reset retry counter & hard-fail flag
+      if (isRunning && _cameraRetryCount > 0) {
+        _cameraRetryCount = 0;
+        _cameraHardFailed = false;
+      }
       setState(() => _controllerReady = isRunning);
     }
+  }
+
+  /// Dipanggil oleh errorBuilder saat MobileScanner melaporkan error kamera.
+  /// Untuk CameraUnavailableException (errorCode.cameraError / generic),
+  /// coba restart controller dengan delay bertahap (1.5s → 3s → 4.5s).
+  void _onCameraError(MobileScannerException error) {
+    if (_disposed || !mounted) return;
+
+    final isRetryable = error.errorCode == MobileScannerErrorCode.genericError ||
+        error.errorCode == MobileScannerErrorCode.controllerUninitialized ||
+        // cameraError enum mungkin tidak ada di semua versi — tangkap semua
+        // errorCode yang bukan permission agar retry tetap berjalan.
+        error.errorCode != MobileScannerErrorCode.permissionDenied;
+
+    if (!isRetryable || _cameraRetryCount >= _kMaxCameraRetry) {
+      // Sudah max retry atau error permanen (permission) → tampilkan hard-fail UI
+      setState(() {
+        _cameraHardFailed = true;
+        _cameraErrorMessage = error.errorDetails?.message ??
+            'Kamera tidak dapat diakses setelah $_kMaxCameraRetry percobaan ulang.';
+      });
+      return;
+    }
+
+    _cameraRetryCount++;
+    // Delay meningkat setiap retry: 1.5s, 3s, 4.5s (exponential-ish backoff)
+    final delay = _kRetryBaseDelay * _cameraRetryCount;
+
+    // Paksa rebuild agar UI retry ditampilkan sebelum timer berjalan
+    if (mounted) setState(() {});
+
+    _cameraRetryTimer?.cancel();
+    _cameraRetryTimer = Timer(delay, () async {
+      if (_disposed || !mounted) return;
+      try {
+        await _controller.start();
+      } catch (_) {
+        // Jika start() throws, errorBuilder akan dipanggil lagi → retry berikutnya
+      }
+    });
   }
 
   @override
   void dispose() {
     _disposed = true;
+    _cameraRetryTimer?.cancel();
     _lineAnim.dispose();
     WidgetsBinding.instance.removeObserver(this);
     // FIX BUG-SCANNER: Hapus listener sebelum dispose controller.
@@ -495,19 +588,18 @@ class _QRScannerScreenState extends State<QRScannerScreen>
             onDetect: _onDetect,
             // _controllerReady dikelola oleh _onScannerStateChanged() via controller.addListener().
             // Tidak perlu onScannerStarted (tidak ada di mobile_scanner ^7.1.3).
-            errorBuilder: (ctx, error) => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  'Kamera tidak dapat diakses:\n${error.errorDetails?.message ?? error.errorCode.toString()}',
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: context.rs(14),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
+            errorBuilder: (ctx, error) {
+              // Picu retry mechanism — fire-and-forget, tidak tunggu hasil
+              // Gunakan addPostFrameCallback agar tidak setState() di tengah build
+              if (!_cameraHardFailed) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _onCameraError(error);
+                });
+              }
+              return _cameraHardFailed
+                  ? _buildCameraErrorView()
+                  : _buildCameraRetryView(error);
+            },
           ),
           CustomPaint(
             painter: _ScannerOverlay(),
@@ -646,6 +738,195 @@ class _QRScannerScreenState extends State<QRScannerScreen>
       child: IconButton(
         icon: Icon(icon, color: Colors.white),
         onPressed: onTap,
+      ),
+    );
+  }
+
+  // ── Camera Error Widgets ───────────────────────────────────────
+
+  /// UI saat kamera sedang dalam proses retry (transient error).
+  /// Tampilkan animasi loading dan informasi percobaan ke-N dari total retry.
+  Widget _buildCameraRetryView(MobileScannerException error) {
+    final attempt = _cameraRetryCount;
+    final delayMs = (_kRetryBaseDelay.inMilliseconds * (attempt + 1));
+    return Container(
+      color: Colors.black,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 48,
+                height: 48,
+                child: CircularProgressIndicator(
+                  color: AppColors.primaryGreen,
+                  strokeWidth: 3,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                attempt == 0
+                    ? 'Menginisialisasi kamera…'
+                    : 'Mencoba ulang kamera (${attempt + 1}/$_kMaxCameraRetry)…',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: context.rs(14),
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                attempt > 0
+                    ? 'Menunggu ${delayMs ~/ 1000} detik sebelum mencoba lagi…'
+                    : 'Harap tunggu sebentar',
+                style: GoogleFonts.poppins(
+                  color: Colors.white60,
+                  fontSize: context.rs(12),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// UI hard-fail setelah semua retry habis ATAU device tidak punya kamera.
+  /// Berikan opsi galeri sebagai fallback agar user tetap bisa scan QR via gambar.
+  Widget _buildCameraErrorView() {
+    return Container(
+      color: Colors.black,
+      child: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(context.rs(28)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(context.rs(18)),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade900.withValues(alpha: 0.3),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.red.shade600,
+                      width: 2,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.no_photography_rounded,
+                    color: Colors.red.shade400,
+                    size: context.rs(44),
+                  ),
+                ),
+                SizedBox(height: context.rs(20)),
+                Text(
+                  'Kamera Tidak Tersedia',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: context.rs(18),
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: context.rs(10)),
+                Text(
+                  _cameraErrorMessage.isNotEmpty
+                      ? _cameraErrorMessage
+                      : 'Kamera tidak dapat diakses. Kemungkinan sedang digunakan aplikasi lain atau terjadi kesalahan sistem.',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white60,
+                    fontSize: context.rs(13),
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: context.rs(16)),
+                // Tip: saran troubleshooting
+                Container(
+                  padding: EdgeInsets.all(context.rs(12)),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.07),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.lightbulb_outline_rounded,
+                        color: Colors.amber.shade400,
+                        size: context.rs(18),
+                      ),
+                      SizedBox(width: context.rs(10)),
+                      Expanded(
+                        child: Text(
+                          'Coba tutup semua aplikasi kamera lain, lalu restart HP. Atau gunakan pilihan Galeri di bawah untuk upload foto QR Code.',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white70,
+                            fontSize: context.rs(12),
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: context.rs(24)),
+                // Tombol Galeri sebagai fallback utama
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _processing ? null : _pickGallery,
+                    icon: const Icon(Icons.photo_library_rounded),
+                    label: Text(
+                      'Pilih QR dari Galeri',
+                      style: GoogleFonts.poppins(
+                        fontSize: context.rs(14),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryGreen,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: context.rs(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: context.rs(12)),
+                // Tombol Tutup
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close_rounded, color: Colors.white60),
+                    label: Text(
+                      'Kembali',
+                      style: GoogleFonts.poppins(
+                        fontSize: context.rs(14),
+                        color: Colors.white60,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.white24),
+                      padding: EdgeInsets.symmetric(vertical: context.rs(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

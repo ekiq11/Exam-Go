@@ -131,7 +131,11 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
-    _connectSub?.cancel();
+    // FIX: Tambah catchError seperti di qris_web_view.dart.
+    // connectivity_plus pakai EventChannel di bawahnya — berpotensi
+    // "No active stream to cancel" jika dispose() dipanggil sebelum
+    // stream fully connected (misalnya saat hot-restart atau navigasi cepat).
+    _connectSub?.cancel().catchError((_) {});
     _pulseController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();

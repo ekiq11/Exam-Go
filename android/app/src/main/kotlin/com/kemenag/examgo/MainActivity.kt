@@ -3,6 +3,7 @@ package com.kemenag.examgo
 import android.app.ActivityManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.pm.PackageManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
@@ -212,12 +213,19 @@ class MainActivity : FlutterFragmentActivity() {
             CHANNEL
         ).setMethodCallHandler { call, result ->
             when (call.method) {
-                "startLockTask"     -> startLockTask(result)
-                "stopLockTask"      -> stopLockTask(result)
-                "bringToForeground" -> bringToForeground(result)
-                "isLockTaskActive"  -> result.success(isLockTaskActive)
-                "isScreenOn"        -> isScreenOn(result)
-                else                -> result.notImplemented()
+                "startLockTask"         -> startLockTask(result)
+                "stopLockTask"          -> stopLockTask(result)
+                "bringToForeground"     -> bringToForeground(result)
+                "isLockTaskActive"      -> result.success(isLockTaskActive)
+                "isScreenOn"            -> isScreenOn(result)
+                // FIX CAMERA-CRASH: Pre-flight check sebelum CameraX diinisialisasi.
+                // Device Advan (dan beberapa brand lokal) melaporkan 0 kamera tersedia
+                // saat Camera HAL bermasalah, menyebabkan CameraUnavailableException
+                // yang crash di level Java (RuntimeException tidak tertangkap Flutter).
+                // Solusi: cek FEATURE_CAMERA_ANY lewat PackageManager sebelum
+                // MobileScannerController.start() pernah dipanggil di Dart.
+                "checkCameraAvailable"  -> checkCameraAvailable(result)
+                else                    -> result.notImplemented()
             }
         }
     }
@@ -279,6 +287,46 @@ class MainActivity : FlutterFragmentActivity() {
             result.success(pm.isInteractive)
         } catch (e: Exception) {
             result.success(true)
+        }
+    }
+
+    // FIX CAMERA-CRASH: Cek ketersediaan kamera sebelum CameraX diinisialisasi.
+    // Menggunakan FEATURE_CAMERA_ANY (bukan FEATURE_CAMERA) karena lebih reliable:
+    // FEATURE_CAMERA_ANY mendeteksi kamera manapun (depan/belakang/eksternal).
+    // Beberapa device lokal (Advan, dll) gagal melaporkan FEATURE_CAMERA padahal
+    // punya kamera depan, atau Camera HAL sementara tidak responsif.
+    // Return value: Map dengan 'available' (bool) dan 'reason' (String).
+    private fun checkCameraAvailable(result: MethodChannel.Result) {
+        try {
+            val pm = packageManager
+            val hasAnyCam = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
+            val hasBackCam = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)
+
+            // Cek tambahan: coba enum kamera via CameraManager (API 21+)
+            // Lebih akurat dari PackageManager karena cek HAL langsung.
+            var cameraCount = 0
+            try {
+                val camManager = getSystemService(Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
+                cameraCount = camManager.cameraIdList.size
+            } catch (_: Exception) {}
+
+            val available = hasAnyCam || hasBackCam || cameraCount > 0
+            result.success(mapOf(
+                "available" to available,
+                "hasAnyCam" to hasAnyCam,
+                "hasBackCam" to hasBackCam,
+                "cameraCount" to cameraCount,
+                "reason" to if (!available)
+                    "Device melaporkan 0 kamera tersedia (HAL issue atau kamera sedang dipakai app lain)"
+                else "OK"
+            ))
+        } catch (e: Exception) {
+            // Jika pengecekan sendiri error, asumsikan kamera ada agar tidak
+            // memblokir pengguna yang sebenarnya punya kamera berfungsi.
+            result.success(mapOf(
+                "available" to true,
+                "reason" to "check_failed: ${e.message}"
+            ))
         }
     }
 
