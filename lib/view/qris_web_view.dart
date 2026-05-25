@@ -143,8 +143,23 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     }
   }
 
+  String _lastSentStatus = '';
+  int _lastSentViolations = -1;
+  final Map<String, DateTime> _lastLogTime = {};
+
   void _sendMonitoringStatus(String status) {
     if (widget.examId.isEmpty) return;
+
+    // FIX OPTIMISASI KUOTA FIRESTORE:
+    // Mencegah aplikasi mengirim status yang sama berulang-ulang ke Firestore.
+    // Hanya lakukan Write ke Firestore jika Status atau Jumlah Pelanggaran berubah.
+    if (_lastSentStatus == status && _lastSentViolations == _minimizeCount) {
+      return; 
+    }
+    
+    _lastSentStatus = status;
+    _lastSentViolations = _minimizeCount;
+
     MonitoringService.instance.updateStudentStatus(
       examId: widget.examId,
       nis: widget.studentNis,
@@ -156,6 +171,21 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
 
   void _logActivity(String type, String description) {
     if (widget.examId.isEmpty || widget.studentNis.isEmpty) return;
+
+    // FIX OPTIMISASI KUOTA FIRESTORE:
+    // Cegah spam log yang diakibatkan oleh glitch HP siswa (misal layar berkedip 
+    // memicu VISIBILITY_HIDDEN ratusan kali). Debounce: 60 detik per tipe log.
+    // NOTE: Gunakan key gabungan agar log yang berurutan namun memiliki keterangan 
+    // berbeda (seperti pelanggaran ke-1, ke-2) tetap tercatat di Firestore.
+    final now = DateTime.now();
+    final logKey = '${type}_$description';
+    if (_lastLogTime.containsKey(logKey)) {
+      if (now.difference(_lastLogTime[logKey]!).inSeconds < 60) {
+        return; // Abaikan log ini
+      }
+    }
+    _lastLogTime[logKey] = now;
+
     MonitoringService.instance.logActivity(
       examId: widget.examId,
       nis: widget.studentNis,
@@ -163,6 +193,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       description: description,
     );
   }
+
 
   /// Kirim notifikasi pelanggaran ke device guru via GAS.
   /// GAS membaca TEACHER_FCM_TOKEN dari Script Properties sendiri

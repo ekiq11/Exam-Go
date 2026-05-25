@@ -90,6 +90,25 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
       return;
     }
     final title = _titleController.text.trim();
+
+    // FIX: Cegah duplikasi sesi ujian jika guru generate ulang dengan URL & Judul yang sama.
+    // Jika data sama, kita gunakan ulang QR lama agar semua siswa tetap masuk ke satu sesi (examId yang sama).
+    final existingIdx = _historyList.indexWhere(
+      (e) => e['url'] == url && (e['title'] ?? '') == title,
+    );
+
+    if (existingIdx != -1) {
+      final existingData = _historyList[existingIdx];
+      setState(() {
+        _qrData = existingData['qrData'];
+        _lastExamId = existingData['examId'];
+        _errorText = null;
+        _generated = true;
+      });
+      _showSnack('Menggunakan kembali sesi ujian yang sudah ada');
+      return;
+    }
+
     final signed = QRPayloadService.generate(url, title: title);
     
     // Ekstrak nonce/examId dan daftarkan sesi ke Firestore
