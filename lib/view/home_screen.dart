@@ -131,11 +131,21 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
-    // FIX: Tambah catchError seperti di qris_web_view.dart.
-    // connectivity_plus pakai EventChannel di bawahnya — berpotensi
-    // "No active stream to cancel" jika dispose() dipanggil sebelum
-    // stream fully connected (misalnya saat hot-restart atau navigasi cepat).
-    _connectSub?.cancel().catchError((_) {});
+    // FIX CRASH-1: StandardMethodCodec.decodeEnvelope crash (312 events, 224 users).
+    // connectivity_plus pakai EventChannel di bawahnya. Saat dispose() dipanggil
+    // sebelum EventChannel stream fully connected (race condition saat navigasi cepat
+    // atau hot-restart), native side melempar "No active stream to cancel" sebagai
+    // PlatformException yang TIDAK bisa ditangkap oleh .catchError() karena
+    // exception-nya dilempar secara sinkron dari StandardMethodCodec.decodeEnvelope.
+    //
+    // Fix: wrap seluruh cancel() dalam try/catch sinkron, lalu juga .catchError()
+    // sebagai double-guard untuk error async yang mungkin datang belakangan.
+    try {
+      _connectSub?.cancel().catchError((_) {});
+    } catch (_) {
+      // Intentionally ignored — "No active stream to cancel" bukan kondisi fatal.
+    }
+    _connectSub = null;
     _pulseController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();

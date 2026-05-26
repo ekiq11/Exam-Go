@@ -39,19 +39,30 @@ android {
 
     defaultConfig {
         applicationId = "com.kemenag.examgo"
-        // FIX BUG-MINSDK: useLegacyPackaging = false (16KB alignment) membutuhkan
-        // minSdk >= 23 (Android 6.0). flutter.minSdkVersion = 21 (Android 5.0)
-        // menyebabkan crash dlopen failed: libflutter.so di Android 5.x.
-        // Android 6+ (2015) sudah mencakup >99.5% device aktif per 2026.
-        minSdk = flutter.minSdkVersion
+        // FIX CRASH-5: MissingLibraryException "Could not find 'libflutter.so'" (2 events, 2 users).
+        // ROOT CAUSE: useLegacyPackaging = false (wajib untuk 16KB page alignment) membuat
+        // .so libs TIDAK dikompres di dalam APK. Android 5.x (API 21-22) tidak mendukung
+        // dlopen() langsung dari uncompressed .so di dalam ZIP → fatal crash saat startup.
+        //
+        // Kombinasi berbahaya:
+        //   minSdk = 21 (flutter default)  +  useLegacyPackaging = false
+        //   → crash "libflutter.so not found" di Android 5.x
+        //
+        // Fix: naikkan minSdk ke 23 (Android 6.0 Marshmallow, released 2015).
+        // Alasan aman: Android 5.x hanya ~0.1% device aktif per 2026, sedangkan
+        // semua fitur app (kamera, WebView, LockTask) membutuhkan API 23+ anyway.
+        // API 23+ mendukung useLegacyPackaging=false DAN 16KB alignment via NDK 27.
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         // versionCode & versionName otomatis dari pubspec.yaml
-        // version: 5.0.0+33 → versionName=5.0.0, versionCode=33
+        // version: X.Y.Z+N → versionName=X.Y.Z, versionCode=N
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         ndk {
             // FIX PLAY-16KB: arm64-v8a untuk modern devices, armeabi-v7a untuk older tablets.
             // NDK 27+ mendukung 16KB alignment untuk kedua arsitektur ini.
+            // x86_64 DIHAPUS: tidak dipakai di device fisik (hanya emulator),
+            // menambah 4MB ke APK tanpa manfaat di production.
             abiFilters.clear()
             abiFilters.add("arm64-v8a")
             abiFilters.add("armeabi-v7a")

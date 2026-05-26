@@ -165,11 +165,23 @@ class _QRScannerScreenState extends State<QRScannerScreen>
 
     _cameraRetryTimer?.cancel();
     _cameraRetryTimer = Timer(delay, () async {
+      // FIX CRASH-4: MobileScannerController.start.<fn> race condition (5 events).
+      // Check _disposed sebelum await aman, tapi ada window kecil antara
+      // Timer fire dan saat _controller.start() dipanggil di mana widget
+      // bisa di-dispose. Guard ganda: cek sebelum DAN setelah start().
       if (_disposed || !mounted) return;
       try {
         await _controller.start();
+        // Double-check setelah await — widget bisa saja dispose() selama
+        // start() berjalan secara async (terutama di device lambat).
+        if (_disposed || !mounted) {
+          // Controller sudah distart tapi widget sudah dispose —
+          // stop controller agar tidak ada kamera yang terus berjalan.
+          try { await _controller.stop(); } catch (_) {}
+        }
       } catch (_) {
-        // Jika start() throws, errorBuilder akan dipanggil lagi → retry berikutnya
+        // Jika start() throws, errorBuilder akan dipanggil lagi → retry berikutnya.
+        // Tidak perlu aksi tambahan — retry sudah terhandle di _onCameraError().
       }
     });
   }
@@ -265,6 +277,10 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   // ── Gallery picker ────────────────────────────────────────────
 
   Future<void> _pickGallery() async {
+    // FIX: Guard _controllerReady — analyzeImage() bisa throw jika controller
+    // belum init. Berbeda dengan flash/balik, gallery bisa dipakai walau
+    // camera live view belum siap (analyzeImage = off-stream processing).
+    // Tapi tetap perlu guard _disposed agar tidak crash saat widget sudah mati.
     if (_processing || _disposed) return;
     setState(() => _processing = true);
     try {
@@ -273,23 +289,29 @@ class _QRScannerScreenState extends State<QRScannerScreen>
         imageQuality: 100,
       );
       if (file == null || _disposed) {
-        setState(() => _processing = false);
+        if (mounted) setState(() => _processing = false);
         return;
       }
       _showLoadingOverlay();
+      // FIX: Guard _disposed setelah await pickImage — user bisa saja menutup
+      // screen saat file picker terbuka, sehingga controller sudah di-dispose.
+      if (_disposed) {
+        if (mounted && Navigator.canPop(context)) Navigator.of(context).pop();
+        return;
+      }
       final result = await _controller.analyzeImage(file.path);
-      if (mounted) Navigator.of(context).pop();
-      if (result != null && result.barcodes.isNotEmpty) {
+      if (mounted && Navigator.canPop(context)) Navigator.of(context).pop();
+      if (!_disposed && result != null && result.barcodes.isNotEmpty) {
         final raw = result.barcodes.first.rawValue ?? '';
         if (raw.isNotEmpty) {
           _handleRaw(raw);
           return;
         }
       }
-      _showNoQrDialog();
+      if (!_disposed) _showNoQrDialog();
     } catch (e) {
       if (mounted && Navigator.canPop(context)) Navigator.of(context).pop();
-      _showSnack('Gagal memproses gambar: $e', isError: true);
+      if (!_disposed) _showSnack('Gagal memproses gambar: $e', isError: true);
     } finally {
       if (mounted && !_disposed) setState(() => _processing = false);
     }
@@ -531,16 +553,26 @@ class _QRScannerScreenState extends State<QRScannerScreen>
     );
   }
 
-  void _resetScan() {
+  Future<void> _resetScan() async {
     if (!mounted || _disposed) return;
-    // FIX BUG-SCANNER: Reset _controllerReady saat restart agar tombol Flash/Balik
-    // tetap di-guard selama camera re-initialization cycle.
-    // onScannerStarted akan set _controllerReady = true kembali setelah siap.
+    // FIX CRASH-3: MobileScannerController._throwIfNotInitialized (6 events).
+    // _controller.start() sebelumnya dipanggil tanpa await dan tanpa try-catch.
+    // Jika controller sedang dalam state transisi (mis. sedang stop/restart),
+    // _throwIfNotInitialized akan dilempar sebagai MobileScannerException
+    // yang langsung crash karena tidak ada error handler.
+    //
+    // Fix: (1) gunakan async/await, (2) wrap dalam try-catch, (3) reset
+    // _controllerReady SEBELUM start() agar guard flash/balik tetap aktif.
     setState(() {
       _scanned = false;
       _controllerReady = false;
     });
-    _controller.start();
+    try {
+      await _controller.start();
+    } catch (_) {
+      // Jika start() gagal, errorBuilder MobileScanner akan dipanggil
+      // dan _onCameraError() akan menangani retry — tidak perlu aksi di sini.
+    }
   }
 
   void _toggleFlash() {

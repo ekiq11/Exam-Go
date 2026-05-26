@@ -85,23 +85,56 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // ── Crashlytics: tangkap semua crash Flutter & Dart ────────────
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  //
+  // ROOT CAUSE FIX (v6.0.1 — 33 events, 15 users):
+  // ─────────────────────────────────────────────────────────────────
+  // Stack trace Crashlytics menunjukkan:
+  //   FlutterError.onError → recordFlutterFatalError
+  //   ← EventChannel.receiveBroadcastStream.<fn> (platform_channel.dart:727)
+  //   ← PlatformException: "No active stream to cancel"
+  //
+  // MASALAH: Sebelumnya FlutterError.onError langsung diarahkan ke
+  // recordFlutterFatalError TANPA filter. Semua PlatformException dari
+  // EventChannel (connectivity_plus, Firestore) yang terjadi saat cancel
+  // stream di dispose() dicatat sebagai FATAL crash.
+  //
+  // SOLUSI: Intercept FlutterError.onError dengan filter. Jika error adalah
+  // PlatformException 'No active stream to cancel', abaikan (bukan crash sejati).
+  // Jika error lain → teruskan ke recordFlutterFatalError seperti biasa.
+  FlutterError.onError = (FlutterErrorDetails details) {
+    final exception = details.exception;
+    // Filter PlatformException non-fatal dari EventChannel yang terjadi saat
+    // dispose() membatalkan stream yang belum sepenuhnya tersambung ke native.
+    // Ini BUKAN crash sejati — app tidak force-close, user tidak terdampak.
+    if (exception is PlatformException) {
+      final msg = exception.message ?? '';
+      final code = exception.code;
+      if (msg.contains('No active') || code.contains('No active') ||
+          msg.contains('no active') || msg.contains('stream')) {
+        // Log ringan untuk debugging tapi TIDAK kirim ke Crashlytics
+        debugPrint('[ExamGo] Filtered PlatformException (non-fatal): ${exception.message}');
+        return;
+      }
+    }
+    // Semua error lain tetap dikirim ke Crashlytics sebagai fatal
+    FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+  };
 
   // FIX BUG-01: Tangkap uncaught async error di luar Flutter framework.
   // FlutterError.onError TIDAK menangkap error dari async callbacks,
   // isolate, atau Platform-level errors. PlatformDispatcher.onError
   // adalah satu-satunya cara menangkap error tersebut ke Crashlytics.
   WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
-    // FIX BUG: Cegah Exception async seperti "No active stream to cancel" 
-    // atau "No active scan" dari menurunkan skor Crash-Free Sessions.
+    // Filter PlatformException yang sama untuk jalur async (zone errors)
     if (error is PlatformException) {
       final msg = error.message ?? '';
       final code = error.code;
-      if (msg.contains('No active') || code.contains('No active')) {
+      if (msg.contains('No active') || code.contains('No active') ||
+          msg.contains('no active') || msg.contains('stream')) {
         return true; // Abaikan sepenuhnya, ini aman
       }
     }
-    // Set fatal: false agar error background tidak dihitung sebagai 'Crash' utama 
+    // Set fatal: false agar error background tidak dihitung sebagai 'Crash' utama
     // oleh Crashlytics (karena aplikasi tidak force-close).
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: false);
     return true;

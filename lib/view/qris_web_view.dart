@@ -95,8 +95,20 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         : resolved.title.isNotEmpty
         ? resolved.title
         : Uri.tryParse(resolved.url)?.host ?? 'Ujian';
-    _initWebView();
-    _activateSecurity();
+    // FIX CRASH-C2: LateInitializationError — `_wvc` adalah `late final` tapi
+    // _initWebView() dipanggil TANPA await di initState(). Jika ada lifecycle callback
+    // (didChangeAppLifecycleState) atau Firestore stream event datang sangat cepat
+    // sebelum _initWebView() selesai, akses ke _wvc akan crash dengan LateInitializationError.
+    //
+    // Fix: gunakan addPostFrameCallback agar inisialisasi terjadi setelah frame pertama
+    // selesai dirender. Monitoring stream sudah disetup di atas (tidak butuh _wvc),
+    // sehingga urutan ini aman.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await _initWebView();
+      if (!mounted) return;
+      _activateSecurity();
+    });
     AnalyticsService.instance.logScreenView(screenName: 'exam_webview');
 
     // FIX BUG-STREAM: Tambah guard studentNis.isNotEmpty.
@@ -241,9 +253,17 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     _retryTimer?.cancel();
     _pauseDebounce?.cancel();
     _pingTimer?.cancel();
-    // FIX BUG-STREAM: Gunakan catchError agar PlatformException "No active stream to cancel"
-    // tidak propagasi ke Crashlytics jika dispose() dipanggil sebelum stream fully connected.
-    _statusSub?.cancel().catchError((_) {});
+    // FIX CRASH-C1: Sama persis dengan bug StandardMethodCodec di home_screen (312 events).
+    // Firestore juga menggunakan EventChannel. Saat dispose() dipanggil sebelum stream
+    // fully connected, native side melempar PlatformException secara sinkron dari
+    // StandardMethodCodec.decodeEnvelope — TIDAK tertangkap oleh .catchError().
+    // Fix: double guard dengan try/catch sinkron + .catchError() untuk async errors.
+    try {
+      _statusSub?.cancel().catchError((_) {});
+    } catch (_) {
+      // Intentionally ignored — "No active stream to cancel" bukan kondisi fatal.
+    }
+    _statusSub = null;
     
     // Jangan timpa status BLOCKED dengan FINISHED jika siswa dikeluarkan paksa
     if (!_kickedOut) {

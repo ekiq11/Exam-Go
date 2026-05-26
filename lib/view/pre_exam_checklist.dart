@@ -117,6 +117,10 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
     await prefs.setString('student_name', name);
     await prefs.setString('student_nis', nis);
 
+    // FIX CRASH-C6: mounted check wajib setelah await — user bisa saja dismiss dialog
+    // saat SharedPreferences sedang menyimpan data, menyebabkan widget unmount
+    // dan Navigator.of(context) crash dengan "Looking up a deactivated widget's ancestor".
+    if (!mounted) return;
     Navigator.of(context).pop({'name': name, 'nis': nis});
   }
 
