@@ -111,6 +111,9 @@
 	     UIApplication.shared.isIdleTimerDisabled = true
 	     diaktifkan saat kiosk/ujian mulai di AppDelegate.swift
 	     ══════════════════════════════════════════════════════════ -->
+	<!-- ANTI SPLIT SCREEN (iPadOS) — Cegah Slide Over dan Split View -->
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

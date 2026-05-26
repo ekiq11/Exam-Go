@@ -119,10 +119,7 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
-    // ANTI SPLIT SCREEN — Lapisan 2: override isInMultiWindowMode()
-    // Mengembalikan false selalu agar Flutter engine dan plugin tidak
-    // melakukan adaptasi layout untuk mode multi-window.
-    override fun isInMultiWindowMode(): Boolean = false
+    // (Lapisan 2 dihapus karena method isInMultiWindowMode tidak dapat di-override di SDK ini)
 
     // ANTI SPLIT SCREEN — Lapisan 3: override onPictureInPictureModeChanged()
     // Blokir Picture-in-Picture mode juga (celah serupa split screen).

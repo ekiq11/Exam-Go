@@ -18,6 +18,7 @@
 import UIKit
 import Flutter
 import WebKit
+import UserNotifications
 
 // ══════════════════════════════════════════════════════════════════
 // MARK: - AppDelegate
@@ -41,6 +42,11 @@ import WebKit
         // ── 1. Jalankan Flutter engine ──────────────────────────
         flutterEngine.run()
         GeneratedPluginRegistrant.register(with: flutterEngine)
+
+        // FIX FCM iOS: Daftarkan delegate notifikasi lokal iOS 10+
+        if #available(iOS 10.0, *) {
+            UNUserNotificationCenter.current().delegate = self as? UNUserNotificationCenterDelegate
+        }
 
         // ── 2. Root view controller: KioskViewController ────────
         //    Setara: android:launchMode="singleTop" + kiosk setup

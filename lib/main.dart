@@ -35,7 +35,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Isolate background tidak berbagi memory dengan isolate utama, sehingga
   // _localNotif belum terinisialisasi di sini saat aplikasi terminated.
   await _localNotif.initialize(
-    const InitializationSettings(
+    settings: const InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(
         requestAlertPermission: false,
