@@ -8,7 +8,7 @@ class AppConfig {
   // Sync dengan pubspec.yaml: version: 6.0.1+36
   static const String appVersion = '6.0.1';
   static const int appBuildNumber = 36;
-  static const int qrFormatVersion = 1;
+  static const int qrFormatVersion = 2;
 
   /// Secret key for HMAC-SHA256 QR signing.
   /// [FIX K-1] Diinject via --dart-define=QR_SECRET_KEY=NILAI saat build production.

@@ -268,6 +268,11 @@ class _QRScannerScreenState extends State<QRScannerScreen>
         _popResult(ScanResult(url: p.url, title: t, examId: p.nonce));
         return;
       }
+    } on FormatException catch (e) {
+      if (e.message == 'OUTDATED_QR') {
+        _showOutdatedDialog();
+        return;
+      }
     } catch (_) {}
     if (raw.startsWith('http://') || raw.startsWith('https://')) {
       _showPlainUrlDialog(raw);
@@ -509,6 +514,29 @@ class _QRScannerScreenState extends State<QRScannerScreen>
         actions: [
           _DialogBtn(
             label: 'Coba Lagi',
+            bgColor: AppColors.primaryGreen,
+            onTap: () {
+              Navigator.of(ctx).pop();
+              _resetScan();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showOutdatedDialog() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => _BaseDialog(
+        icon: Icons.update,
+        iconColor: Colors.orange,
+        title: 'Versi QR Usang',
+        body: 'QR Code ini menggunakan format versi lama. Harap minta pengawas ujian untuk memperbarui aplikasi ExamGO mereka ke versi terbaru untuk membuat QR baru.',
+        actions: [
+          _DialogBtn(
+            label: 'Mengerti',
             bgColor: AppColors.primaryGreen,
             onTap: () {
               Navigator.of(ctx).pop();

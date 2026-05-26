@@ -59,7 +59,9 @@ class QRPayloadService {
 
       final data = jsonDecode(dataJson) as Map<String, dynamic>;
       final version = (data['v'] as num?)?.toInt() ?? 0;
-      if (version != AppConfig.qrFormatVersion) return null;
+      if (version != AppConfig.qrFormatVersion) {
+        throw const FormatException('OUTDATED_QR');
+      }
 
       if (AppConfig.qrExpiryMinutes > 0) {
         final ts = (data['ts'] as num).toInt();
@@ -84,6 +86,9 @@ class QRPayloadService {
         nonce: (data['nonce'] as String?) ?? '',
         version: version,
       );
+    } on FormatException catch (e) {
+      if (e.message == 'OUTDATED_QR') rethrow;
+      return null;
     } catch (_) {
       return null;
     }
