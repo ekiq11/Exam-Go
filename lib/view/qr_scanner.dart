@@ -251,7 +251,14 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   void _handleRaw(String raw) {
     if (_scanned || _disposed) return;
     setState(() => _scanned = true);
-    _controller.stop();
+    // FIX CRASH-C8: MobileScannerController.stop() bisa melempar
+    // MobileScannerException jika controller sudah dalam state stopped
+    // (race condition antara camera auto-stop dan manual stop dari _handleRaw).
+    try {
+      _controller.stop();
+    } catch (_) {
+      // Intentionally ignored — controller mungkin sudah stopped
+    }
     try {
       final p = QRPayloadService.validate(raw);
       if (p != null) {
