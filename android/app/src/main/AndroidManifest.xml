@@ -40,11 +40,32 @@
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize"
+            android:supportsPictureInPicture="false"
+            android:lockTaskMode="if_whitelisted"
+            android:excludeFromRecents="false">
+            <!--
+                ANTI SPLIT SCREEN:
+                - resizeableActivity="false": sinyal ke Android bahwa activity tidak
+                  mendukung multi-window. Efektif di Android 7.1+ (API 25+).
+                - supportsPictureInPicture="false": blokir PiP mode juga.
+                - lockTaskMode="if_whitelisted": saat device admin aktif, app bisa
+                  masuk Lock Task penuh yang secara hardware memblokir split screen.
+
+                CATATAN Android 7.0 (API 24):
+                resizeableActivity="false" pada API 24 tidak 100% mencegah split screen.
+                Ini ditangani di kode (onMultiWindowModeChanged override di MainActivity.kt).
+            -->
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Agar tap notifikasi dari flutter_local_notifications membuka app -->
+            <intent-filter>
+                <action android:name="FLUTTER_NOTIFICATION_CLICK" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
             <meta-data
@@ -78,6 +99,15 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- 
+            FCM: Default Notification Channel.
+            Penting agar notifikasi background yang punya key 'notification'
+            menggunakan channel ini oleh sistem operasi (bisa getar + suara)
+        -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="exam_violations" />
 
         <!--
             FIX: gralloc4 "Format allocation info not found for format: 0x38/0x3b"

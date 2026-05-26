@@ -30,6 +30,21 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   }
+
+  // FIX FCM-6: Inisialisasi plugin notifikasi lokal di background isolate.
+  // Isolate background tidak berbagi memory dengan isolate utama, sehingga
+  // _localNotif belum terinisialisasi di sini saat aplikasi terminated.
+  await _localNotif.initialize(
+    const InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      iOS: DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      ),
+    ),
+  );
+
   // Tampilkan notifikasi lokal agar muncul di notification tray
   await _showLocalNotification(message);
 }

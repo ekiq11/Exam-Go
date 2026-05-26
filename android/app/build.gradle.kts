@@ -52,7 +52,7 @@ android {
         // Alasan aman: Android 5.x hanya ~0.1% device aktif per 2026, sedangkan
         // semua fitur app (kamera, WebView, LockTask) membutuhkan API 23+ anyway.
         // API 23+ mendukung useLegacyPackaging=false DAN 16KB alignment via NDK 27.
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         // versionCode & versionName otomatis dari pubspec.yaml
         // version: X.Y.Z+N → versionName=X.Y.Z, versionCode=N

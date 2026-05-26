@@ -18,6 +18,7 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.android.RenderMode
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import android.util.Log
 
 class MainActivity : FlutterFragmentActivity() {
 
@@ -78,6 +79,64 @@ class MainActivity : FlutterFragmentActivity() {
 
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION)
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // ANTI SPLIT SCREEN — Lapisan 1: onMultiWindowModeChanged()
+    //
+    // resizeableActivity="false" di manifest TIDAK cukup di Android 7.x
+    // (API 24-25). User masih bisa masuk split screen via gesture.
+    // Fix: override callback ini dan langsung finishAndRemoveTask() +
+    // restart Activity dalam mode fullscreen.
+    //
+    // Lapisan 2: Jika sedang dalam Lock Task mode (ujian aktif),
+    // finishAndRemoveTask akan gagal — fallback ke moveTaskToBack()
+    // agar app tetap di foreground.
+    // ════════════════════════════════════════════════════════════════
+    @Suppress("DEPRECATION")
+    override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean) {
+        super.onMultiWindowModeChanged(isInMultiWindowMode)
+        if (isInMultiWindowMode) {
+            Log.w("ExamGO", "⚠️ Split screen detected! Forcing fullscreen...")
+            if (isLockTaskActive) {
+                // Saat ujian aktif: jangan destroy activity, cukup paksa fullscreen kembali
+                // dengan membawa task ke foreground. Lock Task mode akan mengambil alih.
+                moveTaskToBack(false)
+                startActivity(Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                })
+            } else {
+                // Di luar ujian: keluar dari split screen dengan restart activity
+                // Restart tanpa animasi agar perpindahan tidak terlihat oleh user
+                val intent = Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+                startActivity(intent)
+                overridePendingTransition(0, 0) // tanpa animasi
+                finish()
+            }
+        }
+    }
+
+    // ANTI SPLIT SCREEN — Lapisan 2: override isInMultiWindowMode()
+    // Mengembalikan false selalu agar Flutter engine dan plugin tidak
+    // melakukan adaptasi layout untuk mode multi-window.
+    override fun isInMultiWindowMode(): Boolean = false
+
+    // ANTI SPLIT SCREEN — Lapisan 3: override onPictureInPictureModeChanged()
+    // Blokir Picture-in-Picture mode juga (celah serupa split screen).
+    @Suppress("DEPRECATION")
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode)
+        if (isInPictureInPictureMode) {
+            Log.w("ExamGO", "⚠️ PiP mode detected! Forcing exit...")
+            // Keluar dari PiP mode dengan memindahkan task kembali ke foreground
+            val intent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            startActivity(intent)
+        }
     }
 
     // FIX INFINIX/TRANSSION: insetsController adalah null di onCreate() pada
