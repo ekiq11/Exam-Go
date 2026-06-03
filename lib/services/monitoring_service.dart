@@ -110,6 +110,9 @@ class MonitoringService {
 
   /// Mengambil daftar siswa yang sedang terhubung ke sesi ujian tertentu
   Stream<QuerySnapshot> streamExamStudents(String examId) {
+    if (examId.isEmpty) {
+      return const Stream.empty();
+    }
     return _db
         .collection('exam_sessions')
         .doc(examId)
@@ -130,6 +133,9 @@ class MonitoringService {
 
   /// Stream log aktivitas pelanggaran untuk satu siswa (real-time ke guru)
   Stream<QuerySnapshot> streamStudentActivityLog(String examId, String nis) {
+    if (examId.isEmpty || nis.isEmpty) {
+      return const Stream.empty();
+    }
     return _db
         .collection('exam_sessions')
         .doc(examId)
@@ -154,6 +160,9 @@ class MonitoringService {
 
   /// Stream status satu siswa tertentu (digunakan oleh siswa untuk mendengarkan perubahan status dari guru)
   Stream<DocumentSnapshot> streamStudentStatus(String examId, String nis) {
+    if (examId.isEmpty || nis.isEmpty) {
+      return const Stream.empty();
+    }
     return _db
         .collection('exam_sessions')
         .doc(examId)
@@ -179,6 +188,8 @@ class MonitoringService {
 
   /// Get status satu siswa secara one-off (cek lokal dulu sebagai fallback kuota Firestore)
   Future<Map<String, dynamic>?> getStudentData(String examId, String nis) async {
+    if (examId.isEmpty || nis.isEmpty) return null;
+    
     try {
       final prefs = await SharedPreferences.getInstance();
       final localBlocked = prefs.getBool('blocked_${examId}_$nis') ?? false;

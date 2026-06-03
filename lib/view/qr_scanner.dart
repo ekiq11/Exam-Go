@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 import '../constant/app_colors.dart';
 import '../constant/responsive.dart';
@@ -99,7 +100,25 @@ class _QRScannerScreenState extends State<QRScannerScreen>
       _requestPermission();
       return;
     }
+    
     try {
+      final deviceInfo = DeviceInfoPlugin();
+      final androidInfo = await deviceInfo.androidInfo;
+      
+      // FIX CRASH: Fatal Exception: java.lang.UnsupportedOperationException "Unknown error -22"
+      // Bug native pada implementasi Camera2 legacy di beberapa device Vivo (umumnya Android 8.1 / API 27).
+      // Membuka kamera pada device ini menyebabkan crash OS yang tidak bisa ditangkap (fatal).
+      // Bypass scanner dan arahkan user menggunakan galeri.
+      if (androidInfo.manufacturer.toLowerCase() == 'vivo' && androidInfo.version.sdkInt <= 27) {
+        if (mounted) {
+          setState(() {
+            _cameraHardFailed = true;
+            _cameraErrorMessage = 'Kamera perangkat Vivo Anda tidak kompatibel dengan sistem ujian. Gunakan tombol Galeri di bawah untuk memindai QR gambar.';
+          });
+        }
+        return; // STOP — jangan lanjutkan ke permission / scanner init
+      }
+      
       const nativeChannel = MethodChannel('com.examgo/locktask');
       final result = await nativeChannel
           .invokeMethod<Map<Object?, Object?>>('checkCameraAvailable')
@@ -251,14 +270,12 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   void _handleRaw(String raw) {
     if (_scanned || _disposed) return;
     setState(() => _scanned = true);
-    // FIX CRASH-C8: MobileScannerController.stop() bisa melempar
-    // MobileScannerException jika controller sudah dalam state stopped
-    // (race condition antara camera auto-stop dan manual stop dari _handleRaw).
-    try {
-      _controller.stop();
-    } catch (_) {
-      // Intentionally ignored — controller mungkin sudah stopped
-    }
+    
+    // Note: We deliberately do NOT call _controller.stop() here. 
+    // Setting _scanned = true already prevents duplicate processing.
+    // Calling stop() immediately before Navigator.pop() (which calls dispose()) 
+    // causes native CameraDeviceImpl NullPointerExceptions on Android due to race conditions.
+    
     try {
       final p = QRPayloadService.validate(raw);
       if (p != null) {
@@ -590,23 +607,21 @@ class _QRScannerScreenState extends State<QRScannerScreen>
 
   Future<void> _resetScan() async {
     if (!mounted || _disposed) return;
-    // FIX CRASH-3: MobileScannerController._throwIfNotInitialized (6 events).
-    // _controller.start() sebelumnya dipanggil tanpa await dan tanpa try-catch.
-    // Jika controller sedang dalam state transisi (mis. sedang stop/restart),
-    // _throwIfNotInitialized akan dilempar sebagai MobileScannerException
-    // yang langsung crash karena tidak ada error handler.
-    //
-    // Fix: (1) gunakan async/await, (2) wrap dalam try-catch, (3) reset
-    // _controllerReady SEBELUM start() agar guard flash/balik tetap aktif.
+    // FIX BUG-SCANNER: Jangan panggil start() jika kamera sudah berjalan.
+    // Memanggil start() pada kamera yang sudah aktif memicu fatal error
+    // di native Android (CameraDeviceImpl NPE atau IllegalStateException)
+    // yang membuat aplikasi crash (force-close).
     setState(() {
       _scanned = false;
-      _controllerReady = false;
     });
-    try {
-      await _controller.start();
-    } catch (_) {
-      // Jika start() gagal, errorBuilder MobileScanner akan dipanggil
-      // dan _onCameraError() akan menangani retry — tidak perlu aksi di sini.
+    
+    if (!_controller.value.isRunning) {
+      setState(() => _controllerReady = false);
+      try {
+        await _controller.start();
+      } catch (_) {}
+    } else {
+      setState(() => _controllerReady = true);
     }
   }
 
