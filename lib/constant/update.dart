@@ -1,7 +1,7 @@
-// lib/services/update_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:examgo/constant/app_config.dart';
 
 class UpdateInfo {
   final String latestVersion;
@@ -22,12 +22,8 @@ class UpdateInfo {
   bool get hasUpdate => _compareVersions(latestVersion, currentVersion) > 0;
 
   /// true jika major version berbeda → update wajib, tidak bisa skip/dismiss
-  bool get isMajorUpdate {
-    final latest = latestVersion.split('.').map(int.tryParse).toList();
-    final current = currentVersion.split('.').map(int.tryParse).toList();
-    if (latest.isEmpty || current.isEmpty) return false;
-    return (latest[0] ?? 0) > (current[0] ?? 0);
-  }
+  // To force all updates according to user request, we return true if there's an update
+  bool get isMajorUpdate => hasUpdate;
 
   static int _compareVersions(String a, String b) {
     final av = a.replaceAll(RegExp(r'[^0-9.]'), '').split('.');
@@ -52,14 +48,14 @@ class UpdateService {
       'https://api.github.com/repos/kemenag-ri/examgo/releases/latest';
 
   // Wajib sync manual dengan pubspec.yaml setiap rilis
-  static const String _currentVersion = '2.1.0'; // FIX: sync with pubspec.yaml
+  static const String _currentVersion = AppConfig.appVersion;
 
   static const String _skipKey = 'skipped_version';
   static const String _lastCheckKey = 'last_update_check';
   static const Duration _checkInterval = Duration(hours: 6);
 
   /// Cek update. Return null jika tidak ada update, throttled, atau error.
-  Future<UpdateInfo?> checkForUpdate({bool force = false}) async {
+  Future<UpdateInfo?> checkForUpdate({bool force = true}) async {
     try {
       if (!force && !await _shouldCheck()) return null;
 

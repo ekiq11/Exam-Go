@@ -5,10 +5,10 @@ class AppConfig {
 
   static const String appName = 'ExamGO';
 
-  // Sync dengan pubspec.yaml: version: 7.0.1+40
-  static const String appVersion = '7.0.1';
-  static const int appBuildNumber = 40;
-  static const int qrFormatVersion = 2;
+  // Sync dengan pubspec.yaml: version: 7.0.2+41
+  static const String appVersion = '7.0.2';
+  static const int appBuildNumber = 41;
+  static const int qrFormatVersion = 1;
 
   /// Secret key for HMAC-SHA256 QR signing.
   /// [FIX K-1] Diinject via --dart-define=QR_SECRET_KEY=NILAI saat build production.

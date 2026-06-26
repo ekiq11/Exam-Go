@@ -56,6 +56,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   bool _isExiting = false;
   bool _kickedOut = false; // Flag khusus jika tertendang karena pelanggaran
   bool _securityEnabled = false;
+  bool _isWebViewInitialized = false;
 
   // Analytics
   DateTime? _examStartTime;
@@ -746,9 +747,18 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       wk.setAllowsBackForwardNavigationGestures(false);
       wk.setInspectable(false);
     }
+
+    if (mounted) {
+      setState(() {
+        _isWebViewInitialized = true;
+      });
+    }
   }
 
   Widget _buildWebViewWidget() {
+    if (!_isWebViewInitialized) {
+      return const SizedBox.shrink(); // Avoid accessing _wvc before initialization
+    }
     if (!kIsWeb && Platform.isAndroid) {
       // FIX BUG-03: AndroidWebViewWidget tidak bisa langsung direturn sebagai Widget
       // karena tipe-nya adalah PlatformWebViewWidget, bukan Widget.
@@ -1169,8 +1179,10 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
 
     // Auto-Clear Cache & Cookies untuk keamanan perangkat bersama
     try {
-      await _wvc.clearCache();
-      await _wvc.clearLocalStorage();
+      if (_isWebViewInitialized) {
+        await _wvc.clearCache();
+        await _wvc.clearLocalStorage();
+      }
     } catch (_) {}
 
     await Future.delayed(const Duration(milliseconds: 300));
@@ -1179,7 +1191,9 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
 
   void _onRefresh() {
     HapticFeedback.lightImpact();
-    _wvc.reload();
+    if (_isWebViewInitialized) {
+      _wvc.reload();
+    }
     _showSnack('Memuat ulang…', color: AppColors.primaryGreen, duration: 2);
   }
 

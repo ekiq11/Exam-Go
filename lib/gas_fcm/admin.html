@@ -2,7 +2,10 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#2E7D32">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>ExamGO Administrator</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -61,6 +64,58 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    /* PWA Mobile Cards */
+    @media (max-width: 639px) {
+      table.pwa-table, .pwa-table tbody, .pwa-table tr, .pwa-table td {
+        display: block;
+        width: 100%;
+      }
+      .pwa-table thead { display: none; }
+      .pwa-table tr {
+        margin-bottom: 1rem;
+        border: 1px solid #f3f4f6;
+        border-radius: 1rem;
+        padding: 1rem;
+        background: white;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      }
+      .pwa-table td {
+        padding: 0.5rem 0;
+        border: none !important;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .pwa-table td::before {
+        content: attr(data-label);
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #6b7280;
+        margin-right: 1rem;
+      }
+      .pwa-table td.actions-cell {
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+        padding-top: 1rem;
+        border-top: 1px dashed #e5e7eb !important;
+      }
+      .pwa-table td.actions-cell::before { display: none; }
+      .pwa-table td.actions-cell > div {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        width: 100%;
+      }
+      .pwa-table td.actions-cell button {
+        width: 100%;
+        justify-content: center;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+      }
+    }
   </style>
 </head>
 <body class="text-examgo-dark antialiased min-h-screen flex flex-col selection:bg-examgo-pale selection:text-examgo-primary">
@@ -77,10 +132,11 @@
           </div>
           <span class="text-xl font-bold text-white tracking-wide">ExamGO <span class="font-normal opacity-80">Admin</span></span>
         </div>
-        <div class="flex items-center hidden" id="nav-user">
-          <div class="h-8 w-8 rounded-full bg-examgo-pale text-examgo-primary flex items-center justify-center font-bold">
+        <div class="flex items-center space-x-3 hidden" id="nav-user">
+          <div class="h-8 w-8 rounded-full bg-examgo-pale text-examgo-primary flex items-center justify-center font-bold" id="user-avatar">
             A
           </div>
+          <button onclick="logout()" class="text-sm font-medium text-white hover:text-red-200 transition-colors">Logout</button>
         </div>
       </div>
     </div>
@@ -89,107 +145,180 @@
   <!-- Main Content -->
   <main id="main-content" class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden transition-opacity duration-500 opacity-0">
     
-    <!-- Header & Stats -->
-    <div class="md:flex md:items-center md:justify-between mb-8">
-      <div class="flex-1 min-w-0">
-        <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate flex items-center">
-          Database Ujian
-          <span class="ml-3 inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium bg-examgo-pale text-examgo-primary">
-            Firestore
-          </span>
-        </h2>
-        <p class="mt-2 text-sm text-gray-500">Kelola dan bersihkan data ujian untuk menjaga kapasitas penyimpanan cloud Anda.</p>
+    <!-- EXAMS VIEW -->
+    <div id="view-exams">
+      <!-- Header & Stats -->
+      <div class="md:flex md:items-center md:justify-between mb-8">
+        <div class="flex-1 min-w-0">
+          <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate flex items-center">
+            Database Ujian
+            <span class="ml-3 inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium bg-examgo-pale text-examgo-primary">
+              Firestore
+            </span>
+          </h2>
+          <p class="mt-2 text-sm text-gray-500">Kelola dan bersihkan data ujian untuk menjaga kapasitas penyimpanan cloud Anda.</p>
+        </div>
+        <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 space-x-3 gap-y-2 justify-end">
+          <button onclick="loadData()" class="inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
+          <button id="btn-delete-selected" onclick="openDeleteSelectedModal()" class="hidden inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 transition-all transform hover:scale-105">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Hapus Terpilih (<span id="selected-count">0</span>)
+          </button>
+          <button onclick="openDeleteAllModal()" class="inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-all transform hover:scale-105">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Bersihkan Semua
+          </button>
+        </div>
       </div>
-      <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 space-x-3 gap-y-2 justify-end">
-        <button onclick="loadData()" class="inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
-          <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Refresh
-        </button>
-        <button id="btn-delete-selected" onclick="openDeleteSelectedModal()" class="hidden inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 transition-all transform hover:scale-105">
-          <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-          Hapus Terpilih (<span id="selected-count">0</span>)
-        </button>
-        <button onclick="openDeleteAllModal()" class="inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-all transform hover:scale-105">
-          <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-          Bersihkan Semua
-        </button>
-      </div>
-    </div>
 
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
-      <!-- Stat Card -->
-      <div class="glass-card shadow-sm rounded-2xl overflow-hidden transform transition-all hover:-translate-y-1 hover:shadow-md">
-        <div class="p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-examgo-pale rounded-xl p-3">
-              <svg class="h-7 w-7 text-examgo-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
+        <!-- Stat Card -->
+        <div class="glass-card shadow-sm rounded-2xl overflow-hidden transform transition-all hover:-translate-y-1 hover:shadow-md">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 bg-examgo-pale rounded-xl p-3">
+                <svg class="h-7 w-7 text-examgo-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Total Sesi Ujian Aktif</dt>
+                  <dd class="flex items-baseline mt-1">
+                    <div class="text-3xl font-bold text-gray-900" id="stat-total">-</div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Table Card -->
+      <div class="glass-card shadow-sm rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h3 class="text-lg leading-6 font-semibold text-gray-900">Daftar Sesi Ujian</h3>
+          
+          <!-- Search Bar -->
+          <div class="relative max-w-sm w-full">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <div class="ml-5 w-0 flex-1">
-              <dl>
-                <dt class="text-sm font-medium text-gray-500 truncate">Total Sesi Ujian Aktif</dt>
-                <dd class="flex items-baseline mt-1">
-                  <div class="text-3xl font-bold text-gray-900" id="stat-total">-</div>
-                </dd>
-              </dl>
-            </div>
+            <input type="text" id="search-input" onkeyup="filterTable()" class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-examgo-primary focus:border-examgo-primary focus:bg-white sm:text-sm transition-colors" placeholder="Cari judul ujian atau ID...">
           </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-100 pwa-table">
+            <thead class="bg-gray-50/50">
+              <tr>
+                <th scope="col" class="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-10">
+                  <input type="checkbox" id="checkbox-all" onchange="toggleAllCheckboxes(this)" class="focus:ring-examgo-primary h-4 w-4 text-examgo-primary border-gray-300 rounded cursor-pointer transition-all">
+                </th>
+                <th scope="col" class="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ujian</th>
+                <th scope="col" class="hidden md:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Token (ID)</th>
+                <th scope="col" class="hidden sm:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Peserta</th>
+                <th scope="col" class="hidden lg:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Dibuat Pada</th>
+                <th scope="col" class="px-3 sm:px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="table-body" class="bg-white divide-y divide-gray-50">
+              <!-- Skeleton Loading Default -->
+              <tr id="initial-skeleton"><td colspan="6" class="px-3 sm:px-6 py-8">
+                <div class="animate-shimmer skeleton-box h-4 w-3/4 rounded mb-4"></div>
+                <div class="animate-shimmer skeleton-box h-4 w-1/2 rounded"></div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination UI -->
+        <div class="px-6 py-4 border-t border-gray-100 flex justify-center hidden" id="pagination-container">
+          <button id="btn-load-more" onclick="loadMoreExams()" class="inline-flex items-center px-6 py-2.5 border border-gray-300 rounded-full shadow-sm text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
+            Muat Lebih Banyak
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Data Table Card -->
-    <div class="glass-card shadow-sm rounded-2xl overflow-hidden">
-      <div class="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h3 class="text-lg leading-6 font-semibold text-gray-900">Daftar Sesi Ujian</h3>
-        
-        <!-- Search Bar -->
-        <div class="relative max-w-sm w-full">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+    <!-- STUDENTS VIEW -->
+    <div id="view-students" class="hidden">
+      <!-- Header -->
+      <div class="md:flex md:items-center md:justify-between mb-8">
+        <div class="flex-1 min-w-0 flex items-center space-x-4">
+          <button onclick="showExamsView()" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+            <svg class="h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+          </button>
+          <div>
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate flex items-center">
+              Daftar Siswa
+            </h2>
+            <p class="mt-1 text-sm text-gray-500 font-medium" id="current-exam-title">Memuat...</p>
           </div>
-          <input type="text" id="search-input" onkeyup="filterTable()" class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-examgo-primary focus:border-examgo-primary focus:bg-white sm:text-sm transition-colors" placeholder="Cari judul ujian atau ID...">
+        </div>
+        <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 space-x-3 gap-y-2 justify-end">
+          <button onclick="loadStudents()" class="inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
         </div>
       </div>
-      
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-100">
-          <thead class="bg-gray-50/50">
-            <tr>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-10">
-                <input type="checkbox" id="checkbox-all" onchange="toggleAllCheckboxes(this)" class="focus:ring-examgo-primary h-4 w-4 text-examgo-primary border-gray-300 rounded cursor-pointer transition-all">
-              </th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Judul Ujian</th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Token (ID)</th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Peserta</th>
-              <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Dibuat Pada</th>
-              <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="table-body" class="bg-white divide-y divide-gray-50">
-            <!-- Skeleton Loading Default -->
-            <tr id="initial-skeleton"><td colspan="6" class="px-6 py-8">
-              <div class="animate-shimmer skeleton-box h-4 w-3/4 rounded mb-4"></div>
-              <div class="animate-shimmer skeleton-box h-4 w-1/2 rounded"></div>
-            </td></tr>
-          </tbody>
-        </table>
+
+      <!-- Students Table -->
+      <div class="glass-card shadow-sm rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h3 class="text-lg leading-6 font-semibold text-gray-900">Peserta Ujian <span id="student-count-badge" class="ml-2 px-2 py-0.5 rounded-full bg-gray-100 text-xs text-gray-600">0</span></h3>
+          
+          <div class="relative max-w-sm w-full">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input type="text" id="search-student-input" onkeyup="filterStudentsTable()" class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-examgo-primary focus:border-examgo-primary focus:bg-white sm:text-sm transition-colors" placeholder="Cari nama atau NIS...">
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-100 pwa-table">
+            <thead class="bg-gray-50/50">
+              <tr>
+                <th scope="col" class="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama & NIS</th>
+                <th scope="col" class="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                <th scope="col" class="hidden md:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Aktivitas Terakhir</th>
+                <th scope="col" class="hidden sm:table-cell px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Pelanggaran</th>
+                <th scope="col" class="px-3 sm:px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="students-table-body" class="bg-white divide-y divide-gray-50">
+            </tbody>
+          </table>
+        </div>
+        <!-- Students Pagination UI -->
+        <div class="px-6 py-4 border-t border-gray-100 flex justify-center hidden" id="pagination-students-container">
+          <button id="btn-load-more-students" onclick="loadMoreStudents()" class="inline-flex items-center px-6 py-2.5 border border-gray-300 rounded-full shadow-sm text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
+            Muat Lebih Banyak Siswa
+          </button>
+        </div>
       </div>
     </div>
 
   </main>
 
   <!-- Login Modal -->
-  <div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-md">
+  <div id="login-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-md opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 transform transition-all scale-100">
       <div class="text-center mb-8">
         <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-examgo-pale mb-5 shadow-inner">
@@ -197,16 +326,19 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
           </svg>
         </div>
-        <h3 class="text-2xl font-bold text-gray-900">Akses Terkunci</h3>
-        <p class="text-sm text-gray-500 mt-2">Masukkan PIN Administrator untuk mengelola database.</p>
+        <h3 class="text-2xl font-bold text-gray-900">Masuk</h3>
+        <p class="text-sm text-gray-500 mt-2">Gunakan kredensial Admin dari Spreadsheet Anda.</p>
       </div>
       
-      <div class="space-y-5">
+      <div class="space-y-4">
         <div class="relative">
-          <input type="password" id="pin-input" class="w-full px-5 py-4 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-examgo-primary/20 focus:border-examgo-primary focus:bg-white text-center text-2xl tracking-[0.5em] font-mono outline-none transition-all placeholder-gray-300" placeholder="••••••••" autocomplete="off">
+          <input type="text" id="username-input" class="w-full px-5 py-4 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-examgo-primary/20 focus:border-examgo-primary focus:bg-white text-gray-900 outline-none transition-all placeholder-gray-400 font-medium" placeholder="Username" autocomplete="username">
         </div>
-        <button id="login-btn" onclick="attemptLogin()" class="w-full bg-examgo-primary hover:bg-examgo-primaryHover text-white font-semibold py-4 px-4 rounded-xl shadow-md hover:shadow-lg transition-all flex justify-center items-center">
-          Buka Kunci
+        <div class="relative">
+          <input type="password" id="password-input" class="w-full px-5 py-4 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-examgo-primary/20 focus:border-examgo-primary focus:bg-white text-gray-900 outline-none transition-all placeholder-gray-400 font-medium" placeholder="Password" autocomplete="current-password">
+        </div>
+        <button id="login-btn" onclick="attemptLogin()" class="w-full bg-examgo-primary hover:bg-examgo-primaryHover text-white font-semibold py-4 px-4 rounded-xl shadow-md hover:shadow-lg transition-all flex justify-center items-center mt-2">
+          Masuk
         </button>
       </div>
     </div>
@@ -249,15 +381,39 @@
     </div>
   </div>
 
+  <!-- Edit Student Modal -->
+  <div id="edit-student-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity opacity-0">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 transform transition-transform scale-95" id="edit-student-modal-box">
+      <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Data Siswa</h3>
+      <input type="hidden" id="edit-student-id">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+          <input type="text" id="edit-student-name" class="w-full px-4 py-2 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-examgo-primary/20 focus:border-examgo-primary outline-none transition-all">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">NIS</label>
+          <input type="text" id="edit-student-nis" class="w-full px-4 py-2 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-examgo-primary/20 focus:border-examgo-primary outline-none transition-all">
+        </div>
+      </div>
+      <div class="flex space-x-3 mt-6">
+        <button onclick="closeEditStudentModal()" class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors">Batal</button>
+        <button id="save-student-btn" onclick="saveStudentData()" class="flex-1 px-4 py-3 text-white font-medium rounded-xl transition-colors shadow-sm bg-examgo-primary hover:bg-examgo-primaryHover flex justify-center items-center">Simpan</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Notification Toast -->
   <div id="toast" class="fixed bottom-5 right-5 transform transition-all duration-300 translate-y-20 opacity-0 text-white px-6 py-4 rounded-xl shadow-xl z-[60] flex items-center min-w-[300px]">
     <span id="toast-icon" class="mr-3"></span>
-    <span id="toast-msg" class="font-medium text-sm">Notifikasi</span>
-  </div>
-
-  <script>
-    let currentPin = '';
+<script>
+    let currentUser = '';
+    let currentPass = '';
     let currentData = []; // Store data for local search filtering
+    let currentNextPageToken = null;
+    let currentExamId = null;
+    let currentStudentsData = []; // Store students data
+    let currentStudentsNextPageToken = null;
 
     // ─────────────────────────────────────────────────────────
     // UI Helpers
@@ -370,9 +526,31 @@
     // ─────────────────────────────────────────────────────────
     // Logic
     // ─────────────────────────────────────────────────────────
+    function safeGetAuth() { 
+      try { 
+        const u = localStorage.getItem('examgo_admin_user'); 
+        const p = localStorage.getItem('examgo_admin_pass'); 
+        if (u && p) return { user: u, pass: p };
+        return null;
+      } catch(e) { return null; } 
+    }
+    function safeSetAuth(user, pass) { 
+      try { 
+        localStorage.setItem('examgo_admin_user', user); 
+        localStorage.setItem('examgo_admin_pass', pass); 
+      } catch(e) {} 
+    }
+    function safeClearAuth() { 
+      try { 
+        localStorage.removeItem('examgo_admin_user'); 
+        localStorage.removeItem('examgo_admin_pass'); 
+      } catch(e) {} 
+    }
+
     function attemptLogin() {
-      const pinInput = document.getElementById('pin-input').value;
-      if (!pinInput) return showToast('PIN tidak boleh kosong', 'error');
+      const userInput = document.getElementById('username-input').value;
+      const passInput = document.getElementById('password-input').value;
+      if (!userInput || !passInput) return showToast('Username dan Password wajib diisi', 'error');
       
       const btn = document.getElementById('login-btn');
       btn.innerHTML = '<div class="loader mr-2"></div> Memverifikasi...';
@@ -380,16 +558,22 @@
 
       google.script.run
         .withSuccessHandler(function(response) {
-          btn.innerHTML = 'Buka Kunci';
+          btn.innerHTML = 'Masuk';
           btn.disabled = false;
           
           if (response && response.error === 'unauthorized') {
-            showToast('PIN Salah! Akses ditolak.', 'error');
-            document.getElementById('pin-input').value = '';
+            showToast('Username atau Password Salah!', 'error');
+            document.getElementById('password-input').value = '';
+            safeClearAuth();
           } else {
-            currentPin = pinInput;
+            currentUser = userInput;
+            currentPass = passInput;
+            safeSetAuth(userInput, passInput);
+            
+            document.getElementById('user-avatar').innerText = currentUser.charAt(0).toUpperCase();
+            
             document.getElementById('login-modal').classList.add('opacity-0', 'pointer-events-none');
-            setTimeout(() => document.getElementById('login-modal').classList.add('hidden'), 500);
+            setTimeout(() => document.getElementById('login-modal').classList.replace('flex', 'hidden'), 500);
             
             const mainContent = document.getElementById('main-content');
             mainContent.classList.remove('hidden');
@@ -397,48 +581,124 @@
             setTimeout(() => mainContent.classList.remove('opacity-0'), 50);
             
             showToast('Akses Diberikan');
-            currentData = response;
-            renderTableData(response);
+            
+            // Render optimistic states
+            document.getElementById('search-input').value = '';
+            renderSkeleton(5);
+            document.getElementById('stat-total').innerText = '...';
+            currentData = [];
+            document.getElementById('checkbox-all').checked = false;
+            updateSelectedCount();
+            
+            // Gunakan langsung response dari attemptLogin, tanpa request ulang ke server!
+            processLoadDataResponse(response, false);
           }
         })
         .withFailureHandler(function(err) {
-          btn.innerHTML = 'Buka Kunci';
+          btn.innerHTML = 'Masuk';
           btn.disabled = false;
           showToast('Koneksi ke server gagal', 'error');
         })
-        .getExamSessions(pinInput);
+        .getExamSessions(userInput, passInput); 
     }
 
-    document.getElementById('pin-input').addEventListener('keypress', function(e) {
+    document.getElementById('password-input').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') attemptLogin();
     });
+    
+    function logout() {
+      safeClearAuth();
+      currentUser = '';
+      currentPass = '';
+      
+      const mainContent = document.getElementById('main-content');
+      mainContent.classList.add('opacity-0');
+      document.getElementById('nav-user').classList.add('hidden');
+      setTimeout(() => mainContent.classList.add('hidden'), 300);
+      
+      const loginModal = document.getElementById('login-modal');
+      loginModal.classList.replace('hidden', 'flex');
+      loginModal.classList.remove('pointer-events-none');
+      setTimeout(() => loginModal.classList.remove('opacity-0'), 50);
+      
+      document.getElementById('username-input').value = '';
+      document.getElementById('password-input').value = '';
+      showToast('Berhasil logout');
+    }
 
-    function loadData() {
-      if (!currentPin) return;
+    function loadMoreExams() {
+      if (!currentNextPageToken) return;
+      const btn = document.getElementById('btn-load-more');
+      btn.innerHTML = '<div class="loader mr-2 border-gray-400 border-t-gray-700"></div> Memuat...';
+      btn.disabled = true;
+      loadData(currentNextPageToken, true);
+    }
+
+    function loadData(pageToken = null, isLoadMore = false) {
+      if (!currentUser || !currentPass) return;
       document.getElementById('search-input').value = '';
-      renderSkeleton(5);
-      document.getElementById('stat-total').innerText = '...';
+      
+      if (!isLoadMore) {
+        renderSkeleton(5);
+        document.getElementById('stat-total').innerText = '...';
+        currentData = [];
+      }
+      
       document.getElementById('checkbox-all').checked = false;
       updateSelectedCount();
 
       google.script.run
         .withSuccessHandler(function(response) {
-          if (response && response.error === 'unauthorized') {
-            currentPin = '';
-            document.getElementById('main-content').classList.add('hidden', 'opacity-0');
-            const loginModal = document.getElementById('login-modal');
-            loginModal.classList.remove('hidden', 'pointer-events-none');
-            setTimeout(() => loginModal.classList.remove('opacity-0'), 50);
-            return showToast('Sesi ditolak. Silakan login ulang.', 'error');
-          }
-          currentData = response;
-          renderTableData(response);
+          processLoadDataResponse(response, isLoadMore);
         })
         .withFailureHandler(function(err) {
           showToast('Koneksi ke server gagal', 'error');
-          document.getElementById('table-body').innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-sm text-red-500 font-medium">Gagal terhubung ke server.</td></tr>`;
+          if (!isLoadMore) {
+            document.getElementById('table-body').innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-sm text-red-500 font-medium">Gagal terhubung ke server.</td></tr>`;
+          } else {
+            const btn = document.getElementById('btn-load-more');
+            btn.innerHTML = 'Gagal, Coba Lagi';
+            btn.disabled = false;
+          }
         })
-        .getExamSessions(currentPin);
+        .getExamSessions(currentUser, currentPass, pageToken);
+    }
+
+    function processLoadDataResponse(response, isLoadMore) {
+      if (response && response.error === 'unauthorized') {
+        logout();
+        return showToast('Sesi ditolak. Silakan login ulang.', 'error');
+      }
+      
+      if (response.error) {
+        showToast(response.error, 'error');
+        if (!isLoadMore) {
+          document.getElementById('table-body').innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-sm text-red-500 font-medium">Error: ${response.error}</td></tr>`;
+          document.getElementById('stat-total').innerText = '0';
+        }
+        return;
+      }
+
+      const docs = response.documents || [];
+      currentNextPageToken = response.nextPageToken || null;
+      
+      if (isLoadMore) {
+        currentData = currentData.concat(docs);
+      } else {
+        currentData = docs;
+      }
+      
+      renderTableData(currentData);
+      
+      const pagContainer = document.getElementById('pagination-container');
+      const btnLoadMore = document.getElementById('btn-load-more');
+      if (currentNextPageToken) {
+        pagContainer.classList.remove('hidden');
+        btnLoadMore.innerHTML = 'Muat Lebih Banyak';
+        btnLoadMore.disabled = false;
+      } else {
+        pagContainer.classList.add('hidden');
+      }
     }
 
     // Live Search Filter
@@ -477,31 +737,42 @@
       response.forEach(function(exam) {
         html += `
           <tr class="hover:bg-examgo-pale/30 transition-colors group" id="row-${exam.id}">
-            <td class="px-6 py-4 whitespace-nowrap">
-              <input type="checkbox" value="${exam.id}" class="row-checkbox focus:ring-examgo-primary h-4 w-4 text-examgo-primary border-gray-300 rounded cursor-pointer transition-all" onchange="updateSelectedCount()">
+            <td data-label="Pilih" class="px-3 sm:px-6 py-4 whitespace-nowrap">
+              <input type="checkbox" value="${exam.id}" class="row-checkbox focus:ring-examgo-primary h-5 w-5 text-examgo-primary border-gray-300 rounded cursor-pointer transition-all" onchange="updateSelectedCount()">
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td data-label="Ujian" class="px-3 sm:px-6 py-4">
               <div class="text-sm font-bold text-gray-900 group-hover:text-examgo-primary transition-colors">${exam.title}</div>
+              <div class="md:hidden text-xs text-gray-500 mt-1 font-mono">${exam.id}</div>
+              <div class="sm:hidden mt-1 inline-flex items-center text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md border border-blue-200">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                ${exam.studentCount || 0}
+              </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td data-label="ID (Token)" class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
               <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-md bg-gray-100 text-gray-600 font-mono border border-gray-200">
                 ${exam.id}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td data-label="Peserta" class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
               <span class="px-2.5 py-1 inline-flex text-sm leading-5 font-semibold rounded-md bg-blue-50 text-blue-700 border border-blue-200">
                 <svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 ${exam.studentCount || 0}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td data-label="Dibuat" class="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               ${formatDate(exam.createdAt)}
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-              <button onclick="executeSingleDelete('${exam.id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center shadow-sm">
-                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                Hapus
-              </button>
+            <td class="actions-cell px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <div class="flex space-x-1 sm:space-x-2">
+                <button onclick="openExamDetails('${exam.id}', '${exam.title.replace(/'/g, "\\'")}')" class="text-examgo-primary hover:text-examgo-primaryHover bg-examgo-pale hover:bg-green-100 p-2 sm:px-3 sm:py-1.5 rounded-lg transition-colors inline-flex items-center shadow-sm">
+                  <svg class="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  <span class="inline">Detail</span>
+                </button>
+                <button onclick="executeSingleDelete('${exam.id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 sm:px-3 sm:py-1.5 rounded-lg transition-colors inline-flex items-center shadow-sm">
+                  <svg class="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                  <span class="inline">Hapus</span>
+                </button>
+              </div>
             </td>
           </tr>
         `;
@@ -559,7 +830,7 @@
               failCount++;
               resolve();
             })
-            .deleteExamSession(id, currentPin);
+            .deleteExamSession(id, currentUser, currentPass);
         });
         
         // Update progress
@@ -656,7 +927,300 @@
       document.getElementById('checkbox-all').checked = (allCheckboxes.length > 0 && count === allCheckboxes.length);
     }
 
-    window.onload = () => document.getElementById('pin-input').focus();
+    // ─────────────────────────────────────────────────────────
+    // Students Logic
+    // ─────────────────────────────────────────────────────────
+
+    function showExamsView() {
+      document.getElementById('view-students').classList.add('hidden');
+      document.getElementById('view-exams').classList.remove('hidden');
+      currentExamId = null;
+      currentStudentsData = [];
+      loadData(); // refresh exams list
+    }
+
+    function openExamDetails(examId, title) {
+      currentExamId = examId;
+      document.getElementById('current-exam-title').innerText = "Sesi: " + title + " | ID: " + examId;
+      document.getElementById('view-exams').classList.add('hidden');
+      document.getElementById('view-students').classList.remove('hidden');
+      loadStudents();
+    }
+
+    function renderSkeletonStudents(count = 3) {
+      let html = '';
+      for (let i=0; i<count; i++) {
+        html += `<tr><td colspan="6" class="px-6 py-5 border-b border-gray-50">
+          <div class="flex items-center space-x-4">
+            <div class="animate-shimmer skeleton-box h-4 w-1/4 rounded"></div>
+            <div class="animate-shimmer skeleton-box h-4 w-1/4 rounded"></div>
+            <div class="animate-shimmer skeleton-box h-4 w-1/4 rounded"></div>
+          </div>
+        </td></tr>`;
+      }
+      document.getElementById('students-table-body').innerHTML = html;
+      document.getElementById('student-count-badge').innerText = '...';
+    }
+
+    function loadMoreStudents() {
+      if (!currentStudentsNextPageToken) return;
+      const btn = document.getElementById('btn-load-more-students');
+      btn.innerHTML = '<div class="loader mr-2 border-gray-400 border-t-gray-700"></div> Memuat...';
+      btn.disabled = true;
+      loadStudents(currentStudentsNextPageToken, true);
+    }
+
+    function loadStudents(pageToken = null, isLoadMore = false) {
+      if (!currentUser || !currentPass || !currentExamId) return;
+      document.getElementById('search-student-input').value = '';
+      
+      if (!isLoadMore) {
+        renderSkeletonStudents(5);
+        currentStudentsData = [];
+      }
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (response && response.error) {
+            showToast(response.error, 'error');
+            return;
+          }
+          
+          const docs = response.documents || [];
+          currentStudentsNextPageToken = response.nextPageToken || null;
+          
+          if (isLoadMore) {
+            currentStudentsData = currentStudentsData.concat(docs);
+          } else {
+            currentStudentsData = docs;
+          }
+          
+          renderStudentsTable(currentStudentsData);
+          
+          const pagContainer = document.getElementById('pagination-students-container');
+          const btnLoadMore = document.getElementById('btn-load-more-students');
+          if (currentStudentsNextPageToken) {
+            pagContainer.classList.remove('hidden');
+            btnLoadMore.innerHTML = 'Muat Lebih Banyak Siswa';
+            btnLoadMore.disabled = false;
+          } else {
+            pagContainer.classList.add('hidden');
+          }
+        })
+        .withFailureHandler(function(err) {
+          showToast('Gagal memuat data siswa', 'error');
+          if (!isLoadMore) {
+            document.getElementById('students-table-body').innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-sm text-red-500 font-medium">Gagal terhubung ke server.</td></tr>`;
+          } else {
+            const btn = document.getElementById('btn-load-more-students');
+            btn.innerHTML = 'Gagal, Coba Lagi';
+            btn.disabled = false;
+          }
+        })
+        .getStudentsList(currentExamId, currentUser, currentPass, pageToken);
+    }
+
+    function filterStudentsTable() {
+      const term = document.getElementById('search-student-input').value.toLowerCase();
+      if (!currentStudentsData || currentStudentsData.error) return;
+      
+      const filtered = currentStudentsData.filter(student => 
+        student.name.toLowerCase().includes(term) || student.nis.toLowerCase().includes(term)
+      );
+      renderStudentsTable(filtered, true);
+    }
+
+    function renderStudentsTable(response, isFiltering = false) {
+      const tbody = document.getElementById('students-table-body');
+      
+      if (!isFiltering) document.getElementById('student-count-badge').innerText = response.length;
+      
+      if (response.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center flex-col items-center">
+          <div class="bg-gray-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+            <svg class="h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+          </div>
+          <span class="text-gray-500 font-medium">${isFiltering ? 'Tidak ada hasil pencarian.' : 'Belum ada siswa yang mendaftar.'}</span>
+        </td></tr>`;
+        return;
+      }
+
+      let html = '';
+      response.forEach(function(student) {
+        let statusBadge = '';
+        if (student.status === 'ACTIVE') {
+          statusBadge = '<span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 border border-green-200">ACTIVE</span>';
+        } else if (student.status === 'BLOCKED') {
+          statusBadge = '<span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">BLOCKED</span>';
+        } else {
+          statusBadge = '<span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 border border-gray-200">OFFLINE</span>';
+        }
+
+        html += `
+          <tr class="hover:bg-examgo-pale/30 transition-colors group">
+            <td data-label="Nama" class="px-3 sm:px-6 py-4">
+              <div class="text-sm font-bold text-gray-900">${student.name}</div>
+              <div class="text-xs text-gray-500 font-mono">${student.nis}</div>
+              <div class="sm:hidden mt-1 inline-flex items-center text-xs font-bold ${student.violationCount > 0 ? 'text-orange-700 bg-orange-100 border-orange-200' : 'text-gray-600 bg-gray-100 border-gray-200'} px-1.5 py-0.5 rounded border">
+                ${student.violationCount} Pelanggaran
+              </div>
+            </td>
+            <td data-label="Status" class="px-3 sm:px-6 py-4 whitespace-nowrap">
+              ${statusBadge}
+            </td>
+            <td data-label="Aktivitas" class="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              ${formatDate(student.last_ping)}
+            </td>
+            <td data-label="Pelanggaran" class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-center">
+              <span class="${student.violationCount > 0 ? 'bg-orange-100 text-orange-800 border-orange-200' : 'bg-gray-50 text-gray-500 border-gray-200'} px-2.5 py-1 inline-flex text-sm leading-5 font-bold rounded-md border">
+                ${student.violationCount}
+              </span>
+            </td>
+            <td class="actions-cell px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <div class="flex space-x-1 sm:space-x-2">
+                <button onclick="openEditStudentModal('${student.id}', '${student.name.replace(/'/g, "\\'")}', '${student.nis}')" class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-2 sm:px-2.5 sm:py-1.5 rounded-lg transition-colors inline-flex items-center shadow-sm">
+                  <svg class="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                  <span class="inline">Edit</span>
+                </button>
+                ${student.status === 'BLOCKED' 
+                  ? `<button onclick="toggleStudentStatus('${student.id}', 'ACTIVE')" class="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 p-2 sm:px-2.5 sm:py-1.5 rounded-lg transition-colors inline-flex items-center shadow-sm">
+                      <svg class="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                      <span class="inline">Buka</span>
+                     </button>`
+                  : `<button onclick="toggleStudentStatus('${student.id}', 'BLOCKED')" class="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 p-2 sm:px-2.5 sm:py-1.5 rounded-lg transition-colors inline-flex items-center shadow-sm">
+                      <svg class="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                      <span class="inline">Blokir</span>
+                     </button>`
+                }
+                <button onclick="executeDeleteStudent('${student.id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 sm:px-2.5 sm:py-1.5 rounded-lg transition-colors inline-flex items-center shadow-sm">
+                  <svg class="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                  <span class="inline">Hapus</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function toggleStudentStatus(studentId, newStatus) {
+      showConfirmModal({
+        title: newStatus === 'BLOCKED' ? 'Blokir Siswa?' : 'Buka Blokir Siswa?',
+        message: newStatus === 'BLOCKED' ? 'Siswa ini akan dikeluarkan dari ujian dan tidak bisa masuk lagi.' : 'Siswa ini akan dapat masuk kembali ke ujian.',
+        type: newStatus === 'BLOCKED' ? 'warning' : 'info',
+        confirmText: 'Ya, Lanjutkan',
+        onConfirm: (btn) => {
+          btn.innerHTML = '<div class="loader mr-2"></div> Memproses...';
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if(res.error) showToast(res.error, 'error');
+              else {
+                showToast('Status berhasil diubah');
+                loadStudents();
+              }
+            })
+            .withFailureHandler(() => showToast('Gagal terhubung server', 'error'))
+            .updateStudentStatus(currentExamId, studentId, newStatus, currentUser, currentPass);
+        }
+      });
+    }
+
+    function executeDeleteStudent(studentId) {
+      showConfirmModal({
+        title: 'Hapus Siswa?',
+        message: 'Aksi ini akan menghapus data siswa beserta riwayat pelanggarannya dari ujian ini. Tidak dapat dibatalkan.',
+        type: 'danger',
+        confirmText: 'Ya, Hapus',
+        onConfirm: (btn) => {
+          btn.innerHTML = '<div class="loader mr-2"></div> Menghapus...';
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if(res.error) showToast(res.error, 'error');
+              else {
+                showToast('Siswa berhasil dihapus');
+                loadStudents();
+              }
+            })
+            .withFailureHandler(() => showToast('Gagal terhubung server', 'error'))
+            .deleteStudentSingle(currentExamId, studentId, currentUser, currentPass);
+        }
+      });
+    }
+
+    // Edit Modal Logic
+    const editStudentModal = document.getElementById('edit-student-modal');
+    const editStudentModalBox = document.getElementById('edit-student-modal-box');
+
+    function openEditStudentModal(id, name, nis) {
+      document.getElementById('edit-student-id').value = id;
+      document.getElementById('edit-student-name').value = name;
+      document.getElementById('edit-student-nis').value = nis;
+      
+      editStudentModal.classList.replace('hidden', 'flex');
+      void editStudentModal.offsetWidth; // trigger reflow
+      editStudentModal.classList.remove('opacity-0');
+      editStudentModalBox.classList.remove('scale-95');
+      editStudentModalBox.classList.add('scale-100');
+    }
+
+    function closeEditStudentModal() {
+      editStudentModal.classList.add('opacity-0');
+      editStudentModalBox.classList.remove('scale-100');
+      editStudentModalBox.classList.add('scale-95');
+      setTimeout(() => editStudentModal.classList.replace('flex', 'hidden'), 300);
+    }
+
+    function saveStudentData() {
+      const id = document.getElementById('edit-student-id').value;
+      const name = document.getElementById('edit-student-name').value;
+      const nis = document.getElementById('edit-student-nis').value;
+      
+      const btn = document.getElementById('save-student-btn');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<div class="loader"></div>';
+      btn.disabled = true;
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          if(res.error) showToast(res.error, 'error');
+          else {
+            showToast('Data berhasil disimpan');
+            closeEditStudentModal();
+            loadStudents();
+          }
+        })
+        .withFailureHandler(() => {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          showToast('Gagal menyimpan data', 'error');
+        })
+        .updateStudentData(currentExamId, id, name, nis, currentUser, currentPass);
+    }
+
+    window.onload = () => {
+      const auth = safeGetAuth();
+      if (auth) {
+        currentUser = auth.user;
+        currentPass = auth.pass;
+        document.getElementById('user-avatar').innerText = currentUser.charAt(0).toUpperCase();
+        
+        // Optimistic UI: langsung tampilkan main content biar ga kedip/flash
+        const mainContent = document.getElementById('main-content');
+        mainContent.classList.remove('hidden');
+        document.getElementById('nav-user').classList.remove('hidden');
+        setTimeout(() => mainContent.classList.remove('opacity-0'), 50);
+        
+        loadData();
+      } else {
+        const loginModal = document.getElementById('login-modal');
+        loginModal.classList.replace('hidden', 'flex');
+        setTimeout(() => loginModal.classList.remove('opacity-0'), 50);
+        document.getElementById('username-input').focus();
+      }
+    };
   </script>
 </body>
 </html>
