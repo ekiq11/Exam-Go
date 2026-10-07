@@ -65,56 +65,19 @@
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     
-    /* PWA Mobile Cards */
-    @media (max-width: 639px) {
-      table.pwa-table, .pwa-table tbody, .pwa-table tr, .pwa-table td {
-        display: block;
-        width: 100%;
-      }
-      .pwa-table thead { display: none; }
-      .pwa-table tr {
-        margin-bottom: 1rem;
-        border: 1px solid #f3f4f6;
-        border-radius: 1rem;
-        padding: 1rem;
-        background: white;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-      }
-      .pwa-table td {
-        padding: 0.5rem 0;
-        border: none !important;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .pwa-table td::before {
-        content: attr(data-label);
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        color: #6b7280;
-        margin-right: 1rem;
-      }
-      .pwa-table td.actions-cell {
-        flex-direction: column;
-        gap: 0.75rem;
-        margin-top: 0.5rem;
-        padding-top: 1rem;
-        border-top: 1px dashed #e5e7eb !important;
-      }
-      .pwa-table td.actions-cell::before { display: none; }
-      .pwa-table td.actions-cell > div {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.75rem;
-        width: 100%;
-      }
-      .pwa-table td.actions-cell button {
-        width: 100%;
-        justify-content: center;
-        padding-top: 0.75rem;
-        padding-bottom: 0.75rem;
-      }
+    /* PWA Mobile Cards & Floating Elements */
+    .fab-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      pointer-events: none;
+    }
+    .fab-container > * {
+      pointer-events: auto;
     }
   </style>
 </head>
@@ -159,19 +122,19 @@
           <p class="mt-2 text-sm text-gray-500">Kelola dan bersihkan data ujian untuk menjaga kapasitas penyimpanan cloud Anda.</p>
         </div>
         <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 space-x-3 gap-y-2 justify-end">
-          <button onclick="loadData()" class="inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
+          <button onclick="loadData()" class="hidden sm:inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
             <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             Refresh
           </button>
-          <button id="btn-delete-selected" onclick="openDeleteSelectedModal()" class="hidden inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 transition-all transform hover:scale-105">
+          <button id="btn-delete-selected" onclick="openDeleteSelectedModal()" class="hidden sm:inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 transition-all transform hover:scale-105" style="display: none;">
             <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
             Hapus Terpilih (<span id="selected-count">0</span>)
           </button>
-          <button onclick="openDeleteAllModal()" class="inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-all transform hover:scale-105">
+          <button onclick="openDeleteAllModal()" class="hidden sm:inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-all transform hover:scale-105">
             <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
@@ -220,8 +183,8 @@
         </div>
         
         <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-100 pwa-table">
-            <thead class="bg-gray-50/50">
+          <table class="block sm:table min-w-full divide-y divide-gray-100">
+            <thead class="hidden sm:table-header-group bg-gray-50/50">
               <tr>
                 <th scope="col" class="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-10">
                   <input type="checkbox" id="checkbox-all" onchange="toggleAllCheckboxes(this)" class="focus:ring-examgo-primary h-4 w-4 text-examgo-primary border-gray-300 rounded cursor-pointer transition-all">
@@ -233,7 +196,7 @@
                 <th scope="col" class="px-3 sm:px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
               </tr>
             </thead>
-            <tbody id="table-body" class="bg-white divide-y divide-gray-50">
+            <tbody id="table-body" class="block sm:table-row-group bg-transparent sm:bg-white divide-y-0 sm:divide-y divide-gray-50">
               <!-- Skeleton Loading Default -->
               <tr id="initial-skeleton"><td colspan="6" class="px-3 sm:px-6 py-8">
                 <div class="animate-shimmer skeleton-box h-4 w-3/4 rounded mb-4"></div>
@@ -267,7 +230,7 @@
           </div>
         </div>
         <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 space-x-3 gap-y-2 justify-end">
-          <button onclick="loadStudents()" class="inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
+          <button onclick="loadStudents()" class="hidden sm:inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
             <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
@@ -292,8 +255,8 @@
         </div>
         
         <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-100 pwa-table">
-            <thead class="bg-gray-50/50">
+          <table class="block sm:table min-w-full divide-y divide-gray-100">
+            <thead class="hidden sm:table-header-group bg-gray-50/50">
               <tr>
                 <th scope="col" class="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama & NIS</th>
                 <th scope="col" class="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
@@ -302,7 +265,7 @@
                 <th scope="col" class="px-3 sm:px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
               </tr>
             </thead>
-            <tbody id="students-table-body" class="bg-white divide-y divide-gray-50">
+            <tbody id="students-table-body" class="block sm:table-row-group bg-transparent sm:bg-white divide-y-0 sm:divide-y divide-gray-50">
             </tbody>
           </table>
         </div>
@@ -313,6 +276,25 @@
           </button>
         </div>
       </div>
+    </div>
+    
+    <!-- Mobile FAB Container -->
+    <div class="fab-container sm:hidden">
+      <!-- Delete Selected (hidden by default) -->
+      <button id="fab-delete-selected" onclick="openDeleteSelectedModal()" class="flex items-center justify-center w-14 h-14 bg-orange-500 text-white rounded-full shadow-lg hover:bg-orange-600 transition-all transform active:scale-90" style="display: none;">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+        <span id="fab-selected-count" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full border-2 border-white">0</span>
+      </button>
+      
+      <!-- Refresh -->
+      <button onclick="currentExamId ? loadStudents() : loadData()" class="flex items-center justify-center w-14 h-14 bg-examgo-primary text-white rounded-full shadow-lg hover:bg-examgo-primaryHover transition-all transform active:scale-90">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+      </button>
+      
+      <!-- Delete All (only in Exams view) -->
+      <button id="fab-delete-all" onclick="openDeleteAllModal()" class="flex items-center justify-center w-14 h-14 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all transform active:scale-90">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+      </button>
     </div>
 
   </main>
@@ -438,19 +420,46 @@
     function formatDate(isoString) {
       if (!isoString) return '-';
       const d = new Date(isoString);
+      if (isNaN(d)) return '-';
       return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function formatDateShort(isoString) {
+      if (!isoString) return '-';
+      const d = new Date(isoString);
+      if (isNaN(d)) return '-';
+      return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
     }
 
     function renderSkeleton(count = 3) {
       let html = '';
       for (let i=0; i<count; i++) {
-        html += `<tr><td colspan="6" class="px-6 py-5 border-b border-gray-50">
-          <div class="flex items-center space-x-4">
-            <div class="animate-shimmer skeleton-box h-4 w-4 rounded"></div>
-            <div class="animate-shimmer skeleton-box h-4 w-1/4 rounded"></div>
-            <div class="animate-shimmer skeleton-box h-4 w-1/4 rounded"></div>
-          </div>
-        </td></tr>`;
+        html += `
+          <tr class="flex flex-col sm:table-row bg-white border border-gray-100 sm:border-b sm:border-gray-50 rounded-2xl sm:rounded-none mb-4 sm:mb-0 shadow-sm sm:shadow-none overflow-hidden">
+            <td class="block sm:hidden px-4 py-3 bg-gray-50/80 border-b border-gray-100">
+              <div class="flex items-center space-x-3">
+                <div class="animate-shimmer skeleton-box h-4 w-4 rounded"></div>
+                <div class="animate-shimmer skeleton-box h-3 w-16 rounded"></div>
+              </div>
+            </td>
+            <td class="hidden sm:table-cell sm:px-6 sm:py-4 whitespace-nowrap">
+              <div class="animate-shimmer skeleton-box h-4 w-4 rounded"></div>
+            </td>
+            <td class="block sm:table-cell p-5 sm:px-6 sm:py-4">
+              <div class="animate-shimmer skeleton-box h-5 w-3/4 sm:w-1/4 rounded mb-3 sm:mb-1"></div>
+              <div class="animate-shimmer skeleton-box h-4 w-1/2 sm:w-1/5 rounded sm:hidden"></div>
+            </td>
+            <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap"><div class="animate-shimmer skeleton-box h-4 w-16 rounded"></div></td>
+            <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap"><div class="animate-shimmer skeleton-box h-4 w-12 rounded"></div></td>
+            <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap"><div class="animate-shimmer skeleton-box h-4 w-24 rounded"></div></td>
+            <td class="block sm:table-cell p-4 sm:px-6 sm:py-4 border-t border-gray-100 sm:border-0 bg-gray-50/30 sm:bg-transparent">
+              <div class="grid grid-cols-2 gap-3 sm:flex sm:space-x-2 sm:gap-0 sm:w-auto">
+                <div class="animate-shimmer skeleton-box h-10 w-full sm:w-20 rounded-xl sm:rounded-lg"></div>
+                <div class="animate-shimmer skeleton-box h-10 w-full sm:w-20 rounded-xl sm:rounded-lg"></div>
+              </div>
+            </td>
+          </tr>
+        `;
       }
       document.getElementById('table-body').innerHTML = html;
     }
@@ -736,39 +745,55 @@
       let html = '';
       response.forEach(function(exam) {
         html += `
-          <tr class="hover:bg-examgo-pale/30 transition-colors group" id="row-${exam.id}">
-            <td data-label="Pilih" class="px-3 sm:px-6 py-4 whitespace-nowrap">
-              <input type="checkbox" value="${exam.id}" class="row-checkbox focus:ring-examgo-primary h-5 w-5 text-examgo-primary border-gray-300 rounded cursor-pointer transition-all" onchange="updateSelectedCount()">
-            </td>
-            <td data-label="Ujian" class="px-3 sm:px-6 py-4">
-              <div class="text-sm font-bold text-gray-900 group-hover:text-examgo-primary transition-colors">${exam.title}</div>
-              <div class="md:hidden text-xs text-gray-500 mt-1 font-mono">${exam.id}</div>
-              <div class="sm:hidden mt-1 inline-flex items-center text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md border border-blue-200">
-                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                ${exam.studentCount || 0}
+          <tr class="flex flex-col sm:table-row bg-white border border-gray-100 sm:border-b sm:border-gray-50 rounded-2xl sm:rounded-none mb-4 sm:mb-0 shadow-sm sm:shadow-none overflow-hidden hover:bg-examgo-pale/10 transition-colors group" id="row-${exam.id}">
+            <!-- Mobile Header with Checkbox & ID -->
+            <td class="block sm:hidden px-4 py-3 bg-gray-50/80 border-b border-gray-100">
+              <div class="flex items-center space-x-3">
+                <input type="checkbox" value="${exam.id}" class="row-checkbox focus:ring-examgo-primary h-4 w-4 text-examgo-primary border-gray-300 rounded cursor-pointer transition-all" onchange="updateSelectedCount()">
+                <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider font-mono">ID: ${exam.id}</span>
               </div>
             </td>
-            <td data-label="ID (Token)" class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
+            <!-- Desktop Checkbox -->
+            <td class="hidden sm:table-cell sm:px-6 sm:py-4 whitespace-nowrap">
+              <input type="checkbox" value="${exam.id}" class="row-checkbox focus:ring-examgo-primary h-4 w-4 text-examgo-primary border-gray-300 rounded cursor-pointer transition-all" onchange="updateSelectedCount()">
+            </td>
+            <!-- Main Content: Title & Badges -->
+            <td class="block sm:table-cell p-5 sm:px-6 sm:py-4">
+              <div class="text-lg sm:text-sm font-bold text-gray-900 group-hover:text-examgo-primary transition-colors leading-tight">${String(exam.title || '').replace(/'/g, "\\'")}</div>
+              <div class="text-xs text-gray-500 mt-1 font-mono hidden sm:block">${exam.id}</div>
+              <div class="sm:hidden mt-4 flex flex-wrap gap-2">
+                <div class="inline-flex items-center text-[11px] font-bold bg-blue-50 text-blue-700 px-2.5 py-1.5 rounded-lg border border-blue-100 shadow-sm">
+                  <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                  ${exam.studentCount || 0} Peserta
+                </div>
+                <div class="inline-flex items-center text-[11px] font-medium bg-gray-50 text-gray-600 px-2.5 py-1.5 rounded-lg border border-gray-200 shadow-sm">
+                  <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  ${formatDateShort(exam.createdAt)}
+                </div>
+              </div>
+            </td>
+            <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
               <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-md bg-gray-100 text-gray-600 font-mono border border-gray-200">
                 ${exam.id}
               </span>
             </td>
-            <td data-label="Peserta" class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
+            <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
               <span class="px-2.5 py-1 inline-flex text-sm leading-5 font-semibold rounded-md bg-blue-50 text-blue-700 border border-blue-200">
                 <svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 ${exam.studentCount || 0}
               </span>
             </td>
-            <td data-label="Dibuat" class="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               ${formatDate(exam.createdAt)}
             </td>
-            <td class="actions-cell px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-              <div class="flex space-x-1 sm:space-x-2">
-                <button onclick="openExamDetails('${exam.id}', '${exam.title.replace(/'/g, "\\'")}')" class="text-examgo-primary hover:text-examgo-primaryHover bg-examgo-pale hover:bg-green-100 p-2 sm:px-3 sm:py-1.5 rounded-lg transition-colors inline-flex items-center shadow-sm">
+            <!-- Action Buttons -->
+            <td class="block sm:table-cell p-4 sm:px-6 sm:py-4 border-t border-gray-100 sm:border-0 bg-gray-50/30 sm:bg-transparent">
+              <div class="grid grid-cols-2 gap-3 sm:flex sm:space-x-2 sm:gap-0 sm:w-auto">
+                <button onclick="openExamDetails('${exam.id}', '${String(exam.title || '').replace(/'/g, "\\'")}')" class="flex items-center justify-center text-examgo-primary hover:text-white bg-white sm:bg-examgo-pale hover:bg-examgo-primary py-2.5 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors border sm:border-0 border-examgo-pale shadow-sm font-semibold text-sm">
                   <svg class="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                   <span class="inline">Detail</span>
                 </button>
-                <button onclick="executeSingleDelete('${exam.id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 sm:px-3 sm:py-1.5 rounded-lg transition-colors inline-flex items-center shadow-sm">
+                <button onclick="executeSingleDelete('${exam.id}')" class="flex items-center justify-center text-red-600 hover:text-white bg-white sm:bg-red-50 hover:bg-red-500 py-2.5 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors border sm:border-0 border-red-200 shadow-sm font-semibold text-sm">
                   <svg class="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                   <span class="inline">Hapus</span>
                 </button>
@@ -915,12 +940,16 @@
       const checkboxes = document.querySelectorAll('.row-checkbox:checked');
       const count = checkboxes.length;
       document.getElementById('selected-count').innerText = count;
+      document.getElementById('fab-selected-count').innerText = count;
       
       const btn = document.getElementById('btn-delete-selected');
+      const fab = document.getElementById('fab-delete-selected');
       if (count > 0) {
-        btn.classList.remove('hidden');
+        btn.style.display = 'inline-flex';
+        fab.style.display = 'flex';
       } else {
-        btn.classList.add('hidden');
+        btn.style.display = 'none';
+        fab.style.display = 'none';
       }
 
       const allCheckboxes = document.querySelectorAll('.row-checkbox');
@@ -934,6 +963,7 @@
     function showExamsView() {
       document.getElementById('view-students').classList.add('hidden');
       document.getElementById('view-exams').classList.remove('hidden');
+      document.getElementById('fab-delete-all').style.display = 'flex';
       currentExamId = null;
       currentStudentsData = [];
       loadData(); // refresh exams list
@@ -944,19 +974,36 @@
       document.getElementById('current-exam-title').innerText = "Sesi: " + title + " | ID: " + examId;
       document.getElementById('view-exams').classList.add('hidden');
       document.getElementById('view-students').classList.remove('hidden');
+      document.getElementById('fab-delete-all').style.display = 'none'; // Sembunyikan FAB hapus semua di tampilan siswa
       loadStudents();
     }
 
     function renderSkeletonStudents(count = 3) {
       let html = '';
       for (let i=0; i<count; i++) {
-        html += `<tr><td colspan="6" class="px-6 py-5 border-b border-gray-50">
-          <div class="flex items-center space-x-4">
-            <div class="animate-shimmer skeleton-box h-4 w-1/4 rounded"></div>
-            <div class="animate-shimmer skeleton-box h-4 w-1/4 rounded"></div>
-            <div class="animate-shimmer skeleton-box h-4 w-1/4 rounded"></div>
-          </div>
-        </td></tr>`;
+        html += `
+          <tr class="flex flex-col sm:table-row bg-white border border-gray-100 sm:border-b sm:border-gray-50 rounded-2xl sm:rounded-none mb-4 sm:mb-0 shadow-sm sm:shadow-none overflow-hidden">
+            <td class="block sm:hidden px-4 py-3 bg-gray-50/80 border-b border-gray-100">
+              <div class="flex items-center justify-between">
+                <div class="animate-shimmer skeleton-box h-4 w-16 rounded"></div>
+              </div>
+            </td>
+            <td class="block sm:table-cell p-5 sm:px-6 sm:py-4">
+              <div class="animate-shimmer skeleton-box h-5 w-3/4 sm:w-1/4 rounded mb-3 sm:mb-1"></div>
+              <div class="animate-shimmer skeleton-box h-4 w-1/2 sm:w-1/5 rounded sm:hidden"></div>
+            </td>
+            <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap"><div class="animate-shimmer skeleton-box h-4 w-16 rounded"></div></td>
+            <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap"><div class="animate-shimmer skeleton-box h-4 w-12 rounded"></div></td>
+            <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap"><div class="animate-shimmer skeleton-box h-4 w-24 rounded"></div></td>
+            <td class="block sm:table-cell p-4 sm:px-6 sm:py-4 border-t border-gray-100 sm:border-0 bg-gray-50/30 sm:bg-transparent">
+              <div class="grid grid-cols-3 gap-2 sm:flex sm:space-x-2 sm:gap-0 sm:w-auto">
+                <div class="animate-shimmer skeleton-box h-10 w-full sm:w-16 rounded-xl sm:rounded-lg"></div>
+                <div class="animate-shimmer skeleton-box h-10 w-full sm:w-16 rounded-xl sm:rounded-lg"></div>
+                <div class="animate-shimmer skeleton-box h-10 w-full sm:w-16 rounded-xl sm:rounded-lg"></div>
+              </div>
+            </td>
+          </tr>
+        `;
       }
       document.getElementById('students-table-body').innerHTML = html;
       document.getElementById('student-count-badge').innerText = '...';
@@ -1049,51 +1096,67 @@
       response.forEach(function(student) {
         let statusBadge = '';
         if (student.status === 'ACTIVE') {
-          statusBadge = '<span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 border border-green-200">ACTIVE</span>';
+          statusBadge = '<span class="px-2 py-1 inline-flex text-[10px] leading-tight font-bold rounded-md bg-green-100 text-green-800 border border-green-200 uppercase tracking-wider">ACTIVE</span>';
         } else if (student.status === 'BLOCKED') {
-          statusBadge = '<span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 border border-red-200">BLOCKED</span>';
+          statusBadge = '<span class="px-2 py-1 inline-flex text-[10px] leading-tight font-bold rounded-md bg-red-100 text-red-800 border border-red-200 uppercase tracking-wider">BLOCKED</span>';
         } else {
-          statusBadge = '<span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 border border-gray-200">OFFLINE</span>';
+          statusBadge = '<span class="px-2 py-1 inline-flex text-[10px] leading-tight font-bold rounded-md bg-gray-100 text-gray-800 border border-gray-200 uppercase tracking-wider">OFFLINE</span>';
         }
 
         html += `
-          <tr class="hover:bg-examgo-pale/30 transition-colors group">
-            <td data-label="Nama" class="px-3 sm:px-6 py-4">
-              <div class="text-sm font-bold text-gray-900">${student.name}</div>
-              <div class="text-xs text-gray-500 font-mono">${student.nis}</div>
-              <div class="sm:hidden mt-1 inline-flex items-center text-xs font-bold ${student.violationCount > 0 ? 'text-orange-700 bg-orange-100 border-orange-200' : 'text-gray-600 bg-gray-100 border-gray-200'} px-1.5 py-0.5 rounded border">
-                ${student.violationCount} Pelanggaran
+          <tr class="flex flex-col sm:table-row bg-white border border-gray-100 sm:border-b sm:border-gray-50 rounded-2xl sm:rounded-none mb-4 sm:mb-0 shadow-sm sm:shadow-none overflow-hidden hover:bg-examgo-pale/10 transition-colors group">
+            <!-- Mobile Header with Status -->
+            <td class="block sm:hidden px-4 py-3 bg-gray-50/80 border-b border-gray-100">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider font-mono">NIS: ${student.nis}</span>
+                ${statusBadge}
               </div>
             </td>
-            <td data-label="Status" class="px-3 sm:px-6 py-4 whitespace-nowrap">
+            <!-- Main Content: Name & Badges -->
+            <td class="block sm:table-cell p-5 sm:px-6 sm:py-4">
+              <div class="text-lg sm:text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-tight">${String(student.name || '').replace(/'/g, "\\'")}</div>
+              <div class="text-xs text-gray-500 mt-1 font-mono hidden sm:block">${student.nis}</div>
+              <div class="sm:hidden mt-4 flex flex-wrap gap-2">
+                <div class="inline-flex items-center text-[11px] font-bold ${student.violationCount > 0 ? 'text-orange-700 bg-orange-50 border-orange-200' : 'text-gray-600 bg-gray-50 border-gray-200'} px-2.5 py-1.5 rounded-lg border shadow-sm">
+                  ${student.violationCount} Pelanggaran
+                </div>
+                <div class="inline-flex items-center text-[11px] font-medium text-gray-500 bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-200 shadow-sm">
+                  <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  ${formatDateShort(student.last_ping)}
+                </div>
+              </div>
+            </td>
+            <!-- Desktop hidden columns -->
+            <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
               ${statusBadge}
             </td>
-            <td data-label="Aktivitas" class="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               ${formatDate(student.last_ping)}
             </td>
-            <td data-label="Pelanggaran" class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-center">
+            <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-center">
               <span class="${student.violationCount > 0 ? 'bg-orange-100 text-orange-800 border-orange-200' : 'bg-gray-50 text-gray-500 border-gray-200'} px-2.5 py-1 inline-flex text-sm leading-5 font-bold rounded-md border">
                 ${student.violationCount}
               </span>
             </td>
-            <td class="actions-cell px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-              <div class="flex space-x-1 sm:space-x-2">
-                <button onclick="openEditStudentModal('${student.id}', '${student.name.replace(/'/g, "\\'")}', '${student.nis}')" class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-2 sm:px-2.5 sm:py-1.5 rounded-lg transition-colors inline-flex items-center shadow-sm">
-                  <svg class="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+            <!-- Action Buttons -->
+            <td class="block sm:table-cell p-4 sm:px-6 sm:py-4 border-t border-gray-100 sm:border-0 bg-gray-50/30 sm:bg-transparent">
+              <div class="grid grid-cols-3 gap-2 sm:flex sm:space-x-2 sm:gap-0 sm:w-auto">
+                <button onclick="openEditStudentModal('${student.id}', '${String(student.name || '').replace(/'/g, "\\'")}', '${String(student.nis || '').replace(/'/g, "\\'")}')" class="flex flex-col sm:flex-row items-center justify-center text-blue-600 hover:text-white bg-white sm:bg-blue-50 hover:bg-blue-600 py-2 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors border sm:border-0 border-blue-200 shadow-sm font-semibold text-[11px] sm:text-sm">
+                  <svg class="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5 mb-1 sm:mb-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                   <span class="inline">Edit</span>
                 </button>
                 ${student.status === 'BLOCKED' 
-                  ? `<button onclick="toggleStudentStatus('${student.id}', 'ACTIVE')" class="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 p-2 sm:px-2.5 sm:py-1.5 rounded-lg transition-colors inline-flex items-center shadow-sm">
-                      <svg class="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                  ? `<button onclick="toggleStudentStatus('${student.id}', 'ACTIVE')" class="flex flex-col sm:flex-row items-center justify-center text-green-600 hover:text-white bg-white sm:bg-green-50 hover:bg-green-600 py-2 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors border sm:border-0 border-green-200 shadow-sm font-semibold text-[11px] sm:text-sm">
+                      <svg class="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5 mb-1 sm:mb-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
                       <span class="inline">Buka</span>
                      </button>`
-                  : `<button onclick="toggleStudentStatus('${student.id}', 'BLOCKED')" class="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 p-2 sm:px-2.5 sm:py-1.5 rounded-lg transition-colors inline-flex items-center shadow-sm">
-                      <svg class="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                  : `<button onclick="toggleStudentStatus('${student.id}', 'BLOCKED')" class="flex flex-col sm:flex-row items-center justify-center text-orange-600 hover:text-white bg-white sm:bg-orange-50 hover:bg-orange-600 py-2 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors border sm:border-0 border-orange-200 shadow-sm font-semibold text-[11px] sm:text-sm">
+                      <svg class="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5 mb-1 sm:mb-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                       <span class="inline">Blokir</span>
                      </button>`
                 }
-                <button onclick="executeDeleteStudent('${student.id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 sm:px-2.5 sm:py-1.5 rounded-lg transition-colors inline-flex items-center shadow-sm">
-                  <svg class="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                <button onclick="executeDeleteStudent('${student.id}')" class="flex flex-col sm:flex-row items-center justify-center text-red-500 hover:text-white bg-white sm:bg-red-50 hover:bg-red-600 py-2 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors border sm:border-0 border-red-200 shadow-sm font-semibold text-[11px] sm:text-sm">
+                  <svg class="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5 mb-1 sm:mb-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                   <span class="inline">Hapus</span>
                 </button>
               </div>

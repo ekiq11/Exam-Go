@@ -187,10 +187,10 @@ function _sendFcm(token, title, body, dataPayload) {
           priority: 'high',
           notification: {
             sound:          'default',
-            channelId:      'exam_violations',
-            notificationPriority: 'PRIORITY_HIGH',
-            defaultSound:   true,
-            defaultVibrateTimings: true,
+            channel_id:     'exam_violations',
+            notification_priority: 'PRIORITY_HIGH',
+            default_sound:  true,
+            default_vibrate_timings: true,
           },
         },
         apns: {

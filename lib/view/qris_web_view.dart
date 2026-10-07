@@ -208,12 +208,23 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   }
 
 
+  DateTime? _lastNotificationTime;
+
   /// Kirim notifikasi pelanggaran ke device guru via GAS.
   /// GAS membaca TEACHER_FCM_TOKEN dari Script Properties sendiri
   /// sehingga Flutter tidak perlu tahu/menyimpan token guru.
   /// Fire-and-forget — tidak ada await, tidak mengganggu UX siswa.
   void _notifyTeacherViaGas() {
     if (AppConfig.gasUrl.isEmpty || AppConfig.gasApiKey.isEmpty) return;
+
+    // FIX: Cegah spam notifikasi FCM yang membuat boros kuota GAS/Firebase.
+    // Maksimal kirim 1 notifikasi FCM ke guru setiap 60 detik per siswa.
+    final now = DateTime.now();
+    if (_lastNotificationTime != null && now.difference(_lastNotificationTime!).inSeconds < 60) {
+      return;
+    }
+    _lastNotificationTime = now;
+
     http
         .post(
           Uri.parse(AppConfig.gasUrl),
@@ -736,6 +747,14 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       await androidController.setOnPlatformPermissionRequest(
         (request) => request.grant(),
       );
+      
+      // FIX: Aktifkan cookie pihak ketiga agar gambar dari Google Drive (di Google Form) bisa dimuat
+      final cookieManager = WebViewCookieManager();
+      final platformCookie = cookieManager.platform;
+      if (platformCookie is AndroidWebViewCookieManager) {
+        platformCookie.setAcceptThirdPartyCookies(androidController, true);
+      }
+
       // Nonaktifkan tawaran translate dari Android WebView dengan mengirimkan
       // header Accept-Language yang menyamakan bahasa konten dengan locale device.
       // (Header diset via loadRequest di atas).

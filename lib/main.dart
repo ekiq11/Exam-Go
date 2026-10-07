@@ -8,6 +8,7 @@ import 'package:examgo/view/home_screen.dart';
 import 'package:examgo/view/onboarding_screen.dart';
 import 'package:examgo/view/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -46,7 +47,10 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   );
 
   // Tampilkan notifikasi lokal agar muncul di notification tray
-  await _showLocalNotification(message);
+  // HAPUS PANGGILAN INI UNTUK BACKGROUND:
+  // Firebase SDK secara otomatis sudah menampilkan notifikasi jika payload
+  // mengandung objek 'notification'. Memanggil ini akan membuat notifikasi ganda.
+  // await _showLocalNotification(message);
 }
 
 // Plugin notifikasi lokal — digunakan untuk foreground & background
@@ -98,6 +102,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  
+  // FIX: Mengaktifkan mode Offline (Toleransi Offline) secara eksplisit.
+  // Firestore menggunakan cache lokal (SQLite bawaan SDK) untuk menampung
+  // log pelanggaran dan status saat HP tidak ada internet, 
+  // lalu akan di-sync otomatis ketika online kembali.
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+  );
 
   // ── Crashlytics: tangkap semua crash Flutter & Dart ────────────
   //
