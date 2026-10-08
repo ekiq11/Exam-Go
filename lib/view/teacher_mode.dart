@@ -675,7 +675,7 @@ class TeacherDashboardScreen extends StatelessWidget {
               const SizedBox(height: 12),
               // Copyright
               Text(
-                '© Kemenag — Secure Exam Browser',
+                '© ExamGo — Secure Exam Browser',
                 style: GoogleFonts.poppins(
                   fontSize: 11,
                   color: Colors.grey.shade500,

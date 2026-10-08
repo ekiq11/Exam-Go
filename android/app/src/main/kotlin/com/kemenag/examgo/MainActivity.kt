@@ -74,11 +74,6 @@ class MainActivity : FlutterFragmentActivity() {
             @Suppress("DEPRECATION")
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         }
-        
-        // Anti Screen Overlay (Aplikasi Mengambang) untuk Android 12+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            window.setHideOverlayWindows(true)
-        }
 
         // Catatan: WindowInsetsController (API 30+) dipanggil di
         // onWindowFocusChanged() agar insetsController tidak null.
