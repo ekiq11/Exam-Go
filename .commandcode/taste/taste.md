@@ -1,0 +1,1 @@
+- Prefers root-cause, long-term fixes over temporary workarounds — e.g., when offered a version-pin hack, asks to upgrade the dependencies properly instead. Confidence: 0.7
