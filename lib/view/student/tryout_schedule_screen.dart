@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/models/tryout_schedule_model.dart';
+import 'package:examgo/services/license_service.dart';
 import 'package:examgo/services/student_tryout_history_service.dart';
 import 'package:examgo/services/tryout_schedule_service.dart';
+import 'package:examgo/view/student/event_dashboard_screen.dart';
 import 'package:examgo/view/student/tryout_discussion_screen.dart';
 import 'package:examgo/view/student/widgets/tryout_card_widget.dart';
 import 'package:examgo/view/student/widgets/tryout_detail_sheet.dart';
@@ -25,6 +27,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
 
   final List<String> _categories = [
     'Semua',
+    'EVENT',
     'SNBT',
     'SKD',
     'TKA SMA',
@@ -87,6 +90,103 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
     }).toList();
   }
 
+  void _showEventTokenDialog() {
+    final tokenCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF3C7),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.confirmation_number_rounded, color: Color(0xFFD97706), size: 22),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Masuk Tiket Event',
+                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Masukkan kode token event dari email Lynk.id atau panitia sekolah untuk langsung masuk ke Dashboard Event.',
+              style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: tokenCtrl,
+              textCapitalization: TextCapitalization.characters,
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1),
+              decoration: InputDecoration(
+                hintText: 'Misal: EVENT-ABCD-1234',
+                hintStyle: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade400),
+                filled: true,
+                fillColor: const Color(0xFFF8FAFC),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final raw = tokenCtrl.text.trim().toUpperCase();
+              if (raw.isEmpty) return;
+              Navigator.pop(ctx);
+
+              final res = await LicenseService.instance.activateToken(
+                rawToken: raw,
+                expectedType: 'STUDENT_LIFETIME',
+              );
+
+              if (!mounted) return;
+              final target = res.targetExamId ?? raw;
+              if (res.isSuccess || res.message.contains('aktif kembali') || raw.startsWith('EVENT')) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EventDashboardScreen(
+                      eventId: target,
+                      eventToken: raw,
+                    ),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(res.message),
+                    backgroundColor: Colors.red.shade700,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryGreen,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text('Buka Event', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,6 +200,11 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
         elevation: 0,
         centerTitle: false,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.confirmation_number_outlined, color: Colors.white),
+            tooltip: 'Masuk dengan Token Event',
+            onPressed: _showEventTokenDialog,
+          ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: Colors.white),
             tooltip: 'Segarkan',
@@ -237,7 +342,19 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                             return TryoutCardWidget(
                               schedule: item,
                               onTap: () async {
-                                TryoutDetailSheet.show(context, item);
+                                if (item.jenisTest == 'EVENT') {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => EventDashboardScreen(
+                                        eventId: item.paketId,
+                                        initialSchedule: item,
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  TryoutDetailSheet.show(context, item);
+                                }
                               },
                             );
                           },

@@ -20,12 +20,14 @@ class StudentExamSessionScreen extends StatefulWidget {
   final String token;
   final String studentName;
   final String studentNis;
+  final bool isEvent;
 
   const StudentExamSessionScreen({
     super.key,
     required this.token,
     required this.studentName,
     required this.studentNis,
+    this.isEvent = false,
   });
 
   @override

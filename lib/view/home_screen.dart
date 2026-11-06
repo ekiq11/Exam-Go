@@ -1,4 +1,6 @@
 import 'package:examgo/firebas_analytics/analytic_service.dart';
+import 'package:examgo/models/tryout_schedule_model.dart';
+import 'package:examgo/view/student/event_dashboard_screen.dart';
 import 'package:examgo/view/widgets/premium_token_dialog.dart';
 import 'package:examgo/view/student/tryout_schedule_screen.dart';
 import 'package:flutter/services.dart';
@@ -516,21 +518,27 @@ class _HomeScreenState extends State<HomeScreen>
     }
 
     // ── Cek Kuota Freemium Siswa (Maks 5x Gratis, selebihnya Lynk.id) ──
-    final canTake = await LicenseService.instance.canStudentTakeExam();
-    if (!canTake) {
-      if (mounted) _showStudentLicenseDialog();
-      return;
+    // Siswa dengan tiket event resmi tidak dibatasi limit 5x gratis & tidak memotong kuota freemium
+    final isEventExam = url.startsWith('EXAMGO_EVENT://');
+    if (!isEventExam) {
+      final canTake = await LicenseService.instance.canStudentTakeExam();
+      if (!canTake) {
+        if (mounted) _showStudentLicenseDialog();
+        return;
+      }
+
+      // Catat penggunaan 1 kuota ujian (hanya jika belum berstatus Lifetime)
+      await LicenseService.instance.recordExamAttempt();
+      if (mounted) setState(() {});
     }
 
-    // Catat penggunaan 1 kuota ujian (hanya jika belum berstatus Lifetime)
-    await LicenseService.instance.recordExamAttempt();
-    if (mounted) setState(() {});
-
-    // Cek apakah ini ujian native ExamGO Tryout (Docx/GForm)
-    final isNative = url.startsWith('EXAMGO_TRYOUT://') || examId.isNotEmpty;
-    final token = url.startsWith('EXAMGO_TRYOUT://')
-        ? url.replaceFirst('EXAMGO_TRYOUT://', '')
-        : examId;
+    // Cek apakah ini ujian native ExamGO Tryout (Docx/GForm) atau Event
+    final isNative = url.startsWith('EXAMGO_TRYOUT://') || url.startsWith('EXAMGO_EVENT://') || examId.isNotEmpty;
+    final token = url.startsWith('EXAMGO_EVENT://')
+        ? url.replaceFirst('EXAMGO_EVENT://', '')
+        : (url.startsWith('EXAMGO_TRYOUT://')
+            ? url.replaceFirst('EXAMGO_TRYOUT://', '')
+            : examId);
 
     if (isNative && token.isNotEmpty) {
       try {
@@ -547,6 +555,7 @@ class _HomeScreenState extends State<HomeScreen>
                 token: token,
                 studentName: name,
                 studentNis: nis,
+                isEvent: isEventExam,
               ),
             ),
           );
@@ -1970,7 +1979,7 @@ class _HomeScreenState extends State<HomeScreen>
             }
           } catch (_) {}
 
-          // 2. Fallback 1: Cek dokumen paket_tryout native (Tryout Nasional / Ujian Khusus)
+          // 2. Fallback 1: Cek dokumen paket_tryout native (Tryout Nasional / Ujian Khusus / Event)
           try {
             final pkgDoc = await FirebaseFirestore.instance
                 .collection('paket_tryout')
@@ -1978,7 +1987,26 @@ class _HomeScreenState extends State<HomeScreen>
                 .get();
             if (pkgDoc.exists) {
               popLoading();
-              final title = pkgDoc.data()?['nama_paket'] ?? 'Tryout Nasional';
+              final pData = pkgDoc.data() ?? {};
+              final title = pData['nama_paket'] ?? 'Tryout Nasional';
+              final isEventPkg = pData['jenis_test']?.toString().toUpperCase() == 'EVENT' ||
+                  pData['is_event'] == true ||
+                  token.startsWith('EVENT');
+
+              if (isEventPkg) {
+                if (!mounted) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EventDashboardScreen(
+                      eventId: token,
+                      initialSchedule: TryoutSchedule.fromMap(token, pData),
+                    ),
+                  ),
+                );
+                return;
+              }
+
               await _saveEntry(
                 _HistoryItem(
                   title: title,
@@ -2006,7 +2034,23 @@ class _HomeScreenState extends State<HomeScreen>
           if (actResult.isSuccess ||
               actResult.message.contains('aktif kembali')) {
             final targetExam = actResult.targetExamId;
-            if (targetExam != null && targetExam.isNotEmpty) {
+            final isEvent = token.startsWith('EVENT-') ||
+                actResult.message.toLowerCase().contains('event') ||
+                (targetExam != null && targetExam.isNotEmpty);
+
+            if (isEvent && targetExam != null && targetExam.isNotEmpty) {
+              if (mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EventDashboardScreen(
+                      eventId: targetExam,
+                      eventToken: token,
+                    ),
+                  ),
+                );
+              }
+            } else if (targetExam != null && targetExam.isNotEmpty) {
               _confirmAndStart(
                 'EXAMGO_TRYOUT://$targetExam',
                 title: 'Tryout Khusus',

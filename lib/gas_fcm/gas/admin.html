@@ -502,6 +502,7 @@
               <select id="gen-token-type" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none">
                 <option value="TEACHER_PREMIUM">Guru Premium</option>
                 <option value="STUDENT_LIFETIME">Siswa Lifetime</option>
+                <option value="EVENT">🎯 Peserta Event / Tryout (Lynk.id)</option>
               </select>
             </div>
             <div>
@@ -732,6 +733,7 @@
           <select id="edit-token-type" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-medium">
             <option value="TEACHER_PREMIUM">Guru Premium</option>
             <option value="STUDENT_LIFETIME">Siswa Lifetime</option>
+            <option value="EVENT">🎯 Peserta Event / Tryout (Lynk.id)</option>
           </select>
         </div>
         <div>
@@ -2774,7 +2776,9 @@
       paginatedItems.forEach(item => {
         const typeLabel = item.type === 'TEACHER_PREMIUM' 
           ? '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Guru Premium</span>'
-          : '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Siswa Lifetime</span>';
+          : (item.type === 'EVENT'
+            ? '<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-300">🎯 Event Tryout</span>'
+            : '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Siswa Lifetime</span>');
 
         let schoolBadge = '<span class="text-gray-400 text-xs">Umum</span>';
         if (item.school && item.school !== 'UMUM') {
@@ -3085,10 +3089,14 @@
         return;
       }
 
-      const roleText = type === 'TEACHER_PREMIUM' ? 'Guru Premium (Pembuat & Monitoring Soal)' : 'Siswa Lifetime (Akses Ujian Bebas)';
+      const roleText = type === 'TEACHER_PREMIUM' 
+        ? 'Guru Premium (Pembuat & Monitoring Soal)' 
+        : (type === 'EVENT' ? 'Peserta Event & Tryout Lynk.id' : 'Siswa Lifetime (Akses Ujian Bebas)');
       const steps = type === 'TEACHER_PREMIUM'
         ? '1. Buka aplikasi ExamGO di ponsel Android Anda.\n2. Buka menu "Mode Guru" di bagian bawah.\n3. Masukkan PIN Guru Anda (atau buat baru jika pertama kali).\n4. Ketuk banner lisensi "Upgrade / Masukkan Kode Lisensi".\n5. Masukkan salah satu kode di bawah ini lalu tekan Aktivasi.'
-        : '1. Buka aplikasi ExamGO di ponsel Android Anda.\n2. Di halaman utama, ketuk kartu "Lisensi & Status Akun".\n3. Masukkan salah satu kode di bawah ini.\n4. Tekan tombol "Aktivasi Sekarang".';
+        : (type === 'EVENT'
+          ? '1. Buka aplikasi ExamGO di ponsel Android Anda.\n2. Di halaman utama, masukkan kode token ini pada kolom "Masukkan Token Ujian / Event" atau tombol "🎯 Masuk Event".\n3. Anda akan langsung masuk ke Dashboard Event Resmi untuk mulai mengerjakan ujian dan melihat peringkat nilai!'
+          : '1. Buka aplikasi ExamGO di ponsel Android Anda.\n2. Di halaman utama, ketuk kartu "Lisensi & Status Akun".\n3. Masukkan salah satu kode di bawah ini.\n4. Tekan tombol "Aktivasi Sekarang".');
 
       let msg = `*DAFTAR KODE AKTIVASI LISENSI RESMI EXAMGO*\n`;
       msg += `🏫 *Institusi / Sekolah:* ${school}\n`;

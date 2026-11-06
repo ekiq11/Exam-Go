@@ -185,6 +185,30 @@ class LicenseService {
     return false;
   }
 
+  // ─── SISI EVENT TRYOUT (Lynk.id Tiket Event) ─────────────────────
+
+  /// Siswa yang memegang token event berhak mengikuti ujian event tanpa terpotong kuota freemium 5x
+  Future<bool> canStudentTakeEventExam(String eventOrPackageId) async => true;
+
+  /// Cek token event aktif yang tersimpan di perangkat ini
+  Future<String?> getActiveEventToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('active_event_token');
+  }
+
+  /// Cek ID paket event aktif yang tersimpan
+  Future<String?> getActiveEventId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('active_event_id');
+  }
+
+  /// Simpan event aktif ke penyimpanan lokal
+  Future<void> saveActiveEvent({required String token, required String eventId}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('active_event_token', token);
+    await prefs.setString('active_event_id', eventId);
+  }
+
   // ─── AKTIVASI KODE TOKEN (Lynk.id) ────────────────────────────────
 
   /// Validasi dan aktivasi kode token dari email pembeli Lynk.id
@@ -270,6 +294,41 @@ class LicenseService {
       final usedByDevice = data['device_id']?.toString();
 
       final currentDeviceId = await getDeviceId();
+
+      // ── LOGIKA KHUSUS: TOKEN EVENT / TRYOUT BERBAYAR (Lynk.id) ──
+      final isEventToken = tokenType == 'EVENT' || token.startsWith('EVENT-');
+      if (isEventToken) {
+        final targetExam = data['target_exam_id']?.toString() ??
+            data['target_package_id']?.toString() ??
+            data['school']?.toString();
+
+        if (isUsed && usedByDevice != currentDeviceId) {
+          return ActivationResult.failure(
+            'Kode tiket event ini sudah pernah digunakan pada perangkat lain. Setiap kode hanya berlaku untuk 1 perangkat.',
+          );
+        }
+
+        if (!isUsed) {
+          final now = FieldValue.serverTimestamp();
+          await docRef.update({
+            'is_used': true,
+            'device_id': currentDeviceId,
+            'used_by_email': userEmail ?? 'event_buyer',
+            'activated_at': now,
+          });
+        }
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('active_event_token', token);
+        if (targetExam != null && targetExam.isNotEmpty) {
+          await prefs.setString('active_event_id', targetExam);
+        }
+
+        return ActivationResult.success(
+          'Tiket Event berhasil diaktifkan! Mengarahkan ke Dashboard Event...',
+          targetExam,
+        );
+      }
 
       // Cek apakah kode cocok dengan tipe pengguna
       if (tokenType != expectedType.toUpperCase()) {
