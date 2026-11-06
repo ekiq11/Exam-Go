@@ -115,5 +115,99 @@ void main() {
           .get();
       expect(studentsSnap.docs.isEmpty, true);
     });
+
+    test('Anti-Cheat: records multiple exit attempts and sets status BLOCKED at threshold', () async {
+      const examId = 'event_tryout_999';
+      const nis = 'NIS_007';
+
+      // 1. Pelanggaran pertama
+      await monitoringService.logActivity(
+        examId: examId,
+        nis: nis,
+        activityType: 'EXIT_ATTEMPT',
+        description: 'Peserta mencoba keluar dari aplikasi ujian (Pelanggaran ke-1)',
+      );
+      await monitoringService.updateStudentStatus(
+        examId: examId,
+        nis: nis,
+        name: 'Budi',
+        status: 'ONLINE',
+        violations: 1,
+      );
+
+      var snap = await fakeFirestore
+          .collection('exam_sessions')
+          .doc(examId)
+          .collection('students')
+          .doc(nis)
+          .get();
+      expect(snap.data()!['violations'], 1);
+      expect(snap.data()!['status'], 'ONLINE');
+
+      // 2. Pelanggaran kedua
+      await monitoringService.logActivity(
+        examId: examId,
+        nis: nis,
+        activityType: 'EXIT_ATTEMPT',
+        description: 'Peserta mencoba keluar dari aplikasi ujian (Pelanggaran ke-2)',
+      );
+      await monitoringService.updateStudentStatus(
+        examId: examId,
+        nis: nis,
+        name: 'Budi',
+        status: 'ONLINE',
+        violations: 2,
+      );
+
+      // 3. Pelanggaran ketiga (mencapai batas toleransi -> BLOCKED)
+      await monitoringService.logActivity(
+        examId: examId,
+        nis: nis,
+        activityType: 'EXIT_ATTEMPT',
+        description: 'Peserta mencoba keluar dari aplikasi ujian (Pelanggaran ke-3)',
+      );
+      await monitoringService.updateStudentStatus(
+        examId: examId,
+        nis: nis,
+        name: 'Budi',
+        status: 'BLOCKED',
+        violations: 3,
+      );
+
+      snap = await fakeFirestore
+          .collection('exam_sessions')
+          .doc(examId)
+          .collection('students')
+          .doc(nis)
+          .get();
+      expect(snap.data()!['violations'], 3);
+      expect(snap.data()!['status'], 'BLOCKED');
+
+      final logs = await fakeFirestore
+          .collection('exam_sessions')
+          .doc(examId)
+          .collection('students')
+          .doc(nis)
+          .collection('logs')
+          .get();
+      expect(logs.docs.length, 3);
+
+      // 4. Guru membuka blokir siswa
+      await monitoringService.setStudentStatusByTeacher(
+        examId: examId,
+        nis: nis,
+        status: 'ACTIVE',
+        violations: 0,
+      );
+
+      snap = await fakeFirestore
+          .collection('exam_sessions')
+          .doc(examId)
+          .collection('students')
+          .doc(nis)
+          .get();
+      expect(snap.data()!['status'], 'ACTIVE');
+      expect(snap.data()!['violations'], 0);
+    });
   });
 }

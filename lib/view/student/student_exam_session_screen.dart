@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constant/app_colors.dart';
+import '../../constant/security_service.dart';
 import '../../models/exam_question_model.dart';
 import '../../services/monitoring_service.dart';
 import '../../services/national_exam_evaluator.dart';
@@ -70,6 +71,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   int _violations = 0;
   bool _isBlocked = false;
   bool _isSubmitted = false;
+  bool _isShowingWarningDialog = false;
   StreamSubscription<DocumentSnapshot>? _statusListener;
 
   static const int _maxViolations = 3;
@@ -79,6 +81,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _enterImmersiveMode();
+    SecurityService.instance.enable();
     _loadExamData();
     _listenTeacherMonitoring();
   }
@@ -89,6 +92,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     _tickerTimer?.cancel();
     _statusListener?.cancel();
     _exitImmersiveMode();
+    SecurityService.instance.disable(force: true);
     if (!_isSubmitted) {
       MonitoringService.instance.updateStudentStatus(
         examId: widget.token,
@@ -121,11 +125,111 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
       _handleViolationDetected();
     } else if (state == AppLifecycleState.resumed) {
       _enterImmersiveMode();
+      SecurityService.instance.reapply();
       _checkRemainingTime();
       if (_violations >= _maxViolations) {
         setState(() => _isBlocked = true);
+      } else if (_violations > 0 && mounted) {
+        _showViolationWarningDialog(_violations);
       }
     }
+  }
+
+  void _showViolationWarningDialog(int count) {
+    if (_isShowingWarningDialog || !mounted || _isBlocked || _isSubmitted) return;
+    _isShowingWarningDialog = true;
+    HapticFeedback.heavyImpact();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+        contentPadding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF2F2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'PERINGATAN KECURANGAN!',
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFFDC2626),
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF3C7),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFFDE68A)),
+              ),
+              child: Text(
+                'Pelanggaran ke-$count dari $_maxViolations kali toleransi',
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFFB45309),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Aplikasi mendeteksi bahwa Anda meninggalkan layar ujian atau membuka aplikasi lain.\n\n'
+              '⚠️ Kejadian ini telah OTOMATIS TERCATAT dan DILAPORKAN ke Pengawas Ujian secara real-time.\n\n'
+              'Jika Anda melanggar ${_maxViolations - count} kali lagi, perangkat akan DIBLOKIR TOTAL dan ujian dinyatakan GUGUR!',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: const Color(0xFF334155),
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            height: 46,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _isShowingWarningDialog = false;
+                _enterImmersiveMode();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFDC2626),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(
+                'Saya Mengerti & Kembali Mengerjakan',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).then((_) {
+      _isShowingWarningDialog = false;
+    });
   }
 
   void _handleViolationDetected() {
@@ -161,12 +265,13 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
           final status = data['status']?.toString();
           if (status == 'BLOCKED' && !_isBlocked) {
             setState(() => _isBlocked = true);
-          } else if (status == 'ONLINE' && _isBlocked) {
+          } else if ((status == 'ONLINE' || status == 'ACTIVE') && _isBlocked) {
             setState(() {
               _isBlocked = false;
               _violations = 0;
             });
             _enterImmersiveMode();
+            SecurityService.instance.reapply();
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -770,6 +875,8 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         'predikat': evalResult.predikat,
         'subtest_scores': evalResult.subtests.map((k, v) => MapEntry(k, v.toMap())),
         'jawaban': _answers,
+        'violations': _violations,
+        'is_blocked': _isBlocked,
         'submitted_at': FieldValue.serverTimestamp(),
         'auto_submitted': autoSubmit,
       });
