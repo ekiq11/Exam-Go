@@ -456,7 +456,12 @@
         <div id="box-gen-master" class="block">
           <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-3">
             <div>
-              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Sekolah Mitra</label>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider">Sekolah Mitra</label>
+                <button type="button" onclick="openAddPartnerModal()" class="text-[11px] text-examgo-primary hover:text-examgo-primaryHover font-bold flex items-center gap-0.5">
+                  <span>+ Tambah Mitra</span>
+                </button>
+              </div>
               <select id="master-school" onchange="autoSuggestMasterCode()" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none">
                 <option value="MAN 1 Mataram">MAN 1 Mataram</option>
                 <option value="MAN 2 Mataram">MAN 2 Mataram</option>
@@ -477,7 +482,7 @@
               </button>
             </div>
           </div>
-          <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+          <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500" id="quick-suggestions-container">
             <span>Saran Kode Cepat:</span>
             <button onclick="setMasterCode('MAN1MATARAM', 'MAN 1 Mataram', 1200)" class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded border border-emerald-200 font-mono font-semibold">MAN1MATARAM (1.200)</button>
             <button onclick="setMasterCode('MAN2MATARAM', 'MAN 2 Mataram', 1500)" class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded border border-blue-200 font-mono font-semibold">MAN2MATARAM (1.500)</button>
@@ -489,7 +494,12 @@
         <div id="box-gen-batch" class="hidden">
           <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-4">
             <div>
-              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Sekolah / Mitra</label>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider">Sekolah / Mitra</label>
+                <button type="button" onclick="openAddPartnerModal()" class="text-[11px] text-examgo-primary hover:text-examgo-primaryHover font-bold flex items-center gap-0.5">
+                  <span>+ Tambah</span>
+                </button>
+              </div>
               <select id="gen-token-school" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none">
                 <option value="UMUM">Umum (Lynk.id)</option>
                 <option value="MAN 1 Mataram">MAN 1 Mataram</option>
@@ -750,6 +760,46 @@
       <div class="flex space-x-3 mt-6">
         <button onclick="closeEditTokenModal()" class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors">Batal</button>
         <button id="save-token-btn" onclick="saveTokenData()" class="flex-1 px-4 py-3 text-white font-medium rounded-xl transition-colors shadow-sm bg-examgo-primary hover:bg-examgo-primaryHover flex justify-center items-center">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah Sekolah Mitra Baru -->
+  <div id="modal-add-partner" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity opacity-0">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 transform transition-transform scale-95" id="modal-add-partner-box">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-lg font-bold">🏫</div>
+          <h3 class="text-lg font-bold text-gray-900">Tambah Sekolah Mitra</h3>
+        </div>
+        <button onclick="closeAddPartnerModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Nama Sekolah / Mitra <span class="text-red-500">*</span></label>
+          <input type="text" id="add-partner-name" oninput="autoGeneratePartnerCode()" placeholder="Misal: SMAN 1 Mataram" class="w-full px-3.5 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none text-sm font-medium">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Kode Master Voucher <span class="text-red-500">*</span></label>
+          <input type="text" id="add-partner-code" placeholder="Misal: SMAN1MATARAM" class="w-full px-3.5 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none text-sm font-bold font-mono uppercase text-emerald-800">
+          <p class="text-[11px] text-gray-400 mt-1">Kode voucher yang dibagikan ke siswa untuk aktivasi massal.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Estimasi Kuota Perangkat (Siswa)</label>
+          <input type="number" id="add-partner-quota" value="1000" placeholder="1000" class="w-full px-3.5 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none text-sm font-bold text-gray-800">
+        </div>
+      </div>
+
+      <div class="flex space-x-3 mt-6">
+        <button onclick="closeAddPartnerModal()" class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-sm transition-colors">Batal</button>
+        <button id="btn-submit-add-partner" onclick="submitNewPartnerSchool()" class="flex-1 px-4 py-2.5 text-white font-semibold rounded-xl text-sm shadow-sm bg-emerald-600 hover:bg-emerald-700 flex justify-center items-center transition-all">
+          <span>Simpan Mitra</span>
+        </button>
       </div>
     </div>
   </div>
@@ -1668,6 +1718,7 @@
       document.getElementById('fab-delete-all').style.display = 'none';
       _updateNavActive('licenses');
       loadLicenses();
+      loadPartnerSchools();
     }
 
     function _updateNavActive(view) {
@@ -2955,11 +3006,179 @@
       }
     }
 
+    let partnerSchools = [
+      { name: 'MAN 1 Mataram', code: 'MAN1MATARAM', quota: 1200 },
+      { name: 'MAN 2 Mataram', code: 'MAN2MATARAM', quota: 1500 },
+      { name: 'MTsN 1 Mataram', code: 'MTS1MATARAM', quota: 900 }
+    ];
+
+    function loadPartnerSchools() {
+      const creds = getCredentials();
+      if (!creds) return;
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.schools && res.schools.length > 0) {
+            partnerSchools = res.schools;
+            renderPartnerSchoolsUI();
+          }
+        })
+        .withFailureHandler(function(err) {
+          console.warn('Gagal memuat sekolah mitra:', err);
+          renderPartnerSchoolsUI();
+        })
+        .getPartnerSchools(creds.username, creds.password);
+    }
+
+    function renderPartnerSchoolsUI() {
+      const masterSelect = document.getElementById('master-school');
+      const genSelect = document.getElementById('gen-token-school');
+      const filterSelect = document.getElementById('filter-license-school');
+      const suggestionsBox = document.getElementById('quick-suggestions-container');
+
+      const currentMaster = masterSelect ? masterSelect.value : '';
+      const currentGen = genSelect ? genSelect.value : '';
+      const currentFilter = filterSelect ? filterSelect.value : 'all';
+
+      // 1. Master School Dropdown
+      if (masterSelect) {
+        masterSelect.innerHTML = partnerSchools.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+        if (currentMaster && partnerSchools.some(s => s.name === currentMaster)) {
+          masterSelect.value = currentMaster;
+        } else if (partnerSchools.length > 0) {
+          masterSelect.value = partnerSchools[0].name;
+        }
+      }
+
+      // 2. Gen Token School Dropdown
+      if (genSelect) {
+        let genHtml = '<option value="UMUM">Umum (Lynk.id)</option>';
+        genHtml += partnerSchools.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+        genSelect.innerHTML = genHtml;
+        if (currentGen) genSelect.value = currentGen;
+      }
+
+      // 3. Filter School Dropdown
+      if (filterSelect) {
+        let filterHtml = '<option value="all">Semua Sekolah / Mitra</option>';
+        filterHtml += partnerSchools.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+        filterHtml += '<option value="UMUM">Umum (Lynk.id)</option>';
+        filterSelect.innerHTML = filterHtml;
+        if (currentFilter) filterSelect.value = currentFilter;
+      }
+
+      // 4. Quick Suggestions Pills
+      if (suggestionsBox) {
+        let sugHtml = '<span>Saran Kode Cepat:</span>';
+        partnerSchools.forEach((s, idx) => {
+          const colors = [
+            'bg-emerald-50 text-emerald-700 border-emerald-200',
+            'bg-blue-50 text-blue-700 border-blue-200',
+            'bg-purple-50 text-purple-700 border-purple-200',
+            'bg-amber-50 text-amber-700 border-amber-200',
+            'bg-indigo-50 text-indigo-700 border-indigo-200'
+          ];
+          const colorClass = colors[idx % colors.length];
+          const quotaFmt = Number(s.quota).toLocaleString('id-ID');
+          sugHtml += `<button onclick="setMasterCode('${s.code}', '${s.name}', ${s.quota})" class="px-2 py-0.5 ${colorClass} rounded border font-mono font-semibold hover:opacity-80 transition-opacity">${s.code} (${quotaFmt})</button> `;
+        });
+        suggestionsBox.innerHTML = sugHtml;
+      }
+
+      autoSuggestMasterCode();
+    }
+
     function autoSuggestMasterCode() {
-      const sch = document.getElementById('master-school').value;
-      if (sch.includes('MAN 1')) setMasterCode('MAN1MATARAM', 'MAN 1 Mataram', 1200);
-      else if (sch.includes('MAN 2')) setMasterCode('MAN2MATARAM', 'MAN 2 Mataram', 1500);
-      else if (sch.includes('MTs')) setMasterCode('MTS1MATARAM', 'MTsN 1 Mataram', 900);
+      const masterSelect = document.getElementById('master-school');
+      if (!masterSelect) return;
+      const schName = masterSelect.value;
+      const match = partnerSchools.find(s => s.name === schName);
+      if (match) {
+        setMasterCode(match.code, match.name, match.quota);
+      } else if (schName.includes('MAN 1')) {
+        setMasterCode('MAN1MATARAM', 'MAN 1 Mataram', 1200);
+      } else if (schName.includes('MAN 2')) {
+        setMasterCode('MAN2MATARAM', 'MAN 2 Mataram', 1500);
+      } else if (schName.includes('MTs')) {
+        setMasterCode('MTS1MATARAM', 'MTsN 1 Mataram', 900);
+      }
+    }
+
+    function openAddPartnerModal() {
+      document.getElementById('add-partner-name').value = '';
+      document.getElementById('add-partner-code').value = '';
+      document.getElementById('add-partner-quota').value = '1000';
+      _showModal('modal-add-partner', 'modal-add-partner-box');
+      setTimeout(() => document.getElementById('add-partner-name').focus(), 150);
+    }
+
+    function closeAddPartnerModal() {
+      _hideModal('modal-add-partner', 'modal-add-partner-box');
+    }
+
+    function autoGeneratePartnerCode() {
+      const name = document.getElementById('add-partner-name').value;
+      const codeInput = document.getElementById('add-partner-code');
+      codeInput.value = name.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    }
+
+    function submitNewPartnerSchool() {
+      const creds = getCredentials();
+      if (!creds) return;
+
+      const name = document.getElementById('add-partner-name').value.trim();
+      const code = document.getElementById('add-partner-code').value.trim().toUpperCase();
+      const quota = parseInt(document.getElementById('add-partner-quota').value) || 1000;
+      const btn = document.getElementById('btn-submit-add-partner');
+
+      if (!name) {
+        showToast('Nama sekolah mitra wajib diisi', 'error');
+        return;
+      }
+      if (!code) {
+        showToast('Kode voucher sekolah wajib diisi', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<div class="loader inline-block w-4 h-4 mr-2"></div> Menyimpan...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>Simpan Mitra</span>';
+
+          if (res && res.error) {
+            showToast('Gagal: ' + res.error, 'error');
+            return;
+          }
+
+          showToast('Sekolah Mitra "' + name + '" berhasil ditambahkan!', 'success');
+          closeAddPartnerModal();
+
+          const exists = partnerSchools.find(s => s.code === code || s.name.toLowerCase() === name.toLowerCase());
+          if (exists) {
+            exists.name = name;
+            exists.code = code;
+            exists.quota = quota;
+          } else {
+            partnerSchools.push({ name: name, code: code, quota: quota });
+          }
+
+          renderPartnerSchoolsUI();
+
+          const masterSelect = document.getElementById('master-school');
+          if (masterSelect) {
+            masterSelect.value = name;
+            setMasterCode(code, name, quota);
+          }
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>Simpan Mitra</span>';
+          showToast('Error: ' + (err.message || err), 'error');
+        })
+        .addPartnerSchool(creds.username, creds.password, name, code, quota);
     }
 
     function setMasterCode(code, school, quota) {
