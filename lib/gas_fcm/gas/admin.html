@@ -1861,6 +1861,8 @@
       tbody.innerHTML = html;
       updateSelectedTryoutCount();
     }
+
+    function filterTryoutTable() {
       const term = (document.getElementById('search-tryout-input').value || '').toLowerCase();
       if (!allTryoutData) return;
       const filtered = allTryoutData.filter(function(p) {
