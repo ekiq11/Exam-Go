@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Sesi Ujian, Monitoring & Peserta Ujian
+    match /exam_sessions/{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Paket Tryout Nasional & Internal
+    match /paket_tryout/{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Token Lisensi Lynk.id (Guru & Siswa)
+    match /license_tokens/{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Riwayat Kuota & Data Perangkat Siswa/Guru
+    match /devices/{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+

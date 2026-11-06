@@ -34,9 +34,8 @@ class MonitoringService {
       
       final String deviceId = await getDeviceId();
 
-      final docRef = _db
-          .collection('exam_sessions')
-          .doc(examId)
+      final sessionRef = _db.collection('exam_sessions').doc(examId);
+      final docRef = sessionRef
           .collection('students')
           .doc(nis);
 
@@ -49,6 +48,14 @@ class MonitoringService {
         'device_id': deviceId,
         'last_ping': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+
+      // Catat bahwa sesi ini memiliki siswa aktif (hemat kuota, update atomic tanpa re-read)
+      if (status == 'ONLINE') {
+        sessionRef.update({
+          'student_count': FieldValue.increment(1),
+          'last_student_join': FieldValue.serverTimestamp(),
+        }).catchError((_) {});
+      }
     } catch (e) {
       // Abaikan error jaringan saat ujian agar tidak mengganggu siswa
     }
@@ -233,7 +240,7 @@ class MonitoringService {
     } catch (_) {}
   }
 
-  /// Membuat sesi ujian baru dengan TTL 7 hari (expires_at)
+  /// Membuat sesi ujian baru dengan TTL 10 hari (expires_at) dan student_count = 0
   Future<void> createExamSession({
     required String examId,
     required String title,
@@ -241,17 +248,39 @@ class MonitoringService {
   }) async {
     try {
       final expiresAt = Timestamp.fromDate(
-        DateTime.now().add(const Duration(days: 7)),
+        DateTime.now().add(const Duration(days: 10)),
       );
       await _db.collection('exam_sessions').doc(examId).set({
         'title': title,
         'url': url,
         'created_at': FieldValue.serverTimestamp(),
-        // Field ini dibaca oleh Firestore TTL policy untuk auto-delete setelah 7 hari
+        'student_count': 0,
+        // Field ini dibaca oleh Firestore TTL policy untuk auto-delete setelah 10 hari
         'expires_at': expiresAt,
       }, SetOptions(merge: true));
     } catch (e) {
       // Abaikan error
+    }
+  }
+
+  /// Memeriksa dan otomatis menghapus sesi ujian jika umur >= 10 hari dan siswanya 0
+  Future<bool> cleanupIfAbandoned(String examId, DateTime createdAt) async {
+    try {
+      final diff = DateTime.now().difference(createdAt);
+      if (diff.inDays < 10) return false;
+
+      final doc = await _db.collection('exam_sessions').doc(examId).get();
+      if (!doc.exists) return true; // Sudah terhapus
+
+      final data = doc.data();
+      final studentCount = (data?['student_count'] as num?)?.toInt() ?? 0;
+      if (studentCount == 0) {
+        await deleteExamSession(examId);
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
     }
   }
 

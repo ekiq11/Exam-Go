@@ -3,6 +3,8 @@ import 'dart:ui' as ui;
 import 'dart:convert';
 import 'package:examgo/services/qr_payload.dart';
 import 'package:examgo/services/monitoring_service.dart';
+import 'package:examgo/services/license_service.dart';
+import 'package:examgo/view/widgets/premium_token_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -36,6 +38,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   final _repaintKey = GlobalKey();
 
   List<Map<String, String>> _historyList = [];
+  bool _isTeacherPremium = false;
 
   @override
   void initState() {
@@ -46,7 +49,27 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   Future<void> _loadHistory() async {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList('teacher_exam_history') ?? [];
-    final parsed = list.map((item) {
+
+    // Auto-cleanup sesi ujian yang berumur >= 10 hari dan siswanya 0 (hemat kuota)
+    final validList = <String>[];
+    for (final item in list) {
+      final parts = item.split('|');
+      final examId = parts.isNotEmpty ? parts[0] : '';
+      final timestamp = parts.length > 2 ? int.tryParse(parts[2]) ?? 0 : 0;
+      final createdAt = DateTime.fromMillisecondsSinceEpoch(timestamp);
+
+      if (timestamp > 0 && DateTime.now().difference(createdAt).inDays >= 10) {
+        final cleaned = await MonitoringService.instance.cleanupIfAbandoned(examId, createdAt);
+        if (cleaned) continue; // Otomatis terhapus dari daftar karena sudah kadaluarsa & tanpa siswa
+      }
+      validList.add(item);
+    }
+
+    if (validList.length != list.length) {
+      await prefs.setStringList('teacher_exam_history', validList);
+    }
+
+    final parsed = validList.map((item) {
       final parts = item.split('|');
       return {
         'examId':    parts.isNotEmpty ? parts[0] : '',
@@ -56,9 +79,12 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
         'qrData':    parts.length > 4 ? parts[4] : '',
       };
     }).where((element) => element['qrData']!.isNotEmpty).toList();
+
+    final isPrem = await LicenseService.instance.isTeacherPremium();
     if (mounted) {
       setState(() {
         _historyList = parsed;
+        _isTeacherPremium = isPrem;
       });
     }
   }
@@ -72,7 +98,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
 
   // ─── Generate ─────────────────────────────────────────────────
 
-  void _generate() {
+  Future<void> _generate() async {
     final raw = _urlController.text.trim();
     if (raw.isEmpty) {
       setState(() => _errorText = 'URL tidak boleh kosong');
@@ -105,7 +131,14 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
         _errorText = null;
         _generated = true;
       });
-      _showSnack('Menggunakan kembali sesi ujian yang sudah ada');
+      _showSnack('Menggunakan kembali sesi ujian yang sudah ada (Kuota tidak berkurang)');
+      return;
+    }
+
+    // Batasi pembuatan token ujian guru: Akun Standar maksimal 5 token ujian aktif (hemat kuota cloud)
+    final isPremium = await LicenseService.instance.isTeacherPremium();
+    if (!isPremium && _historyList.length >= 5) {
+      if (mounted) _showTokenLimitDialog();
       return;
     }
 
@@ -124,7 +157,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
         url: url,
       );
       
-      _saveCreatedExamLocally(examId, displayTitle, url, signed);
+      await _saveCreatedExamLocally(examId, displayTitle, url, signed);
     } catch (_) {}
 
     setState(() {
@@ -137,18 +170,133 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
         _lastExamId = dataJson['nonce'] as String;
       } catch (_) {}
     });
+
+    final remaining = (5 - _historyList.length).clamp(0, 5);
+    _showSnack(
+      isPremium
+          ? 'QR Ujian baru berhasil dibuat (Guru Premium Unlimited)'
+          : 'QR Ujian baru dibuat. Sisa $remaining kuota aktif.',
+    );
   }
 
   Future<void> _saveCreatedExamLocally(String examId, String title, String url, String qrData) async {
+    final isPremium = await LicenseService.instance.isTeacherPremium();
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList('teacher_exam_history') ?? [];
     // Simpan dalam format examId|title|timestamp|url|qrData
     final entry = '$examId|$title|${DateTime.now().millisecondsSinceEpoch}|$url|$qrData';
     list.insert(0, entry);
-    // Batasi 20 history terakhir untuk QR
-    if (list.length > 20) list.removeLast();
+    // Batasi maksimal 5 history ujian aktif guru (gratis), atau 50 (premium)
+    if (!isPremium && list.length > 5) {
+      list.removeLast();
+    } else if (list.length > 50) {
+      list.removeLast();
+    }
     await prefs.setStringList('teacher_exam_history', list);
     _loadHistory();
+  }
+
+  void _showTokenLimitDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+        contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF3C7),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.workspace_premium_rounded,
+                color: Color(0xFFD97706),
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Batas 5 QR Ujian Aktif',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Akun Guru Standar dibatasi maksimal memiliki 5 token QR ujian aktif guna efisiensi cloud.\n\nBeralih ke Guru Premium untuk membuat token ujian tak terbatas dan membuka fitur Buat Soal DOCX/LaTeX.',
+          style: GoogleFonts.poppins(
+            fontSize: 12.5,
+            color: const Color(0xFF475569),
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Tutup',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF64748B),
+              ),
+            ),
+          ),
+          OutlinedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              PremiumTokenDialog.show(
+                context,
+                userType: 'TEACHER_PREMIUM',
+                onActivated: () => setState(() => _loadHistory()),
+              );
+            },
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFFCBD5E1)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(
+              'Aktivasi Kode',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF334155),
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              LicenseService.instance.openLynkIdPage(userType: 'TEACHER_PREMIUM');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1B5E20),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(
+              'Upgrade 👑',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // ─── Save / Share ─────────────────────────────────────────────
@@ -1141,7 +1289,9 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
             ),
             SizedBox(width: context.rs(8)),
             Text(
-              'QR Code yang Dibuat',
+              _isTeacherPremium
+                  ? 'QR Code yang Dibuat (${_historyList.length})'
+                  : 'QR Code yang Dibuat (Sisa ${(5 - _historyList.length).clamp(0, 5)} dari 5 Kuota)',
               style: GoogleFonts.poppins(
                 fontSize: context.rs(15),
                 fontWeight: FontWeight.w700,
@@ -1149,6 +1299,29 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
             ),
           ],
         ),
+        if (!_isTeacherPremium && _historyList.length >= 5) ...[
+          SizedBox(height: context.rs(8)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF2F2),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFFCA5A5)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, size: 16, color: Color(0xFFDC2626)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Batas 5 QR Ujian akun standar tercapai. Upgrade ke Guru Premium untuk membuat lebih banyak.',
+                    style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF991B1B)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         SizedBox(height: context.rs(12)),
         ListView.separated(
           shrinkWrap: true,

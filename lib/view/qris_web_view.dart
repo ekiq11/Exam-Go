@@ -630,7 +630,6 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     }
 
     _wvc = WebViewController.fromPlatformCreationParams(params)
-      ..setUserAgent('ExamGo-Secure-Browser/2.1.0')
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.white)
       ..setNavigationDelegate(
@@ -662,6 +661,18 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
             }
             final reqHost = uri?.host ?? '';
             if (reqHost.isEmpty) return NavigationDecision.navigate;
+            
+            // Allow Google related domains if the form is from Google
+            final isGoogleForm = _allowedHost.contains('docs.google.com') || _allowedHost.contains('forms.gle');
+            if (isGoogleForm) {
+              if (reqHost.endsWith('.google.com') ||
+                  reqHost == 'google.com' ||
+                  reqHost.endsWith('.googleusercontent.com') ||
+                  reqHost == 'googleusercontent.com') {
+                return NavigationDecision.navigate;
+              }
+            }
+
             if (reqHost == _allowedHost || reqHost.endsWith('.$_allowedHost')) {
               return NavigationDecision.navigate;
             }
@@ -752,7 +763,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       final cookieManager = WebViewCookieManager();
       final platformCookie = cookieManager.platform;
       if (platformCookie is AndroidWebViewCookieManager) {
-        platformCookie.setAcceptThirdPartyCookies(androidController, true);
+        await platformCookie.setAcceptThirdPartyCookies(androidController, true);
       }
 
       // Nonaktifkan tawaran translate dari Android WebView dengan mengirimkan

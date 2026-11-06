@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:examgo/constant/app_config.dart';
@@ -9,6 +10,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ─── Konstanta Warna & Style ──────────────────────────────────────────────────
@@ -71,7 +74,27 @@ class _TeacherMonitoringListScreenState extends State<TeacherMonitoringListScree
   Future<void> _loadHistory() async {
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList('teacher_exam_history') ?? [];
-    final parsed = list.map((item) {
+
+    // Auto-cleanup sesi ujian yang berumur >= 10 hari dan siswanya 0
+    final validList = <String>[];
+    for (final item in list) {
+      final parts = item.split('|');
+      final examId = parts.isNotEmpty ? parts[0] : '';
+      final timestamp = parts.length > 2 ? int.tryParse(parts[2]) ?? 0 : 0;
+      final createdAt = DateTime.fromMillisecondsSinceEpoch(timestamp);
+
+      if (timestamp > 0 && DateTime.now().difference(createdAt).inDays >= 10) {
+        final cleaned = await MonitoringService.instance.cleanupIfAbandoned(examId, createdAt);
+        if (cleaned) continue;
+      }
+      validList.add(item);
+    }
+
+    if (validList.length != list.length) {
+      await prefs.setStringList('teacher_exam_history', validList);
+    }
+
+    final parsed = validList.map((item) {
       final parts = item.split('|');
       return {
         'examId':    parts.isNotEmpty     ? parts[0] : '',
@@ -460,7 +483,9 @@ class TeacherMonitoringDetailScreen extends StatefulWidget {
 class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailScreen>
     with SingleTickerProviderStateMixin {
   String _searchQuery = '';
+  String _scoreSearchQuery = '';
   String _selectedFilter = 'Semua';
+  bool _isExporting = false;
   late TabController _tabController;
 
   @override
@@ -691,89 +716,84 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
             ],
             body: Column(
               children: [
-                // ── Dashboard Metrik ──────────────────────────
+                // ── Tab Bar Navigasi: Aktivitas Live vs Rekap Nilai ────
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: Column(
-                    children: [
-                      _buildTopMetricRow(
-                        activeCount, blockedCount, finishedCount, offlineCount, docs.length,
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                  child: Container(
+                    height: 44,
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
+                      ],
+                    ),
+                    child: TabBar(
+                      controller: _tabController,
+                      indicator: BoxDecoration(
+                        color: _kGreen,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(color: _kGreen.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 2)),
+                        ],
                       ),
-                      const SizedBox(height: 10),
-                      _buildBottomMetricRow(violationTotal, lowBatteryCount, docs.length),
-                    ],
-                  ),
-                ),
-
-                // ── Search & Filter ───────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                  child: Column(
-                    children: [
-                      // Search
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
-                          ],
-                        ),
-                        child: TextField(
-                          onChanged: (val) => setState(() => _searchQuery = val),
-                          decoration: InputDecoration(
-                            hintText: 'Cari nama atau NIS siswa...',
-                            hintStyle: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade400),
-                            prefixIcon: Icon(Icons.search_rounded, color: Colors.grey.shade400),
-                            suffixIcon: _searchQuery.isNotEmpty
-                                ? IconButton(
-                                    icon: Icon(Icons.clear_rounded, color: Colors.grey.shade400),
-                                    onPressed: () => setState(() => _searchQuery = ''),
-                                  )
-                                : null,
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide.none,
-                            ),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      dividerColor: Colors.transparent,
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.grey.shade600,
+                      labelStyle: GoogleFonts.poppins(fontSize: 12.5, fontWeight: FontWeight.w600),
+                      unselectedLabelStyle: GoogleFonts.poppins(fontSize: 12.5, fontWeight: FontWeight.w500),
+                      tabs: const [
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.sensors_rounded, size: 16),
+                              SizedBox(width: 6),
+                              Text('Aktivitas Live'),
+                            ],
                           ),
-                          style: GoogleFonts.poppins(fontSize: 13),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      // Filter Chips
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            for (final f in ['Semua', 'Aktif', 'Melanggar', 'Selesai', 'Offline'])
-                              _buildFilterChip(f),
-                          ],
+                        Tab(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.leaderboard_rounded, size: 16),
+                              SizedBox(width: 6),
+                              Text('Rekap Nilai'),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 
-                const SizedBox(height: 8),
-
-                // ── List Siswa ─────────────────────────────────
+                // ── Konten Tab ─────────────────────────────────
                 Expanded(
-                  child: snapshot.connectionState == ConnectionState.waiting
-                      ? const Center(child: CircularProgressIndicator(color: _kGreenL))
-                      : snapshot.hasError
-                          ? Center(child: Text('Error: ${snapshot.error}'))
-                          : filteredStudents.isEmpty
-                              ? _buildEmptyState()
-                              : ListView.builder(
-                                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                                  physics: const BouncingScrollPhysics(),
-                                  itemCount: filteredStudents.length,
-                                  itemBuilder: (context, index) =>
-                                      _buildStudentCard(filteredStudents[index]),
-                                ),
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      // Tab 1: Aktivitas Live
+                      _buildLiveTab(
+                        activeCount: activeCount,
+                        blockedCount: blockedCount,
+                        finishedCount: finishedCount,
+                        offlineCount: offlineCount,
+                        violationTotal: violationTotal,
+                        lowBatteryCount: lowBatteryCount,
+                        totalStudents: docs.length,
+                        filteredStudents: filteredStudents,
+                        isLoading: snapshot.connectionState == ConnectionState.waiting,
+                        hasError: snapshot.hasError,
+                        errorMessage: snapshot.error?.toString(),
+                      ),
+
+                      // Tab 2: Rekap Nilai Siswa
+                      _buildScoreRekapTab(),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -782,6 +802,569 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
       ),
       ),
     );
+  }
+
+  Widget _buildLiveTab({
+    required int activeCount,
+    required int blockedCount,
+    required int finishedCount,
+    required int offlineCount,
+    required int violationTotal,
+    required int lowBatteryCount,
+    required int totalStudents,
+    required List<Map<String, dynamic>> filteredStudents,
+    required bool isLoading,
+    required bool hasError,
+    required String? errorMessage,
+  }) {
+    return Column(
+      children: [
+        // ── Dashboard Metrik ──────────────────────────
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+          child: Column(
+            children: [
+              _buildTopMetricRow(
+                activeCount, blockedCount, finishedCount, offlineCount, totalStudents,
+              ),
+              const SizedBox(height: 10),
+              _buildBottomMetricRow(violationTotal, lowBatteryCount, totalStudents),
+            ],
+          ),
+        ),
+
+        // ── Search & Filter ───────────────────────────
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+          child: Column(
+            children: [
+              // Search
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
+                  ],
+                ),
+                child: TextField(
+                  onChanged: (val) => setState(() => _searchQuery = val),
+                  decoration: InputDecoration(
+                    hintText: 'Cari nama atau NIS siswa...',
+                    hintStyle: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade400),
+                    prefixIcon: Icon(Icons.search_rounded, color: Colors.grey.shade400),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(Icons.clear_rounded, color: Colors.grey.shade400),
+                            onPressed: () => setState(() => _searchQuery = ''),
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  style: GoogleFonts.poppins(fontSize: 13),
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Filter Chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final f in ['Semua', 'Aktif', 'Melanggar', 'Selesai', 'Offline'])
+                      _buildFilterChip(f),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        // ── List Siswa ─────────────────────────────────
+        Expanded(
+          child: isLoading
+              ? const Center(child: CircularProgressIndicator(color: _kGreenL))
+              : hasError
+                  ? Center(child: Text('Error: $errorMessage'))
+                  : filteredStudents.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: filteredStudents.length,
+                          itemBuilder: (context, index) =>
+                              _buildStudentCard(filteredStudents[index]),
+                        ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildScoreRekapTab() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('jawaban_tryout')
+          .where('token', isEqualTo: widget.examId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: _kGreenL));
+        }
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(
+                'Gagal memuat data nilai: ${snapshot.error}',
+                style: GoogleFonts.poppins(fontSize: 13, color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
+        final docs = snapshot.data?.docs ?? [];
+        final List<Map<String, dynamic>> allScores = docs.map((d) {
+          final data = d.data() as Map<String, dynamic>;
+          final name = data['nama_peserta']?.toString() ?? 'Anonim';
+          final nis = data['nis']?.toString() ?? '-';
+          final skor = (data['skor_akhir'] as num?)?.toInt() ?? 0;
+          final benar = (data['jumlah_benar'] as num?)?.toInt() ?? 0;
+          final salah = (data['jumlah_salah'] as num?)?.toInt() ?? 0;
+          final totalSoal = (data['total_soal'] as num?)?.toInt() ?? 0;
+          final kategori = data['kategori']?.toString() ?? 'umum';
+          final subtestScores = (data['subtest_scores'] as Map<String, dynamic>?) ?? {};
+          final submittedAt = data['submitted_at'] as Timestamp?;
+
+          return {
+            'name': name,
+            'nis': nis,
+            'skor': skor,
+            'benar': benar,
+            'salah': salah,
+            'totalSoal': totalSoal,
+            'kategori': kategori,
+            'subtestScores': subtestScores,
+            'submittedAt': submittedAt,
+          };
+        }).toList();
+
+        // Urutkan nilai tertinggi ke terendah
+        allScores.sort((a, b) => (b['skor'] as int).compareTo(a['skor'] as int));
+
+        // Filter pencarian
+        final filtered = allScores.where((s) {
+          if (_scoreSearchQuery.trim().isEmpty) return true;
+          final q = _scoreSearchQuery.toLowerCase();
+          final nameMatch = (s['name'] as String).toLowerCase().contains(q);
+          final nisMatch = (s['nis'] as String).toLowerCase().contains(q);
+          return nameMatch || nisMatch;
+        }).toList();
+
+        // Hitung statistik nilai
+        final totalSubmissions = allScores.length;
+        final avgScore = totalSubmissions > 0
+            ? (allScores.fold<int>(0, (total, s) => total + (s['skor'] as int)) / totalSubmissions).round()
+            : 0;
+        final maxScore = totalSubmissions > 0 ? (allScores.first['skor'] as int) : 0;
+        final minScore = totalSubmissions > 0 ? (allScores.last['skor'] as int) : 0;
+
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          physics: const BouncingScrollPhysics(),
+          children: [
+            // ── Kartu Ringkasan & Tombol Ekspor CSV ────────────────
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(color: _kGreen.withValues(alpha: 0.25), blurRadius: 12, offset: const Offset(0, 4)),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Rekapitulasi Nilai Siswa',
+                              style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                            Text(
+                              '$totalSubmissions Siswa Telah Mengumpulkan',
+                              style: GoogleFonts.poppins(fontSize: 11, color: Colors.white70),
+                            ),
+                          ],
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: _isExporting ? null : () => _exportToCsv(allScores),
+                        icon: _isExporting
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: _kGreen),
+                              )
+                            : const Icon(Icons.file_download_outlined, size: 16, color: _kGreen),
+                        label: Text(
+                          _isExporting ? 'Mengekspor...' : 'Ekspor CSV',
+                          style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.bold, color: _kGreen),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      _buildScoreStatTile('Rata-Rata', '$avgScore', Icons.analytics_outlined),
+                      const SizedBox(width: 8),
+                      _buildScoreStatTile('Tertinggi', '$maxScore', Icons.arrow_upward_rounded),
+                      const SizedBox(width: 8),
+                      _buildScoreStatTile('Terendah', '$minScore', Icons.arrow_downward_rounded),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // ── Search Input ─────────────────────────────────────
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
+                ],
+              ),
+              child: TextField(
+                onChanged: (val) => setState(() => _scoreSearchQuery = val),
+                decoration: InputDecoration(
+                  hintText: 'Cari nama atau NIS siswa di rekap nilai...',
+                  hintStyle: GoogleFonts.poppins(fontSize: 13, color: Colors.grey.shade400),
+                  prefixIcon: Icon(Icons.search_rounded, color: Colors.grey.shade400),
+                  suffixIcon: _scoreSearchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.clear_rounded, color: Colors.grey.shade400),
+                          onPressed: () => setState(() => _scoreSearchQuery = ''),
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                ),
+                style: GoogleFonts.poppins(fontSize: 13),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // ── Leaderboard List ──────────────────────────────────
+            if (filtered.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 40),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.assignment_turned_in_outlined, size: 54, color: Colors.grey.shade300),
+                      const SizedBox(height: 10),
+                      Text(
+                        allScores.isEmpty
+                            ? 'Belum ada siswa yang mengumpulkan ujian'
+                            : 'Tidak ada siswa yang sesuai pencarian',
+                        style: GoogleFonts.poppins(fontSize: 13.5, fontWeight: FontWeight.w600, color: Colors.grey.shade600),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        allScores.isEmpty
+                            ? 'Jawaban yang disubmit oleh siswa akan otomatis muncul di sini secara real-time.'
+                            : 'Coba periksa kembali ejaan nama atau NIS.',
+                        style: GoogleFonts.poppins(fontSize: 11.5, color: Colors.grey.shade400),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              ...List.generate(filtered.length, (idx) {
+                final s = filtered[idx];
+                final rank = allScores.indexOf(s) + 1;
+                return _buildScoreLeaderboardCard(s, rank);
+              }),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildScoreStatTile(String label, String value, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: Colors.white70),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: GoogleFonts.poppins(fontSize: 9.5, color: Colors.white70)),
+                  Text(value, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white, height: 1.1)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScoreLeaderboardCard(Map<String, dynamic> s, int rank) {
+    final name = s['name'] as String;
+    final nis = s['nis'] as String;
+    final skor = s['skor'] as int;
+    final benar = s['benar'] as int;
+    final salah = s['salah'] as int;
+    final total = s['totalSoal'] as int;
+    final kosong = (total - benar - salah).clamp(0, total);
+    final subtestScores = s['subtestScores'] as Map<String, dynamic>;
+
+    Color rankColor = const Color(0xFF64748B);
+    Color rankBg = const Color(0xFFF1F5F9);
+    String rankEmoji = '#$rank';
+
+    if (rank == 1) {
+      rankColor = const Color(0xFFB45309);
+      rankBg = const Color(0xFFFEF3C7);
+      rankEmoji = '🥇 #1';
+    } else if (rank == 2) {
+      rankColor = const Color(0xFF475569);
+      rankBg = const Color(0xFFE2E8F0);
+      rankEmoji = '🥈 #2';
+    } else if (rank == 3) {
+      rankColor = const Color(0xFF9A3412);
+      rankBg = const Color(0xFFFFEDD5);
+      rankEmoji = '🥉 #3';
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          leading: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: rankBg,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              rankEmoji,
+              style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.bold, color: rankColor),
+            ),
+          ),
+          title: Text(
+            name,
+            style: GoogleFonts.poppins(fontSize: 13.5, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A)),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Row(
+            children: [
+              Text('NIS: $nis', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+              const SizedBox(width: 8),
+              Text('•', style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey.shade400)),
+              const SizedBox(width: 8),
+              Text(
+                'B: $benar | S: $salah | K: $kosong',
+                style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF475569), fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFDCFCE7),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFF86EFAC)),
+            ),
+            child: Text(
+              '$skor',
+              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xFF15803D)),
+            ),
+          ),
+          children: [
+            if (subtestScores.isNotEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Divider(color: Color(0xFFF1F5F9)),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Rincian Skor Per-Subtest:',
+                      style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.bold, color: const Color(0xFF334155)),
+                    ),
+                    const SizedBox(height: 8),
+                    ...subtestScores.values.map((v) {
+                      final j = v['judul']?.toString() ?? 'Subtest';
+                      final b = v['benar'] ?? 0;
+                      final t = v['total'] ?? 0;
+                      final sVal = v['skor'] ?? 0;
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(j, style: GoogleFonts.poppins(fontSize: 11.5, color: const Color(0xFF1E293B))),
+                            ),
+                            Text('$b/$t Benar', style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF64748B))),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '$sVal',
+                                style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF15803D)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _exportToCsv(List<Map<String, dynamic>> scores) async {
+    if (scores.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tidak ada data nilai siswa untuk diekspor.')),
+      );
+      return;
+    }
+
+    setState(() => _isExporting = true);
+    try {
+      final buffer = StringBuffer();
+      // Tambahkan UTF-8 BOM (\uFEFF) agar Microsoft Excel membaca file CSV dengan karakter rapi tanpa rusak encoding
+      buffer.write('\uFEFF');
+      
+      // Header CSV
+      buffer.writeln('Peringkat,Nama Siswa,NIS,Kategori,Skor Akhir,Jumlah Benar,Jumlah Salah,Jumlah Kosong,Total Soal,Waktu Selesai');
+
+      for (int i = 0; i < scores.length; i++) {
+        final s = scores[i];
+        final rank = i + 1;
+        final name = '"${(s['name'] as String).replaceAll('"', '""')}"';
+        final nis = '"${s['nis']}"';
+        final kategori = s['kategori'];
+        final skor = s['skor'];
+        final benar = s['benar'];
+        final salah = s['salah'];
+        final total = s['totalSoal'] as int;
+        final kosong = (total - (benar as int) - (salah as int)).clamp(0, total);
+
+        String timeStr = '-';
+        final ts = s['submittedAt'] as Timestamp?;
+        if (ts != null) {
+          final d = ts.toDate();
+          timeStr = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+        }
+
+        buffer.writeln('$rank,$name,$nis,$kategori,$skor,$benar,$salah,$kosong,$total,"$timeStr"');
+      }
+
+      final tempDir = await getTemporaryDirectory();
+      final sanitizedTitle = widget.title.replaceAll(RegExp(r'[^\w\s\-]'), '_').trim();
+      final filePath = '${tempDir.path}/Rekap_Nilai_${sanitizedTitle}_${widget.examId}.csv';
+      final file = File(filePath);
+      await file.writeAsString(buffer.toString(), encoding: utf8);
+
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path, mimeType: 'text/csv')],
+          subject: 'Rekap Nilai ExamGO - ${widget.title}',
+          text: 'Rekap Nilai Siswa Ujian "${widget.title}" (Token: ${widget.examId}).',
+        ),
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Berkas CSV berhasil dibuat dan siap dibagikan.'),
+            backgroundColor: _kGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengekspor CSV: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
   }
 
   Widget _buildTopMetricRow(int active, int blocked, int finished, int offline, int total) {

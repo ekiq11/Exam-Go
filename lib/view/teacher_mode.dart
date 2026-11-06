@@ -3,8 +3,11 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/constant/app_config.dart';
+import 'package:examgo/services/license_service.dart';
 import 'package:examgo/services/qr_generator.dart';
+import 'package:examgo/view/widgets/premium_token_dialog.dart';
 import 'package:examgo/view/teacher_monitoring_screen.dart';
+import 'package:examgo/view/teacher/teacher_exam_creator_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -82,11 +85,12 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
   Future<void> _checkBiometricAndPrompt() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final useBiometric = prefs.getBool('teacher_use_biometric') ?? true; // default true
-      
+      final useBiometric =
+          prefs.getBool('teacher_use_biometric') ?? true; // default true
+
       final canCheck = await _localAuth.canCheckBiometrics;
       final isSupported = await _localAuth.isDeviceSupported();
-      
+
       if (canCheck && isSupported && useBiometric) {
         setState(() => _biometricAvailable = true);
         // Langsung picu biometrik saat layar dibuka
@@ -104,10 +108,12 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
   Future<void> _authenticateWithBiometric() async {
     try {
       final authenticated = await _localAuth.authenticate(
-        localizedReason: 'Verifikasi sidik jari / Face ID untuk masuk Mode Guru',
+        localizedReason:
+            'Verifikasi sidik jari / Face ID untuk masuk Mode Guru',
         options: const AuthenticationOptions(
-          biometricOnly: false, // Izinkan fallback ke PIN device jika biometrik gagal
-          stickyAuth: true,     // Jangan batalkan saat app ke background
+          biometricOnly:
+              false, // Izinkan fallback ke PIN device jika biometrik gagal
+          stickyAuth: true, // Jangan batalkan saat app ke background
           useErrorDialogs: true,
         ),
       );
@@ -195,19 +201,23 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
     try {
       // Minta permission notifikasi (Android 13+ wajib, iOS selalu minta)
       await FirebaseMessaging.instance.requestPermission(
-        alert: true, badge: true, sound: true,
+        alert: true,
+        badge: true,
+        sound: true,
       );
       final token = await FirebaseMessaging.instance.getToken();
       if (token == null) return;
-      await http.post(
-        Uri.parse(AppConfig.gasUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'apiKey': AppConfig.gasApiKey,
-          'action': 'registerToken',
-          'token':  token,
-        }),
-      ).timeout(const Duration(seconds: 10));
+      await http
+          .post(
+            Uri.parse(AppConfig.gasUrl),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'apiKey': AppConfig.gasApiKey,
+              'action': 'registerToken',
+              'token': token,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
     } catch (_) {
       // Abaikan — jangan blokir login guru jika GAS gagal
     }
@@ -293,8 +303,8 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
                       color: _hasError
                           ? Colors.red
                           : filled
-                              ? AppColors.primaryGreen
-                              : Colors.grey.shade300,
+                          ? AppColors.primaryGreen
+                          : Colors.grey.shade300,
                     ),
                   );
                 }),
@@ -305,10 +315,7 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
                 const SizedBox(height: 12),
                 Text(
                   _errorMsg,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.red,
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.red),
                 ),
               ],
 
@@ -330,7 +337,9 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
                           color: AppColors.primaryGreen.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppColors.primaryGreen.withValues(alpha: 0.3),
+                            color: AppColors.primaryGreen.withValues(
+                              alpha: 0.3,
+                            ),
                           ),
                         ),
                         child: const Icon(
@@ -373,7 +382,9 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: row.map((d) {
             // Di mode verify, slot kosong di bawah ganti jadi ikon biometrik (jika tersedia)
-            if (d.isEmpty && widget.mode == _PinMode.verify && _biometricAvailable) {
+            if (d.isEmpty &&
+                widget.mode == _PinMode.verify &&
+                _biometricAvailable) {
               return GestureDetector(
                 onTap: _authenticateWithBiometric,
                 child: Container(
@@ -388,8 +399,11 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
                     ),
                   ),
                   child: const Center(
-                    child: Icon(Icons.fingerprint_rounded,
-                        color: AppColors.primaryGreen, size: 28),
+                    child: Icon(
+                      Icons.fingerprint_rounded,
+                      color: AppColors.primaryGreen,
+                      size: 28,
+                    ),
                   ),
                 ),
               );
@@ -433,8 +447,284 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
 // ─────────────────────────────────────────────────────────────
 // Teacher Dashboard Screen
 // ─────────────────────────────────────────────────────────────
-class TeacherDashboardScreen extends StatelessWidget {
+class TeacherDashboardScreen extends StatefulWidget {
   const TeacherDashboardScreen({super.key});
+
+  @override
+  State<TeacherDashboardScreen> createState() => _TeacherDashboardScreenState();
+}
+
+class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
+  bool _isTeacherPremium = false;
+  bool _isLoadingLicense = true;
+  int _activeExamCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLicenseStatus();
+  }
+
+  Future<void> _checkLicenseStatus() async {
+    final premium = await LicenseService.instance.isTeacherPremium();
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList('teacher_exam_history') ?? [];
+    if (mounted) {
+      setState(() {
+        _isTeacherPremium = premium;
+        _activeExamCount = list.length;
+        _isLoadingLicense = false;
+      });
+    }
+  }
+
+  Widget _buildLicenseStatusBanner() {
+    if (_isLoadingLicense) return const SizedBox.shrink();
+
+    if (_isTeacherPremium) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF064E3B), Color(0xFF047857)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF064E3B).withValues(alpha: 0.25),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.25),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.workspace_premium_rounded,
+                        color: Color(0xFFFDE047),
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'GURU PREMIUM LIFETIME',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFDE047).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'UNLIMITED',
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFFFDE047),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Akses penuh aktif: Buat QR Ujian URL tanpa batas kuota, upload soal DOCX, rumus matematika LaTeX & pantau ujian nasional.',
+              style: GoogleFonts.poppins(
+                fontSize: 11.5,
+                color: Colors.white.withValues(alpha: 0.9),
+                height: 1.45,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final remaining = (5 - _activeExamCount).clamp(0, 5);
+    final isLimitReached = remaining <= 0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isLimitReached ? const Color(0xFFFCA5A5) : const Color(0xFFE2E8F0),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFCBD5E1)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.shield_outlined,
+                      size: 13,
+                      color: Color(0xFF475569),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      'AKUN STANDAR',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF334155),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.qr_code_2_rounded,
+                    size: 15,
+                    color: isLimitReached ? const Color(0xFFDC2626) : const Color(0xFF475569),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    isLimitReached
+                        ? '0 / 5 Kuota Habis'
+                        : 'Sisa $remaining dari 5 URL Ujian',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: isLimitReached ? const Color(0xFFDC2626) : const Color(0xFF1E293B),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: (remaining / 5).clamp(0.0, 1.0),
+              minHeight: 6,
+              backgroundColor: const Color(0xFFF1F5F9),
+              valueColor: AlwaysStoppedAnimation(
+                isLimitReached ? const Color(0xFFDC2626) : AppColors.primaryGreen,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            isLimitReached
+                ? 'Batas maksimal 5 URL ujian aktif telah tercapai (0 tersisa). Hapus sesi lama di Pemantauan atau beralih ke Guru Premium untuk membuat ujian tanpa batas.'
+                : 'Tersisa $remaining kuota pembuatan URL ujian aktif. Setiap membuat link/QR baru, kuota akan berkurang dari 5 hingga 0.',
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              color: isLimitReached ? const Color(0xFFB91C1C) : const Color(0xFF64748B),
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => LicenseService.instance.openLynkIdPage(
+                    userType: 'TEACHER_PREMIUM',
+                  ),
+                  icon: const Icon(Icons.workspace_premium_rounded, size: 16),
+                  label: Text(
+                    'Upgrade Premium 👑',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1B5E20),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              OutlinedButton.icon(
+                onPressed: () => _showTeacherLicenseDialog(
+                  context,
+                  onActivated: _checkLicenseStatus,
+                ),
+                icon: const Icon(Icons.vpn_key_outlined, size: 15),
+                label: Text(
+                  'Aktivasi',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF334155),
+                  side: const BorderSide(color: Color(0xFFCBD5E1)),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -453,7 +743,7 @@ class TeacherDashboardScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -472,7 +762,11 @@ class TeacherDashboardScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.school_rounded, color: Colors.white, size: 36),
+                  const Icon(
+                    Icons.school_rounded,
+                    color: Colors.white,
+                    size: 36,
+                  ),
                   const SizedBox(width: 16),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -498,7 +792,10 @@ class TeacherDashboardScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
+            _buildLicenseStatusBanner(),
+
+            const SizedBox(height: 20),
             Text(
               'Menu',
               style: GoogleFonts.poppins(
@@ -511,14 +808,52 @@ class TeacherDashboardScreen extends StatelessWidget {
 
             // Menu tiles
             _MenuTile(
+              icon: Icons.post_add_rounded,
+              color: const Color(0xFF1B5E20),
+              title: 'Buat & Upload Soal',
+              subtitle: _isTeacherPremium
+                  ? 'Upload DOCX / Google Form & atur TKA/SNBT/SKD'
+                  : 'Upload DOCX / Google Form (Perlu Lisensi Premium)',
+              trailing: _isTeacherPremium
+                  ? null
+                  : const Icon(
+                      Icons.lock_rounded,
+                      size: 20,
+                      color: Color(0xFFD97706),
+                    ),
+              onTap: () async {
+                final isPremium = await LicenseService.instance
+                    .isTeacherPremium();
+                if (!context.mounted) return;
+                if (!isPremium) {
+                  _showTeacherLicenseDialog(
+                    context,
+                    onActivated: _checkLicenseStatus,
+                  );
+                  return;
+                }
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const TeacherExamCreatorScreen(),
+                  ),
+                );
+                if (mounted) _checkLicenseStatus();
+              },
+            ),
+            const SizedBox(height: 10),
+            _MenuTile(
               icon: Icons.qr_code_2_rounded,
               color: AppColors.primaryGreen,
-              title: 'Buat QR Ujian',
-              subtitle: 'Generate QR Code untuk peserta',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const QRGeneratorScreen()),
-              ),
+              title: 'Buat QR Ujian URL',
+              subtitle: 'Generate QR Code untuk link ujian web eksternal',
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const QRGeneratorScreen()),
+                );
+                if (mounted) _checkLicenseStatus();
+              },
             ),
             const SizedBox(height: 10),
             _MenuTile(
@@ -526,10 +861,15 @@ class TeacherDashboardScreen extends StatelessWidget {
               color: Colors.orange,
               title: 'Monitoring Ujian',
               subtitle: 'Pantau aktivitas peserta ujian',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const TeacherMonitoringListScreen()),
-              ),
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const TeacherMonitoringListScreen(),
+                  ),
+                );
+                if (mounted) _checkLicenseStatus();
+              },
             ),
             const SizedBox(height: 10),
             _MenuTile(
@@ -539,7 +879,9 @@ class TeacherDashboardScreen extends StatelessWidget {
               subtitle: 'Aktifkan sidik jari / Face ID untuk login',
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const BiometricSettingsScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const BiometricSettingsScreen(),
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -564,12 +906,33 @@ class TeacherDashboardScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _showTeacherLicenseDialog(
+    BuildContext context, {
+    VoidCallback? onActivated,
+  }) async {
+    final activated = await PremiumTokenDialog.show(
+      context,
+      userType: 'TEACHER_PREMIUM',
+      onActivated: onActivated,
+    );
+    if (activated == true && mounted) {
+      _checkLicenseStatus();
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const TeacherExamCreatorScreen()),
+      );
+    }
+  }
+
   Future<void> _resetPin(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Reset PIN?', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Reset PIN?',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
         content: Text(
           'PIN akan dihapus. Anda harus membuat PIN baru.',
           style: GoogleFonts.poppins(fontSize: 13),
@@ -582,7 +945,10 @@ class TeacherDashboardScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('Reset', style: GoogleFonts.poppins(color: Colors.white)),
+            child: Text(
+              'Reset',
+              style: GoogleFonts.poppins(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -644,7 +1010,10 @@ class TeacherDashboardScreen extends StatelessWidget {
               const SizedBox(height: 8),
               // Version Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -723,6 +1092,7 @@ class _MenuTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final Widget? trailing;
 
   const _MenuTile({
     required this.icon,
@@ -730,6 +1100,7 @@ class _MenuTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.trailing,
   });
 
   @override
@@ -774,7 +1145,8 @@ class _MenuTile extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
+              trailing ??
+                  Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
             ],
           ),
         ),
@@ -790,7 +1162,8 @@ class BiometricSettingsScreen extends StatefulWidget {
   const BiometricSettingsScreen({super.key});
 
   @override
-  State<BiometricSettingsScreen> createState() => _BiometricSettingsScreenState();
+  State<BiometricSettingsScreen> createState() =>
+      _BiometricSettingsScreenState();
 }
 
 class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
@@ -821,7 +1194,9 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _useBiometric = prefs.getBool('teacher_use_biometric') ?? true; // default true if supported
+      _useBiometric =
+          prefs.getBool('teacher_use_biometric') ??
+          true; // default true if supported
     });
   }
 
@@ -830,7 +1205,8 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
       // Prompt user to authenticate before enabling
       try {
         final authenticated = await _localAuth.authenticate(
-          localizedReason: 'Verifikasi sidik jari/Face ID untuk mengaktifkan fitur ini',
+          localizedReason:
+              'Verifikasi sidik jari/Face ID untuk mengaktifkan fitur ini',
           options: const AuthenticationOptions(
             biometricOnly: true,
             useErrorDialogs: true,
@@ -842,7 +1218,7 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
         return;
       }
     }
-    
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('teacher_use_biometric', value);
     setState(() {
@@ -863,11 +1239,18 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Icon(Icons.fingerprint_rounded, size: 80, color: AppColors.primaryGreen.withValues(alpha: 0.5)),
+          Icon(
+            Icons.fingerprint_rounded,
+            size: 80,
+            color: AppColors.primaryGreen.withValues(alpha: 0.5),
+          ),
           const SizedBox(height: 20),
           Text(
             'Autentikasi Biometrik',
-            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10),
@@ -887,12 +1270,18 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.orange.shade700,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Perangkat ini tidak mendukung biometrik atau Anda belum mendaftarkan sidik jari/Face ID di pengaturan perangkat.',
-                      style: GoogleFonts.poppins(fontSize: 12, color: Colors.orange.shade900),
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.orange.shade900,
+                      ),
                     ),
                   ),
                 ],
@@ -906,16 +1295,27 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
                 border: Border.all(color: Colors.grey.shade200),
               ),
               child: SwitchListTile(
-                title: Text('Gunakan Biometrik', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                title: Text(
+                  'Gunakan Biometrik',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                ),
                 subtitle: Text(
-                  _availableBiometrics.contains(BiometricType.face) ? 'Face ID / Pengenalan Wajah' : 'Sidik Jari / Fingerprint',
-                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
+                  _availableBiometrics.contains(BiometricType.face)
+                      ? 'Face ID / Pengenalan Wajah'
+                      : 'Sidik Jari / Fingerprint',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
                 ),
                 value: _useBiometric,
                 onChanged: _toggleBiometric,
                 activeThumbColor: AppColors.primaryGreen,
                 activeTrackColor: AppColors.primaryGreen.withValues(alpha: 0.5),
-                secondary: const Icon(Icons.security_rounded, color: AppColors.primaryGreen),
+                secondary: const Icon(
+                  Icons.security_rounded,
+                  color: AppColors.primaryGreen,
+                ),
               ),
             ),
         ],
@@ -923,4 +1323,3 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
     );
   }
 }
-

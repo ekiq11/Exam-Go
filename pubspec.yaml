@@ -2,7 +2,7 @@ name: examgo
 description: "ExamGO — Secure Exam Browser for Android & iOS"
 publish_to: 'none'
 
-version: 7.0.2+41
+version: 8.0.2+43
 
 environment:
   sdk: ^3.9.2
@@ -63,6 +63,15 @@ dependencies:
   # flutter_jailbreak_detection: ^1.10.0 # DISABLED: Fails 16KB alignment (libtoolChecker.so)
   cloud_firestore: ^6.3.0
   flutter_local_notifications: ^20.1.0
+
+  # Soal & Tryout UI (LaTeX, HTML, File Picker, Images)
+  flutter_math_fork: ^0.7.4
+  flutter_widget_from_html: ^0.15.3
+  cached_network_image: ^3.4.1
+  file_picker: ^8.1.7
+  archive: ^3.6.1
+  xml: ^6.5.0
+  flutter_widget_from_html_core: ^0.15.2
 
 dev_dependencies:
   flutter_test:

@@ -52,4 +52,23 @@ class AppConfig {
     'GAS_API_KEY',
     defaultValue: 'examgo_guru_2026',
   );
+
+  /// Google Drive Folder ID target untuk penyimpanan gambar soal ujian
+  /// Link: https://drive.google.com/drive/folders/1mM7PTjpZKQnHCQX14BdQiOcoqVRdMlZJ?usp=sharing
+  static const String driveFolderId = String.fromEnvironment(
+    'DRIVE_FOLDER_ID',
+    defaultValue: '1mM7PTjpZKQnHCQX14BdQiOcoqVRdMlZJ',
+  );
+
+  /// URL Produk Lynk.id untuk Pembelian Kode Akses Guru & Siswa
+  /// Dapat di-override saat build dengan: --dart-define=LYNK_ID_TEACHER_URL=...
+  static const String lynkIdTeacherUrl = String.fromEnvironment(
+    'LYNK_ID_TEACHER_URL',
+    defaultValue: 'https://lynk.id',
+  );
+
+  static const String lynkIdStudentUrl = String.fromEnvironment(
+    'LYNK_ID_STUDENT_URL',
+    defaultValue: 'https://lynk.id',
+  );
 }

@@ -1,0 +1,3430 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#2E7D32">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>ExamGO Administrator</title>
+  <!-- Speed: preconnect for CDNs to eliminate DNS round-trips -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            examgo: {
+              primary: '#2E7D32',
+              primaryHover: '#1B5E20',
+              pale: '#E8F5E9',
+              dark: '#212121',
+              light: '#FAFAFA'
+            }
+          },
+          animation: {
+            'shimmer': 'shimmer 1.5s infinite linear',
+          },
+          keyframes: {
+            shimmer: {
+              '0%': { backgroundPosition: '-1000px 0' },
+              '100%': { backgroundPosition: '1000px 0' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  
+  <!-- Math & Document Parser Libraries (KaTeX, JSZip, Mammoth) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f0f2f5;
+    }
+    .preview-soal-card img { max-width: 100%; border-radius: 6px; }
+    .preview-soal-card table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 12px; }
+    .preview-soal-card table th, .preview-soal-card table td { border: 1px solid #cbd5e1; padding: 4px 8px; }
+    .preview-soal-card table th { background: #f8fafc; font-weight: 600; }
+    .preview-opsi { display: flex; align-items: flex-start; gap: 8px; padding: 7px 10px; margin-bottom: 5px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; font-size: 12.5px; }
+    .preview-opsi.is-correct { border-color: #16a34a; background: #f0fdf4; }
+    .preview-opsi-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0; }
+    .preview-opsi-letter.is-correct { background: #16a34a; color: #fff; }
+    .preview-opsi-letter:not(.is-correct) { background: #f1f5f9; color: #64748b; }
+    .preview-opsi-text { flex-grow: 1; overflow-x: auto; }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+    .loader {
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+    }
+    .skeleton-box {
+      background: #f6f7f8;
+      background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+      background-repeat: no-repeat;
+      background-size: 1000px 100%; 
+    }
+    /* Hide scrollbar for clean look */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    /* PWA Mobile Cards & Floating Elements */
+    .fab-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      pointer-events: none;
+    }
+    .fab-container > * {
+      pointer-events: auto;
+    }
+  </style>
+</head>
+<body class="text-examgo-dark antialiased min-h-screen flex flex-col selection:bg-examgo-pale selection:text-examgo-primary">
+
+  <!-- Navbar -->
+  <nav class="bg-gradient-to-r from-examgo-primary to-[#43A047] shadow-lg sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center">
+            <svg class="h-6 w-6 text-examgo-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <span class="text-xl font-bold text-white tracking-wide">ExamGO <span class="font-normal opacity-80">Admin</span></span>
+        </div>
+        <div class="flex items-center space-x-3 hidden" id="nav-user">
+          <div class="flex items-center space-x-1 mr-2 bg-black/15 rounded-xl p-1">
+            <button id="nav-tab-exams" onclick="showExamsView()" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-white bg-white/20 shadow-sm transition-all">
+              📋 Sesi Ujian
+            </button>
+            <button id="nav-tab-tryout" onclick="showTryoutView()" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all">
+              📅 Paket Tryout
+            </button>
+            <button id="nav-tab-licenses" onclick="showLicensesView()" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all">
+              🔑 Token Lynk.id
+            </button>
+          </div>
+          <div class="h-8 w-8 rounded-full bg-examgo-pale text-examgo-primary flex items-center justify-center font-bold" id="user-avatar">
+            A
+          </div>
+          <button onclick="logout()" class="text-sm font-medium text-white hover:text-red-200 transition-colors">Logout</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main id="main-content" class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden transition-opacity duration-500 opacity-0">
+    
+    <!-- EXAMS VIEW -->
+    <div id="view-exams">
+      <!-- Header & Stats -->
+      <div class="md:flex md:items-center md:justify-between mb-8">
+        <div class="flex-1 min-w-0">
+          <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate flex items-center">
+            Database Ujian
+            <span class="ml-3 inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium bg-examgo-pale text-examgo-primary">
+              Firestore
+            </span>
+          </h2>
+          <p class="mt-2 text-sm text-gray-500">Kelola dan bersihkan data ujian untuk menjaga kapasitas penyimpanan cloud Anda.</p>
+        </div>
+        <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 space-x-3 gap-y-2 justify-end">
+          <button onclick="loadData()" class="hidden sm:inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
+          <button id="btn-delete-selected" onclick="openDeleteSelectedModal()" class="hidden sm:inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 transition-all transform hover:scale-105" style="display: none;">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Hapus Terpilih (<span id="selected-count">0</span>)
+          </button>
+          <button onclick="openDeleteAllModal()" class="hidden sm:inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-all transform hover:scale-105">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Bersihkan Semua
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
+        <!-- Stat Card -->
+        <div class="glass-card shadow-sm rounded-2xl overflow-hidden transform transition-all hover:-translate-y-1 hover:shadow-md">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 bg-examgo-pale rounded-xl p-3">
+                <svg class="h-7 w-7 text-examgo-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Total Sesi Ujian Aktif</dt>
+                  <dd class="flex items-baseline mt-1">
+                    <div class="text-3xl font-bold text-gray-900" id="stat-total">-</div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Table Card -->
+      <div class="glass-card shadow-sm rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h3 class="text-lg leading-6 font-semibold text-gray-900">Daftar Sesi Ujian</h3>
+          
+          <!-- Search Bar -->
+          <div class="relative max-w-sm w-full">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input type="text" id="search-input" onkeyup="filterTable()" class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-examgo-primary focus:border-examgo-primary focus:bg-white sm:text-sm transition-colors" placeholder="Cari judul ujian atau ID...">
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="block sm:table min-w-full divide-y divide-gray-100">
+            <thead class="hidden sm:table-header-group bg-gray-50/50">
+              <tr>
+                <th scope="col" class="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-10">
+                  <input type="checkbox" id="checkbox-all" onchange="toggleAllCheckboxes(this)" class="focus:ring-examgo-primary h-4 w-4 text-examgo-primary border-gray-300 rounded cursor-pointer transition-all">
+                </th>
+                <th scope="col" class="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Ujian</th>
+                <th scope="col" class="hidden md:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Token (ID)</th>
+                <th scope="col" class="hidden sm:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Peserta</th>
+                <th scope="col" class="hidden lg:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Dibuat Pada</th>
+                <th scope="col" class="px-3 sm:px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="table-body" class="block sm:table-row-group bg-transparent sm:bg-white divide-y-0 sm:divide-y divide-gray-50">
+              <!-- Skeleton Loading Default -->
+              <tr id="initial-skeleton"><td colspan="6" class="px-3 sm:px-6 py-8">
+                <div class="animate-shimmer skeleton-box h-4 w-3/4 rounded mb-4"></div>
+                <div class="animate-shimmer skeleton-box h-4 w-1/2 rounded"></div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination UI -->
+        <div class="px-6 py-4 border-t border-gray-100 flex justify-center hidden" id="pagination-container">
+          <button id="btn-load-more" onclick="loadMoreExams()" class="inline-flex items-center px-6 py-2.5 border border-gray-300 rounded-full shadow-sm text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
+            Muat Lebih Banyak
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STUDENTS VIEW -->
+    <div id="view-students" class="hidden">
+      <!-- Header -->
+      <div class="md:flex md:items-center md:justify-between mb-8">
+        <div class="flex-1 min-w-0 flex items-center space-x-4">
+          <button onclick="showExamsView()" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+            <svg class="h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+          </button>
+          <div>
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate flex items-center">
+              Daftar Siswa
+            </h2>
+            <p class="mt-1 text-sm text-gray-500 font-medium" id="current-exam-title">Memuat...</p>
+          </div>
+        </div>
+        <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 space-x-3 gap-y-2 justify-end">
+          <button onclick="loadStudents()" class="hidden sm:inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Students Table -->
+      <div class="glass-card shadow-sm rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h3 class="text-lg leading-6 font-semibold text-gray-900">Peserta Ujian <span id="student-count-badge" class="ml-2 px-2 py-0.5 rounded-full bg-gray-100 text-xs text-gray-600">0</span></h3>
+          
+          <div class="relative max-w-sm w-full">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input type="text" id="search-student-input" onkeyup="filterStudentsTable()" class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-examgo-primary focus:border-examgo-primary focus:bg-white sm:text-sm transition-colors" placeholder="Cari nama atau NIS...">
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="block sm:table min-w-full divide-y divide-gray-100">
+            <thead class="hidden sm:table-header-group bg-gray-50/50">
+              <tr>
+                <th scope="col" class="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama & NIS</th>
+                <th scope="col" class="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                <th scope="col" class="hidden md:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Aktivitas Terakhir</th>
+                <th scope="col" class="hidden sm:table-cell px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Pelanggaran</th>
+                <th scope="col" class="px-3 sm:px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="students-table-body" class="block sm:table-row-group bg-transparent sm:bg-white divide-y-0 sm:divide-y divide-gray-50">
+            </tbody>
+          </table>
+        </div>
+        <!-- Students Pagination UI -->
+        <div class="px-6 py-4 border-t border-gray-100 flex justify-center hidden" id="pagination-students-container">
+          <button id="btn-load-more-students" onclick="loadMoreStudents()" class="inline-flex items-center px-6 py-2.5 border border-gray-300 rounded-full shadow-sm text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
+            Muat Lebih Banyak Siswa
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAKET TRYOUT VIEW (Admin Tryout Scheduling) -->
+    <div id="view-tryout" class="hidden">
+      <!-- Header -->
+      <div class="md:flex md:items-center md:justify-between mb-8">
+        <div class="flex-1 min-w-0">
+          <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate flex items-center">
+            Paket & Jadwal Tryout
+            <span class="ml-3 inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+              SNBT • SKD • TKA
+            </span>
+          </h2>
+          <p class="mt-2 text-sm text-gray-500">Jadwalkan tryout nasional resmi admin yang akan otomatis tampil pada akun siswa berlisensi premium.</p>
+        </div>
+        <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 space-x-3 gap-y-2 justify-end">
+          <button onclick="openCreateTryoutModal()" class="inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-examgo-primary hover:bg-examgo-primaryHover transition-all shadow-md hover:shadow-lg">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Tambah Paket Tryout
+          </button>
+          <button onclick="loadAdminPaketTryout()" class="inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
+        <div class="glass-card shadow-sm rounded-2xl p-6">
+          <div class="text-sm font-medium text-gray-500">Total Paket Terdaftar</div>
+          <div class="text-3xl font-bold text-gray-900 mt-1" id="stat-tryout-total">0</div>
+        </div>
+        <div class="glass-card shadow-sm rounded-2xl p-6 border-l-4 border-emerald-500">
+          <div class="text-sm font-medium text-gray-500">Paket Aktif (Tampil di Siswa)</div>
+          <div class="text-3xl font-bold text-emerald-600 mt-1" id="stat-tryout-active">0</div>
+        </div>
+        <div class="glass-card shadow-sm rounded-2xl p-6 border-l-4 border-gray-400">
+          <div class="text-sm font-medium text-gray-500">Paket Nonaktif / Draft</div>
+          <div class="text-3xl font-bold text-gray-600 mt-1" id="stat-tryout-inactive">0</div>
+        </div>
+      </div>
+
+      <!-- Table Section -->
+      <div class="glass-card shadow-sm rounded-2xl overflow-hidden mb-8">
+        <div class="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h3 class="text-lg leading-6 font-semibold text-gray-900">Daftar Paket & Jadwal Tryout</h3>
+          <div class="relative max-w-sm w-full">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input type="text" id="search-tryout-input" onkeyup="filterTryoutTable()" class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-examgo-primary focus:border-examgo-primary focus:bg-white sm:text-sm transition-colors" placeholder="Cari nama paket atau jenis...">
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="block sm:table min-w-full divide-y divide-gray-100">
+            <thead class="hidden sm:table-header-group bg-gray-50/50">
+              <tr>
+                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Paket & Jenis</th>
+                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Jadwal Tanggal & Jam</th>
+                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Durasi & Soal</th>
+                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Target Exam ID</th>
+                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tryout-table-body" class="block sm:table-row-group divide-y divide-gray-100 p-4 sm:p-0">
+              <tr><td colspan="6" class="px-6 py-8 text-center text-gray-400">Klik tab untuk memuat data.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- LICENSES & TOKENS VIEW (Lynk.id Monetization) -->
+    <div id="view-licenses" class="hidden">
+      <!-- Header -->
+      <div class="md:flex md:items-center md:justify-between mb-8">
+        <div class="flex-1 min-w-0">
+          <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate flex items-center">
+            Token & Lisensi Lynk.id
+            <span class="ml-3 inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+              Monetisasi
+            </span>
+          </h2>
+          <p class="mt-2 text-sm text-gray-500">Generate serial key untuk dijual di Lynk.id dan pantau aktivasi perangkat guru & siswa.</p>
+        </div>
+        <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 space-x-3 gap-y-2 justify-end">
+          <button onclick="loadLicenses()" class="inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
+        <div class="glass-card shadow-sm rounded-2xl p-6">
+          <div class="text-sm font-medium text-gray-500">Total Token Terdaftar</div>
+          <div class="text-3xl font-bold text-gray-900 mt-1" id="stat-licenses-total">0</div>
+        </div>
+        <div class="glass-card shadow-sm rounded-2xl p-6 border-l-4 border-green-500">
+          <div class="text-sm font-medium text-gray-500">Tersedia (Siap di Lynk.id)</div>
+          <div class="text-3xl font-bold text-green-600 mt-1" id="stat-licenses-available">0</div>
+        </div>
+        <div class="glass-card shadow-sm rounded-2xl p-6 border-l-4 border-amber-500">
+          <div class="text-sm font-medium text-gray-500">Terpakai (Aktif di HP)</div>
+          <div class="text-3xl font-bold text-amber-600 mt-1" id="stat-licenses-used">0</div>
+        </div>
+      </div>
+
+      <!-- Generator Section -->
+      <div class="glass-card shadow-sm rounded-2xl p-6 mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 class="text-lg font-bold text-gray-900 mb-0.5 flex items-center">
+              <svg class="h-5 w-5 mr-2 text-examgo-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Kelola Lisensi & Voucher Sekolah
+            </h3>
+            <p class="text-xs text-gray-500">Pilih mode Master Voucher untuk 1 kode dipakai seluruh siswa sekolah, atau Token Unik untuk serial key Lynk.id.</p>
+          </div>
+          <!-- Mode Tabs -->
+          <div class="inline-flex p-1 bg-gray-100 rounded-xl">
+            <button id="tab-gen-master" onclick="switchGenMode('master')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-examgo-primary shadow-sm transition-all">
+              🏫 Master Voucher (1000+ Siswa)
+            </button>
+            <button id="tab-gen-batch" onclick="switchGenMode('batch')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-600 hover:text-gray-900 transition-all">
+              🎟️ Token Unik (Lynk.id)
+            </button>
+          </div>
+        </div>
+
+        <!-- FORM 1: MASTER VOUCHER SEKOLAH (SOLUSI 1 KODE UNTUK 1000+ SISWA) -->
+        <div id="box-gen-master" class="block">
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-3">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Sekolah Mitra</label>
+              <select id="master-school" onchange="autoSuggestMasterCode()" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none">
+                <option value="MAN 1 Mataram">MAN 1 Mataram</option>
+                <option value="MAN 2 Mataram">MAN 2 Mataram</option>
+                <option value="MTsN 1 Mataram">MTsN 1 Mataram</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Kode Master Voucher</label>
+              <input type="text" id="master-code" value="MAN1MATARAM" placeholder="Misal: MAN1MATARAM" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold font-mono text-emerald-800 uppercase focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Kuota Perangkat (Siswa)</label>
+              <input type="number" id="master-quota" value="1200" placeholder="1000" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-900 focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none">
+            </div>
+            <div class="flex items-end">
+              <button id="btn-save-master-voucher" onclick="executeCreateMasterVoucher()" class="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-sm transition-all flex items-center justify-center text-sm">
+                <span>⚡ Simpan Master Voucher</span>
+              </button>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+            <span>Saran Kode Cepat:</span>
+            <button onclick="setMasterCode('MAN1MATARAM', 'MAN 1 Mataram', 1200)" class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded border border-emerald-200 font-mono font-semibold">MAN1MATARAM (1.200)</button>
+            <button onclick="setMasterCode('MAN2MATARAM', 'MAN 2 Mataram', 1500)" class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded border border-blue-200 font-mono font-semibold">MAN2MATARAM (1.500)</button>
+            <button onclick="setMasterCode('MTS1MATARAM', 'MTsN 1 Mataram', 900)" class="px-2 py-0.5 bg-purple-50 text-purple-700 rounded border border-purple-200 font-mono font-semibold">MTS1MATARAM (900)</button>
+          </div>
+        </div>
+
+        <!-- FORM 2: GENERATOR TOKEN BATCH (LYNK.ID) -->
+        <div id="box-gen-batch" class="hidden">
+          <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Sekolah / Mitra</label>
+              <select id="gen-token-school" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none">
+                <option value="UMUM">Umum (Lynk.id)</option>
+                <option value="MAN 1 Mataram">MAN 1 Mataram</option>
+                <option value="MAN 2 Mataram">MAN 2 Mataram</option>
+                <option value="MTsN 1 Mataram">MTsN 1 Mataram</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Peruntukan</label>
+              <select id="gen-token-type" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none">
+                <option value="TEACHER_PREMIUM">Guru Premium</option>
+                <option value="STUDENT_LIFETIME">Siswa Lifetime</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Jumlah Token</label>
+              <select id="gen-token-count" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none">
+                <option value="10">10 Token</option>
+                <option value="25" selected>25 Token</option>
+                <option value="50">50 Token</option>
+                <option value="100">100 Token</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Tautan Soal (Opsional)</label>
+              <input type="text" id="gen-token-target" placeholder="Misal: TONAS2026" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none uppercase font-mono">
+            </div>
+            <div class="flex items-end">
+              <button id="btn-generate-tokens" onclick="executeGenerateTokens()" class="w-full py-2.5 px-3 bg-examgo-primary hover:bg-examgo-primaryHover text-white rounded-xl font-semibold shadow-sm transition-all flex items-center justify-center text-sm">
+                <span>⚡ Generate</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Output Box (Master Voucher / Batch Tokens) -->
+        <div id="generated-output-box" class="hidden mt-4 p-4 bg-emerald-50/80 border border-emerald-200 rounded-2xl">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+            <div class="text-sm font-bold text-emerald-900" id="generated-output-title">
+              ✅ Master Voucher Siap Dibagikan!
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="copyGeneratedTokens()" class="inline-flex items-center px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all">
+                <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                Salin Teks
+              </button>
+              <button onclick="copyTokensForWhatsApp()" class="inline-flex items-center px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold shadow-sm transition-all">
+                <span>📱 Salin Pengumuman WhatsApp Sekolah</span>
+              </button>
+            </div>
+          </div>
+          <textarea id="generated-tokens-textarea" rows="4" readonly class="w-full p-3 font-mono text-xs bg-white border border-emerald-200 rounded-xl text-gray-800 focus:outline-none select-all"></textarea>
+          <p class="text-xs text-emerald-700 mt-2" id="generated-output-tip">💡 Cukup bagikan 1 kode ini di grup WhatsApp atau mading sekolah. Siswa tinggal buka aplikasi dan masukkan kode tersebut.</p>
+        </div>
+      </div>
+
+      <!-- Token List Table -->
+      <div class="glass-card shadow-sm rounded-2xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h3 class="text-lg leading-6 font-semibold text-gray-900">Daftar Token Lisensi di Database</h3>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="filter-license-school" onchange="licenseCurrentPage=1; renderLicensesTable()" class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none">
+              <option value="all">Semua Sekolah / Mitra</option>
+              <option value="MAN 1 Mataram">MAN 1 Mataram</option>
+              <option value="MAN 2 Mataram">MAN 2 Mataram</option>
+              <option value="MTsN 1 Mataram">MTsN 1 Mataram</option>
+              <option value="UMUM">Umum (Lynk.id)</option>
+            </select>
+            <select id="filter-license-status" onchange="licenseCurrentPage=1; renderLicensesTable()" class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none">
+              <option value="all">Semua Status</option>
+              <option value="available">Tersedia Saja</option>
+              <option value="used">Terpakai Saja</option>
+            </select>
+            <input type="text" id="search-licenses" onkeyup="licenseCurrentPage=1; renderLicensesTable()" placeholder="Cari token / sekolah..." class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none w-44">
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-100">
+            <thead class="bg-gray-50/50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Kode Token</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Sekolah / Mitra</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Peruntukan</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tautan Soal</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Device ID Terikat</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Waktu Aktivasi</th>
+                <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="licenses-table-body" class="bg-white divide-y divide-gray-50 text-sm">
+              <tr>
+                <td colspan="8" class="px-6 py-8 text-center text-gray-400 text-sm">
+                  Klik tab "Token Lynk.id" untuk memuat data lisensi.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination UI for Licenses -->
+        <div id="licenses-pagination-container" class="px-6 py-3.5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-gray-50/40">
+          <div class="flex items-center gap-2 text-xs text-gray-600">
+            <span>Baris per halaman:</span>
+            <select id="license-page-size" onchange="changeLicensePageSize(this.value)" class="px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 focus:outline-none focus:ring-1 focus:ring-examgo-primary">
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            <span id="licenses-count-info" class="text-gray-500 ml-2">Menampilkan 0 - 0 dari 0 token</span>
+          </div>
+
+          <div class="flex items-center space-x-1" id="licenses-page-controls">
+            <!-- Dynamic pagination buttons -->
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Mobile FAB Container -->
+    <div class="fab-container sm:hidden">
+      <!-- Delete Selected (hidden by default) -->
+      <button id="fab-delete-selected" onclick="openDeleteSelectedModal()" class="flex items-center justify-center w-14 h-14 bg-orange-500 text-white rounded-full shadow-lg hover:bg-orange-600 transition-all transform active:scale-90" style="display: none;">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+        <span id="fab-selected-count" class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full border-2 border-white">0</span>
+      </button>
+      
+      <!-- Refresh -->
+      <button onclick="currentExamId ? loadStudents() : loadData()" class="flex items-center justify-center w-14 h-14 bg-examgo-primary text-white rounded-full shadow-lg hover:bg-examgo-primaryHover transition-all transform active:scale-90">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+      </button>
+      
+      <!-- Delete All (only in Exams view) -->
+      <button id="fab-delete-all" onclick="openDeleteAllModal()" class="flex items-center justify-center w-14 h-14 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all transform active:scale-90">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Login Modal -->
+  <div id="login-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-md opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 transform transition-all scale-100">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-examgo-pale mb-5 shadow-inner">
+          <svg class="w-10 h-10 text-examgo-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900">Masuk</h3>
+        <p class="text-sm text-gray-500 mt-2">Gunakan kredensial Admin dari Spreadsheet Anda.</p>
+      </div>
+      
+      <div class="space-y-4">
+        <div class="relative">
+          <input type="text" id="username-input" class="w-full px-5 py-4 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-examgo-primary/20 focus:border-examgo-primary focus:bg-white text-gray-900 outline-none transition-all placeholder-gray-400 font-medium" placeholder="Username" autocomplete="username">
+        </div>
+        <div class="relative">
+          <input type="password" id="password-input" class="w-full px-5 py-4 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-examgo-primary/20 focus:border-examgo-primary focus:bg-white text-gray-900 outline-none transition-all placeholder-gray-400 font-medium" placeholder="Password" autocomplete="current-password">
+        </div>
+        <button id="login-btn" onclick="attemptLogin()" class="w-full bg-examgo-primary hover:bg-examgo-primaryHover text-white font-semibold py-4 px-4 rounded-xl shadow-md hover:shadow-lg transition-all flex justify-center items-center mt-2">
+          Masuk
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Modal -->
+  <div id="progress-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity opacity-0">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center transform transition-transform scale-95" id="progress-modal-box">
+      <div class="mb-4">
+        <div class="loader inline-block border-examgo-primary border-t-examgo-primary/30 w-12 h-12"></div>
+      </div>
+      <h3 class="text-xl font-bold text-gray-900 mb-2">Menghapus Data...</h3>
+      <p id="progress-text" class="text-sm text-gray-500 mb-6 font-medium">Memulai proses...</p>
+      
+      <div class="w-full bg-gray-100 rounded-full h-3 mb-2 overflow-hidden shadow-inner">
+        <div id="progress-bar" class="bg-examgo-primary h-3 rounded-full transition-all duration-300 shadow-sm" style="width: 0%"></div>
+      </div>
+      <p id="progress-percent" class="text-xs text-gray-400 font-bold tracking-widest mt-2">0%</p>
+    </div>
+  </div>
+
+  <!-- Custom Confirm Modal -->
+  <div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity opacity-0">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 transform transition-transform scale-95" id="confirm-modal-box">
+      <div class="flex items-center justify-center w-12 h-12 rounded-full mb-4 mx-auto" id="confirm-icon-container">
+        <!-- Icon injected via JS -->
+      </div>
+      <h3 class="text-xl font-bold text-center text-gray-900" id="confirm-title">Konfirmasi</h3>
+      <p class="text-sm text-center text-gray-500 mt-2 mb-6" id="confirm-msg">Apakah Anda yakin?</p>
+      
+      <!-- Password Input for Mass Delete -->
+      <div id="confirm-input-container" class="hidden mb-6">
+        <input type="text" id="confirm-input" class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 text-center font-bold outline-none transition-all" placeholder="Ketik BERSIHKAN" autocomplete="off">
+      </div>
+
+      <div class="flex space-x-3">
+        <button onclick="closeConfirmModal()" class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors">Batal</button>
+        <button id="confirm-action-btn" class="flex-1 px-4 py-3 text-white font-medium rounded-xl transition-colors shadow-sm flex justify-center items-center">Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Student Modal -->
+  <div id="edit-student-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity opacity-0">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 transform transition-transform scale-95" id="edit-student-modal-box">
+      <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Data Siswa</h3>
+      <input type="hidden" id="edit-student-id">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+          <input type="text" id="edit-student-name" class="w-full px-4 py-2 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-examgo-primary/20 focus:border-examgo-primary outline-none transition-all">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">NIS</label>
+          <input type="text" id="edit-student-nis" class="w-full px-4 py-2 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-examgo-primary/20 focus:border-examgo-primary outline-none transition-all">
+        </div>
+      </div>
+      <div class="flex space-x-3 mt-6">
+        <button onclick="closeEditStudentModal()" class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors">Batal</button>
+        <button id="save-student-btn" onclick="saveStudentData()" class="flex-1 px-4 py-3 text-white font-medium rounded-xl transition-colors shadow-sm bg-examgo-primary hover:bg-examgo-primaryHover flex justify-center items-center">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Token Modal -->
+  <div id="edit-token-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity opacity-0">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 transform transition-transform scale-95" id="edit-token-modal-box">
+      <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Token Lisensi</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Kode Token</label>
+          <input type="text" id="edit-token-code" readonly class="w-full px-4 py-2.5 bg-gray-100 rounded-xl border border-gray-200 text-gray-700 font-mono font-bold outline-none cursor-not-allowed">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Peruntukan</label>
+          <select id="edit-token-type" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-medium">
+            <option value="TEACHER_PREMIUM">Guru Premium</option>
+            <option value="STUDENT_LIFETIME">Siswa Lifetime</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Tautan Soal (Opsional)</label>
+          <input type="text" id="edit-token-target" placeholder="Contoh: TONAS2026 (kosongkan jika umum)" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none uppercase font-mono text-sm">
+        </div>
+        <div id="edit-token-reset-container" class="pt-2 hidden">
+          <label class="flex items-center space-x-2 cursor-pointer bg-amber-50 p-3 rounded-xl border border-amber-200">
+            <input type="checkbox" id="edit-token-reset-status" class="rounded text-examgo-primary focus:ring-examgo-primary h-4 w-4">
+            <span class="text-xs font-medium text-amber-800">Reset Status Lisensi (Lepas Device ID & jadikan Tersedia kembali)</span>
+          </label>
+        </div>
+      </div>
+      <div class="flex space-x-3 mt-6">
+        <button onclick="closeEditTokenModal()" class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors">Batal</button>
+        <button id="save-token-btn" onclick="saveTokenData()" class="flex-1 px-4 py-3 text-white font-medium rounded-xl transition-colors shadow-sm bg-examgo-primary hover:bg-examgo-primaryHover flex justify-center items-center">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create / Edit Tryout Modal -->
+  <div id="modal-tryout" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity opacity-0">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-6 sm:p-7 max-h-[92vh] overflow-y-auto transform transition-transform scale-95" id="modal-tryout-box">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
+        <h3 class="text-xl font-bold text-gray-900" id="tryout-modal-title">Tambah Paket Tryout</h3>
+        <button onclick="closeTryoutModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <input type="hidden" id="tryout-form-id">
+      
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Nama Paket Tryout <span class="text-red-500">*</span></label>
+          <input type="text" id="tryout-form-nama" placeholder="Misal: Tryout Akbar UTBK SNBT 2026 Gelombang 1" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none text-sm font-medium">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Kategori / Jenis <span class="text-red-500">*</span></label>
+            <select id="tryout-form-jenis" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-semibold text-emerald-800">
+              <option value="SNBT">SNBT (UTBK)</option>
+              <option value="SKD">SKD (Kedinasan / CPNS)</option>
+              <option value="TKA">TKA (Akademik)</option>
+              <option value="UMUM">UMUM</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Status Paket <span class="text-red-500">*</span></label>
+            <select id="tryout-form-status" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-semibold">
+              <option value="aktif">Aktif (Tampil di Siswa)</option>
+              <option value="nonaktif">Nonaktif (Draft / Sembunyikan)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Pengaturan Lifetime & Pengulangan -->
+        <div class="bg-emerald-50/60 p-3.5 rounded-2xl border border-emerald-100 space-y-3">
+          <label class="flex items-center space-x-3 cursor-pointer">
+            <input type="checkbox" id="tryout-form-lifetime" onchange="toggleLifetimeFields()" class="w-4 h-4 text-examgo-primary rounded border-gray-300 focus:ring-examgo-primary">
+            <div>
+              <span class="text-xs font-bold text-gray-900">⚡ Lifetime Aktif (Permanen)</span>
+              <p class="text-[11px] text-gray-500">Aktif selamanya tanpa batasan tanggal dan jam mulai/selesai.</p>
+            </div>
+          </label>
+          <label class="flex items-center space-x-3 cursor-pointer pt-2 border-t border-emerald-100/70">
+            <input type="checkbox" id="tryout-form-allow-retake" checked class="w-4 h-4 text-examgo-primary rounded border-gray-300 focus:ring-examgo-primary">
+            <div>
+              <span class="text-xs font-bold text-gray-900">🔄 Izinkan Dikerjakan Berulang Kali</span>
+              <p class="text-[11px] text-gray-500">Siswa dapat mengulang pengerjaan tryout ini berkali-kali untuk latihan.</p>
+            </div>
+          </label>
+        </div>
+
+        <div id="tryout-schedule-datetime-container">
+          <div class="mb-3">
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Tanggal Pelaksanaan (YYYY-MM-DD)</label>
+            <input type="date" id="tryout-form-tanggal" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none text-sm font-medium">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Jam Mulai</label>
+              <input type="time" id="tryout-form-jam-mulai" value="08:00" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-medium">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Jam Selesai</label>
+              <input type="time" id="tryout-form-jam-selesai" value="23:59" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-medium">
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Durasi (Menit)</label>
+            <input type="number" id="tryout-form-durasi" value="120" min="1" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-medium">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Total Soal</label>
+            <input type="number" id="tryout-form-soal" value="50" min="0" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-medium">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Tipe Waktu</label>
+            <select id="tryout-form-jenis-waktu" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-medium">
+              <option value="total">Waktu Total</option>
+              <option value="per_subtest">Per Subtes</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Target Exam ID (Opsional)</label>
+            <input type="text" id="tryout-form-target" placeholder="Misal: SNBT-GEL1" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-mono uppercase">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Passing Grade (%)</label>
+            <input type="number" id="tryout-form-passing" value="65" min="0" max="100" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-medium">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Petunjuk / Deskripsi</label>
+          <textarea id="tryout-form-deskripsi" rows="2" placeholder="Informasi materi uji, aturan pengerjaan, dsb." class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-medium"></textarea>
+        </div>
+
+        <!-- Import Soal DOCX & Preview KaTeX -->
+        <div class="pt-4 border-t border-gray-200">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              Import Soal Dokumen Word (.docx) <span class="text-emerald-600 font-semibold">(Dengan Rumus & Opsi)</span>
+            </label>
+            <button type="button" onclick="toggleDocxTemplateGuide()" class="text-[11px] font-bold text-examgo-primary hover:text-examgo-primaryHover flex items-center">
+              <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Lihat Format Baku Template
+            </button>
+          </div>
+
+          <!-- Collapsible Template Guide -->
+          <div id="docx-template-guide" class="hidden mb-3 p-3.5 bg-blue-50/70 border border-blue-200 rounded-xl text-xs text-blue-900 leading-relaxed font-sans">
+            <div class="font-bold text-blue-950 mb-1 flex items-center justify-between">
+              <span>Format Baku Template DOCX:</span>
+              <button type="button" onclick="toggleDocxTemplateGuide(false)" class="text-blue-500 hover:text-blue-700 font-bold text-xs">✕ Tutup</button>
+            </div>
+            <div class="font-mono bg-white p-2.5 rounded-lg border border-blue-100 text-[11px] text-gray-800 leading-normal select-all overflow-x-auto">
+              1. Berapakah nilai $x$ jika $2x + 10 = 20$?<br>
+              A. 3<br>
+              B. 5<br>
+              C. 7<br>
+              D. 10<br>
+              E. 15<br>
+              Kunci: B<br>
+              Pembahasan: $2x = 10 \rightarrow x = 5$<br>
+              ---<br>
+              2. Soal nomor dua...
+            </div>
+            <div class="mt-2 text-[11px] text-blue-800 space-y-0.5">
+              <div>• <b>Nomor Soal:</b> Awali dengan angka dan titik (misal: <code>1.</code> atau <code>2.</code>).</div>
+              <div>• <b>Pilihan Jawaban:</b> Tuliskan minimal dua opsi (<code>A.</code> sampai <code>E.</code>).</div>
+              <div>• <b>Kunci Jawaban:</b> Tuliskan <code>Kunci: A</code> (atau B/C/D/E).</div>
+              <div>• <b>Rumus / Simbol:</b> Gunakan Equation bawaan Word (OMML) atau LaTeX (<code>$rumus$</code>).</div>
+            </div>
+          </div>
+
+          <input type="file" id="tryout-file-docx" accept=".docx" class="hidden" onchange="handleTryoutDocxUpload(this)">
+          
+          <div onclick="document.getElementById('tryout-file-docx').click()" class="border-2 border-dashed border-emerald-300 rounded-2xl p-4 text-center bg-emerald-50/50 hover:bg-emerald-50 transition-colors cursor-pointer group">
+            <svg class="mx-auto h-8 w-8 text-emerald-600 group-hover:scale-110 transition-transform mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <div class="text-xs font-bold text-emerald-950" id="tryout-file-label">Klik untuk Upload File Soal DOCX</div>
+            <div class="text-[11px] text-emerald-700 mt-0.5">Mendukung konversi otomatis rumus OMML/Word ke LaTeX KaTeX dan tabel</div>
+          </div>
+
+          <!-- Alert 1: Format Soal Tidak Sesuai -->
+          <div id="tryout-format-alert" class="hidden mt-3 p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-xs text-amber-900 space-y-1">
+            <div class="font-bold flex items-center">
+              <svg class="w-4 h-4 mr-1.5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              <span>Format Soal Tidak Sesuai Template</span>
+            </div>
+            <div id="tryout-format-alert-msg" class="text-[11px] text-amber-800 leading-relaxed"></div>
+          </div>
+
+          <!-- Alert 2: Ada Soal Yang Tidak Tersimpan -->
+          <div id="tryout-partial-warning" class="hidden mt-3 p-3.5 rounded-xl bg-yellow-50 border border-yellow-300 text-xs text-yellow-900 space-y-1">
+            <div class="font-bold flex items-center">
+              <svg class="w-4 h-4 mr-1.5 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span>Ada Soal Yang Tidak Tersimpan</span>
+            </div>
+            <div id="tryout-partial-warning-msg" class="text-[11px] text-yellow-800 leading-relaxed"></div>
+          </div>
+
+          <!-- Alert 3: Gagal Upload ke Firestore -->
+          <div id="tryout-upload-error" class="hidden mt-3 p-3.5 rounded-xl bg-red-50 border border-red-300 text-xs text-red-900 space-y-1">
+            <div class="font-bold flex items-center">
+              <svg class="w-4 h-4 mr-1.5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span>Gagal Upload ke Firestore</span>
+            </div>
+            <div id="tryout-upload-error-msg" class="text-[11px] text-red-800 leading-relaxed"></div>
+          </div>
+
+          <!-- Loading extraction indicator -->
+          <div id="docx-extract-loading" class="hidden mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
+            <div class="loader inline-block border-examgo-primary border-t-transparent w-5 h-5 mr-2"></div>
+            <span class="text-xs font-semibold text-emerald-900" id="docx-extract-text">Mengekstrak soal & rumus matematika dari file DOCX...</span>
+          </div>
+
+          <!-- Live Preview Section -->
+          <div id="tryout-docx-preview-container" class="hidden mt-4">
+            <div class="flex items-center justify-between pb-2 mb-3 border-b border-gray-200">
+              <div>
+                <span class="text-xs font-bold text-emerald-900">Preview Butir Soal Terdeteksi:</span>
+                <span id="preview-soal-counter" class="ml-1 px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-full">0 Soal</span>
+              </div>
+              <div class="flex items-center space-x-1.5 text-xs">
+                <button type="button" id="btn-prev-preview-page" onclick="changePreviewPage(-1)" class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-semibold disabled:opacity-40">&laquo; Prev</button>
+                <span id="preview-page-info" class="font-bold text-gray-700">1 / 1</span>
+                <button type="button" id="btn-next-preview-page" onclick="changePreviewPage(1)" class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-semibold disabled:opacity-40">Next &raquo;</button>
+              </div>
+            </div>
+
+            <div id="tryout-questions-preview-list" class="space-y-3 max-h-[360px] overflow-y-auto pr-1">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex space-x-3 mt-6 pt-3 border-t border-gray-100">
+        <button onclick="closeTryoutModal()" class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors">Batal</button>
+        <button id="btn-save-tryout" onclick="submitTryoutForm()" class="flex-1 px-4 py-3 text-white font-semibold rounded-xl transition-colors shadow-md bg-examgo-primary hover:bg-examgo-primaryHover flex justify-center items-center">
+          Simpan & Jadwalkan Tryout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Single Question Edit Modal -->
+  <div id="modal-edit-single-soal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-gray-900/50 backdrop-blur-sm transition-opacity opacity-0">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto transform transition-transform scale-95" id="modal-edit-single-soal-box">
+      <h3 class="text-lg font-bold text-gray-900 mb-3" id="edit-single-soal-title">Edit Soal</h3>
+      <input type="hidden" id="edit-single-soal-idx">
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Pertanyaan</label>
+          <textarea id="edit-single-pertanyaan" class="w-full px-3 py-2 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary text-xs font-medium" rows="3"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Opsi A</label>
+            <input type="text" id="edit-single-a" class="w-full px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-200 text-xs">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Opsi B</label>
+            <input type="text" id="edit-single-b" class="w-full px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-200 text-xs">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Opsi C</label>
+            <input type="text" id="edit-single-c" class="w-full px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-200 text-xs">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Opsi D</label>
+            <input type="text" id="edit-single-d" class="w-full px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-200 text-xs">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Opsi E</label>
+            <input type="text" id="edit-single-e" class="w-full px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-200 text-xs">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Kunci Jawaban</label>
+            <select id="edit-single-kunci" class="w-full px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-200 text-xs font-bold text-emerald-800">
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+              <option value="E">E</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Pembahasan (Opsional)</label>
+            <input type="text" id="edit-single-pembahasan" class="w-full px-3 py-1.5 bg-gray-50 rounded-xl border border-gray-200 text-xs">
+          </div>
+        </div>
+      </div>
+      <div class="flex space-x-2 mt-4 pt-3 border-t border-gray-100">
+        <button onclick="closeEditSingleSoalModal()" class="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl text-xs transition-colors">Batal</button>
+        <button onclick="saveEditedSingleSoal()" class="flex-1 px-3 py-2 text-white font-semibold rounded-xl text-xs shadow-sm bg-examgo-primary hover:bg-examgo-primaryHover">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 transform transition-all duration-300 translate-y-20 opacity-0 text-white px-6 py-4 rounded-xl shadow-xl z-[60] flex items-center min-w-[300px]">
+    <span id="toast-icon" class="mr-3"></span>
+    <span id="toast-msg" class="text-sm font-medium flex-1"></span>
+  </div>
+<script>
+    let currentUser = '';
+    let currentPass = '';
+    let currentData = []; // Store data for local search filtering
+    let currentNextPageToken = null;
+    let currentExamId = null;
+    let currentStudentsData = []; // Store students data
+    let currentStudentsNextPageToken = null;
+
+    // ─────────────────────────────────────────────────────────
+    // Modal Helpers
+    // ─────────────────────────────────────────────────────────
+    function _showModal(modalId, boxId) {
+      const modal = document.getElementById(modalId);
+      const box = document.getElementById(boxId);
+      if (!modal || !box) return;
+      modal.classList.replace('hidden', 'flex');
+      void modal.offsetWidth;
+      modal.classList.remove('opacity-0');
+      box.classList.remove('scale-95');
+      box.classList.add('scale-100');
+    }
+
+    function _hideModal(modalId, boxId) {
+      const modal = document.getElementById(modalId);
+      const box = document.getElementById(boxId);
+      if (!modal || !box) return;
+      modal.classList.add('opacity-0');
+      box.classList.remove('scale-100');
+      box.classList.add('scale-95');
+      setTimeout(() => modal.classList.replace('flex', 'hidden'), 300);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // UI Helpers
+    // ─────────────────────────────────────────────────────────
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toast');
+      const icon = document.getElementById('toast-icon');
+      document.getElementById('toast-msg').innerText = msg;
+      
+      if (type === 'success') {
+        toast.className = "fixed bottom-5 right-5 transform transition-all duration-300 bg-examgo-primary text-white px-6 py-4 rounded-xl shadow-xl z-[60] flex items-center min-w-[300px]";
+        icon.innerHTML = '<div class="bg-white/20 p-1 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>';
+      } else {
+        toast.className = "fixed bottom-5 right-5 transform transition-all duration-300 bg-red-600 text-white px-6 py-4 rounded-xl shadow-xl z-[60] flex items-center min-w-[300px]";
+        icon.innerHTML = '<div class="bg-white/20 p-1 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></div>';
+      }
+      
+      setTimeout(() => toast.classList.remove('translate-y-20', 'opacity-0'), 10);
+      setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 4000);
+    }
+
+    function formatDate(isoString) {
+      if (!isoString) return '-';
+      const d = new Date(isoString);
+      if (isNaN(d)) return '-';
+      return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function formatDateShort(isoString) {
+      if (!isoString) return '-';
+      const d = new Date(isoString);
+      if (isNaN(d)) return '-';
+      return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function renderSkeleton(count = 3) {
+      let html = '';
+      for (let i=0; i<count; i++) {
+        html += `
+          <tr class="flex flex-col sm:table-row bg-white border border-gray-100 sm:border-b sm:border-gray-50 rounded-2xl sm:rounded-none mb-4 sm:mb-0 shadow-sm sm:shadow-none overflow-hidden">
+            <td class="block sm:hidden px-4 py-3 bg-gray-50/80 border-b border-gray-100">
+              <div class="flex items-center space-x-3">
+                <div class="animate-shimmer skeleton-box h-4 w-4 rounded"></div>
+                <div class="animate-shimmer skeleton-box h-3 w-16 rounded"></div>
+              </div>
+            </td>
+            <td class="hidden sm:table-cell sm:px-6 sm:py-4 whitespace-nowrap">
+              <div class="animate-shimmer skeleton-box h-4 w-4 rounded"></div>
+            </td>
+            <td class="block sm:table-cell p-5 sm:px-6 sm:py-4">
+              <div class="animate-shimmer skeleton-box h-5 w-3/4 sm:w-1/4 rounded mb-3 sm:mb-1"></div>
+              <div class="animate-shimmer skeleton-box h-4 w-1/2 sm:w-1/5 rounded sm:hidden"></div>
+            </td>
+            <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap"><div class="animate-shimmer skeleton-box h-4 w-16 rounded"></div></td>
+            <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap"><div class="animate-shimmer skeleton-box h-4 w-12 rounded"></div></td>
+            <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap"><div class="animate-shimmer skeleton-box h-4 w-24 rounded"></div></td>
+            <td class="block sm:table-cell p-4 sm:px-6 sm:py-4 border-t border-gray-100 sm:border-0 bg-gray-50/30 sm:bg-transparent">
+              <div class="grid grid-cols-2 gap-3 sm:flex sm:space-x-2 sm:gap-0 sm:w-auto">
+                <div class="animate-shimmer skeleton-box h-10 w-full sm:w-20 rounded-xl sm:rounded-lg"></div>
+                <div class="animate-shimmer skeleton-box h-10 w-full sm:w-20 rounded-xl sm:rounded-lg"></div>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+      document.getElementById('table-body').innerHTML = html;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Custom Modal System
+    // ─────────────────────────────────────────────────────────
+    const confirmModal = document.getElementById('confirm-modal');
+    const confirmModalBox = document.getElementById('confirm-modal-box');
+    
+    function closeConfirmModal() {
+      confirmModal.classList.add('opacity-0');
+      confirmModalBox.classList.remove('scale-100');
+      confirmModalBox.classList.add('scale-95');
+      setTimeout(() => confirmModal.classList.replace('flex', 'hidden'), 300);
+    }
+
+    function showConfirmModal({ title, message, type, requireInput, confirmText, onConfirm }) {
+      document.getElementById('confirm-title').innerText = title;
+      document.getElementById('confirm-msg').innerText = message;
+      
+      const iconContainer = document.getElementById('confirm-icon-container');
+      const actionBtn = document.getElementById('confirm-action-btn');
+      const inputContainer = document.getElementById('confirm-input-container');
+      const inputEl = document.getElementById('confirm-input');
+
+      // Style based on type
+      if (type === 'danger') {
+        iconContainer.className = 'flex items-center justify-center w-14 h-14 rounded-full mb-4 mx-auto bg-red-100 text-red-600';
+        iconContainer.innerHTML = '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+        actionBtn.className = 'flex-1 px-4 py-3 text-white font-medium rounded-xl transition-colors shadow-sm flex justify-center items-center bg-red-600 hover:bg-red-700';
+      } else {
+        iconContainer.className = 'flex items-center justify-center w-14 h-14 rounded-full mb-4 mx-auto bg-orange-100 text-orange-500';
+        iconContainer.innerHTML = '<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>';
+        actionBtn.className = 'flex-1 px-4 py-3 text-white font-medium rounded-xl transition-colors shadow-sm flex justify-center items-center bg-orange-500 hover:bg-orange-600';
+      }
+
+      actionBtn.innerText = confirmText;
+
+      // Handle Input Requirement
+      if (requireInput) {
+        inputContainer.classList.remove('hidden');
+        inputEl.value = '';
+        inputEl.placeholder = `Ketik "${requireInput}"`;
+        actionBtn.onclick = () => {
+          if (inputEl.value !== requireInput) {
+            inputEl.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+            setTimeout(() => inputEl.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20'), 500);
+            return;
+          }
+          closeConfirmModal();
+          onConfirm(actionBtn);
+        };
+      } else {
+        inputContainer.classList.add('hidden');
+        actionBtn.onclick = () => {
+          closeConfirmModal();
+          onConfirm(actionBtn);
+        };
+      }
+
+      // Show Modal
+      confirmModal.classList.replace('hidden', 'flex');
+      // Trigger reflow for transition
+      void confirmModal.offsetWidth;
+      confirmModal.classList.remove('opacity-0');
+      confirmModalBox.classList.remove('scale-95');
+      confirmModalBox.classList.add('scale-100');
+      
+      if (requireInput) setTimeout(() => inputEl.focus(), 100);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Logic
+    // ─────────────────────────────────────────────────────────
+    function safeGetAuth() { 
+      try { 
+        const u = localStorage.getItem('examgo_admin_user'); 
+        const p = localStorage.getItem('examgo_admin_pass'); 
+        if (u && p) return { user: u, pass: p };
+        return null;
+      } catch(e) { return null; } 
+    }
+
+    // Central creds helper used by token & license functions
+    function getCredentials() {
+      if (!currentUser || !currentPass) {
+        showToast('Sesi habis, silakan login ulang.', 'error');
+        return null;
+      }
+      return { username: currentUser, password: currentPass };
+    }
+    function safeSetAuth(user, pass) { 
+      try { 
+        localStorage.setItem('examgo_admin_user', user); 
+        localStorage.setItem('examgo_admin_pass', pass); 
+      } catch(e) {} 
+    }
+    function safeClearAuth() { 
+      try { 
+        localStorage.removeItem('examgo_admin_user'); 
+        localStorage.removeItem('examgo_admin_pass'); 
+      } catch(e) {} 
+    }
+
+    function attemptLogin() {
+      const userInput = document.getElementById('username-input').value;
+      const passInput = document.getElementById('password-input').value;
+      if (!userInput || !passInput) return showToast('Username dan Password wajib diisi', 'error');
+      
+      const btn = document.getElementById('login-btn');
+      btn.innerHTML = '<div class="loader mr-2"></div> Memverifikasi...';
+      btn.disabled = true;
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          btn.innerHTML = 'Masuk';
+          btn.disabled = false;
+          
+          if (response && response.error === 'unauthorized') {
+            showToast('Username atau Password Salah!', 'error');
+            document.getElementById('password-input').value = '';
+            safeClearAuth();
+          } else {
+            currentUser = userInput;
+            currentPass = passInput;
+            safeSetAuth(userInput, passInput);
+            
+            document.getElementById('user-avatar').innerText = currentUser.charAt(0).toUpperCase();
+            
+            document.getElementById('login-modal').classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => document.getElementById('login-modal').classList.replace('flex', 'hidden'), 500);
+            
+            const mainContent = document.getElementById('main-content');
+            mainContent.classList.remove('hidden');
+            document.getElementById('nav-user').classList.remove('hidden');
+            setTimeout(() => mainContent.classList.remove('opacity-0'), 50);
+            
+            showToast('Akses Diberikan');
+            
+            // Render optimistic states
+            document.getElementById('search-input').value = '';
+            renderSkeleton(5);
+            document.getElementById('stat-total').innerText = '...';
+            currentData = [];
+            document.getElementById('checkbox-all').checked = false;
+            updateSelectedCount();
+            
+            // Gunakan langsung response dari attemptLogin, tanpa request ulang ke server!
+            processLoadDataResponse(response, false);
+          }
+        })
+        .withFailureHandler(function(err) {
+          btn.innerHTML = 'Masuk';
+          btn.disabled = false;
+          showToast('Koneksi ke server gagal', 'error');
+        })
+        .getExamSessions(userInput, passInput); 
+    }
+
+    document.getElementById('password-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') attemptLogin();
+    });
+    
+    function logout() {
+      safeClearAuth();
+      currentUser = '';
+      currentPass = '';
+      
+      const mainContent = document.getElementById('main-content');
+      mainContent.classList.add('opacity-0');
+      document.getElementById('nav-user').classList.add('hidden');
+      setTimeout(() => mainContent.classList.add('hidden'), 300);
+      
+      const loginModal = document.getElementById('login-modal');
+      loginModal.classList.replace('hidden', 'flex');
+      loginModal.classList.remove('pointer-events-none');
+      setTimeout(() => loginModal.classList.remove('opacity-0'), 50);
+      
+      document.getElementById('username-input').value = '';
+      document.getElementById('password-input').value = '';
+      showToast('Berhasil logout');
+    }
+
+    function loadMoreExams() {
+      if (!currentNextPageToken) return;
+      const btn = document.getElementById('btn-load-more');
+      btn.innerHTML = '<div class="loader mr-2 border-gray-400 border-t-gray-700"></div> Memuat...';
+      btn.disabled = true;
+      loadData(currentNextPageToken, true);
+    }
+
+    function loadData(pageToken = null, isLoadMore = false) {
+      if (!currentUser || !currentPass) return;
+      document.getElementById('search-input').value = '';
+      
+      if (!isLoadMore) {
+        renderSkeleton(5);
+        document.getElementById('stat-total').innerText = '...';
+        currentData = [];
+      }
+      
+      document.getElementById('checkbox-all').checked = false;
+      updateSelectedCount();
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          processLoadDataResponse(response, isLoadMore);
+        })
+        .withFailureHandler(function(err) {
+          showToast('Koneksi ke server gagal', 'error');
+          if (!isLoadMore) {
+            document.getElementById('table-body').innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-sm text-red-500 font-medium">Gagal terhubung ke server.</td></tr>`;
+          } else {
+            const btn = document.getElementById('btn-load-more');
+            btn.innerHTML = 'Gagal, Coba Lagi';
+            btn.disabled = false;
+          }
+        })
+        .getExamSessions(currentUser, currentPass, pageToken);
+    }
+
+    function processLoadDataResponse(response, isLoadMore) {
+      if (response && response.error === 'unauthorized') {
+        logout();
+        return showToast('Sesi ditolak. Silakan login ulang.', 'error');
+      }
+      
+      if (response.error) {
+        showToast(response.error, 'error');
+        if (!isLoadMore) {
+          document.getElementById('table-body').innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-sm text-red-500 font-medium">Error: ${response.error}</td></tr>`;
+          document.getElementById('stat-total').innerText = '0';
+        }
+        return;
+      }
+
+      const docs = response.documents || [];
+      currentNextPageToken = response.nextPageToken || null;
+      
+      if (isLoadMore) {
+        currentData = currentData.concat(docs);
+      } else {
+        currentData = docs;
+      }
+      
+      renderTableData(currentData);
+      
+      const pagContainer = document.getElementById('pagination-container');
+      const btnLoadMore = document.getElementById('btn-load-more');
+      if (currentNextPageToken) {
+        pagContainer.classList.remove('hidden');
+        btnLoadMore.innerHTML = 'Muat Lebih Banyak';
+        btnLoadMore.disabled = false;
+      } else {
+        pagContainer.classList.add('hidden');
+      }
+    }
+
+    // Live Search Filter
+    function filterTable() {
+      const term = document.getElementById('search-input').value.toLowerCase();
+      if (!currentData || currentData.error) return;
+      
+      const filtered = currentData.filter(exam => 
+        exam.title.toLowerCase().includes(term) || exam.id.toLowerCase().includes(term)
+      );
+      renderTableData(filtered, true); // true = isFiltering
+    }
+
+    function renderTableData(response, isFiltering = false) {
+      const tbody = document.getElementById('table-body');
+
+      if (response.error) {
+        showToast(response.error, 'error');
+        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-sm text-red-500 font-medium">Error: ${response.error}</td></tr>`;
+        return;
+      }
+
+      if (!isFiltering) document.getElementById('stat-total').innerText = response.length;
+      
+      if (response.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center flex-col items-center">
+          <div class="bg-gray-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+            <svg class="h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+          </div>
+          <span class="text-gray-500 font-medium">${isFiltering ? 'Tidak ada hasil pencarian.' : 'Tidak ada data ujian di Firestore.'}</span>
+        </td></tr>`;
+        return;
+      }
+
+      let html = '';
+      response.forEach(function(exam) {
+        html += `
+          <tr class="flex flex-col sm:table-row bg-white border border-gray-100 sm:border-b sm:border-gray-50 rounded-2xl sm:rounded-none mb-4 sm:mb-0 shadow-sm sm:shadow-none overflow-hidden hover:bg-examgo-pale/10 transition-colors group" id="row-${exam.id}">
+            <!-- Mobile Header with Checkbox & ID -->
+            <td class="block sm:hidden px-4 py-3 bg-gray-50/80 border-b border-gray-100">
+              <div class="flex items-center space-x-3">
+                <input type="checkbox" value="${exam.id}" class="row-checkbox focus:ring-examgo-primary h-4 w-4 text-examgo-primary border-gray-300 rounded cursor-pointer transition-all" onchange="updateSelectedCount()">
+                <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider font-mono">ID: ${exam.id}</span>
+              </div>
+            </td>
+            <!-- Desktop Checkbox -->
+            <td class="hidden sm:table-cell sm:px-6 sm:py-4 whitespace-nowrap">
+              <input type="checkbox" value="${exam.id}" class="row-checkbox focus:ring-examgo-primary h-4 w-4 text-examgo-primary border-gray-300 rounded cursor-pointer transition-all" onchange="updateSelectedCount()">
+            </td>
+            <!-- Main Content: Title & Badges -->
+            <td class="block sm:table-cell p-5 sm:px-6 sm:py-4">
+              <div class="text-lg sm:text-sm font-bold text-gray-900 group-hover:text-examgo-primary transition-colors leading-tight">${String(exam.title || '').replace(/'/g, "\\'")}</div>
+              <div class="text-xs text-gray-500 mt-1 font-mono hidden sm:block">${exam.id}</div>
+              <div class="sm:hidden mt-4 flex flex-wrap gap-2">
+                <div class="inline-flex items-center text-[11px] font-bold bg-blue-50 text-blue-700 px-2.5 py-1.5 rounded-lg border border-blue-100 shadow-sm">
+                  <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                  ${exam.studentCount || 0} Peserta
+                </div>
+                <div class="inline-flex items-center text-[11px] font-medium bg-gray-50 text-gray-600 px-2.5 py-1.5 rounded-lg border border-gray-200 shadow-sm">
+                  <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  ${formatDateShort(exam.createdAt)}
+                </div>
+              </div>
+            </td>
+            <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
+              <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-md bg-gray-100 text-gray-600 font-mono border border-gray-200">
+                ${exam.id}
+              </span>
+            </td>
+            <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
+              <span class="px-2.5 py-1 inline-flex text-sm leading-5 font-semibold rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                <svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                ${exam.studentCount || 0}
+              </span>
+            </td>
+            <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              ${formatDate(exam.createdAt)}
+            </td>
+            <!-- Action Buttons -->
+            <td class="block sm:table-cell p-4 sm:px-6 sm:py-4 border-t border-gray-100 sm:border-0 bg-gray-50/30 sm:bg-transparent">
+              <div class="grid grid-cols-2 gap-3 sm:flex sm:space-x-2 sm:gap-0 sm:w-auto">
+                <button onclick="openExamDetails('${exam.id}', '${String(exam.title || '').replace(/'/g, "\\'")}')" class="flex items-center justify-center text-examgo-primary hover:text-white bg-white sm:bg-examgo-pale hover:bg-examgo-primary py-2.5 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors border sm:border-0 border-examgo-pale shadow-sm font-semibold text-sm">
+                  <svg class="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  <span class="inline">Detail</span>
+                </button>
+                <button onclick="executeSingleDelete('${exam.id}')" class="flex items-center justify-center text-red-600 hover:text-white bg-white sm:bg-red-50 hover:bg-red-500 py-2.5 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors border sm:border-0 border-red-200 shadow-sm font-semibold text-sm">
+                  <svg class="w-4 h-4 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                  <span class="inline">Hapus</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+      
+      // Resync checkboxes state with header checkbox
+      updateSelectedCount();
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Deletion Actions (With Progress Indicator)
+    // ─────────────────────────────────────────────────────────
+    
+    async function executeBatchDelete(examIds) {
+      const progressModal = document.getElementById('progress-modal');
+      const progressBox = document.getElementById('progress-modal-box');
+      const progressBar = document.getElementById('progress-bar');
+      const progressText = document.getElementById('progress-text');
+      const progressPercent = document.getElementById('progress-percent');
+      
+      // Show Progress Modal
+      progressModal.classList.replace('hidden', 'flex');
+      void progressModal.offsetWidth; // trigger reflow
+      progressModal.classList.remove('opacity-0');
+      progressBox.classList.remove('scale-95');
+      progressBox.classList.add('scale-100');
+      
+      let successCount = 0;
+      let failCount = 0;
+      let isQuotaError = false;
+      
+      progressBar.style.width = '0%';
+      progressText.innerText = `Menghapus 0 dari ${examIds.length}`;
+      progressPercent.innerText = '0%';
+      
+      for (let i = 0; i < examIds.length; i++) {
+        if (isQuotaError) break; // Stop loop if quota limit hit
+        
+        const id = examIds[i];
+        progressText.innerText = `Memproses: ${id}`;
+        
+        await new Promise((resolve) => {
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if (res.error) {
+                if (res.error.includes('Kuota')) isQuotaError = true;
+                failCount++;
+              } else {
+                successCount++;
+              }
+              resolve();
+            })
+            .withFailureHandler(function() {
+              failCount++;
+              resolve();
+            })
+            .deleteExamSession(id, currentUser, currentPass);
+        });
+        
+        // Update progress
+        const percent = Math.round(((i + 1) / examIds.length) * 100);
+        progressBar.style.width = percent + '%';
+        progressText.innerText = `${i + 1} dari ${examIds.length} selesai`;
+        progressPercent.innerText = percent + '%';
+      }
+      
+      // Hide Progress Modal
+      progressModal.classList.add('opacity-0');
+      progressBox.classList.remove('scale-100');
+      progressBox.classList.add('scale-95');
+      setTimeout(() => progressModal.classList.replace('flex', 'hidden'), 300);
+      
+      if (isQuotaError) {
+        showToast('Proses terhenti karena limit kuota Firestore harian', 'error');
+      } else {
+        showToast(`Selesai! ${successCount} dihapus, ${failCount} gagal.`);
+      }
+      
+      loadData();
+    }
+
+    function executeSingleDelete(id) {
+      showConfirmModal({
+        title: 'Hapus Ujian?',
+        message: 'Aksi ini akan menghapus sesi ujian beserta seluruh data siswa dan riwayat log-nya. Tidak dapat dibatalkan.',
+        type: 'warning',
+        confirmText: 'Ya, Hapus',
+        onConfirm: () => {
+          executeBatchDelete([id]);
+        }
+      });
+    }
+
+    function openDeleteSelectedModal() {
+      const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+      if (checkedBoxes.length === 0) return;
+      const examIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+      showConfirmModal({
+        title: 'Hapus Multiple',
+        message: `Anda akan menghapus ${examIds.length} ujian yang dipilih beserta seluruh isinya secara permanen.`,
+        type: 'warning',
+        confirmText: `Hapus ${examIds.length} Ujian`,
+        onConfirm: () => {
+          executeBatchDelete(examIds);
+        }
+      });
+    }
+
+    function openDeleteAllModal() {
+      const total = document.getElementById('stat-total').innerText;
+      if (total === '0' || total === '...') return showToast('Tidak ada data yang bisa dihapus', 'error');
+      
+      if (currentData.length === 0) return;
+      const examIds = currentData.map(e => e.id);
+
+      showConfirmModal({
+        title: 'Peringatan Bahaya!',
+        message: 'Tindakan ini akan menghapus SELURUH data di Firestore tanpa terkecuali.',
+        type: 'danger',
+        requireInput: 'BERSIHKAN',
+        confirmText: 'Hapus Semua Data',
+        onConfirm: () => {
+          executeBatchDelete(examIds);
+        }
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Checkbox Logic
+    // ─────────────────────────────────────────────────────────
+    function toggleAllCheckboxes(source) {
+      const checkboxes = document.querySelectorAll('.row-checkbox');
+      checkboxes.forEach(cb => cb.checked = source.checked);
+      updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+      const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+      const count = checkboxes.length;
+      document.getElementById('selected-count').innerText = count;
+      document.getElementById('fab-selected-count').innerText = count;
+      
+      const btn = document.getElementById('btn-delete-selected');
+      const fab = document.getElementById('fab-delete-selected');
+      if (count > 0) {
+        btn.style.display = 'inline-flex';
+        fab.style.display = 'flex';
+      } else {
+        btn.style.display = 'none';
+        fab.style.display = 'none';
+      }
+
+      const allCheckboxes = document.querySelectorAll('.row-checkbox');
+      document.getElementById('checkbox-all').checked = (allCheckboxes.length > 0 && count === allCheckboxes.length);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Students Logic
+    // ─────────────────────────────────────────────────────────
+
+    function showExamsView() {
+      document.getElementById('view-students').classList.add('hidden');
+      document.getElementById('view-licenses').classList.add('hidden');
+      document.getElementById('view-tryout').classList.add('hidden');
+      document.getElementById('view-exams').classList.remove('hidden');
+      document.getElementById('fab-delete-all').style.display = 'flex';
+      _updateNavActive('exams');
+      currentExamId = null;
+      currentStudentsData = [];
+      // Only reload if no data yet (avoid double-fetch on tab switch)
+      if (currentData.length === 0) loadData();
+    }
+
+    function showTryoutView() {
+      document.getElementById('view-exams').classList.add('hidden');
+      document.getElementById('view-students').classList.add('hidden');
+      document.getElementById('view-licenses').classList.add('hidden');
+      document.getElementById('view-tryout').classList.remove('hidden');
+      document.getElementById('fab-delete-all').style.display = 'none';
+      _updateNavActive('tryout');
+      loadAdminPaketTryout();
+    }
+
+    function showLicensesView() {
+      document.getElementById('view-exams').classList.add('hidden');
+      document.getElementById('view-students').classList.add('hidden');
+      document.getElementById('view-tryout').classList.add('hidden');
+      document.getElementById('view-licenses').classList.remove('hidden');
+      document.getElementById('fab-delete-all').style.display = 'none';
+      _updateNavActive('licenses');
+      loadLicenses();
+    }
+
+    function _updateNavActive(view) {
+      const tabExams = document.getElementById('nav-tab-exams');
+      const tabTryout = document.getElementById('nav-tab-tryout');
+      const tabLicenses = document.getElementById('nav-tab-licenses');
+      const activeClass = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-white bg-white/20 shadow-sm transition-all";
+      const inactiveClass = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all";
+
+      if (tabExams) tabExams.className = view === 'exams' ? activeClass : inactiveClass;
+      if (tabTryout) tabTryout.className = view === 'tryout' ? activeClass : inactiveClass;
+      if (tabLicenses) tabLicenses.className = view === 'licenses' ? activeClass : inactiveClass;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Paket & Jadwal Tryout Logic
+    // ─────────────────────────────────────────────────────────
+    let allTryoutData = [];
+
+    function loadAdminPaketTryout() {
+      const creds = getCredentials();
+      if (!creds) return;
+      const tbody = document.getElementById('tryout-table-body');
+      tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500"><div class="loader inline-block border-examgo-primary border-t-examgo-primary/30 w-6 h-6 mr-2"></div> Memuat data paket tryout dari Firestore...</td></tr>';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.error) {
+            showToast(res.error, 'error');
+            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-red-500">' + res.error + '</td></tr>';
+            return;
+          }
+          allTryoutData = res.packages || [];
+          document.getElementById('stat-tryout-total').innerText = res.total || 0;
+          document.getElementById('stat-tryout-active').innerText = res.active || 0;
+          document.getElementById('stat-tryout-inactive').innerText = res.inactive || 0;
+          renderAdminPaketTable(allTryoutData);
+        })
+        .withFailureHandler(function(err) {
+          showToast('Gagal memuat paket tryout: ' + err, 'error');
+          tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-red-500">Gagal terhubung ke server.</td></tr>';
+        })
+        .getAdminPaketTryout(creds.username, creds.password);
+    }
+
+    function renderAdminPaketTable(data) {
+      const tbody = document.getElementById('tryout-table-body');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">Belum ada paket tryout yang dibuat. Klik tombol <b>Tambah Paket Tryout</b> untuk memulai.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      data.forEach(function(pkg) {
+        const isAktif = pkg.status === 'aktif';
+        const statusBadge = isAktif
+          ? '<span class="px-2.5 py-1 inline-flex text-xs font-bold rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-200">AKTIF</span>'
+          : '<span class="px-2.5 py-1 inline-flex text-xs font-bold rounded-lg bg-gray-100 text-gray-600 border border-gray-200">NONAKTIF</span>';
+
+        const jenisBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-bold ' + 
+          (pkg.jenis_test === 'SNBT' ? 'bg-blue-100 text-blue-800' :
+           pkg.jenis_test === 'SKD' ? 'bg-purple-100 text-purple-800' :
+           pkg.jenis_test === 'TKA' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800') + '">' + pkg.jenis_test + '</span>';
+
+        const safePkg = JSON.stringify(pkg).replace(/'/g, "&#39;");
+
+        html += '<tr class="flex flex-col sm:table-row bg-white border border-gray-100 sm:border-b sm:border-gray-50 rounded-2xl sm:rounded-none mb-4 sm:mb-0 shadow-sm sm:shadow-none hover:bg-examgo-pale/10 transition-colors">' +
+          '<td class="p-5 sm:px-6 sm:py-4">' +
+            '<div class="flex items-center space-x-2">' + jenisBadge + '<span class="font-bold text-gray-900 text-sm">' + (pkg.nama_paket || '') + '</span></div>' +
+            '<div class="text-xs text-gray-400 mt-1 font-mono">ID: ' + (pkg.paket_id || '') + '</div>' +
+          '</td>' +
+          '<td class="p-5 sm:px-6 sm:py-4 text-xs text-gray-600">' +
+            (pkg.is_lifetime
+              ? '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">⚡ Selalu Aktif (Lifetime)</span>'
+              : '<div class="font-semibold text-gray-800">' + (pkg.tanggal || 'Kapan saja') + '</div>' +
+                '<div class="text-gray-500 font-mono">' + (pkg.jam_mulai || '08:00') + ' - ' + (pkg.jam_selesai || '23:59') + ' WIB</div>') +
+            '<div class="mt-1">' + (pkg.allow_retake !== false
+              ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-600 border border-blue-200">🔄 Bisa Diulang</span>'
+              : '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">🔒 1x Kerjakan</span>') + '</div>' +
+          '</td>' +
+          '<td class="p-5 sm:px-6 sm:py-4 text-xs text-gray-600">' +
+            '<div class="font-semibold">' + (pkg.durasi_menit || 120) + ' Menit</div>' +
+            '<div class="text-gray-400">' + (pkg.total_soal || 50) + ' Butir Soal</div>' +
+          '</td>' +
+          '<td class="p-5 sm:px-6 sm:py-4">' +
+            (pkg.target_exam_id ? '<span class="px-2 py-1 font-mono text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200 rounded-md">' + pkg.target_exam_id + '</span>' : '<span class="text-xs text-gray-400 italic">Default</span>') +
+          '</td>' +
+          '<td class="p-5 sm:px-6 sm:py-4">' + statusBadge + '</td>' +
+          '<td class="p-4 sm:px-6 sm:py-4 text-right">' +
+            '<div class="flex items-center justify-end space-x-2">' +
+              '<button onclick=\'openEditTryoutModal(' + safePkg + ')\' class="px-3 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-lg text-xs font-semibold transition-all">Edit</button>' +
+              '<button onclick="deleteTryoutPackage(\'' + pkg.paket_id + '\', \'' + String(pkg.nama_paket || '').replace(/'/g, "\\'") + '\')" class="px-3 py-1.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-lg text-xs font-semibold transition-all">Hapus</button>' +
+            '</div>' +
+          '</td>' +
+        '</tr>';
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    function filterTryoutTable() {
+      const term = (document.getElementById('search-tryout-input').value || '').toLowerCase();
+      if (!allTryoutData) return;
+      const filtered = allTryoutData.filter(function(p) {
+        return (p.nama_paket || '').toLowerCase().includes(term) ||
+               (p.jenis_test || '').toLowerCase().includes(term) ||
+               (p.paket_id || '').toLowerCase().includes(term);
+      });
+      renderAdminPaketTable(filtered);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Smart Math & DOCX Parser Engine (from myOLCv2)
+    // ─────────────────────────────────────────────────────────
+    window._tryoutParsedQuestions = [];
+    window._tryoutPreviewCurrentPage = 1;
+    window._tryoutPreviewPerPage = 5;
+
+    async function extractAndConvertOMML(arrayBuffer) {
+      if (typeof JSZip === 'undefined') return arrayBuffer;
+      try {
+        const zip = await JSZip.loadAsync(arrayBuffer);
+        const docXmlFile = zip.file("word/document.xml");
+        if (!docXmlFile) return arrayBuffer;
+
+        let xmlStr = await docXmlFile.async("string");
+        if (!xmlStr.includes('<m:oMath')) return arrayBuffer;
+
+        function parseNode(node) {
+          if (!node) return '';
+          let tex = '';
+          function getChild(n, tagName) {
+            if (!n || !n.childNodes) return null;
+            for (let i = 0; i < n.childNodes.length; i++) {
+              let cname = n.childNodes[i].nodeName.replace(/^.*:/, 'm:');
+              if (cname === tagName) return n.childNodes[i];
+            }
+            return null;
+          }
+
+          for (let i = 0; i < node.childNodes.length; i++) {
+            let child = node.childNodes[i];
+            let name = child.nodeName.replace(/^.*:/, 'm:');
+            if (name === 'm:r') {
+              tex += parseNode(child);
+            } else if (name === 'm:t') {
+              tex += child.textContent;
+            } else if (name === 'm:f') {
+              let num = parseNode(getChild(child, 'm:num'));
+              let den = parseNode(getChild(child, 'm:den'));
+              tex += '\\frac{' + num + '}{' + den + '}';
+            } else if (name === 'm:rad') {
+              let deg = parseNode(getChild(child, 'm:deg'));
+              let e = parseNode(getChild(child, 'm:e'));
+              tex += deg ? ('\\sqrt[' + deg + ']{' + e + '}') : ('\\sqrt{' + e + '}');
+            } else if (name === 'm:sSup') {
+              let e = parseNode(getChild(child, 'm:e'));
+              let sup = parseNode(getChild(child, 'm:sup'));
+              tex += e + '^{' + sup + '}';
+            } else if (name === 'm:sSub') {
+              let e = parseNode(getChild(child, 'm:e'));
+              let sub = parseNode(getChild(child, 'm:sub'));
+              tex += e + '_{' + sub + '}';
+            } else if (name === 'm:sSubSup') {
+              let e = parseNode(getChild(child, 'm:e'));
+              let sub = parseNode(getChild(child, 'm:sub'));
+              let sup = parseNode(getChild(child, 'm:sup'));
+              tex += e + '_{' + sub + '}^{' + sup + '}';
+            } else if (name === 'm:d') {
+              let e = parseNode(getChild(child, 'm:e'));
+              tex += '\\left(' + e + '\\right)';
+            } else if (name === 'm:e' || name === 'm:num' || name === 'm:den' || name === 'm:sup' || name === 'm:sub' || name === 'm:deg') {
+              tex += parseNode(child);
+            } else if (child.childNodes && child.childNodes.length > 0) {
+              tex += parseNode(child);
+            }
+          }
+          return tex;
+        }
+
+        xmlStr = xmlStr.replace(/<m:oMath(>|\s[^>]*>)[\s\S]*?<\/m:oMath>/g, function(match) {
+          try {
+            const parser = new DOMParser();
+            const dummyDoc = parser.parseFromString('<root xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math">' + match + '</root>', "application/xml");
+            const oMath = dummyDoc.firstChild.firstChild;
+            let latex = parseNode(oMath);
+            latex = latex.replace(/−/g, '-').replace(/×/g, '\\times ').replace(/÷/g, '\\div ').replace(/≤/g, '\\le ').replace(/≥/g, '\\ge ').replace(/≠/g, '\\ne ').replace(/±/g, '\\pm ');
+            latex = String(latex).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return '<w:r><w:t xml:space="preserve">$' + latex + '$</w:t></w:r>';
+          } catch(e) {
+            return match;
+          }
+        });
+
+        xmlStr = xmlStr.replace(/<m:oMathPara[^>]*>/g, '').replace(/<\/m:oMathPara>/g, '');
+        zip.file("word/document.xml", xmlStr);
+        return await zip.generateAsync({type: "arraybuffer"});
+      } catch(e) {
+        return arrayBuffer;
+      }
+    }
+
+    function convertMathToLatex(str) {
+      if (!str) return '';
+      let s = String(str);
+      if (s.includes('$')) {
+        s = s.replace(/\$\$([\s\S]*?)\$\$/g, function(match, p1) {
+          return '$' + p1.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&') + '$';
+        });
+        s = s.replace(/\$([^\$\n]+)\$/g, function(match, p1) {
+          return '$' + p1.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&') + '$';
+        });
+      }
+      s = s.replace(/\u221A(\d+)/g, '\\sqrt{$1}')
+           .replace(/√\(([^)]+)\)/g, '\\sqrt{$1}')
+           .replace(/√([0-9a-zA-Z]+)/g, '\\sqrt{$1}')
+           .replace(/x\u00B2/g, 'x^{2}')
+           .replace(/x\u00B3/g, 'x^{3}')
+           .replace(/([a-zA-Z0-9\)])²|([a-zA-Z0-9\)])\^2/g, '$1^{2}')
+           .replace(/([a-zA-Z0-9\)])³|([a-zA-Z0-9\)])\^3/g, '$1^{3}')
+           .replace(/\u2264/g, '\\le ')
+           .replace(/\u2265/g, '\\ge ')
+           .replace(/\u2260/g, '\\ne ')
+           .replace(/\u00B1/g, '\\pm ')
+           .replace(/\u00D7/g, '\\times ')
+           .replace(/\u00F7/g, '\\div ')
+           .replace(/\u221E/g, '\\infty ')
+           .replace(/([a-zA-Z0-9\)])\^(\d+)/g, '$1^{$2}')
+           .replace(/sqrt\(([^)]+)\)/g, '\\sqrt{$1}')
+           .replace(/\bsum\b/g, '\\sum')
+           .replace(/(\d+)\/(\d+)/g, '\\frac{$1}{$2}');
+
+      // Bungkus formula \sqrt{...} atau \frac{...} yang belum berada dalam $
+      s = s.replace(/(?<!\$)((\\frac\{[^{}]*\}\{[^{}]*\}|\\sqrt(?:\[[^\]]*\])?\{[^{}]*\})(?:\s*[+\-*\/]\s*(?:\\frac\{[^{}]*\}\{[^{}]*\}|\\sqrt(?:\[[^\]]*\])?\{[^{}]*\}|[a-zA-Z0-9]+))*)(?!\$)/g, '$$$1$$');
+
+      s = s.replace(/\$\s+/g, '$').replace(/\s+\$/g, '$');
+      return s;
+    }
+
+    function toggleDocxTemplateGuide(show) {
+      const guide = document.getElementById('docx-template-guide');
+      if (!guide) return;
+      if (typeof show === 'boolean') {
+        if (show) guide.classList.remove('hidden');
+        else guide.classList.add('hidden');
+      } else {
+        guide.classList.toggle('hidden');
+      }
+    }
+
+    function _showTryoutAlert(alertId, msgHtml) {
+      const el = document.getElementById(alertId);
+      const msgEl = document.getElementById(alertId + '-msg');
+      if (msgEl) msgEl.innerHTML = msgHtml;
+      if (el) el.classList.remove('hidden');
+    }
+
+    function _hideTryoutAlert(alertId) {
+      const el = document.getElementById(alertId);
+      if (el) el.classList.add('hidden');
+    }
+
+    function _clearAllTryoutAlerts() {
+      _hideTryoutAlert('tryout-format-alert');
+      _hideTryoutAlert('tryout-partial-warning');
+      _hideTryoutAlert('tryout-upload-error');
+    }
+
+    function validateTryoutQuestions(questions) {
+      if (!questions || questions.length === 0) {
+        return {
+          valid: false,
+          summary: 'Tidak ada butir soal yang terdeteksi dari dokumen.',
+          invalidQuestions: []
+        };
+      }
+
+      const invalidQuestions = [];
+      questions.forEach(function(q, idx) {
+        const num = q.nomor_soal || (idx + 1);
+        const issues = [];
+        if (!q.pertanyaan || !q.pertanyaan.trim()) {
+          issues.push('Teks pertanyaan kosong');
+        }
+
+        let optionCount = 0;
+        ['a', 'b', 'c', 'd', 'e'].forEach(function(opt) {
+          if ((q[opt] && q[opt].trim()) || q['gam_' + opt]) optionCount++;
+        });
+        if (optionCount < 2) {
+          issues.push('Pilihan jawaban kurang dari 2 opsi');
+        }
+
+        const key = (q.kunci || '').trim().toUpperCase();
+        if (!key || !['A', 'B', 'C', 'D', 'E'].includes(key)) {
+          issues.push('Kunci jawaban (' + (key || 'kosong') + ') tidak valid');
+        }
+
+        if (issues.length > 0) {
+          invalidQuestions.push({
+            index: idx,
+            number: num,
+            issues: issues
+          });
+        }
+      });
+
+      return {
+        valid: invalidQuestions.length === 0,
+        summary: invalidQuestions.length > 0
+          ? 'Ditemukan ' + invalidQuestions.length + ' soal dengan format belum lengkap atau tidak sesuai template.'
+          : 'Semua butir soal valid dan sesuai template.',
+        invalidQuestions: invalidQuestions
+      };
+    }
+
+    function parseDocxHtmlToQuestions(html) {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+
+      let parsedSoals = [];
+      let currentSoal = null;
+      let currentOption = null;
+      let forceNewQuestion = false;
+
+      function processLine(text, imagesList) {
+        if (!text && (!imagesList || imagesList.length === 0)) return;
+        text = text.replace(/[\u2000-\u200F\u2028-\u202F\u205F\u3000\uFEFF]/g, '').trim();
+        text = convertMathToLatex(text);
+        if (!text && (!imagesList || imagesList.length === 0)) return;
+
+        if (/^[\-_─—–=]{3,}$/.test(text) || text.includes('PENTING:') || text.includes('Template ini dibuat') || text.includes('────────────────')) {
+          forceNewQuestion = true;
+          return;
+        }
+
+        let extractedPembahasan = null;
+        let extractedKunci = null;
+
+        let pmIndex = text.search(/(?:#\s*)?Pembahasan\s*[:\-]/i);
+        if (pmIndex !== -1) {
+          let pmMatch = text.match(/(?:#\s*)?Pembahasan\s*[:\-]\s*([\s\S]*)/i);
+          if (pmMatch) extractedPembahasan = pmMatch[1].trim();
+          text = text.substring(0, pmIndex).trim();
+        }
+
+        let kmIndex = text.search(/(?:#\s*)?Kunci\s*[:\-]/i);
+        if (kmIndex !== -1) {
+          let kmMatch = text.match(/(?:#\s*)?Kunci\s*[:\-]\s*([A-Ea-e\s,]+)/i);
+          if (kmMatch) {
+            extractedKunci = kmMatch[1].trim().toUpperCase();
+          }
+          text = text.substring(0, kmIndex).trim();
+        }
+
+        if (currentSoal) {
+          if (extractedPembahasan !== null) {
+            currentSoal.pembahasan = extractedPembahasan;
+            currentOption = 'pembahasan';
+          }
+          if (extractedKunci !== null) currentSoal.kunci = extractedKunci;
+        }
+
+        if (!text) {
+          if (imagesList && imagesList.length > 0 && currentSoal) {
+            let b64 = imagesList[0];
+            if (currentOption && currentOption !== 'pembahasan') {
+              if (!currentSoal['gam_' + currentOption]) currentSoal['gam_' + currentOption] = b64;
+            } else if (!currentOption) {
+              if (!currentSoal.gambar_soal) currentSoal.gambar_soal = b64;
+            }
+          }
+          return;
+        }
+
+        let om = text.match(/^([A-Ea-e])[.)]\s*([\s\S]*)/);
+        if (om) {
+          currentOption = om[1].toLowerCase();
+          if (currentSoal) {
+            currentSoal[currentOption] = om[2].trim();
+            if (imagesList && imagesList.length > 0) currentSoal['gam_' + currentOption] = imagesList[0];
+          }
+          return;
+        }
+
+        let qm = text.match(/^(?:(?:Soal\s*)?(\d+)[.):]\s*|(\d+)\s+)([\s\S]*)/i);
+        if (qm || forceNewQuestion) {
+          forceNewQuestion = false;
+          if (currentSoal) parsedSoals.push(currentSoal);
+          currentOption = null;
+          let qNum = qm ? parseInt(qm[1] || qm[2] || (parsedSoals.length + 1), 10) : (parsedSoals.length + 1);
+          let qText = qm ? (qm[3] || '').trim() : text;
+          currentSoal = {
+            nomor_soal: qNum,
+            pertanyaan: qText,
+            a: '', b: '', c: '', d: '', e: '',
+            gam_a: '', gam_b: '', gam_c: '', gam_d: '', gam_e: '',
+            kunci: 'A',
+            pembahasan: '',
+            gambar_soal: (imagesList && imagesList.length > 0) ? imagesList[0] : '',
+            baris_tabel: ''
+          };
+          return;
+        }
+
+        if (currentSoal) {
+          if (currentOption === 'pembahasan') {
+            currentSoal.pembahasan += (currentSoal.pembahasan ? ' ' : '') + text;
+          } else if (currentOption && ['a', 'b', 'c', 'd', 'e'].includes(currentOption)) {
+            currentSoal[currentOption] += (currentSoal[currentOption] ? ' ' : '') + text;
+            if (imagesList && imagesList.length > 0 && !currentSoal['gam_' + currentOption]) {
+              currentSoal['gam_' + currentOption] = imagesList[0];
+            }
+          } else {
+            currentSoal.pertanyaan += (currentSoal.pertanyaan ? ' ' : '') + text;
+            if (imagesList && imagesList.length > 0 && !currentSoal.gambar_soal) {
+              currentSoal.gambar_soal = imagesList[0];
+            }
+          }
+        }
+      }
+
+      const allElements = tempDiv.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, table, hr');
+      const elements = Array.from(allElements).filter(el => el.tagName.toLowerCase() === 'table' || !el.closest('table'));
+
+      for (let i = 0; i < elements.length; i++) {
+        const el = elements[i];
+        const tag = el.tagName.toLowerCase();
+
+        if (tag === 'hr') {
+          forceNewQuestion = true;
+          continue;
+        }
+
+        // Deteksi <li> dalam <ol>: penanganan auto-numbering Word
+        if (tag === 'li' && el.parentElement && el.parentElement.tagName.toLowerCase() === 'ol') {
+          const liText = (el.innerText || el.textContent || '').replace(/[\u2000-\u200F\u2028-\u202F\u205F\u3000\uFEFF]/g, '').trim();
+          if (liText && !/^[A-Ea-e][.)]\s/.test(liText) && !/^(Kunci|Pembahasan|Bobot)\s*[:\-]/i.test(liText)) {
+            forceNewQuestion = true;
+          }
+        }
+
+        let imagesList = [];
+        el.querySelectorAll('img').forEach(img => imagesList.push(img.src));
+
+        if (tag === 'table') {
+          let rowData = [];
+          el.querySelectorAll('tr').forEach(tr => {
+            let cells = [];
+            tr.querySelectorAll('td, th').forEach(td => cells.push(convertMathToLatex((td.textContent || '').trim())));
+            if (cells.some(c => c)) rowData.push(cells);
+          });
+          if (rowData.length > 0 && currentSoal) {
+            let barisArr = rowData.map((row, idx) => (idx + 1) + '|||' + row.join('|||'));
+            currentSoal.baris_tabel = barisArr.join('===');
+          }
+          continue;
+        }
+
+        const fullText = (el.innerText || el.textContent || '').trim();
+        if (!fullText && imagesList.length === 0) continue;
+        const subLines = fullText.split('\n').map(l => l.trim()).filter(Boolean);
+
+        // Jika paragraf hanya berisi gambar tanpa teks
+        if (subLines.length === 0 && imagesList.length > 0) {
+          if (currentSoal) {
+            let b64 = imagesList[0];
+            if (currentOption && currentOption !== 'pembahasan') {
+              if (!currentSoal['gam_' + currentOption]) currentSoal['gam_' + currentOption] = b64;
+            } else if (!currentOption) {
+              if (!currentSoal.gambar_soal) currentSoal.gambar_soal = b64;
+            }
+          }
+          continue;
+        }
+
+        for (let j = 0; j < subLines.length; j++) {
+          processLine(subLines[j], j === 0 ? imagesList : []);
+        }
+      }
+
+      if (currentSoal) parsedSoals.push(currentSoal);
+      return parsedSoals;
+    }
+
+    async function handleTryoutDocxUpload(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const loadingBox = document.getElementById('docx-extract-loading');
+      if (loadingBox) loadingBox.classList.remove('hidden');
+      document.getElementById('tryout-file-label').innerText = 'Memproses: ' + file.name + '...';
+      _clearAllTryoutAlerts();
+
+      try {
+        let arrayBuffer = await file.arrayBuffer();
+        if (typeof extractAndConvertOMML === 'function') {
+          arrayBuffer = await extractAndConvertOMML(arrayBuffer);
+        }
+        const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+        const parsed = parseDocxHtmlToQuestions(result.value);
+
+        if (loadingBox) loadingBox.classList.add('hidden');
+
+        if (!parsed || parsed.length === 0) {
+          _showTryoutAlert('tryout-format-alert', '<b>Format soal tidak sesuai:</b> Dokumen tidak memiliki butir soal bernomor yang dapat dikenali (contoh: <code>1. Pertanyaan...</code>). Silakan periksa format dokumen Anda.');
+          toggleDocxTemplateGuide(true);
+          document.getElementById('tryout-file-label').innerText = 'Klik untuk Upload File Soal DOCX';
+          return;
+        }
+
+        window._tryoutParsedQuestions = parsed;
+        document.getElementById('tryout-form-soal').value = parsed.length;
+
+        // Validasi kelengkapan format template
+        const val = validateTryoutQuestions(parsed);
+        if (!val.valid) {
+          let issuesText = val.invalidQuestions.slice(0, 5).map(function(item) {
+            return '• <b>Soal No. ' + item.number + ':</b> ' + item.issues.join(', ');
+          }).join('<br>');
+          if (val.invalidQuestions.length > 5) {
+            issuesText += '<br>• ...dan ' + (val.invalidQuestions.length - 5) + ' butir soal lainnya.';
+          }
+          _showTryoutAlert('tryout-format-alert', 'Ditemukan <b>' + val.invalidQuestions.length + ' butir soal</b> dengan format tidak sesuai template:<br>' + issuesText + '<br><span class="text-amber-900 font-bold underline cursor-pointer mt-1 inline-block" onclick="toggleDocxTemplateGuide(true)">Klik untuk melihat contoh panduan template format baku</span>');
+          document.getElementById('tryout-file-label').innerText = '⚠️ ' + file.name + ' (' + parsed.length + ' Soal, ' + val.invalidQuestions.length + ' perlu perbaikan)';
+          showToast('File dibaca, namun ada ' + val.invalidQuestions.length + ' format soal yang perlu disesuaikan', 'warning');
+        } else {
+          document.getElementById('tryout-file-label').innerText = '✅ ' + file.name + ' (' + parsed.length + ' Soal Siap)';
+          showToast('Berhasil membaca ' + parsed.length + ' butir soal sesuai template!', 'success');
+        }
+
+        renderTryoutQuestionsPreview(1);
+      } catch (err) {
+        if (loadingBox) loadingBox.classList.add('hidden');
+        _showTryoutAlert('tryout-upload-error', 'Gagal memproses file dokumen Word: ' + (err.message || err));
+        document.getElementById('tryout-file-label').innerText = 'Klik untuk Upload File Soal DOCX';
+      }
+    }
+
+    function renderTryoutQuestionsPreview(page) {
+      const questions = window._tryoutParsedQuestions || [];
+      const container = document.getElementById('tryout-docx-preview-container');
+      const listEl = document.getElementById('tryout-questions-preview-list');
+
+      if (!container || !listEl) return;
+
+      if (questions.length === 0) {
+        container.classList.add('hidden');
+        return;
+      }
+
+      container.classList.remove('hidden');
+      document.getElementById('preview-soal-counter').innerText = questions.length + ' Soal';
+
+      // Pre-calculate validation map
+      const val = validateTryoutQuestions(questions);
+      const invalidMap = {};
+      val.invalidQuestions.forEach(function(item) {
+        invalidMap[item.index] = item.issues;
+      });
+
+      const perPage = window._tryoutPreviewPerPage || 5;
+      const totalPages = Math.ceil(questions.length / perPage) || 1;
+      if (page < 1) page = 1;
+      if (page > totalPages) page = totalPages;
+      window._tryoutPreviewCurrentPage = page;
+
+      document.getElementById('preview-page-info').innerText = page + ' / ' + totalPages;
+      document.getElementById('btn-prev-preview-page').disabled = page === 1;
+      document.getElementById('btn-next-preview-page').disabled = page === totalPages;
+
+      const startIdx = (page - 1) * perPage;
+      const pageQuestions = questions.slice(startIdx, startIdx + perPage);
+
+      let html = '';
+      pageQuestions.forEach(function(q, i) {
+        const actualIdx = startIdx + i;
+        const kunci = (q.kunci || 'A').toUpperCase();
+        const issues = invalidMap[actualIdx];
+        const isInvalid = issues && issues.length > 0;
+
+        let opsiHtml = '';
+        ['a', 'b', 'c', 'd', 'e'].forEach(function(opt) {
+          const optVal = q[opt];
+          const optImg = q['gam_' + opt];
+          if (!optVal && !optImg) return;
+          const isCorrect = kunci === opt.toUpperCase();
+          const imgHtml = optImg ? '<div class="mt-1.5"><img src="' + optImg + '" class="max-h-28 rounded-lg border object-contain bg-white p-1 shadow-sm"></div>' : '';
+
+          opsiHtml += '<div class="preview-opsi ' + (isCorrect ? 'is-correct' : '') + '">' +
+            '<div class="preview-opsi-letter ' + (isCorrect ? 'is-correct' : '') + '">' + opt.toUpperCase() + '</div>' +
+            '<div class="preview-opsi-text">' + (optVal || '') + imgHtml + '</div>' +
+          '</div>';
+        });
+
+        let tableHtml = '';
+        if (q.baris_tabel) {
+          try {
+            const rowsArr = q.baris_tabel.includes('===') ? q.baris_tabel.split('===') : q.baris_tabel.split(',/');
+            const delim = q.baris_tabel.includes('===') ? '|||' : '-';
+            let ths = '';
+            let trs = '';
+            for (let k = 0; k < rowsArr.length; k++) {
+              let parts = rowsArr[k].split(delim);
+              parts.shift();
+              if (k === 0) {
+                ths = parts.map(c => '<th class="border border-gray-300 px-3 py-1.5 bg-gray-100 font-semibold text-gray-800 text-left">' + c + '</th>').join('');
+              } else {
+                trs += '<tr class="hover:bg-gray-50">' + parts.map(td => '<td class="border border-gray-300 px-3 py-1.5 text-gray-700">' + td + '</td>').join('') + '</tr>';
+              }
+            }
+            tableHtml = '<div class="overflow-x-auto my-3"><table class="w-full text-xs border-collapse border border-gray-300 rounded-lg shadow-sm"><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table></div>';
+          } catch (e) {
+            tableHtml = '';
+          }
+        }
+
+        let qImgHtml = q.gambar_soal ? '<div class="my-3 text-center bg-white p-2 rounded-xl border border-gray-200 shadow-sm"><img src="' + q.gambar_soal + '" class="max-h-64 rounded-lg mx-auto object-contain"></div>' : '';
+
+        const cardBorder = isInvalid ? 'border-2 border-amber-400 bg-amber-50/40' : 'border border-gray-200 bg-gray-50';
+        const invalidBadge = isInvalid
+          ? '<span class="px-2 py-0.5 bg-red-100 text-red-700 rounded font-bold text-[10px]" title="' + issues.join('; ') + '">⚠️ ' + issues[0] + '</span>'
+          : '';
+
+        html += '<div class="preview-soal-card p-4 rounded-2xl ' + cardBorder + '">' +
+          '<div class="flex items-center justify-between pb-2 mb-2 border-b border-gray-200">' +
+            '<div class="flex items-center space-x-2">' +
+              '<span class="font-bold text-gray-800 text-xs">Soal No. ' + (actualIdx + 1) + '</span>' +
+              invalidBadge +
+            '</div>' +
+            '<div class="flex items-center space-x-2">' +
+              '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[11px]">Kunci: ' + kunci + '</span>' +
+              '<button type="button" onclick="openEditSingleSoal(' + actualIdx + ')" class="px-2 py-0.5 bg-white hover:bg-blue-50 text-blue-600 rounded text-[11px] font-semibold border border-blue-200 transition-all">✏️ Edit</button>' +
+              '<button type="button" onclick="deleteSingleSoal(' + actualIdx + ')" class="px-2 py-0.5 bg-white hover:bg-red-50 text-red-600 rounded text-[11px] font-semibold border border-red-200 transition-all">🗑️ Hapus</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="text-xs text-gray-800 leading-relaxed mb-2 font-medium">' + (q.pertanyaan || '<span class="text-red-500 font-bold">[Teks Pertanyaan Kosong]</span>') + '</div>' +
+          tableHtml +
+          qImgHtml +
+          '<div class="mt-2 space-y-1">' + opsiHtml + '</div>' +
+          (q.pembahasan ? '<div class="mt-2 pt-1 text-[11px] text-gray-500 border-t border-gray-200 italic">💡 Pembahasan: ' + q.pembahasan + '</div>' : '') +
+        '</div>';
+      });
+
+      listEl.innerHTML = html;
+
+      // Render math formulas via KaTeX
+      if (window.renderMathInElement) {
+        renderMathInElement(listEl, {
+          throwOnError: false,
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+          ]
+        });
+      }
+    }
+
+    function changePreviewPage(delta) {
+      renderTryoutQuestionsPreview((window._tryoutPreviewCurrentPage || 1) + delta);
+    }
+
+    function openEditSingleSoal(idx) {
+      const q = window._tryoutParsedQuestions[idx];
+      if (!q) return;
+
+      document.getElementById('edit-single-soal-title').innerText = 'Edit Soal No. ' + (idx + 1);
+      document.getElementById('edit-single-soal-idx').value = idx;
+      document.getElementById('edit-single-pertanyaan').value = q.pertanyaan || '';
+      document.getElementById('edit-single-a').value = q.a || '';
+      document.getElementById('edit-single-b').value = q.b || '';
+      document.getElementById('edit-single-c').value = q.c || '';
+      document.getElementById('edit-single-d').value = q.d || '';
+      document.getElementById('edit-single-e').value = q.e || '';
+      document.getElementById('edit-single-kunci').value = (q.kunci || 'A').toUpperCase();
+      document.getElementById('edit-single-pembahasan').value = q.pembahasan || '';
+
+      _showModal('modal-edit-single-soal', 'modal-edit-single-soal-box');
+    }
+
+    function closeEditSingleSoalModal() {
+      _hideModal('modal-edit-single-soal', 'modal-edit-single-soal-box');
+    }
+
+    function saveEditedSingleSoal() {
+      const idx = parseInt(document.getElementById('edit-single-soal-idx').value, 10);
+      if (isNaN(idx) || !window._tryoutParsedQuestions[idx]) return;
+
+      window._tryoutParsedQuestions[idx].pertanyaan = convertMathToLatex(document.getElementById('edit-single-pertanyaan').value.trim());
+      window._tryoutParsedQuestions[idx].a = convertMathToLatex(document.getElementById('edit-single-a').value.trim());
+      window._tryoutParsedQuestions[idx].b = convertMathToLatex(document.getElementById('edit-single-b').value.trim());
+      window._tryoutParsedQuestions[idx].c = convertMathToLatex(document.getElementById('edit-single-c').value.trim());
+      window._tryoutParsedQuestions[idx].d = convertMathToLatex(document.getElementById('edit-single-d').value.trim());
+      window._tryoutParsedQuestions[idx].e = convertMathToLatex(document.getElementById('edit-single-e').value.trim());
+      window._tryoutParsedQuestions[idx].kunci = document.getElementById('edit-single-kunci').value;
+      window._tryoutParsedQuestions[idx].pembahasan = convertMathToLatex(document.getElementById('edit-single-pembahasan').value.trim());
+
+      closeEditSingleSoalModal();
+
+      // Re-validate and update alert banner
+      const val = validateTryoutQuestions(window._tryoutParsedQuestions);
+      if (val.valid) {
+        _hideTryoutAlert('tryout-format-alert');
+      } else {
+        let issuesText = val.invalidQuestions.slice(0, 5).map(function(item) {
+          return '• <b>Soal No. ' + item.number + ':</b> ' + item.issues.join(', ');
+        }).join('<br>');
+        _showTryoutAlert('tryout-format-alert', 'Ditemukan <b>' + val.invalidQuestions.length + ' butir soal</b> dengan format tidak sesuai template:<br>' + issuesText);
+      }
+
+      renderTryoutQuestionsPreview(window._tryoutPreviewCurrentPage || 1);
+      showToast('Soal No. ' + (idx + 1) + ' diperbarui', 'success');
+    }
+
+    function deleteSingleSoal(idx) {
+      if (!window._tryoutParsedQuestions[idx]) return;
+      window._tryoutParsedQuestions.splice(idx, 1);
+      document.getElementById('tryout-form-soal').value = window._tryoutParsedQuestions.length;
+      document.getElementById('preview-soal-counter').innerText = window._tryoutParsedQuestions.length + ' Soal';
+
+      const val = validateTryoutQuestions(window._tryoutParsedQuestions);
+      if (val.valid) {
+        _hideTryoutAlert('tryout-format-alert');
+      }
+
+      renderTryoutQuestionsPreview(window._tryoutPreviewCurrentPage || 1);
+      showToast('Soal dihapus', 'info');
+    }
+
+    function toggleLifetimeFields() {
+      const isLifetime = document.getElementById('tryout-form-lifetime').checked;
+      const container = document.getElementById('tryout-schedule-datetime-container');
+      if (container) {
+        if (isLifetime) {
+          container.classList.add('opacity-40', 'pointer-events-none');
+        } else {
+          container.classList.remove('opacity-40', 'pointer-events-none');
+        }
+      }
+    }
+
+    function openCreateTryoutModal() {
+      document.getElementById('tryout-modal-title').innerText = 'Tambah Paket Tryout Baru';
+      document.getElementById('tryout-form-id').value = '';
+      document.getElementById('tryout-form-nama').value = '';
+      document.getElementById('tryout-form-jenis').value = 'SNBT';
+      document.getElementById('tryout-form-status').value = 'aktif';
+      document.getElementById('tryout-form-lifetime').checked = false;
+      document.getElementById('tryout-form-allow-retake').checked = true;
+      toggleLifetimeFields();
+      document.getElementById('tryout-form-tanggal').value = new Date().toISOString().split('T')[0];
+      document.getElementById('tryout-form-jam-mulai').value = '08:00';
+      document.getElementById('tryout-form-jam-selesai').value = '23:59';
+      document.getElementById('tryout-form-durasi').value = '120';
+      document.getElementById('tryout-form-soal').value = '0';
+      document.getElementById('tryout-form-jenis-waktu').value = 'total';
+      document.getElementById('tryout-form-target').value = '';
+      document.getElementById('tryout-form-passing').value = '65';
+      document.getElementById('tryout-form-deskripsi').value = '';
+      
+      // Reset DOCX state & preview
+      window._tryoutParsedQuestions = [];
+      const fileInput = document.getElementById('tryout-file-docx');
+      if (fileInput) fileInput.value = '';
+      document.getElementById('tryout-file-label').innerText = 'Klik untuk Upload File Soal DOCX';
+      const container = document.getElementById('tryout-docx-preview-container');
+      if (container) container.classList.add('hidden');
+      _clearAllTryoutAlerts();
+      toggleDocxTemplateGuide(false);
+
+      _showModal('modal-tryout', 'modal-tryout-box');
+    }
+
+    function openEditTryoutModal(pkg) {
+      document.getElementById('tryout-modal-title').innerText = 'Edit Paket Tryout (' + (pkg.paket_id || '') + ')';
+      document.getElementById('tryout-form-id').value = pkg.paket_id || '';
+      document.getElementById('tryout-form-nama').value = pkg.nama_paket || '';
+      document.getElementById('tryout-form-jenis').value = pkg.jenis_test || 'SNBT';
+      document.getElementById('tryout-form-status').value = pkg.status || 'aktif';
+      document.getElementById('tryout-form-lifetime').checked = pkg.is_lifetime === true;
+      document.getElementById('tryout-form-allow-retake').checked = pkg.allow_retake !== false;
+      toggleLifetimeFields();
+      document.getElementById('tryout-form-tanggal').value = pkg.tanggal || '';
+      document.getElementById('tryout-form-jam-mulai').value = pkg.jam_mulai || '08:00';
+      document.getElementById('tryout-form-jam-selesai').value = pkg.jam_selesai || '23:59';
+      document.getElementById('tryout-form-durasi').value = pkg.durasi_menit || 120;
+      document.getElementById('tryout-form-soal').value = pkg.total_soal || 0;
+      document.getElementById('tryout-form-jenis-waktu').value = pkg.jenis_waktu || 'total';
+      document.getElementById('tryout-form-target').value = pkg.target_exam_id || '';
+      document.getElementById('tryout-form-passing').value = pkg.pass_percentage || 65;
+      document.getElementById('tryout-form-deskripsi').value = pkg.deskripsi || '';
+
+      window._tryoutParsedQuestions = [];
+      const fileInput = document.getElementById('tryout-file-docx');
+      if (fileInput) fileInput.value = '';
+      document.getElementById('tryout-file-label').innerText = 'Klik untuk Upload File Soal DOCX Pengganti';
+      const container = document.getElementById('tryout-docx-preview-container');
+      if (container) container.classList.add('hidden');
+      _clearAllTryoutAlerts();
+      toggleDocxTemplateGuide(false);
+
+      _showModal('modal-tryout', 'modal-tryout-box');
+    }
+
+    function closeTryoutModal() {
+      _hideModal('modal-tryout', 'modal-tryout-box');
+    }
+
+    async function submitTryoutForm() {
+      const creds = getCredentials();
+      if (!creds) return;
+
+      const nama = document.getElementById('tryout-form-nama').value.trim();
+      if (!nama) {
+        showToast('Nama paket tidak boleh kosong', 'error');
+        return;
+      }
+
+      _clearAllTryoutAlerts();
+
+      // 1. Proses konversi ke LaTeX pada seluruh butir soal sebelum disimpan ke Firestore
+      const rawQuestions = window._tryoutParsedQuestions || [];
+      if (rawQuestions.length > 0) {
+        rawQuestions.forEach(function(q) {
+          q.pertanyaan = convertMathToLatex(q.pertanyaan);
+          q.a = convertMathToLatex(q.a);
+          q.b = convertMathToLatex(q.b);
+          q.c = convertMathToLatex(q.c);
+          q.d = convertMathToLatex(q.d);
+          q.e = convertMathToLatex(q.e);
+          q.pembahasan = convertMathToLatex(q.pembahasan);
+        });
+
+        // 2. Error 1: Format soal tidak sesuai
+        const val = validateTryoutQuestions(rawQuestions);
+        if (!val.valid) {
+          let issuesText = val.invalidQuestions.slice(0, 5).map(function(item) {
+            return '• <b>Soal No. ' + item.number + ':</b> ' + item.issues.join(', ');
+          }).join('<br>');
+          if (val.invalidQuestions.length > 5) {
+            issuesText += '<br>• ...dan ' + (val.invalidQuestions.length - 5) + ' soal lainnya.';
+          }
+          _showTryoutAlert('tryout-format-alert', '<b>Format soal tidak sesuai template!</b> Mohon lengkapi butir soal berikut sebelum menyimpan:<br>' + issuesText);
+          showToast('Format soal tidak sesuai: Perbaiki soal bertanda kuning/merah terlebih dahulu', 'error');
+          return;
+        }
+      }
+
+      const btn = document.getElementById('btn-save-tryout');
+      btn.disabled = true;
+
+      // 3. Upload Gambar & Grafik Base64 ke Google Drive Resmi (1mM7PTjpZKQnHCQX14BdQiOcoqVRdMlZJ)
+      const imageTasks = [];
+      rawQuestions.forEach(function(q, qIdx) {
+        if (q.gambar_soal && String(q.gambar_soal).startsWith('data:image')) {
+          imageTasks.push({ qIdx: qIdx, field: 'gambar_soal', b64: q.gambar_soal, name: 'soal_' + (qIdx + 1) + '_gambar' });
+        }
+        ['a', 'b', 'c', 'd', 'e'].forEach(function(opt) {
+          if (q['gam_' + opt] && String(q['gam_' + opt]).startsWith('data:image')) {
+            imageTasks.push({ qIdx: qIdx, field: 'gam_' + opt, b64: q['gam_' + opt], name: 'soal_' + (qIdx + 1) + '_opt_' + opt });
+          }
+        });
+      });
+
+      if (imageTasks.length > 0) {
+        for (let t = 0; t < imageTasks.length; t++) {
+          const task = imageTasks[t];
+          btn.innerHTML = '<div class="loader mr-2 inline-block"></div> Mengunggah gambar ke Drive (' + (t + 1) + '/' + imageTasks.length + ')...';
+          try {
+            const upRes = await new Promise(function(resolve, reject) {
+              google.script.run
+                .withSuccessHandler(resolve)
+                .withFailureHandler(reject)
+                .uploadImageToDriveFolder(task.b64, task.name);
+            });
+            if (upRes && upRes.url) {
+              rawQuestions[task.qIdx][task.field] = upRes.url;
+            }
+          } catch(upErr) {
+            console.warn('Gagal upload gambar butir ke Drive:', upErr);
+          }
+        }
+      }
+
+      btn.innerHTML = '<div class="loader mr-2 inline-block"></div> Menyimpan ke Firestore...';
+
+      const totalSoal = rawQuestions.length > 0
+        ? rawQuestions.length
+        : parseInt(document.getElementById('tryout-form-soal').value || '0', 10);
+
+      const payload = {
+        paket_id: document.getElementById('tryout-form-id').value.trim(),
+        nama_paket: nama,
+        jenis_test: document.getElementById('tryout-form-jenis').value,
+        status: document.getElementById('tryout-form-status').value,
+        tanggal: document.getElementById('tryout-form-tanggal').value,
+        jam_mulai: document.getElementById('tryout-form-jam-mulai').value,
+        jam_selesai: document.getElementById('tryout-form-jam-selesai').value,
+        durasi_menit: parseInt(document.getElementById('tryout-form-durasi').value || '120', 10),
+        total_soal: totalSoal,
+        jenis_waktu: document.getElementById('tryout-form-jenis-waktu').value,
+        target_exam_id: document.getElementById('tryout-form-target').value.trim().toUpperCase(),
+        pass_percentage: parseInt(document.getElementById('tryout-form-passing').value || '65', 10),
+        is_lifetime: document.getElementById('tryout-form-lifetime').checked,
+        allow_retake: document.getElementById('tryout-form-allow-retake').checked,
+        deskripsi: convertMathToLatex(document.getElementById('tryout-form-deskripsi').value.trim()),
+        is_premium_only: true,
+        soal: rawQuestions
+      };
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btn.disabled = false;
+          btn.innerText = 'Simpan & Jadwalkan Tryout';
+
+          if (res && res.error) {
+            // Error 3: Gagal upload ke firestore
+            _showTryoutAlert('tryout-upload-error', '<b>Gagal upload ke Firestore:</b> ' + res.error);
+            showToast('Gagal upload ke Firestore: ' + res.error, 'error');
+          } else if (res && res.failedQuestions && res.failedQuestions.length > 0) {
+            // Error 2: Ada soal yang tidak tersimpan
+            _showTryoutAlert('tryout-partial-warning', '<b>Ada soal yang tidak tersimpan:</b> ' + res.message);
+            showToast('Sebagian soal tersimpan: ' + res.savedCount + ' dari ' + res.totalCount + ' soal', 'warning');
+            loadAdminPaketTryout();
+          } else {
+            showToast((res && res.message) || 'Paket tryout berhasil dijadwalkan ke Firestore!', 'success');
+            closeTryoutModal();
+            loadAdminPaketTryout();
+          }
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          btn.innerText = 'Simpan & Jadwalkan Tryout';
+          // Error 3: Gagal upload ke firestore
+          _showTryoutAlert('tryout-upload-error', '<b>Gagal upload ke Firestore:</b> ' + (err.message || err));
+          showToast('Gagal upload ke Firestore: ' + (err.message || err), 'error');
+        })
+        .saveAdminPaketTryout(payload, creds.username, creds.password);
+    }
+
+    function deleteTryoutPackage(pkgId, pkgName) {
+      const creds = getCredentials();
+      if (!creds) return;
+
+      showConfirmModal({
+        title: 'Hapus Paket Tryout?',
+        message: 'Apakah Anda yakin ingin menghapus paket "' + pkgName + '" (' + pkgId + ') dari Firestore? Siswa tidak akan dapat mengakses paket ini lagi.',
+        type: 'danger',
+        confirmText: 'Ya, Hapus Paket',
+        onConfirm: function(btn) {
+          btn.innerHTML = '<div class="loader mr-2 inline-block"></div> Menghapus...';
+          btn.disabled = true;
+          google.script.run
+            .withSuccessHandler(function(res) {
+              closeConfirmModal();
+              if (res && res.error) {
+                showToast(res.error, 'error');
+              } else {
+                showToast('Paket tryout berhasil dihapus');
+                loadAdminPaketTryout();
+              }
+            })
+            .withFailureHandler(function(err) {
+              closeConfirmModal();
+              showToast('Gagal menghapus: ' + err, 'error');
+            })
+            .deleteAdminPaketTryout(pkgId, creds.username, creds.password);
+        }
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Licenses & Token Lynk.id Logic
+    // ─────────────────────────────────────────────────────────
+    let allLicensesData = [];
+    let licenseCurrentPage = 1;
+    let licensePageSize = 10;
+
+    function changeLicensePageSize(size) {
+      licensePageSize = parseInt(size, 10) || 10;
+      licenseCurrentPage = 1;
+      renderLicensesTable();
+    }
+
+    function goToLicensePage(page) {
+      licenseCurrentPage = page;
+      renderLicensesTable();
+    }
+
+    function loadLicenses() {
+      const creds = getCredentials();
+      if (!creds) return;
+      const tbody = document.getElementById('licenses-table-body');
+      tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500"><div class="loader inline-block border-examgo-primary border-t-examgo-primary/30 w-6 h-6 mr-2"></div> Memuat data lisensi dari Firestore...</td></tr>';
+      
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.error) {
+            showToast(res.error, 'error');
+            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-red-500">' + res.error + '</td></tr>';
+            return;
+          }
+          allLicensesData = (res && res.tokens) ? res.tokens : [];
+          document.getElementById('stat-licenses-total').innerText = res.total || 0;
+          document.getElementById('stat-licenses-available').innerText = res.available || 0;
+          document.getElementById('stat-licenses-used').innerText = res.used || 0;
+          renderLicensesTable();
+        })
+        .withFailureHandler(function(err) {
+          showToast('Gagal memuat token: ' + err.message, 'error');
+          tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-red-500">Gagal memuat: ' + err.message + '</td></tr>';
+        })
+        .getLicenseTokens(creds.username, creds.password);
+    }
+
+    function renderLicensesTable() {
+      const filter = document.getElementById('filter-license-status').value;
+      const filterSchool = document.getElementById('filter-license-school') ? document.getElementById('filter-license-school').value : 'all';
+      const search = (document.getElementById('search-licenses').value || '').trim().toLowerCase();
+      const tbody = document.getElementById('licenses-table-body');
+      const countInfo = document.getElementById('licenses-count-info');
+      const pageControls = document.getElementById('licenses-page-controls');
+      
+      let filtered = allLicensesData.filter(item => {
+        if (filterSchool !== 'all' && (item.school || 'UMUM') !== filterSchool) return false;
+        if (filter === 'available' && item.isUsed) return false;
+        if (filter === 'used' && !item.isUsed) return false;
+        if (search) {
+          const matchToken = (item.token || '').toLowerCase().includes(search);
+          const matchDevice = (item.deviceId || '').toLowerCase().includes(search);
+          const matchSchool = (item.school || '').toLowerCase().includes(search);
+          if (!matchToken && !matchDevice && !matchSchool) return false;
+        }
+        return true;
+      });
+
+      const totalItems = filtered.length;
+      const totalPages = Math.ceil(totalItems / licensePageSize) || 1;
+      if (licenseCurrentPage > totalPages) licenseCurrentPage = totalPages;
+      if (licenseCurrentPage < 1) licenseCurrentPage = 1;
+
+      if (totalItems === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-gray-400">Tidak ada token yang sesuai kriteria.</td></tr>';
+        if (countInfo) countInfo.innerText = 'Menampilkan 0 dari 0 token';
+        if (pageControls) pageControls.innerHTML = '';
+        return;
+      }
+
+      const startIndex = (licenseCurrentPage - 1) * licensePageSize;
+      const endIndex = Math.min(startIndex + licensePageSize, totalItems);
+      const paginatedItems = filtered.slice(startIndex, endIndex);
+
+      if (countInfo) {
+        countInfo.innerText = `Menampilkan ${startIndex + 1} - ${endIndex} dari ${totalItems} token`;
+      }
+
+      if (pageControls) {
+        let controlsHtml = '';
+        controlsHtml += `
+          <button type="button" onclick="goToLicensePage(${licenseCurrentPage - 1})" ${licenseCurrentPage <= 1 ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 text-gray-700 font-semibold disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs shadow-2xs">
+            &laquo; Prev
+          </button>
+        `;
+
+        let pageNumbers = [];
+        if (totalPages <= 7) {
+          for (let p = 1; p <= totalPages; p++) pageNumbers.push(p);
+        } else {
+          pageNumbers.push(1);
+          let startPage = Math.max(2, licenseCurrentPage - 1);
+          let endPage = Math.min(totalPages - 1, licenseCurrentPage + 1);
+
+          if (startPage > 2) pageNumbers.push('...');
+          for (let p = startPage; p <= endPage; p++) {
+            pageNumbers.push(p);
+          }
+          if (endPage < totalPages - 1) pageNumbers.push('...');
+          pageNumbers.push(totalPages);
+        }
+
+        pageNumbers.forEach(p => {
+          if (p === '...') {
+            controlsHtml += `<span class="px-1.5 py-1 text-gray-400 font-bold select-none text-xs">...</span>`;
+          } else {
+            const isActive = p === licenseCurrentPage;
+            controlsHtml += `
+              <button type="button" onclick="goToLicensePage(${p})" class="px-3 py-1.5 rounded-lg font-bold text-xs transition-all shadow-2xs ${isActive ? 'bg-examgo-primary text-white' : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'}">
+                ${p}
+              </button>
+            `;
+          }
+        });
+
+        controlsHtml += `
+          <button type="button" onclick="goToLicensePage(${licenseCurrentPage + 1})" ${licenseCurrentPage >= totalPages ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 text-gray-700 font-semibold disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs shadow-2xs">
+            Next &raquo;
+          </button>
+        `;
+
+        pageControls.innerHTML = controlsHtml;
+      }
+
+      let html = '';
+      paginatedItems.forEach(item => {
+        const typeLabel = item.type === 'TEACHER_PREMIUM' 
+          ? '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Guru Premium</span>'
+          : '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Siswa Lifetime</span>';
+
+        let schoolBadge = '<span class="text-gray-400 text-xs">Umum</span>';
+        if (item.school && item.school !== 'UMUM') {
+          let colorClass = 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+          if (item.school.includes('MAN 1')) colorClass = 'bg-emerald-50 text-emerald-800 border border-emerald-200';
+          if (item.school.includes('MAN 2')) colorClass = 'bg-blue-50 text-blue-800 border border-blue-200';
+          if (item.school.includes('MTs')) colorClass = 'bg-purple-50 text-purple-800 border border-purple-200';
+          schoolBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-lg ${colorClass}">${item.school}</span>`;
+        }
+
+        const targetStr = (item.targetExam && item.targetExam !== '-')
+          ? `<span class="px-2 py-0.5 text-xs font-mono font-bold rounded bg-amber-100 text-amber-900">${item.targetExam}</span>`
+          : '<span class="text-gray-400 text-xs">Umum</span>';
+        
+        const statusLabel = item.isGroup
+          ? `<span class="px-2.5 py-1 text-xs font-bold rounded-full ${item.currentActivations >= item.maxActivations ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}">Master Voucher (${item.currentActivations || 0}/${item.maxActivations})</span>`
+          : (item.isUsed
+            ? '<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800">Terpakai (Aktif)</span>'
+            : '<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800">Tersedia</span>');
+
+        const deviceStr = item.isGroup
+          ? `<span class="font-bold text-xs text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${item.currentActivations || 0} HP Terdaftar</span>`
+          : (item.isUsed && item.deviceId !== '-' 
+            ? `<span class="font-mono text-xs text-gray-800 bg-gray-100 px-2 py-0.5 rounded">${item.deviceId}</span>`
+            : '<span class="text-gray-400 text-xs">Belum diaktivasi</span>');
+
+        const activatedStr = item.isUsed && item.activatedAt !== '-'
+          ? `<span class="text-xs text-gray-600">${new Date(item.activatedAt).toLocaleString('id-ID')}</span>`
+          : '-';
+
+        html += `
+          <tr class="hover:bg-gray-50/80 transition-colors">
+            <td class="px-6 py-4 font-mono font-bold text-gray-900 tracking-wider">${item.token}</td>
+            <td class="px-6 py-4">${schoolBadge}</td>
+            <td class="px-6 py-4">${typeLabel}</td>
+            <td class="px-6 py-4">${targetStr}</td>
+            <td class="px-6 py-4">${statusLabel}</td>
+            <td class="px-6 py-4">${deviceStr}</td>
+            <td class="px-6 py-4">${activatedStr}</td>
+            <td class="px-6 py-4 text-right space-x-1.5 whitespace-nowrap">
+              <button onclick="openEditTokenModal('${item.token}', '${item.type}', '${item.targetExam === '-' ? '' : item.targetExam}', ${item.isUsed})" class="inline-flex items-center text-blue-600 hover:text-white bg-blue-50 hover:bg-blue-600 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors border border-blue-200">
+                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                Edit
+              </button>
+              <button onclick="confirmDeleteToken('${item.token}')" class="inline-flex items-center text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors border border-red-200">
+                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                Hapus
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    const editTokenModal = document.getElementById('edit-token-modal');
+    const editTokenModalBox = document.getElementById('edit-token-modal-box');
+
+    function openEditTokenModal(token, type, targetExam, isUsed) {
+      document.getElementById('edit-token-code').value = token;
+      document.getElementById('edit-token-type').value = type || 'TEACHER_PREMIUM';
+      document.getElementById('edit-token-target').value = (targetExam && targetExam !== '-') ? targetExam : '';
+      
+      const resetCheckbox = document.getElementById('edit-token-reset-status');
+      resetCheckbox.checked = false;
+      const resetContainer = document.getElementById('edit-token-reset-container');
+      if (isUsed) {
+        resetContainer.classList.remove('hidden');
+      } else {
+        resetContainer.classList.add('hidden');
+      }
+
+      editTokenModal.classList.replace('hidden', 'flex');
+      void editTokenModal.offsetWidth;
+      editTokenModal.classList.remove('opacity-0');
+      editTokenModalBox.classList.remove('scale-95');
+      editTokenModalBox.classList.add('scale-100');
+    }
+
+    function closeEditTokenModal() {
+      editTokenModal.classList.add('opacity-0');
+      editTokenModalBox.classList.remove('scale-100');
+      editTokenModalBox.classList.add('scale-95');
+      setTimeout(() => editTokenModal.classList.replace('flex', 'hidden'), 300);
+    }
+
+    function saveTokenData() {
+      const creds = getCredentials();
+      if (!creds) return;
+
+      const token = document.getElementById('edit-token-code').value;
+      const type = document.getElementById('edit-token-type').value;
+      const targetExam = (document.getElementById('edit-token-target').value || '').trim();
+      const resetStatus = document.getElementById('edit-token-reset-status').checked;
+
+      const btn = document.getElementById('save-token-btn');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<div class="loader"></div>';
+      btn.disabled = true;
+
+      const updates = {
+        type: type,
+        targetExam: targetExam,
+        resetStatus: resetStatus
+      };
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          if (res && res.error) {
+            showToast(res.error, 'error');
+          } else {
+            showToast(res.message || 'Token berhasil diperbarui!', 'success');
+            closeEditTokenModal();
+            loadLicenses();
+          }
+        })
+        .withFailureHandler(function(err) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          showToast('Gagal update token: ' + err.message, 'error');
+        })
+        .updateLicenseToken(token, updates, creds.username, creds.password);
+    }
+
+    function confirmDeleteToken(token) {
+      showConfirmModal({
+        title: 'Hapus Token Lisensi?',
+        message: 'Token ' + token + ' akan dihapus dari Firestore secara permanen. Aksi ini tidak dapat dibatalkan.',
+        type: 'danger',
+        confirmText: 'Ya, Hapus Token',
+        onConfirm: (btn) => {
+          const creds = getCredentials();
+          if (!creds) return;
+          btn.innerHTML = '<div class="loader mr-2"></div> Menghapus...';
+          
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if (res && res.error) {
+                showToast(res.error, 'error');
+              } else {
+                showToast(res.message || 'Token berhasil dihapus', 'success');
+                loadLicenses();
+              }
+            })
+            .withFailureHandler(function(err) {
+              showToast('Gagal menghapus token: ' + err.message, 'error');
+            })
+            .deleteLicenseToken(token, creds.username, creds.password);
+        }
+      });
+    }
+
+    let currentGenMode = 'master';
+
+    function switchGenMode(mode) {
+      currentGenMode = mode;
+      const tabMaster = document.getElementById('tab-gen-master');
+      const tabBatch = document.getElementById('tab-gen-batch');
+      const boxMaster = document.getElementById('box-gen-master');
+      const boxBatch = document.getElementById('box-gen-batch');
+
+      if (mode === 'master') {
+        tabMaster.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-examgo-primary shadow-sm transition-all';
+        tabBatch.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-600 hover:text-gray-900 transition-all';
+        boxMaster.classList.remove('hidden');
+        boxBatch.classList.add('hidden');
+      } else {
+        tabBatch.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-examgo-primary shadow-sm transition-all';
+        tabMaster.className = 'px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-600 hover:text-gray-900 transition-all';
+        boxBatch.classList.remove('hidden');
+        boxMaster.classList.add('hidden');
+      }
+    }
+
+    function autoSuggestMasterCode() {
+      const sch = document.getElementById('master-school').value;
+      if (sch.includes('MAN 1')) setMasterCode('MAN1MATARAM', 'MAN 1 Mataram', 1200);
+      else if (sch.includes('MAN 2')) setMasterCode('MAN2MATARAM', 'MAN 2 Mataram', 1500);
+      else if (sch.includes('MTs')) setMasterCode('MTS1MATARAM', 'MTsN 1 Mataram', 900);
+    }
+
+    function setMasterCode(code, school, quota) {
+      document.getElementById('master-code').value = code;
+      document.getElementById('master-school').value = school;
+      document.getElementById('master-quota').value = quota;
+    }
+
+    function executeCreateMasterVoucher() {
+      const creds = getCredentials();
+      if (!creds) return;
+      const school = document.getElementById('master-school').value;
+      const code = (document.getElementById('master-code').value || '').trim().toUpperCase();
+      const quota = parseInt(document.getElementById('master-quota').value) || 1000;
+      const btn = document.getElementById('btn-save-master-voucher');
+
+      if (!code) {
+        showToast('Kode Master Voucher tidak boleh kosong.', 'warning');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<div class="loader inline-block w-4 h-4 mr-2"></div> Menyimpan...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>⚡ Simpan Master Voucher</span>';
+          if (res && res.error) {
+            showToast(res.error, 'error');
+            return;
+          }
+          document.getElementById('generated-output-title').innerText = `✅ Master Voucher "${res.token}" Berhasil Diterbitkan!`;
+          document.getElementById('generated-tokens-textarea').value = res.token;
+          document.getElementById('generated-output-tip').innerText = `💡 Bagikan kode "${res.token}" ke siswa ${res.school}. Kuota aktivasi: ${res.maxQuota} perangkat ponsel.`;
+          document.getElementById('generated-output-box').classList.remove('hidden');
+          showToast(`Master Voucher ${res.token} (${res.maxQuota} siswa) siap!`, 'success');
+          loadLicenses();
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>⚡ Simpan Master Voucher</span>';
+          showToast('Error: ' + err.message, 'error');
+        })
+        .createMasterSchoolVoucher(creds.username, creds.password, code, school, 'STUDENT_LIFETIME', quota);
+    }
+
+    function executeGenerateTokens() {
+      const creds = getCredentials();
+      if (!creds) return;
+      const type = document.getElementById('gen-token-type').value;
+      const school = document.getElementById('gen-token-school').value;
+      const count = document.getElementById('gen-token-count').value;
+      const targetExam = (document.getElementById('gen-token-target').value || '').trim();
+      const btn = document.getElementById('btn-generate-tokens');
+      
+      btn.disabled = true;
+      btn.innerHTML = '<div class="loader inline-block w-4 h-4 mr-2"></div> Generating...';
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>⚡ Generate Token</span>';
+          if (res && res.error) {
+            showToast(res.error, 'error');
+            return;
+          }
+          const tokens = res.tokens || [];
+          document.getElementById('generated-count-badge').innerText = tokens.length;
+          document.getElementById('generated-tokens-textarea').value = tokens.join('\n');
+          document.getElementById('generated-output-box').classList.remove('hidden');
+          showToast(`Berhasil membuat ${tokens.length} token untuk ${school}!`, 'success');
+          loadLicenses();
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>⚡ Generate Token</span>';
+          showToast('Error: ' + err.message, 'error');
+        })
+        .generateLicenseTokens(creds.username, creds.password, type, count, targetExam, school);
+    }
+
+    function copyGeneratedTokens() {
+      const textarea = document.getElementById('generated-tokens-textarea');
+      textarea.select();
+      navigator.clipboard.writeText(textarea.value).then(() => {
+        showToast('Semua token berhasil disalin ke clipboard!', 'success');
+      }).catch(() => {
+        document.execCommand('copy');
+        showToast('Token disalin!', 'success');
+      });
+    }
+
+    function copyTokensForWhatsApp() {
+      if (currentGenMode === 'master') {
+        const school = document.getElementById('master-school').value;
+        const code = (document.getElementById('master-code').value || '').trim().toUpperCase();
+        const quota = document.getElementById('master-quota').value;
+
+        let msg = `*PENGUMUMAN LISENSI RESMI EXAMGO PREMIUM*\n`;
+        msg += `🏫 *Sekolah:* ${school}\n`;
+        msg += `🔑 *Kode Master Voucher:* *${code}*\n`;
+        msg += `👥 *Kuota Akses:* ${quota} Siswa\n\n`;
+        msg += `Halo Siswa-Siswi ${school},\nUntuk mengaktifkan akun Siswa Premium selamanya di aplikasi ExamGO:\n\n`;
+        msg += `1. Buka aplikasi *ExamGO* di ponsel Android Anda.\n`;
+        msg += `2. Di halaman utama, ketuk kartu *Lisensi & Status Akun*.\n`;
+        msg += `3. Masukkan Kode Voucher: *${code}*\n`;
+        msg += `4. Tekan tombol *Aktivasi Sekarang*.\n\n`;
+        msg += `Status akun Anda akan langsung aktif menjadi *Siswa Premium Permanen* tanpa batasan kuota ujian!\n\n`;
+        msg += `_Catatan: Kode ini khusus siswa ${school}. Segera aktifkan di ponsel masing-masing._`;
+
+        navigator.clipboard.writeText(msg).then(() => {
+          showToast('Format pengumuman WhatsApp untuk ' + school + ' berhasil disalin!', 'success');
+        }).catch(() => {
+          showToast('Gagal menyalin.', 'error');
+        });
+        return;
+      }
+
+      const type = document.getElementById('gen-token-type').value;
+      const school = document.getElementById('gen-token-school').value;
+      const textarea = document.getElementById('generated-tokens-textarea');
+      const tokens = textarea.value.split('\n').map(t => t.trim()).filter(t => t.length > 0);
+
+      if (tokens.length === 0) {
+        showToast('Tidak ada token yang dapat disalin.', 'warning');
+        return;
+      }
+
+      const roleText = type === 'TEACHER_PREMIUM' ? 'Guru Premium (Pembuat & Monitoring Soal)' : 'Siswa Lifetime (Akses Ujian Bebas)';
+      const steps = type === 'TEACHER_PREMIUM'
+        ? '1. Buka aplikasi ExamGO di ponsel Android Anda.\n2. Buka menu "Mode Guru" di bagian bawah.\n3. Masukkan PIN Guru Anda (atau buat baru jika pertama kali).\n4. Ketuk banner lisensi "Upgrade / Masukkan Kode Lisensi".\n5. Masukkan salah satu kode di bawah ini lalu tekan Aktivasi.'
+        : '1. Buka aplikasi ExamGO di ponsel Android Anda.\n2. Di halaman utama, ketuk kartu "Lisensi & Status Akun".\n3. Masukkan salah satu kode di bawah ini.\n4. Tekan tombol "Aktivasi Sekarang".';
+
+      let msg = `*DAFTAR KODE AKTIVASI LISENSI RESMI EXAMGO*\n`;
+      msg += `🏫 *Institusi / Sekolah:* ${school}\n`;
+      msg += `👤 *Peruntukan:* ${roleText}\n`;
+      msg += `🔢 *Jumlah Lisensi:* ${tokens.length} Perangkat\n\n`;
+      msg += `*Panduan Cara Aktivasi:*\n${steps}\n\n`;
+      msg += `*Daftar Kode Token (1 Kode Khusus 1 Ponsel):*\n`;
+      tokens.forEach((tok, idx) => {
+        msg += `${idx + 1}. \`${tok}\`\n`;
+      });
+      msg += `\n_Catatan: Setiap kode lisensi terkunci otomatis pada ponsel pertama yang mengaktifkannya. Harap bagikan masing-masing 1 kode secara pribadi ke setiap guru/siswa._`;
+
+      navigator.clipboard.writeText(msg).then(() => {
+        showToast('Format pesan WhatsApp untuk ' + school + ' berhasil disalin!', 'success');
+      }).catch(() => {
+        showToast('Gagal menyalin otomatis.', 'error');
+      });
+    }
+
+    function openExamDetails(examId, title) {
+      currentExamId = examId;
+      document.getElementById('current-exam-title').innerText = "Sesi: " + title + " | ID: " + examId;
+      document.getElementById('view-exams').classList.add('hidden');
+      document.getElementById('view-tryout').classList.add('hidden');
+      document.getElementById('view-licenses').classList.add('hidden');
+      document.getElementById('view-students').classList.remove('hidden');
+      document.getElementById('fab-delete-all').style.display = 'none'; // Sembunyikan FAB hapus semua di tampilan siswa
+      loadStudents();
+    }
+
+    function renderSkeletonStudents(count = 3) {
+      let html = '';
+      for (let i=0; i<count; i++) {
+        html += `
+          <tr class="flex flex-col sm:table-row bg-white border border-gray-100 sm:border-b sm:border-gray-50 rounded-2xl sm:rounded-none mb-4 sm:mb-0 shadow-sm sm:shadow-none overflow-hidden">
+            <td class="block sm:hidden px-4 py-3 bg-gray-50/80 border-b border-gray-100">
+              <div class="flex items-center justify-between">
+                <div class="animate-shimmer skeleton-box h-4 w-16 rounded"></div>
+              </div>
+            </td>
+            <td class="block sm:table-cell p-5 sm:px-6 sm:py-4">
+              <div class="animate-shimmer skeleton-box h-5 w-3/4 sm:w-1/4 rounded mb-3 sm:mb-1"></div>
+              <div class="animate-shimmer skeleton-box h-4 w-1/2 sm:w-1/5 rounded sm:hidden"></div>
+            </td>
+            <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap"><div class="animate-shimmer skeleton-box h-4 w-16 rounded"></div></td>
+            <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap"><div class="animate-shimmer skeleton-box h-4 w-12 rounded"></div></td>
+            <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap"><div class="animate-shimmer skeleton-box h-4 w-24 rounded"></div></td>
+            <td class="block sm:table-cell p-4 sm:px-6 sm:py-4 border-t border-gray-100 sm:border-0 bg-gray-50/30 sm:bg-transparent">
+              <div class="grid grid-cols-3 gap-2 sm:flex sm:space-x-2 sm:gap-0 sm:w-auto">
+                <div class="animate-shimmer skeleton-box h-10 w-full sm:w-16 rounded-xl sm:rounded-lg"></div>
+                <div class="animate-shimmer skeleton-box h-10 w-full sm:w-16 rounded-xl sm:rounded-lg"></div>
+                <div class="animate-shimmer skeleton-box h-10 w-full sm:w-16 rounded-xl sm:rounded-lg"></div>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+      document.getElementById('students-table-body').innerHTML = html;
+      document.getElementById('student-count-badge').innerText = '...';
+    }
+
+    function loadMoreStudents() {
+      if (!currentStudentsNextPageToken) return;
+      const btn = document.getElementById('btn-load-more-students');
+      btn.innerHTML = '<div class="loader mr-2 border-gray-400 border-t-gray-700"></div> Memuat...';
+      btn.disabled = true;
+      loadStudents(currentStudentsNextPageToken, true);
+    }
+
+    function loadStudents(pageToken = null, isLoadMore = false) {
+      if (!currentUser || !currentPass || !currentExamId) return;
+      document.getElementById('search-student-input').value = '';
+      
+      if (!isLoadMore) {
+        renderSkeletonStudents(5);
+        currentStudentsData = [];
+      }
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (response && response.error) {
+            showToast(response.error, 'error');
+            return;
+          }
+          
+          const docs = response.documents || [];
+          currentStudentsNextPageToken = response.nextPageToken || null;
+          
+          if (isLoadMore) {
+            currentStudentsData = currentStudentsData.concat(docs);
+          } else {
+            currentStudentsData = docs;
+          }
+          
+          renderStudentsTable(currentStudentsData);
+          
+          const pagContainer = document.getElementById('pagination-students-container');
+          const btnLoadMore = document.getElementById('btn-load-more-students');
+          if (currentStudentsNextPageToken) {
+            pagContainer.classList.remove('hidden');
+            btnLoadMore.innerHTML = 'Muat Lebih Banyak Siswa';
+            btnLoadMore.disabled = false;
+          } else {
+            pagContainer.classList.add('hidden');
+          }
+        })
+        .withFailureHandler(function(err) {
+          showToast('Gagal memuat data siswa', 'error');
+          if (!isLoadMore) {
+            document.getElementById('students-table-body').innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-sm text-red-500 font-medium">Gagal terhubung ke server.</td></tr>`;
+          } else {
+            const btn = document.getElementById('btn-load-more-students');
+            btn.innerHTML = 'Gagal, Coba Lagi';
+            btn.disabled = false;
+          }
+        })
+        .getStudentsList(currentExamId, currentUser, currentPass, pageToken);
+    }
+
+    function filterStudentsTable() {
+      const term = document.getElementById('search-student-input').value.toLowerCase();
+      if (!currentStudentsData || currentStudentsData.error) return;
+      
+      const filtered = currentStudentsData.filter(student => 
+        student.name.toLowerCase().includes(term) || student.nis.toLowerCase().includes(term)
+      );
+      renderStudentsTable(filtered, true);
+    }
+
+    function renderStudentsTable(response, isFiltering = false) {
+      const tbody = document.getElementById('students-table-body');
+      
+      if (!isFiltering) document.getElementById('student-count-badge').innerText = response.length;
+      
+      if (response.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center flex-col items-center">
+          <div class="bg-gray-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+            <svg class="h-10 w-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+          </div>
+          <span class="text-gray-500 font-medium">${isFiltering ? 'Tidak ada hasil pencarian.' : 'Belum ada siswa yang mendaftar.'}</span>
+        </td></tr>`;
+        return;
+      }
+
+      let html = '';
+      response.forEach(function(student) {
+        let statusBadge = '';
+        if (student.status === 'ACTIVE') {
+          statusBadge = '<span class="px-2 py-1 inline-flex text-[10px] leading-tight font-bold rounded-md bg-green-100 text-green-800 border border-green-200 uppercase tracking-wider">ACTIVE</span>';
+        } else if (student.status === 'BLOCKED') {
+          statusBadge = '<span class="px-2 py-1 inline-flex text-[10px] leading-tight font-bold rounded-md bg-red-100 text-red-800 border border-red-200 uppercase tracking-wider">BLOCKED</span>';
+        } else {
+          statusBadge = '<span class="px-2 py-1 inline-flex text-[10px] leading-tight font-bold rounded-md bg-gray-100 text-gray-800 border border-gray-200 uppercase tracking-wider">OFFLINE</span>';
+        }
+
+        html += `
+          <tr class="flex flex-col sm:table-row bg-white border border-gray-100 sm:border-b sm:border-gray-50 rounded-2xl sm:rounded-none mb-4 sm:mb-0 shadow-sm sm:shadow-none overflow-hidden hover:bg-examgo-pale/10 transition-colors group">
+            <!-- Mobile Header with Status -->
+            <td class="block sm:hidden px-4 py-3 bg-gray-50/80 border-b border-gray-100">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider font-mono">NIS: ${student.nis}</span>
+                ${statusBadge}
+              </div>
+            </td>
+            <!-- Main Content: Name & Badges -->
+            <td class="block sm:table-cell p-5 sm:px-6 sm:py-4">
+              <div class="text-lg sm:text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-tight">${String(student.name || '').replace(/'/g, "\\'")}</div>
+              <div class="text-xs text-gray-500 mt-1 font-mono hidden sm:block">${student.nis}</div>
+              <div class="sm:hidden mt-4 flex flex-wrap gap-2">
+                <div class="inline-flex items-center text-[11px] font-bold ${student.violationCount > 0 ? 'text-orange-700 bg-orange-50 border-orange-200' : 'text-gray-600 bg-gray-50 border-gray-200'} px-2.5 py-1.5 rounded-lg border shadow-sm">
+                  ${student.violationCount} Pelanggaran
+                </div>
+                <div class="inline-flex items-center text-[11px] font-medium text-gray-500 bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-200 shadow-sm">
+                  <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  ${formatDateShort(student.last_ping)}
+                </div>
+              </div>
+            </td>
+            <!-- Desktop hidden columns -->
+            <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
+              ${statusBadge}
+            </td>
+            <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              ${formatDate(student.last_ping)}
+            </td>
+            <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-center">
+              <span class="${student.violationCount > 0 ? 'bg-orange-100 text-orange-800 border-orange-200' : 'bg-gray-50 text-gray-500 border-gray-200'} px-2.5 py-1 inline-flex text-sm leading-5 font-bold rounded-md border">
+                ${student.violationCount}
+              </span>
+            </td>
+            <!-- Action Buttons -->
+            <td class="block sm:table-cell p-4 sm:px-6 sm:py-4 border-t border-gray-100 sm:border-0 bg-gray-50/30 sm:bg-transparent">
+              <div class="grid grid-cols-3 gap-2 sm:flex sm:space-x-2 sm:gap-0 sm:w-auto">
+                <button onclick="openEditStudentModal('${student.id}', '${String(student.name || '').replace(/'/g, "\\'")}', '${String(student.nis || '').replace(/'/g, "\\'")}')" class="flex flex-col sm:flex-row items-center justify-center text-blue-600 hover:text-white bg-white sm:bg-blue-50 hover:bg-blue-600 py-2 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors border sm:border-0 border-blue-200 shadow-sm font-semibold text-[11px] sm:text-sm">
+                  <svg class="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5 mb-1 sm:mb-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                  <span class="inline">Edit</span>
+                </button>
+                ${student.status === 'BLOCKED' 
+                  ? `<button onclick="toggleStudentStatus('${student.id}', 'ACTIVE')" class="flex flex-col sm:flex-row items-center justify-center text-green-600 hover:text-white bg-white sm:bg-green-50 hover:bg-green-600 py-2 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors border sm:border-0 border-green-200 shadow-sm font-semibold text-[11px] sm:text-sm">
+                      <svg class="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5 mb-1 sm:mb-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                      <span class="inline">Buka</span>
+                     </button>`
+                  : `<button onclick="toggleStudentStatus('${student.id}', 'BLOCKED')" class="flex flex-col sm:flex-row items-center justify-center text-orange-600 hover:text-white bg-white sm:bg-orange-50 hover:bg-orange-600 py-2 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors border sm:border-0 border-orange-200 shadow-sm font-semibold text-[11px] sm:text-sm">
+                      <svg class="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5 mb-1 sm:mb-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                      <span class="inline">Blokir</span>
+                     </button>`
+                }
+                <button onclick="executeDeleteStudent('${student.id}')" class="flex flex-col sm:flex-row items-center justify-center text-red-500 hover:text-white bg-white sm:bg-red-50 hover:bg-red-600 py-2 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg transition-colors border sm:border-0 border-red-200 shadow-sm font-semibold text-[11px] sm:text-sm">
+                  <svg class="w-5 h-5 sm:w-4 sm:h-4 sm:mr-1.5 mb-1 sm:mb-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                  <span class="inline">Hapus</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function toggleStudentStatus(studentId, newStatus) {
+      showConfirmModal({
+        title: newStatus === 'BLOCKED' ? 'Blokir Siswa?' : 'Buka Blokir Siswa?',
+        message: newStatus === 'BLOCKED' ? 'Siswa ini akan dikeluarkan dari ujian dan tidak bisa masuk lagi.' : 'Siswa ini akan dapat masuk kembali ke ujian.',
+        type: newStatus === 'BLOCKED' ? 'warning' : 'info',
+        confirmText: 'Ya, Lanjutkan',
+        onConfirm: (btn) => {
+          btn.innerHTML = '<div class="loader mr-2"></div> Memproses...';
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if(res.error) showToast(res.error, 'error');
+              else {
+                showToast('Status berhasil diubah');
+                loadStudents();
+              }
+            })
+            .withFailureHandler(() => showToast('Gagal terhubung server', 'error'))
+            .updateStudentStatus(currentExamId, studentId, newStatus, currentUser, currentPass);
+        }
+      });
+    }
+
+    function executeDeleteStudent(studentId) {
+      showConfirmModal({
+        title: 'Hapus Siswa?',
+        message: 'Aksi ini akan menghapus data siswa beserta riwayat pelanggarannya dari ujian ini. Tidak dapat dibatalkan.',
+        type: 'danger',
+        confirmText: 'Ya, Hapus',
+        onConfirm: (btn) => {
+          btn.innerHTML = '<div class="loader mr-2"></div> Menghapus...';
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if(res.error) showToast(res.error, 'error');
+              else {
+                showToast('Siswa berhasil dihapus');
+                loadStudents();
+              }
+            })
+            .withFailureHandler(() => showToast('Gagal terhubung server', 'error'))
+            .deleteStudentSingle(currentExamId, studentId, currentUser, currentPass);
+        }
+      });
+    }
+
+    // Edit Modal Logic
+    const editStudentModal = document.getElementById('edit-student-modal');
+    const editStudentModalBox = document.getElementById('edit-student-modal-box');
+
+    function openEditStudentModal(id, name, nis) {
+      document.getElementById('edit-student-id').value = id;
+      document.getElementById('edit-student-name').value = name;
+      document.getElementById('edit-student-nis').value = nis;
+      
+      editStudentModal.classList.replace('hidden', 'flex');
+      void editStudentModal.offsetWidth; // trigger reflow
+      editStudentModal.classList.remove('opacity-0');
+      editStudentModalBox.classList.remove('scale-95');
+      editStudentModalBox.classList.add('scale-100');
+    }
+
+    function closeEditStudentModal() {
+      editStudentModal.classList.add('opacity-0');
+      editStudentModalBox.classList.remove('scale-100');
+      editStudentModalBox.classList.add('scale-95');
+      setTimeout(() => editStudentModal.classList.replace('flex', 'hidden'), 300);
+    }
+
+    function saveStudentData() {
+      const id = document.getElementById('edit-student-id').value;
+      const name = document.getElementById('edit-student-name').value;
+      const nis = document.getElementById('edit-student-nis').value;
+      
+      const btn = document.getElementById('save-student-btn');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<div class="loader"></div>';
+      btn.disabled = true;
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          if(res.error) showToast(res.error, 'error');
+          else {
+            showToast('Data berhasil disimpan');
+            closeEditStudentModal();
+            loadStudents();
+          }
+        })
+        .withFailureHandler(() => {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          showToast('Gagal menyimpan data', 'error');
+        })
+        .updateStudentData(currentExamId, id, name, nis, currentUser, currentPass);
+    }
+
+    window.onload = () => {
+      const auth = safeGetAuth();
+      if (auth) {
+        currentUser = auth.user;
+        currentPass = auth.pass;
+        document.getElementById('user-avatar').innerText = currentUser.charAt(0).toUpperCase();
+        
+        // Optimistic UI: langsung tampilkan main content biar ga kedip/flash
+        const mainContent = document.getElementById('main-content');
+        mainContent.classList.remove('hidden');
+        document.getElementById('nav-user').classList.remove('hidden');
+        setTimeout(() => mainContent.classList.remove('opacity-0'), 50);
+        
+        loadData();
+      } else {
+        const loginModal = document.getElementById('login-modal');
+        loginModal.classList.replace('hidden', 'flex');
+        setTimeout(() => loginModal.classList.remove('opacity-0'), 50);
+        document.getElementById('username-input').focus();
+      }
+    };
+  </script>
+</body>
+</html>
