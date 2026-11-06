@@ -9,11 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constant/app_colors.dart';
 import '../../models/exam_question_model.dart';
-import '../../services/license_service.dart';
 import '../../services/monitoring_service.dart';
 import '../../services/qr_payload.dart';
 import '../../utils/math_widget_factory.dart';
-import '../widgets/premium_token_dialog.dart';
 import 'teacher_exam_published_dialog.dart';
 
 class TeacherExamPreviewScreen extends StatefulWidget {
@@ -213,14 +211,8 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
   }
 
   Future<void> _publishExam([String? customToken]) async {
-    final isPremium = await LicenseService.instance.isTeacherPremium();
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList('teacher_exam_history') ?? [];
-    if (!isPremium && list.length >= 5) {
-      if (!mounted) return;
-      _showTokenLimitDialog();
-      return;
-    }
 
     final token = customToken?.trim().toUpperCase().replaceAll(' ', '') ?? _lastTokenUsed ?? _generateToken();
     _lastTokenUsed = token;
@@ -319,9 +311,7 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
       // 5. Simpan di riwayat guru lokal agar muncul di Monitoring List
       final entry = '$token|${widget.package.namaPaket}|${DateTime.now().millisecondsSinceEpoch}|$examUrl|$qrSigned';
       list.insert(0, entry);
-      if (!isPremium && list.length > 5) {
-        list.removeLast();
-      } else if (list.length > 50) {
+      if (list.length > 50) {
         list.removeLast();
       }
       await prefs.setStringList('teacher_exam_history', list);
@@ -346,74 +336,6 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
       setState(() => _isPublishing = false);
       _showPublishErrorDialog(e.toString());
     }
-  }
-
-  void _showTokenLimitDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-        contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEF3C7),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.workspace_premium_rounded, color: Color(0xFFD97706), size: 24),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Batas 5 Token Ujian Aktif',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          'Akun Guru Standar dibatasi maksimal memiliki 5 token ujian aktif guna efisiensi cloud.\n\nBeralih ke Guru Premium untuk menerbitkan ujian tanpa batas dan membuka fitur analitik lengkap.',
-          style: GoogleFonts.poppins(fontSize: 12.5, color: const Color(0xFF475569), height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Tutup', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
-          ),
-          OutlinedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              PremiumTokenDialog.show(
-                context,
-                userType: 'TEACHER_PREMIUM',
-              );
-            },
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Color(0xFFCBD5E1)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: Text('Aktivasi Kode', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF334155))),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              LicenseService.instance.openLynkIdPage(userType: 'TEACHER_PREMIUM');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1B5E20),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: Text('Upgrade 👑', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showPublishErrorDialog(String error) {

@@ -517,17 +517,9 @@ class _HomeScreenState extends State<HomeScreen>
       }
     }
 
-    // ── Cek Kuota Freemium Siswa (Maks 5x Gratis, selebihnya Lynk.id) ──
-    // Siswa dengan tiket event resmi tidak dibatasi limit 5x gratis & tidak memotong kuota freemium
+    // ── Catat Penggunaan Ujian Siswa (Akses Ujian Dasar Bebas Kuota / Unlimited) ──
     final isEventExam = url.startsWith('EXAMGO_EVENT://');
     if (!isEventExam) {
-      final canTake = await LicenseService.instance.canStudentTakeExam();
-      if (!canTake) {
-        if (mounted) _showStudentLicenseDialog();
-        return;
-      }
-
-      // Catat penggunaan 1 kuota ujian (hanya jika belum berstatus Lifetime)
       await LicenseService.instance.recordExamAttempt();
       if (mounted) setState(() {});
     }
@@ -658,147 +650,119 @@ class _HomeScreenState extends State<HomeScreen>
           );
         }
 
-        return FutureBuilder<int>(
-          future: LicenseService.instance.getRemainingStudentAttempts(),
-          builder: (context, attemptSnap) {
-            final remaining =
-                attemptSnap.data ?? LicenseService.maxFreeAttempts;
-            final isExhausted = remaining <= 0;
-            final used = (LicenseService.maxFreeAttempts - remaining).clamp(0, LicenseService.maxFreeAttempts);
-
-            return Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isExhausted ? const Color(0xFFFEF2F2) : Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: isExhausted
-                      ? const Color(0xFFFCA5A5)
-                      : const Color(0xFFE2E8F0),
-                  width: 1.2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-                    blurRadius: 12,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: const Color(0xFFE2E8F0),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFECFDF5),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFA7F3D0)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.check_circle_outline_rounded,
+                          size: 13,
+                          color: Color(0xFF059669),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          'AKUN SISWA AKTIF',
+                          style: GoogleFonts.poppins(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF065F46),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFCBD5E1)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.shield_outlined,
-                              size: 13,
-                              color: Color(0xFF475569),
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              'AKUN STANDAR',
-                              style: GoogleFonts.poppins(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF334155),
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
+                      const Icon(
+                        Icons.all_inclusive_rounded,
+                        size: 15,
+                        color: Color(0xFF059669),
                       ),
-                      const Spacer(),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            isExhausted ? Icons.lock_clock_rounded : Icons.confirmation_number_outlined,
-                            size: 15,
-                            color: isExhausted ? const Color(0xFFDC2626) : const Color(0xFF475569),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            isExhausted
-                                ? '0 / 5 Kuota Tersisa'
-                                : 'Sisa $remaining dari 5 Ujian',
-                            style: GoogleFonts.poppins(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: isExhausted ? const Color(0xFFDC2626) : const Color(0xFF1E293B),
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: 4),
+                      Text(
+                        'Ujian Gratis Tanpa Batas',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF065F46),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: (used / LicenseService.maxFreeAttempts).clamp(0.0, 1.0),
-                      minHeight: 6,
-                      backgroundColor: const Color(0xFFF1F5F9),
-                      valueColor: AlwaysStoppedAnimation(
-                        isExhausted ? const Color(0xFFDC2626) : AppColors.primaryGreen,
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Bebas ujian sekolah & QR. Buka akses Tryout Nasional SNBT, Pembahasan, & Sertifikat dengan Lynk.id.',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: const Color(0xFF64748B),
+                        height: 1.4,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          isExhausted
-                              ? 'Batas 5x ujian gratis habis. Tingkatkan ke Lifetime untuk akses tanpa batas.'
-                              : 'Akses gratis hingga 5x ujian. Tingkatkan ke Lifetime untuk akses bebas selamanya.',
-                          style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            color: isExhausted ? const Color(0xFFB91C1C) : const Color(0xFF64748B),
-                            height: 1.4,
-                          ),
-                        ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: _showStudentLicenseDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD97706),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
                       ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: _showStudentLicenseDialog,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isExhausted ? const Color(0xFFDC2626) : const Color(0xFFD97706),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          isExhausted ? 'Beli Akses 👑' : 'Upgrade 👑',
-                          style: GoogleFonts.poppins(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    ],
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      'Upgrade 👑',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
               ),
-            );
-          },
+            ],
+          ),
         );
       },
     );

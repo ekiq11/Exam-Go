@@ -106,44 +106,18 @@ class LicenseService {
     return false;
   }
 
-  /// Sisa kuota ujian gratis siswa (0 s.d. 5)
+  /// Sisa kuota ujian gratis siswa (selalu unlimited untuk pengerjaan ujian dasar)
   Future<int> getRemainingStudentAttempts() async {
-    if (await isStudentPremium()) return 9999; // Unlimited
-
-    final prefs = await SharedPreferences.getInstance();
-    int localCount = prefs.getInt(_kStudentAttemptsKey) ?? 0;
-
-    final db = _db;
-    if (db != null) {
-      // Sinkronisasi dengan Firestore (jika user uninstall/clear data, kuota tetap tercatat)
-      try {
-        final deviceId = await getDeviceId();
-        final doc = await db.collection('devices').doc(deviceId).get();
-        if (doc.exists) {
-          final serverCount = (doc.data()?['exam_count'] as num?)?.toInt() ?? 0;
-          if (serverCount > localCount) {
-            localCount = serverCount;
-            await prefs.setInt(_kStudentAttemptsKey, localCount);
-          }
-        }
-      } catch (_) {}
-    }
-
-    final remaining = maxFreeAttempts - localCount;
-    return remaining.clamp(0, maxFreeAttempts);
+    return 9999;
   }
 
-  /// Cek apakah siswa diizinkan memulai ujian baru
+  /// Cek apakah siswa diizinkan memulai ujian baru (selalu diizinkan untuk ujian gratis)
   Future<bool> canStudentTakeExam() async {
-    if (await isStudentPremium()) return true;
-    final remaining = await getRemainingStudentAttempts();
-    return remaining > 0;
+    return true;
   }
 
-  /// Catat penggunaan 1 kuota ujian (dipanggil saat siswa mulai ujian)
+  /// Catat penggunaan ujian (dipanggil saat siswa mulai ujian, untuk analitik/statistik)
   Future<void> recordExamAttempt() async {
-    if (await isStudentPremium()) return;
-
     final prefs = await SharedPreferences.getInstance();
     final current = prefs.getInt(_kStudentAttemptsKey) ?? 0;
     final next = current + 1;
