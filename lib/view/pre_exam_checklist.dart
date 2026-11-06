@@ -35,6 +35,7 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
   String? _securityError;
   int _batteryLevel = 100;
   bool _batteryWarning = false;
+  bool _agreedToRules = false;
 
   @override
   void initState() {
@@ -103,10 +104,23 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Nama dan NIS harus diisi',
+            'Nama dan NIS harus diisi terlebih dahulu',
             style: GoogleFonts.poppins(fontSize: 13),
           ),
           backgroundColor: Colors.red.shade700,
+        ),
+      );
+      return;
+    }
+
+    if (!_agreedToRules) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Harap baca dan centang persetujuan regulasi anti-curang',
+            style: GoogleFonts.poppins(fontSize: 13),
+          ),
+          backgroundColor: Colors.orange.shade800,
         ),
       );
       return;
@@ -129,21 +143,28 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: context.rs(16),
+        vertical: context.rs(20),
+      ),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 420),
+        constraints: BoxConstraints(
+          maxWidth: 440,
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 30,
               offset: const Offset(0, 10),
             ),
           ],
         ),
         child: Padding(
-          padding: EdgeInsets.all(context.rs(20)),
+          padding: EdgeInsets.all(context.rs(18)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -155,7 +176,7 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                       color: AppColors.paleGreen,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.assignment_ind_rounded, color: AppColors.primaryGreen, size: 24),
+                    child: const Icon(Icons.shield_outlined, color: AppColors.primaryGreen, size: 24),
                   ),
                   SizedBox(width: context.rs(12)),
                   Expanded(
@@ -163,16 +184,16 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Persiapan Ujian',
+                          'Persiapan & Regulasi Ujian',
                           style: GoogleFonts.poppins(
-                            fontSize: context.rs(16),
+                            fontSize: context.rs(15),
                             fontWeight: FontWeight.w700,
                             color: AppColors.textPrimary,
                             height: 1.2,
                           ),
                         ),
                         Text(
-                          'Lengkapi identitas Anda',
+                          'Sistem Anti-Kecurangan ExamGo Aktif',
                           style: GoogleFonts.poppins(
                             fontSize: context.rs(11),
                             color: AppColors.textSecondary,
@@ -183,7 +204,7 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                   ),
                 ],
               ),
-              SizedBox(height: context.rs(20)),
+              SizedBox(height: context.rs(16)),
               
               if (_isLoading)
                 const Padding(
@@ -193,7 +214,12 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
               else if (_securityError != null)
                 _buildSecurityError()
               else
-                _buildChecklistForm(),
+                Flexible(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: _buildChecklistForm(),
+                  ),
+                ),
             ],
           ),
         ),
@@ -275,7 +301,7 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Sesi Ujian',
+                      'Sesi Ujian / Tryout',
                       style: GoogleFonts.poppins(fontSize: context.rs(11), color: Colors.grey.shade600, fontWeight: FontWeight.w600),
                     ),
                     Text(
@@ -295,12 +321,12 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
             ],
           ),
         ),
-        SizedBox(height: context.rs(16)),
+        SizedBox(height: context.rs(12)),
 
         // Battery Info
         if (_batteryWarning)
           Container(
-            margin: EdgeInsets.only(bottom: context.rs(16)),
+            margin: EdgeInsets.only(bottom: context.rs(12)),
             padding: EdgeInsets.all(context.rs(10)),
             decoration: BoxDecoration(
               color: Colors.orange.shade50,
@@ -336,19 +362,19 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
             ],
           ),
         
-        SizedBox(height: context.rs(16)),
+        SizedBox(height: context.rs(14)),
         
-        // Form
+        // Identitas Peserta
         Text(
           'IDENTITAS PESERTA',
           style: GoogleFonts.poppins(
             fontSize: context.rs(11),
             fontWeight: FontWeight.w700,
-            color: Colors.grey.shade500,
-            letterSpacing: 1.2,
+            color: Colors.grey.shade600,
+            letterSpacing: 1.1,
           ),
         ),
-        SizedBox(height: context.rs(12)),
+        SizedBox(height: context.rs(8)),
         TextField(
           controller: _nameCtrl,
           style: GoogleFonts.poppins(fontSize: context.rs(13), fontWeight: FontWeight.w600),
@@ -367,7 +393,7 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
           ),
           textCapitalization: TextCapitalization.words,
         ),
-        SizedBox(height: context.rs(12)),
+        SizedBox(height: context.rs(10)),
         TextField(
           controller: _nisCtrl,
           keyboardType: TextInputType.number,
@@ -387,7 +413,13 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
           ),
         ),
 
-        SizedBox(height: context.rs(20)),
+        // Box Regulasi Anti-Curang a, b, c, d
+        _buildAntiCheatCard(),
+
+        // Checkbox Persetujuan
+        _buildAgreementCheckbox(),
+
+        SizedBox(height: context.rs(16)),
         Row(
           children: [
             Expanded(
@@ -405,13 +437,21 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
               flex: 2,
               child: Container(
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1B5E20), AppColors.primaryGreen],
+                  gradient: LinearGradient(
+                    colors: _agreedToRules
+                        ? [const Color(0xFF1B5E20), AppColors.primaryGreen]
+                        : [Colors.grey.shade600, Colors.grey.shade500],
                   ),
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(color: AppColors.primaryGreen.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 3)),
-                  ],
+                  boxShadow: _agreedToRules
+                      ? [
+                          BoxShadow(
+                            color: AppColors.primaryGreen.withValues(alpha: 0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: ElevatedButton(
                   onPressed: _onStart,
@@ -421,13 +461,184 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                     padding: EdgeInsets.symmetric(vertical: context.rs(12)),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: Text('Mulai Ujian', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: context.rs(13))),
+                  child: Text(
+                    'Saya Paham & Mulai',
+                    style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: context.rs(13)),
+                  ),
                 ),
               ),
             ),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildAntiCheatCard() {
+    return Container(
+      margin: EdgeInsets.only(top: context.rs(14), bottom: context.rs(10)),
+      padding: EdgeInsets.all(context.rs(12)),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB), // Warm amber background
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFFDE68A), width: 1.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(context.rs(5)),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD97706),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.gpp_maybe_rounded, color: Colors.white, size: 16),
+              ),
+              SizedBox(width: context.rs(8)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'TATA TERTIB ANTI-KECURANGAN',
+                      style: GoogleFonts.poppins(
+                        fontSize: context.rs(11),
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF78350F),
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                    Text(
+                      'Ketahui 4 aturan ketat ini sebelum memulai ujian:',
+                      style: GoogleFonts.poppins(
+                        fontSize: context.rs(10),
+                        color: const Color(0xFF92400E),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: context.rs(8)),
+          const Divider(height: 1, color: Color(0xFFFDE68A)),
+          SizedBox(height: context.rs(8)),
+          _buildRuleRow(
+            letter: 'a',
+            title: 'Dilarang Berpindah Aplikasi / Split Screen',
+            desc: 'Menekan tombol Home, Recent Apps, notifikasi, floating apps, atau split-screen langsung terdeteksi sebagai pelanggaran.',
+          ),
+          SizedBox(height: context.rs(6)),
+          _buildRuleRow(
+            letter: 'b',
+            title: 'Larangan Screenshot & Rekam Layar',
+            desc: 'Fitur tangkapan layar dan rekam layar diblokir otomatis oleh sistem keamanan OS perangkat.',
+          ),
+          SizedBox(height: context.rs(6)),
+          _buildRuleRow(
+            letter: 'c',
+            title: 'Pelaporan Pelanggaran Real-Time',
+            desc: 'Setiap percobaan keluar atau kecurangan otomatis tercatat dan dilaporkan langsung ke dashboard pengawas/guru.',
+          ),
+          SizedBox(height: context.rs(6)),
+          _buildRuleRow(
+            letter: 'd',
+            title: 'Batas Toleransi Maksimal 3 Kali',
+            desc: 'Pelanggaran ke-3 membuat ujian TERKUNCI PERMANEN (BLOCKED) dan hasil ujian dianggap gugur.',
+            isCritical: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRuleRow({
+    required String letter,
+    required String title,
+    required String desc,
+    bool isCritical = false,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: context.rs(18),
+          height: context.rs(18),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isCritical ? const Color(0xFFDC2626) : const Color(0xFFD97706),
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Text(
+            letter,
+            style: GoogleFonts.poppins(
+              fontSize: context.rs(10),
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        SizedBox(width: context.rs(8)),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: context.rs(11),
+                  fontWeight: FontWeight.w700,
+                  color: isCritical ? const Color(0xFF991B1B) : const Color(0xFF451A03),
+                ),
+              ),
+              Text(
+                desc,
+                style: GoogleFonts.poppins(
+                  fontSize: context.rs(10),
+                  color: const Color(0xFF78350F).withValues(alpha: 0.9),
+                  height: 1.25,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAgreementCheckbox() {
+    return Container(
+      decoration: BoxDecoration(
+        color: _agreedToRules ? AppColors.paleGreen.withValues(alpha: 0.5) : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: _agreedToRules ? AppColors.primaryGreen : Colors.grey.shade300,
+          width: 1.2,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: CheckboxListTile(
+          value: _agreedToRules,
+          onChanged: (val) => setState(() => _agreedToRules = val ?? false),
+          title: Text(
+            'Saya paham seluruh aturan di atas & siap mengerjakan ujian secara jujur.',
+            style: GoogleFonts.poppins(
+              fontSize: context.rs(11),
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          controlAffinity: ListTileControlAffinity.leading,
+          dense: true,
+          contentPadding: EdgeInsets.symmetric(horizontal: context.rs(6), vertical: 0),
+          activeColor: AppColors.primaryGreen,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      ),
     );
   }
 }

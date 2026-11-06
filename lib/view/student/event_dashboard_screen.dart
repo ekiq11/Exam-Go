@@ -269,15 +269,13 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
     final sch = _schedule;
     if (sch == null) return;
 
-    // Pastikan identitas terisi
-    if (_studentName.isEmpty || _studentNis.isEmpty) {
-      final identity = await PreExamChecklistDialog.show(context, sch.namaPaket);
-      if (identity == null) return;
-      setState(() {
-        _studentName = identity['name'] ?? 'Peserta';
-        _studentNis = identity['nis'] ?? '-';
-      });
-    }
+    // Tampilkan verifikasi identitas & konfirmasi regulasi anti-curang
+    final identity = await PreExamChecklistDialog.show(context, sch.namaPaket);
+    if (identity == null) return;
+    setState(() {
+      _studentName = identity['name'] ?? _studentName;
+      _studentNis = identity['nis'] ?? _studentNis;
+    });
 
     if (!mounted) return;
 
