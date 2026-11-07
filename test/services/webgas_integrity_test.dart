@@ -267,6 +267,12 @@ void main() {
       expect(adminContent, contains('function renderTablePreview('));
       expect(adminContent, contains('function renderQuestionImage('));
       expect(adminContent, contains('overflow-y-auto shadow-sm max-h-[52vh]'));
+
+      // User-friendly Indonesian Date Formatting
+      expect(adminContent, contains('function parseDateFlexible('));
+      expect(adminContent, contains('function formatIndoDate('));
+      expect(adminContent, contains('function toYmdDate('));
+      expect(kodeContent, contains('function _formatSheetDateToYMD('));
     });
   });
 }

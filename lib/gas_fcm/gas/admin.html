@@ -2109,6 +2109,63 @@
     }
 
     // ─────────────────────────────────────────────────────────
+    // Date & Time Formatting Helpers (Format Ramah & Jelas)
+    // ─────────────────────────────────────────────────────────
+    function parseDateFlexible(val) {
+      if (!val) return null;
+      if (val instanceof Date && !isNaN(val.getTime())) return val;
+      const s = String(val).trim();
+      if (!s || s === 'Kapan saja' || s === '-' || s === 'null' || s === 'undefined') return null;
+
+      // 1. Format YYYY-MM-DD atau YYYY/MM/DD
+      const ymd = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+      if (ymd) {
+        return new Date(parseInt(ymd[1], 10), parseInt(ymd[2], 10) - 1, parseInt(ymd[3], 10));
+      }
+
+      // 2. Format DD-MM-YYYY atau DD/MM/YYYY
+      const dmy = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+      if (dmy) {
+        return new Date(parseInt(dmy[3], 10), parseInt(dmy[2], 10) - 1, parseInt(dmy[1], 10));
+      }
+
+      // 3. String bawaan JavaScript Date (contoh: "Wed Sep 09 2026 08:00:00 GMT+0800")
+      const ts = Date.parse(s);
+      if (!isNaN(ts)) {
+        return new Date(ts);
+      }
+      return null;
+    }
+
+    function formatIndoDate(val, isShort) {
+      if (!val) return 'Kapan saja';
+      const d = parseDateFlexible(val);
+      if (!d) return String(val);
+
+      const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      const months = isShort
+        ? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+        : ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+      const dayName = days[d.getDay()];
+      const dateNum = d.getDate();
+      const monthName = months[d.getMonth()];
+      const year = d.getFullYear();
+
+      return dayName + ', ' + dateNum + ' ' + monthName + ' ' + year;
+    }
+
+    function toYmdDate(val) {
+      if (!val) return '';
+      const d = parseDateFlexible(val);
+      if (!d) return String(val).match(/^\d{4}-\d{2}-\d{2}$/) ? String(val) : '';
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return y + '-' + m + '-' + day;
+    }
+
+    // ─────────────────────────────────────────────────────────
     // UI Helpers
     // ─────────────────────────────────────────────────────────
     function showToast(msg, type = 'success') {
@@ -2880,9 +2937,9 @@
               (pkg.jenis_test === 'SKD' ? 'bg-indigo-100 text-indigo-800' :
               (pkg.jenis_test === 'TKA' ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800'));
             
-            const scheduleText = pkg.is_lifetime
+            const scheduleText = pkg.is_lifetime || !pkg.tanggal
               ? '<span class="text-emerald-600 font-bold">⚡ Lifetime</span>'
-              : (pkg.tanggal ? (pkg.tanggal + ' (' + (pkg.jam_mulai || '08:00') + ')') : 'Sesuai Jadwal');
+              : ('<span class="font-medium text-slate-800">📅 ' + formatIndoDate(pkg.tanggal, true) + '</span> • <span class="font-mono text-[11px] text-slate-500">' + (pkg.jam_mulai || '08:00') + ' WIB</span>');
 
             rHtml += '<div class="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-gray-50/80 hover:bg-gray-50 rounded-2xl border border-gray-100 transition-all gap-3">' +
               '<div class="flex-1 min-w-0 space-y-1">' +
@@ -3025,13 +3082,13 @@
             '<div class="text-xs text-gray-400 mt-1 font-mono">ID: ' + (pkg.paket_id || '') + '</div>' +
           '</td>' +
           '<td class="p-5 sm:px-6 sm:py-4 text-xs text-gray-600">' +
-            (pkg.is_lifetime
-              ? '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">⚡ Selalu Aktif (Lifetime)</span>'
-              : '<div class="font-semibold text-gray-800">' + (pkg.tanggal || 'Kapan saja') + '</div>' +
-                '<div class="text-gray-500 font-mono">' + (pkg.jam_mulai || '08:00') + ' - ' + (pkg.jam_selesai || '23:59') + ' WIB</div>') +
-            '<div class="mt-1">' + (pkg.allow_retake !== false
-              ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-600 border border-blue-200">🔄 Bisa Diulang</span>'
-              : '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">🔒 1x Kerjakan</span>') + '</div>' +
+            (pkg.is_lifetime || !pkg.tanggal
+              ? '<span class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">⚡ Selalu Aktif (Lifetime)</span>'
+              : '<div class="font-bold text-gray-900 text-xs flex items-center gap-1.5"><span class="text-emerald-700">📅</span> ' + formatIndoDate(pkg.tanggal) + '</div>' +
+                '<div class="text-gray-500 font-mono text-[11px] mt-0.5 flex items-center gap-1"><span class="text-slate-400">🕒</span> ' + (pkg.jam_mulai || '08:00') + ' - ' + (pkg.jam_selesai || '23:59') + ' WIB</div>') +
+            '<div class="mt-1.5">' + (pkg.allow_retake !== false
+              ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">🔄 Bisa Diulang</span>'
+              : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">🔒 1x Kerjakan</span>') + '</div>' +
           '</td>' +
           '<td class="p-5 sm:px-6 sm:py-4 text-xs text-gray-600">' +
             '<div class="font-semibold">' + (pkg.durasi_menit || 120) + ' Menit</div>' +
@@ -5113,7 +5170,7 @@
       document.getElementById('tryout-form-lifetime').checked = pkg.is_lifetime === true;
       document.getElementById('tryout-form-allow-retake').checked = pkg.allow_retake !== false;
       toggleLifetimeFields();
-      document.getElementById('tryout-form-tanggal').value = pkg.tanggal || '';
+      document.getElementById('tryout-form-tanggal').value = toYmdDate(pkg.tanggal);
       document.getElementById('tryout-form-jam-mulai').value = pkg.jam_mulai || '08:00';
       document.getElementById('tryout-form-jam-selesai').value = pkg.jam_selesai || '23:59';
       document.getElementById('tryout-form-durasi').value = pkg.durasi_menit || 120;
