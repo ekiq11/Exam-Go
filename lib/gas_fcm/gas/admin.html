@@ -3607,6 +3607,16 @@
     // ─────────────────────────────────────────────────────────
     // Google Sheets Bank Soal Sync Controller (2-Step Staging & Delta)
     // ─────────────────────────────────────────────────────────
+    function escapeHtml(str) {
+      if (str === undefined || str === null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     let lastSheetPreviewData = null;
     let currentSheetFilter = 'all';
 
@@ -3657,7 +3667,7 @@
 
           lastSheetPreviewData = res;
           renderSheetPreview(res);
-          showToast('Data sheet berhasil ditarik sementara (' + (res.packages ? res.packages.length : 0) + ' paket)', 'success');
+          showToast('Data sheet berhasil ditarik (' + (res.packages ? res.packages.length : 0) + ' paket)', 'success');
         })
         .withFailureHandler(function(err) {
           if (btn) btn.disabled = false;
@@ -3681,6 +3691,13 @@
 
       if (emptyEl) emptyEl.classList.add('hidden');
       if (contentEl) contentEl.classList.remove('hidden');
+
+      // Ensure each package has selected property initialized
+      data.packages.forEach(function(pkg) {
+        if (typeof pkg.selected !== 'boolean') {
+          pkg.selected = !pkg.is_synced;
+        }
+      });
 
       const elKpiNew = document.getElementById('sheet-kpi-new');
       const elKpiSynced = document.getElementById('sheet-kpi-synced');
@@ -3719,80 +3736,86 @@
       const tbody = document.getElementById('sheet-staging-tbody');
       if (!tbody) return;
 
-      const packages = lastSheetPreviewData.packages.filter(function(p) {
-        if (currentSheetFilter === 'new') return !p.is_synced;
-        return true;
-      });
+      try {
+        const packages = lastSheetPreviewData.packages.filter(function(p) {
+          if (currentSheetFilter === 'new') return !p.is_synced;
+          return true;
+        });
 
-      if (packages.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">Tidak ada paket yang sesuai dengan filter.</td></tr>';
-        return;
-      }
-
-      let html = '';
-      packages.forEach(function(pkg) {
-        const isNew = !pkg.is_synced;
-        const statusBadge = isNew
-          ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✨ Baru (Siap Sync)</span>'
-          : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">✓ Sudah di Firestore (Skip)</span>';
-
-        const jenisBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold ' +
-          (pkg.jenis_test === 'SNBT' ? 'bg-indigo-100 text-indigo-800' : (pkg.jenis_test === 'SKD' ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800')) + '">' +
-          pkg.jenis_test + '</span>';
-
-        const rowBg = isNew ? 'hover:bg-emerald-50/40' : 'opacity-80 bg-slate-50/50 hover:bg-slate-100/50';
-
-        html += '<tr class="transition-colors ' + rowBg + '">' +
-          '<td class="px-3 py-3 text-center">' +
-            '<input type="checkbox" onchange="onSheetRowCheckboxChange(this, \'' + pkg.paket_id + '\')" ' + (pkg.selected ? 'checked' : '') + ' class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">' +
-          '</td>' +
-          '<td class="px-4 py-3">' +
-            '<div class="font-bold text-slate-900 text-xs">' + escapeHtml(pkg.nama_paket) + '</div>' +
-            '<div class="text-[11px] font-mono text-slate-400 mt-0.5">ID: ' + escapeHtml(pkg.paket_id) + '</div>' +
-          '</td>' +
-          '<td class="px-3 py-3">' +
-            '<div class="flex items-center gap-1.5">' + jenisBadge + '<span class="text-slate-500 text-[11px] font-mono">' + pkg.jenis_waktu + '</span></div>' +
-            '<div class="text-[11px] text-slate-400 mt-0.5">' + pkg.durasi_menit + ' menit</div>' +
-          '</td>' +
-          '<td class="px-3 py-3">' +
-            '<div class="font-bold text-slate-800">' + (pkg.subtest_count || 0) + ' Subtest</div>' +
-            '<div class="text-[11px] text-emerald-700 font-semibold">' + (pkg.total_soal || 0) + ' Butir Soal</div>' +
-          '</td>' +
-          '<td class="px-3 py-3">' + statusBadge + '</td>' +
-          '<td class="px-3 py-3 text-center">' +
-            '<button onclick="toggleSheetSubtestDetail(\'' + pkg.paket_id + '\')" class="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200">Detail &darr;</button>' +
-          '</td>' +
-        '</tr>';
-
-        // Subtests breakdown row (Accordion)
-        html += '<tr id="subtest-detail-' + pkg.paket_id + '" class="hidden bg-slate-50/90 border-t border-b border-slate-200">' +
-          '<td colspan="6" class="p-3 pl-12">' +
-            '<div class="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">' +
-              '<svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>' +
-              'Daftar Subtest Terhubung (' + (pkg.subtests ? pkg.subtests.length : 0) + '):' +
-            '</div>';
-
-        if (pkg.subtests && pkg.subtests.length > 0) {
-          html += '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">';
-          pkg.subtests.forEach(function(st, sIdx) {
-            html += '<div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-2xs">' +
-              '<div class="font-bold text-slate-800 text-[11px] truncate">' + (sIdx + 1) + '. ' + escapeHtml(st.judul_subtest) + '</div>' +
-              '<div class="flex items-center justify-between text-[10px] text-slate-500 mt-1">' +
-                '<span>' + st.durasi_menit + ' Menit</span>' +
-                '<span class="font-bold text-emerald-700">' + st.soal_count + ' Soal</span>' +
-              '</div>' +
-            '</div>';
-          });
-          html += '</div>';
-        } else {
-          html += '<p class="text-xs text-slate-400 italic">Tidak ada rincian subtest terpisah.</p>';
+        if (packages.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">Tidak ada paket yang sesuai dengan filter.</td></tr>';
+          return;
         }
 
-        html += '</td></tr>';
-      });
+        let html = '';
+        packages.forEach(function(pkg, pIdx) {
+          const isNew = !pkg.is_synced;
+          const statusBadge = isNew
+            ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✨ Baru (Siap Sync)</span>'
+            : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">✓ Sudah di Firestore (Skip)</span>';
 
-      tbody.innerHTML = html;
-      updateHeaderCheckboxState();
+          const jenisBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold ' +
+            (pkg.jenis_test === 'SNBT' ? 'bg-indigo-100 text-indigo-800' : (pkg.jenis_test === 'SKD' ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800')) + '">' +
+            escapeHtml(pkg.jenis_test) + '</span>';
+
+          const rowBg = isNew ? 'hover:bg-emerald-50/40' : 'opacity-80 bg-slate-50/50 hover:bg-slate-100/50';
+          const safePid = escapeHtml(pkg.paket_id);
+
+          html += '<tr class="transition-colors ' + rowBg + '">' +
+            '<td class="px-3 py-3 text-center">' +
+              '<input type="checkbox" data-pid="' + safePid + '" onchange="onSheetRowCheckboxChange(this, \'' + safePid + '\')" ' + (pkg.selected ? 'checked' : '') + ' class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer">' +
+            '</td>' +
+            '<td class="px-4 py-3">' +
+              '<div class="font-bold text-slate-900 text-xs">' + escapeHtml(pkg.nama_paket) + '</div>' +
+              '<div class="text-[11px] font-mono text-slate-400 mt-0.5">ID: ' + safePid + '</div>' +
+            '</td>' +
+            '<td class="px-3 py-3">' +
+              '<div class="flex items-center gap-1.5">' + jenisBadge + '<span class="text-slate-500 text-[11px] font-mono">' + escapeHtml(pkg.jenis_waktu) + '</span></div>' +
+              '<div class="text-[11px] text-slate-400 mt-0.5">' + (pkg.durasi_menit || 0) + ' menit</div>' +
+            '</td>' +
+            '<td class="px-3 py-3">' +
+              '<div class="font-bold text-slate-800">' + (pkg.subtest_count || 0) + ' Subtest</div>' +
+              '<div class="text-[11px] text-emerald-700 font-semibold">' + (pkg.total_soal || 0) + ' Butir Soal</div>' +
+            '</td>' +
+            '<td class="px-3 py-3">' + statusBadge + '</td>' +
+            '<td class="px-3 py-3 text-center">' +
+              '<button type="button" onclick="toggleSheetSubtestDetail(\'' + safePid + '\')" class="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200">Rincian &darr;</button>' +
+            '</td>' +
+          '</tr>';
+
+          // Subtests breakdown row (Accordion)
+          html += '<tr id="subtest-detail-' + safePid + '" class="hidden bg-slate-50/90 border-t border-b border-slate-200">' +
+            '<td colspan="6" class="p-3 pl-12">' +
+              '<div class="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">' +
+                '<svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>' +
+                'Rincian Subtest & Waktu (' + (pkg.subtests ? pkg.subtests.length : 0) + ' subtest):' +
+              '</div>';
+
+          if (pkg.subtests && pkg.subtests.length > 0) {
+            html += '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">';
+            pkg.subtests.forEach(function(st, sIdx) {
+              html += '<div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-2xs">' +
+                '<div class="font-bold text-slate-800 text-[11px] truncate">' + (sIdx + 1) + '. ' + escapeHtml(st.judul_subtest) + '</div>' +
+                '<div class="flex items-center justify-between text-[10px] text-slate-500 mt-1">' +
+                  '<span>⏱️ ' + st.durasi_menit + ' Menit</span>' +
+                  '<span class="font-bold text-emerald-700">📝 ' + st.soal_count + ' Soal</span>' +
+                '</div>' +
+              '</div>';
+            });
+            html += '</div>';
+          } else {
+            html += '<p class="text-xs text-slate-400 italic">Tidak ada rincian subtest terpisah.</p>';
+          }
+
+          html += '</td></tr>';
+        });
+
+        tbody.innerHTML = html;
+        updateHeaderCheckboxState();
+      } catch(err) {
+        console.error('Error rendering staging table:', err);
+        tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-red-500 font-medium">Terjadi kesalahan rendering: ' + escapeHtml(err.message) + '</td></tr>';
+      }
     }
 
     function toggleSheetSubtestDetail(paketId) {
@@ -3873,7 +3896,7 @@
 
       if (summaryEl) {
         summaryEl.innerHTML = '<b class="text-emerald-700">' + selected.length + ' paket terpilih</b> (' +
-          totalSubtestsSelected + ' subtest • ' + totalSoalSelected + ' soal) siap disinkronkan.';
+          totalSubtestsSelected + ' subtest • ' + totalSoalSelected + ' butir soal) siap disinkronkan.';
       }
       if (commitBtn) {
         commitBtn.disabled = selected.length === 0;
@@ -3913,6 +3936,8 @@
 
       const urlInput = document.getElementById('sheet-sync-url-input');
       const sheetUrl = (urlInput ? urlInput.value : '').trim();
+
+      showToast('Menyinkronkan ' + selected.length + ' paket (' + totalQ + ' soal) ke Firestore...', 'info');
 
       google.script.run
         .withSuccessHandler(function(res) {
