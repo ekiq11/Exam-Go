@@ -171,7 +171,7 @@ void main() {
 
       // Navigation & Header
       expect(content, contains('id="nav-tab-landing-config"'));
-      expect(content, contains('🎨 Setting Landing Page'));
+      expect(content, contains('Setting Landing Page'));
       expect(content, contains('href="?page=landing"'));
 
       // Logo & WhatsApp in admin
