@@ -165,8 +165,24 @@ class LicenseService {
   Future<int> getRemainingTeacherUploads() async {
     if (await isTeacherPremium()) return 9999; // Unlimited
     final prefs = await SharedPreferences.getInstance();
-    final count = prefs.getInt(_kTeacherUploadsKey) ?? 0;
-    return (maxFreeTeacherUploads - count).clamp(0, maxFreeTeacherUploads);
+    int localCount = prefs.getInt(_kTeacherUploadsKey) ?? 0;
+
+    final db = _db;
+    if (db != null) {
+      try {
+        final deviceId = await getDeviceId();
+        final doc = await db.collection('devices').doc(deviceId).get();
+        if (doc.exists) {
+          final serverCount = (doc.data()?['teacher_upload_count'] as num?)?.toInt() ?? 0;
+          if (serverCount > localCount) {
+            localCount = serverCount;
+            await prefs.setInt(_kTeacherUploadsKey, localCount);
+          }
+        }
+      } catch (_) {}
+    }
+
+    return (maxFreeTeacherUploads - localCount).clamp(0, maxFreeTeacherUploads);
   }
 
   /// Cek apakah guru diizinkan mengakses fitur Buat & Upload Soal (Premium atau sisa coba > 0)
@@ -181,7 +197,19 @@ class LicenseService {
     if (await isTeacherPremium()) return;
     final prefs = await SharedPreferences.getInstance();
     final current = prefs.getInt(_kTeacherUploadsKey) ?? 0;
-    await prefs.setInt(_kTeacherUploadsKey, current + 1);
+    final next = current + 1;
+    await prefs.setInt(_kTeacherUploadsKey, next);
+
+    final db = _db;
+    if (db != null) {
+      try {
+        final deviceId = await getDeviceId();
+        await db.collection('devices').doc(deviceId).set({
+          'teacher_upload_count': FieldValue.increment(1),
+          'last_teacher_upload': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      } catch (_) {}
+    }
   }
 
   // ─── SISI EVENT TRYOUT (Lynk.id Tiket Event) ─────────────────────
