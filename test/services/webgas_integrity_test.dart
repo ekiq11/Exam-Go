@@ -45,6 +45,23 @@ void main() {
       expect(content, contains('function filterTryoutTable() {'));
     });
 
+    test('admin.html contains subtest management, preset builder, and upload DOCX elements', () {
+      final content = adminHtmlFile.readAsStringSync();
+
+      // UI containers & modals
+      expect(content, contains('tryout-subtest-rows-container'));
+      expect(content, contains('modal-subtest-detail'));
+      expect(content, contains('modal-subtest-docx-upload'));
+      expect(content, contains('modal-quick-upload-tryout'));
+
+      // Presets & JS logic
+      expect(content, contains('const SUBTEST_PRESET ='));
+      expect(content, contains('function onTryoutJenisChange()'));
+      expect(content, contains('function openSubtestModal('));
+      expect(content, contains('function openUploadDocxForSubtest('));
+      expect(content, contains('function saveUploadedQuestionsToSubtest('));
+    });
+
     test('Kode.js contains required administrative GAS endpoints', () {
       expect(kodeJsFile.existsSync(), isTrue);
       final content = kodeJsFile.readAsStringSync();
@@ -56,6 +73,12 @@ void main() {
       expect(content, contains('function deleteMultipleTryouts('));
       expect(content, contains('function deleteMultipleLicenseTokens('));
       expect(content, contains('function _checkUserLogin('));
+
+      // Subtest endpoints
+      expect(content, contains('function getAdminSubtests('));
+      expect(content, contains('function saveAdminSubtest('));
+      expect(content, contains('function deleteAdminSubtest('));
+      expect(content, contains('function saveAdminSubtestQuestions('));
     });
 
     test('Master Voucher code sanitizer regex cleans input properly', () {

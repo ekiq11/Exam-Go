@@ -338,6 +338,10 @@
             <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             Hapus Terpilih (<span id="selected-tryout-count">0</span>)
           </button>
+          <button onclick="openQuickUploadTryoutModal()" class="inline-flex items-center px-4 py-2.5 border border-indigo-200 rounded-xl shadow-sm text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+            Upload Soal DOCX
+          </button>
           <button onclick="openCreateTryoutModal()" class="inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-examgo-primary hover:bg-examgo-primaryHover transition-all shadow-md hover:shadow-lg">
             <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -864,7 +868,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Kategori / Jenis <span class="text-red-500">*</span></label>
-            <select id="tryout-form-jenis" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-semibold text-emerald-800">
+            <select id="tryout-form-jenis" onchange="onTryoutJenisChange()" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-semibold text-emerald-800">
               <option value="SNBT">SNBT (UTBK)</option>
               <option value="SKD">SKD (Kedinasan / CPNS)</option>
               <option value="TKA">TKA (Akademik)</option>
@@ -927,10 +931,33 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Tipe Waktu</label>
-            <select id="tryout-form-jenis-waktu" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-medium">
-              <option value="total">Waktu Total</option>
-              <option value="per_subtest">Per Subtes</option>
+            <select id="tryout-form-jenis-waktu" onchange="onTryoutJenisWaktuChange()" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-medium">
+              <option value="per_subtest">Per Subtes (Mandiri)</option>
+              <option value="total">Waktu Total (Akumulatif)</option>
             </select>
+          </div>
+        </div>
+
+        <!-- Subtest & Waktu Per Subtest Builder -->
+        <div class="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Struktur Subtest & Waktu Per Subtest
+              </span>
+              <p class="text-[11px] text-indigo-600/80">Otomatis terisi dari template materi uji atau sesuaikan waktu tiap subtes.</p>
+            </div>
+            <button type="button" onclick="addCustomSubtestRow()" class="px-2.5 py-1 bg-white hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 rounded-lg text-xs font-bold transition-all shadow-sm">
+              + Subtest
+            </button>
+          </div>
+          <div id="tryout-subtest-rows-container" class="space-y-2 max-h-52 overflow-y-auto pr-1">
+            <!-- Dynamic rows rendered here -->
+          </div>
+          <div class="flex items-center justify-between pt-2 border-t border-indigo-100 text-[11px] text-indigo-900 font-medium">
+            <span id="tryout-subtest-summary-label">Total: 0 Subtest</span>
+            <span id="tryout-subtest-total-duration" class="font-bold">Total Waktu: 0 Menit</span>
           </div>
         </div>
 
@@ -1116,6 +1143,149 @@
       </div>
     </div>
   </div>
+  <!-- Modal Manajemen Subtest & Soal -->
+  <div id="modal-subtest-detail" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/50 backdrop-blur-sm transition-opacity opacity-0">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl p-6 sm:p-7 max-h-[92vh] overflow-y-auto transform transition-transform scale-95" id="modal-subtest-detail-box">
+      <div class="flex items-start justify-between pb-4 border-b border-gray-100 mb-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-xl font-bold text-gray-900">Kelola Subtest & Soal</h3>
+            <span id="subtest-modal-jenis-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800">SNBT</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1 font-medium" id="subtest-modal-paket-title">Paket Tryout</p>
+        </div>
+        <button onclick="closeSubtestModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Action Toolbar inside Modal -->
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-4 bg-gray-50 p-3 rounded-2xl border border-gray-200">
+        <div class="text-xs text-gray-600 flex items-center gap-2">
+          <span class="font-bold text-gray-900" id="subtest-modal-count-info">0 Subtest Terdaftar</span>
+          <span>•</span>
+          <span id="subtest-modal-timing-info" class="text-indigo-600 font-semibold">Tipe: Per Subtest</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="applyPresetToActivePaket()" class="px-3 py-1.5 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            Terapkan Preset Standar
+          </button>
+          <button type="button" onclick="addNewSubtestPrompt()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            + Tambah Subtest
+          </button>
+        </div>
+      </div>
+
+      <!-- List of Subtests -->
+      <div id="subtest-modal-list-container" class="space-y-3 mb-6">
+        <!-- Rendered via JS -->
+      </div>
+
+      <div class="flex justify-end pt-3 border-t border-gray-100">
+        <button onclick="closeSubtestModal()" class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl text-sm transition-colors">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Upload DOCX Spesifik ke Subtest -->
+  <div id="modal-subtest-docx-upload" class="fixed inset-0 z-[60] hidden items-center justify-center bg-gray-900/50 backdrop-blur-sm transition-opacity opacity-0">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-6 sm:p-7 max-h-[92vh] overflow-y-auto transform transition-transform scale-95" id="modal-subtest-docx-upload-box">
+      <div class="flex items-start justify-between pb-3 border-b border-gray-100 mb-4">
+        <div>
+          <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+            📄 Upload Soal ke Subtest
+          </h3>
+          <p class="text-xs text-indigo-700 font-bold mt-1" id="subtest-upload-target-title">Subtest Target</p>
+        </div>
+        <button onclick="closeUploadDocxSubtestModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <input type="file" id="subtest-docx-file-input" accept=".docx" class="hidden" onchange="handleSubtestDocxFile(this)">
+
+      <div onclick="document.getElementById('subtest-docx-file-input').click()" class="border-2 border-dashed border-indigo-300 rounded-2xl p-6 text-center bg-indigo-50/50 hover:bg-indigo-50 transition-colors cursor-pointer group mb-4">
+        <svg class="mx-auto h-10 w-10 text-indigo-600 group-hover:scale-110 transition-transform mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        </svg>
+        <div class="text-sm font-bold text-indigo-950" id="subtest-upload-file-label">Klik untuk Memilih File .DOCX</div>
+        <div class="text-xs text-indigo-700 mt-1">Mendukung konversi otomatis rumus OMML/Word ke KaTeX dan tabel opsi A-E</div>
+      </div>
+
+      <!-- Loading Extraction -->
+      <div id="subtest-upload-loading" class="hidden my-3 p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-center">
+        <div class="loader inline-block border-indigo-600 border-t-transparent w-5 h-5 mr-2"></div>
+        <span class="text-xs font-semibold text-indigo-900" id="subtest-upload-loading-text">Mengekstrak soal & rumus dari DOCX...</span>
+      </div>
+
+      <!-- Preview Section -->
+      <div id="subtest-docx-preview-container" class="hidden mt-4">
+        <div class="flex items-center justify-between pb-2 mb-3 border-b border-gray-200">
+          <div>
+            <span class="text-xs font-bold text-gray-900">Preview Butir Soal Terdeteksi:</span>
+            <span id="subtest-preview-counter" class="ml-1 px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-full">0 Soal</span>
+          </div>
+          <div class="flex items-center space-x-1.5 text-xs">
+            <button type="button" id="btn-subtest-prev-page" onclick="changeSubtestPreviewPage(-1)" class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-semibold disabled:opacity-40">&laquo; Prev</button>
+            <span id="subtest-preview-page-info" class="font-bold text-gray-700">1 / 1</span>
+            <button type="button" id="btn-subtest-next-page" onclick="changeSubtestPreviewPage(1)" class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700 font-semibold disabled:opacity-40">Next &raquo;</button>
+          </div>
+        </div>
+
+        <div id="subtest-questions-preview-list" class="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <div class="flex space-x-3 mt-6 pt-3 border-t border-gray-100">
+        <button onclick="closeUploadDocxSubtestModal()" class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl text-sm transition-colors">Batal</button>
+        <button id="btn-save-subtest-questions" onclick="saveUploadedQuestionsToSubtest()" disabled class="flex-1 px-4 py-2.5 text-white font-semibold rounded-xl text-sm transition-colors shadow-md bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center">
+          Simpan ke Subtest
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Cepat Pilih Paket & Subtest untuk Upload DOCX -->
+  <div id="modal-quick-upload-tryout" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity opacity-0">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto transform transition-transform scale-95" id="modal-quick-upload-tryout-box">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
+        <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+          Upload Soal DOCX ke Subtest
+        </h3>
+        <button onclick="closeQuickUploadTryoutModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">1. Pilih Paket Tryout <span class="text-red-500">*</span></label>
+          <select id="quick-upload-paket-select" onchange="onQuickUploadPaketChange()" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-semibold">
+            <option value="">-- Pilih Paket Tryout --</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">2. Pilih Subtest Tujuan <span class="text-red-500">*</span></label>
+          <select id="quick-upload-subtest-select" disabled class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-semibold disabled:opacity-50">
+            <option value="">-- Pilih Paket Terlebih Dahulu --</option>
+          </select>
+        </div>
+        <p class="text-xs text-gray-500 bg-gray-50 p-3 rounded-xl border border-gray-200">
+          💡 Setelah memilih Paket dan Subtest, Anda dapat langsung mengunggah file dokumen Word (.docx) untuk mengekstrak dan menyimpan soal ke dalam subtest tersebut.
+        </p>
+      </div>
+      <div class="flex space-x-3 mt-6 pt-3 border-t border-gray-100">
+        <button onclick="closeQuickUploadTryoutModal()" class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl text-sm transition-colors">Batal</button>
+        <button id="btn-proceed-quick-upload" onclick="startQuickUploadAction()" disabled class="flex-1 px-4 py-2.5 text-white font-semibold rounded-xl text-sm transition-colors shadow-md bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          Lanjut ke Upload DOCX &rarr;
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Notification Toast -->
   <div id="toast" class="fixed bottom-5 right-5 transform transition-all duration-300 translate-y-20 opacity-0 text-white px-6 py-4 rounded-xl shadow-xl z-[60] flex items-center min-w-[300px]">
     <span id="toast-icon" class="mr-3"></span>
@@ -1851,6 +2021,10 @@
           '<td class="p-5 sm:px-6 sm:py-4">' + statusBadge + '</td>' +
           '<td class="p-4 sm:px-6 sm:py-4 text-right">' +
             '<div class="flex items-center justify-end space-x-2">' +
+              '<button onclick="openSubtestModal(\'' + pkg.paket_id + '\', \'' + String(pkg.nama_paket || '').replace(/'/g, "\\'") + '\', \'' + String(pkg.jenis_test || '').replace(/'/g, "\\'") + '\', \'' + String(pkg.jenis_waktu || '').replace(/'/g, "\\'") + '\')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-lg text-xs font-semibold transition-all flex items-center gap-1">' +
+                '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>' +
+                'Subtest & Soal' +
+              '</button>' +
               '<button onclick=\'openEditTryoutModal(' + safePkg + ')\' class="px-3 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-lg text-xs font-semibold transition-all">Edit</button>' +
               '<button onclick="deleteTryoutPackage(\'' + pkg.paket_id + '\', \'' + String(pkg.nama_paket || '').replace(/'/g, "\\'") + '\')" class="px-3 py-1.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-lg text-xs font-semibold transition-all">Hapus</button>' +
             '</div>' +
@@ -1860,6 +2034,697 @@
 
       tbody.innerHTML = html;
       updateSelectedTryoutCount();
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Subtest Presets & Timing Logic (dari myOLCv2)
+    // ─────────────────────────────────────────────────────────
+    const SUBTEST_PRESET = {
+      'SNBT': {
+        jenis_waktu: 'per_subtest',
+        durasi_total: 210,
+        subtests: [
+          { judul: 'Penalaran Umum', durasi: 30 },
+          { judul: 'Pengetahuan dan Pemahaman Umum (PPU)', durasi: 15 },
+          { judul: 'Pemahaman Bacaan dan Menulis (PBM)', durasi: 25 },
+          { judul: 'Pengetahuan Kuantitatif', durasi: 20 },
+          { judul: 'Literasi dalam Bahasa Indonesia', durasi: 40 },
+          { judul: 'Literasi dalam Bahasa Inggris', durasi: 40 },
+          { judul: 'Penalaran Matematika', durasi: 40 },
+        ]
+      },
+      'SKD': {
+        jenis_waktu: 'per_subtest',
+        durasi_total: 100,
+        subtests: [
+          { judul: 'Tes Wawasan Kebangsaan (TWK)', durasi: 30 },
+          { judul: 'Tes Intelegensia Umum (TIU)', durasi: 35 },
+          { judul: 'Tes Karakteristik Pribadi (TKP)', durasi: 35 },
+        ]
+      },
+      'TKA': {
+        jenis_waktu: 'per_subtest',
+        durasi_total: 225,
+        subtests: [
+          { judul: 'Matematika', durasi: 75 },
+          { judul: 'Bahasa Indonesia', durasi: 75 },
+          { judul: 'Bahasa Inggris', durasi: 75 },
+        ]
+      },
+      'UMUM': {
+        jenis_waktu: 'total',
+        durasi_total: 90,
+        subtests: [
+          { judul: 'Tes Kemampuan Umum', durasi: 90 },
+        ]
+      }
+    };
+
+    window._tryoutFormSubtests = [];
+
+    function onTryoutJenisChange() {
+      const jenisSelect = document.getElementById('tryout-form-jenis');
+      const jenis = (jenisSelect && jenisSelect.value) || 'SNBT';
+      const preset = SUBTEST_PRESET[jenis] || SUBTEST_PRESET['SNBT'];
+      
+      const waktuSelect = document.getElementById('tryout-form-jenis-waktu');
+      if (waktuSelect) {
+        waktuSelect.value = preset.jenis_waktu || 'per_subtest';
+      }
+
+      window._tryoutFormSubtests = (preset.subtests || []).map(function(s) {
+        return { judul: s.judul, durasi: s.durasi };
+      });
+
+      renderSubtestFormRows();
+      recalcSubtestDurations();
+    }
+
+    function onTryoutJenisWaktuChange() {
+      recalcSubtestDurations();
+    }
+
+    function renderSubtestFormRows() {
+      const container = document.getElementById('tryout-subtest-rows-container');
+      if (!container) return;
+
+      const subtests = window._tryoutFormSubtests || [];
+      if (subtests.length === 0) {
+        container.innerHTML = '<div class="text-xs text-gray-400 italic p-2 text-center">Belum ada subtest. Klik "+ Subtest" untuk menambahkan.</div>';
+        const sumLabel = document.getElementById('tryout-subtest-summary-label');
+        if (sumLabel) sumLabel.innerText = 'Total: 0 Subtest';
+        return;
+      }
+
+      let html = '';
+      subtests.forEach(function(st, idx) {
+        html += '<div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-indigo-100 shadow-sm">' +
+          '<div class="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center text-xs font-bold flex-shrink-0">' + (idx + 1) + '</div>' +
+          '<input type="text" value="' + String(st.judul || '').replace(/"/g, '&quot;') + '" onchange="updateSubtestRow(' + idx + ', \'judul\', this.value)" placeholder="Judul Subtest" class="flex-1 px-2.5 py-1 text-xs bg-gray-50 border border-gray-200 rounded-lg outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500 font-medium">' +
+          '<div class="flex items-center gap-1 flex-shrink-0">' +
+            '<input type="number" value="' + (st.durasi || 0) + '" min="0" onchange="updateSubtestRow(' + idx + ', \'durasi\', this.value)" class="w-16 px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded-lg outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500 text-center font-bold font-mono">' +
+            '<span class="text-[11px] text-gray-500">m</span>' +
+          '</div>' +
+          '<button type="button" onclick="removeSubtestFormRow(' + idx + ')" class="p-1 text-red-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors" title="Hapus Subtest">' +
+            '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>' +
+          '</button>' +
+        '</div>';
+      });
+
+      container.innerHTML = html;
+      const sumLabel = document.getElementById('tryout-subtest-summary-label');
+      if (sumLabel) sumLabel.innerText = 'Total: ' + subtests.length + ' Subtest';
+    }
+
+    function addCustomSubtestRow() {
+      if (!window._tryoutFormSubtests) window._tryoutFormSubtests = [];
+      const num = window._tryoutFormSubtests.length + 1;
+      window._tryoutFormSubtests.push({ judul: 'Subtest ' + num, durasi: 30 });
+      renderSubtestFormRows();
+      recalcSubtestDurations();
+    }
+
+    function removeSubtestFormRow(idx) {
+      if (!window._tryoutFormSubtests) return;
+      window._tryoutFormSubtests.splice(idx, 1);
+      renderSubtestFormRows();
+      recalcSubtestDurations();
+    }
+
+    function updateSubtestRow(idx, field, val) {
+      if (!window._tryoutFormSubtests || !window._tryoutFormSubtests[idx]) return;
+      if (field === 'durasi') {
+        window._tryoutFormSubtests[idx].durasi = parseInt(val || '0', 10);
+      } else {
+        window._tryoutFormSubtests[idx].judul = val;
+      }
+      recalcSubtestDurations();
+    }
+
+    function recalcSubtestDurations() {
+      const subtests = window._tryoutFormSubtests || [];
+      const totalMenit = subtests.reduce(function(acc, s) { return acc + (parseInt(s.durasi, 10) || 0); }, 0);
+      
+      const totDurEl = document.getElementById('tryout-subtest-total-duration');
+      if (totDurEl) totDurEl.innerText = 'Total Waktu: ' + totalMenit + ' Menit';
+
+      const waktuSelect = document.getElementById('tryout-form-jenis-waktu');
+      if (waktuSelect && waktuSelect.value === 'per_subtest' && totalMenit > 0) {
+        const durInput = document.getElementById('tryout-form-durasi');
+        if (durInput) durInput.value = totalMenit;
+      }
+    }
+
+    function getTryoutFormSubtests() {
+      return (window._tryoutFormSubtests || []).map(function(s, idx) {
+        return {
+          judul: String(s.judul || 'Subtest ' + (idx + 1)).trim(),
+          durasi: parseInt(s.durasi || '0', 10)
+        };
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Subtest Modal Controller & Direct DOCX Upload
+    // ─────────────────────────────────────────────────────────
+    window._activeSubtestPaketId = null;
+    window._activeSubtestPaketNama = '';
+    window._activeSubtestJenis = '';
+    window._activeSubtestJenisWaktu = '';
+    window._activeSubtestsList = [];
+
+    function openSubtestModal(paketId, namaPaket, jenisTest, jenisWaktu) {
+      window._activeSubtestPaketId = paketId;
+      window._activeSubtestPaketNama = namaPaket || '';
+      window._activeSubtestJenis = jenisTest || 'SNBT';
+      window._activeSubtestJenisWaktu = jenisWaktu || 'per_subtest';
+
+      const titleEl = document.getElementById('subtest-modal-paket-title');
+      if (titleEl) titleEl.innerText = namaPaket + ' (' + paketId + ')';
+
+      const badgeEl = document.getElementById('subtest-modal-jenis-badge');
+      if (badgeEl) badgeEl.innerText = jenisTest || 'SNBT';
+
+      const timingEl = document.getElementById('subtest-modal-timing-info');
+      if (timingEl) {
+        timingEl.innerText = 'Tipe: ' + (jenisWaktu === 'per_subtest' ? 'Per Subtest (Mandiri)' : 'Total Akumulatif');
+      }
+
+      _showModal('modal-subtest-detail', 'modal-subtest-detail-box');
+      loadSubtestsForActivePaket();
+    }
+
+    function closeSubtestModal() {
+      _hideModal('modal-subtest-detail', 'modal-subtest-detail-box');
+    }
+
+    function loadSubtestsForActivePaket() {
+      const container = document.getElementById('subtest-modal-list-container');
+      const countEl = document.getElementById('subtest-modal-count-info');
+      if (!container) return;
+
+      container.innerHTML = '<div class="text-center py-8"><div class="loader inline-block border-indigo-600 border-t-transparent w-6 h-6 mr-2"></div><span class="text-xs font-semibold text-gray-500">Memuat subtest...</span></div>';
+
+      const creds = getCredentials();
+      if (!creds || !window._activeSubtestPaketId) return;
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.error) {
+            container.innerHTML = '<div class="p-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl">Gagal memuat: ' + res.error + '</div>';
+            return;
+          }
+
+          const subtests = (res && res.subtests) || [];
+          window._activeSubtestsList = subtests;
+
+          if (countEl) countEl.innerText = subtests.length + ' Subtest Terdaftar';
+
+          if (subtests.length === 0) {
+            container.innerHTML = '<div class="p-8 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">' +
+              '<div class="text-sm font-bold text-gray-700 mb-1">Belum ada subtest di paket ini</div>' +
+              '<p class="text-xs text-gray-500 mb-4">Klik tombol "Terapkan Preset Standar" di atas untuk membuat subtest otomatis atau tambah manual.</p>' +
+              '<button type="button" onclick="applyPresetToActivePaket()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm">Terapkan Preset Standar</button>' +
+            '</div>';
+            return;
+          }
+
+          let html = '';
+          subtests.forEach(function(st, idx) {
+            const safeJudul = String(st.judul_subtest || '').replace(/'/g, "\\\'").replace(/"/g, '&quot;');
+            html += '<div class="bg-gray-50/70 p-4 rounded-2xl border border-gray-200 hover:border-indigo-200 transition-all space-y-3">' +
+              '<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-gray-200/70">' +
+                '<div class="flex items-center gap-2">' +
+                  '<div class="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">' + (idx + 1) + '</div>' +
+                  '<div>' +
+                    '<span class="text-xs font-mono font-bold text-gray-400">' + st.subtest_id + '</span>' +
+                    '<span class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">' + (st.soal_count || 0) + ' Soal</span>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="flex items-center gap-1.5 self-end sm:self-auto">' +
+                  '<button type="button" onclick="openUploadDocxForSubtest(\'' + st.subtest_id + '\', \'' + safeJudul + '\', \'' + window._activeSubtestPaketId + '\', \'' + String(window._activeSubtestPaketNama).replace(/'/g, "\\\'") + '\')" class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm">' +
+                    '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>' +
+                    'Upload Soal DOCX' +
+                  '</button>' +
+                  '<button type="button" onclick="saveSubtestInline(\'' + st.subtest_id + '\', ' + idx + ')" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white rounded-lg text-xs font-bold transition-all shadow-sm">Simpan</button>' +
+                  '<button type="button" onclick="deleteSubtestAction(\'' + st.subtest_id + '\', \'' + safeJudul + '\')" class="px-2 py-1.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-lg text-xs font-bold transition-all shadow-sm">Hapus</button>' +
+                '</div>' +
+              '</div>' +
+              '<div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">' +
+                '<div class="sm:col-span-3">' +
+                  '<label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Judul Subtest</label>' +
+                  '<input type="text" id="st-detail-judul-' + idx + '" value="' + safeJudul + '" class="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-medium focus:ring-1 focus:ring-indigo-500 outline-none">' +
+                '</div>' +
+                '<div>' +
+                  '<label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Durasi (Menit)</label>' +
+                  '<div class="flex items-center gap-1">' +
+                    '<input type="number" id="st-detail-durasi-' + idx + '" value="' + (st.durasi_menit || 0) + '" min="0" class="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-bold font-mono focus:ring-1 focus:ring-indigo-500 outline-none text-center">' +
+                    '<span class="text-xs text-gray-500 font-medium">m</span>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+          });
+
+          container.innerHTML = html;
+        })
+        .withFailureHandler(function(err) {
+          container.innerHTML = '<div class="p-4 bg-red-50 text-red-700 text-xs rounded-xl">Error: ' + err.message + '</div>';
+        })
+        .getAdminSubtests(window._activeSubtestPaketId, creds.username, creds.password);
+    }
+
+    function saveSubtestInline(subtestId, idx) {
+      const judulInput = document.getElementById('st-detail-judul-' + idx);
+      const durasiInput = document.getElementById('st-detail-durasi-' + idx);
+      if (!judulInput || !durasiInput) return;
+
+      const judul = judulInput.value.trim();
+      const durasi = parseInt(durasiInput.value || '0', 10);
+      if (!judul) return showToast('Judul subtest tidak boleh kosong', 'error');
+
+      const creds = getCredentials();
+      if (!creds) return;
+
+      showToast('Menyimpan perubahan subtest...');
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.error) {
+            showToast('Gagal simpan: ' + res.error, 'error');
+          } else {
+            showToast('Subtest berhasil diperbarui');
+            loadSubtestsForActivePaket();
+            loadAdminPaketTryout();
+          }
+        })
+        .withFailureHandler(function(err) {
+          showToast('Error: ' + err.message, 'error');
+        })
+        .saveAdminSubtest({
+          subtest_id: subtestId,
+          paket_id: window._activeSubtestPaketId,
+          judul_subtest: judul,
+          durasi_menit: durasi,
+          order_index: idx
+        }, creds.username, creds.password);
+    }
+
+    function deleteSubtestAction(subtestId, judul) {
+      const creds = getCredentials();
+      if (!creds) return;
+
+      showConfirmModal({
+        title: 'Hapus Subtest?',
+        message: 'Apakah Anda yakin ingin menghapus subtest "' + judul + '" (' + subtestId + ')? Seluruh soal yang ada di subtest ini juga akan terhapus.',
+        type: 'danger',
+        confirmText: 'Ya, Hapus Subtest',
+        onConfirm: function(btn) {
+          btn.disabled = true;
+          btn.innerHTML = 'Menghapus...';
+          google.script.run
+            .withSuccessHandler(function(res) {
+              closeConfirmModal();
+              if (res && res.error) {
+                showToast('Gagal menghapus: ' + res.error, 'error');
+              } else {
+                showToast('Subtest berhasil dihapus');
+                loadSubtestsForActivePaket();
+                loadAdminPaketTryout();
+              }
+            })
+            .withFailureHandler(function(err) {
+              closeConfirmModal();
+              showToast('Error: ' + err.message, 'error');
+            })
+            .deleteAdminSubtest(subtestId, creds.username, creds.password);
+        }
+      });
+    }
+
+    function applyPresetToActivePaket() {
+      const jenis = window._activeSubtestJenis || 'SNBT';
+      const preset = SUBTEST_PRESET[jenis] || SUBTEST_PRESET['SNBT'];
+
+      showConfirmModal({
+        title: 'Terapkan Preset Standar ' + jenis + '?',
+        message: 'Ini akan menambahkan ' + preset.subtests.length + ' subtest resmi standar ke paket "' + window._activeSubtestPaketNama + '". Lanjutkan?',
+        type: 'info',
+        confirmText: 'Ya, Terapkan Preset',
+        onConfirm: async function(btn) {
+          btn.disabled = true;
+          btn.innerHTML = 'Menerapkan...';
+
+          const creds = getCredentials();
+          if (!creds) return;
+
+          let successCount = 0;
+          for (let i = 0; i < preset.subtests.length; i++) {
+            const s = preset.subtests[i];
+            const stId = window._activeSubtestPaketId + '_ST' + (i + 1);
+            await new Promise(function(resolve) {
+              google.script.run
+                .withSuccessHandler(function() { successCount++; resolve(); })
+                .withFailureHandler(function() { resolve(); })
+                .saveAdminSubtest({
+                  subtest_id: stId,
+                  paket_id: window._activeSubtestPaketId,
+                  judul_subtest: s.judul,
+                  durasi_menit: s.durasi,
+                  order_index: i
+                }, creds.username, creds.password);
+            });
+          }
+
+          closeConfirmModal();
+          showToast('Preset diterapkan: ' + successCount + ' subtest tersimpan');
+          loadSubtestsForActivePaket();
+          loadAdminPaketTryout();
+        }
+      });
+    }
+
+    function addNewSubtestPrompt() {
+      const currentCount = (window._activeSubtestsList || []).length;
+      const defaultJudul = 'Subtest ' + (currentCount + 1);
+      const creds = getCredentials();
+      if (!creds || !window._activeSubtestPaketId) return;
+
+      const stId = window._activeSubtestPaketId + '_ST' + (currentCount + 1);
+      showToast('Menambahkan subtest baru...');
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.error) {
+            showToast('Gagal: ' + res.error, 'error');
+          } else {
+            showToast('Subtest baru ditambahkan');
+            loadSubtestsForActivePaket();
+            loadAdminPaketTryout();
+          }
+        })
+        .withFailureHandler(function(err) {
+          showToast('Error: ' + err.message, 'error');
+        })
+        .saveAdminSubtest({
+          subtest_id: stId,
+          paket_id: window._activeSubtestPaketId,
+          judul_subtest: defaultJudul,
+          durasi_menit: 30,
+          order_index: currentCount
+        }, creds.username, creds.password);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Direct DOCX Upload per Subtest Controller
+    // ─────────────────────────────────────────────────────────
+    window._subtestUploadTargetId = null;
+    window._subtestUploadTargetPaketId = null;
+    window._subtestUploadQuestions = [];
+    window._subtestPreviewPage = 1;
+    window._subtestPreviewPerPage = 5;
+
+    function openUploadDocxForSubtest(subtestId, judulSubtest, paketId, namaPaket) {
+      window._subtestUploadTargetId = subtestId;
+      window._subtestUploadTargetPaketId = paketId;
+      window._subtestUploadQuestions = [];
+      window._subtestPreviewPage = 1;
+
+      const titleEl = document.getElementById('subtest-upload-target-title');
+      if (titleEl) titleEl.innerText = judulSubtest + ' (' + subtestId + ') • Paket: ' + (namaPaket || paketId);
+
+      const labelEl = document.getElementById('subtest-upload-file-label');
+      if (labelEl) labelEl.innerText = 'Klik untuk Memilih File .DOCX';
+
+      const fileInput = document.getElementById('subtest-docx-file-input');
+      if (fileInput) fileInput.value = '';
+
+      const prevContainer = document.getElementById('subtest-docx-preview-container');
+      if (prevContainer) prevContainer.classList.add('hidden');
+
+      const saveBtn = document.getElementById('btn-save-subtest-questions');
+      if (saveBtn) saveBtn.disabled = true;
+
+      _showModal('modal-subtest-docx-upload', 'modal-subtest-docx-upload-box');
+    }
+
+    function closeUploadDocxSubtestModal() {
+      _hideModal('modal-subtest-docx-upload', 'modal-subtest-docx-upload-box');
+    }
+
+    async function handleSubtestDocxFile(input) {
+      const file = input.files && input.files[0];
+      if (!file) return;
+
+      const labelEl = document.getElementById('subtest-upload-file-label');
+      if (labelEl) labelEl.innerText = '📄 ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+
+      const loadingEl = document.getElementById('subtest-upload-loading');
+      if (loadingEl) loadingEl.classList.remove('hidden');
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const convertedBuffer = await extractAndConvertOMML(arrayBuffer);
+
+        const mammothResult = await mammoth.convertToHtml({ arrayBuffer: convertedBuffer });
+        const htmlContent = mammothResult.value;
+
+        // Parse HTML to plain text while keeping math and options
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        const rawText = tempDiv.innerText || tempDiv.textContent || '';
+
+        const questions = extractQuestionsFromText(rawText);
+        window._subtestUploadQuestions = questions;
+
+        if (loadingEl) loadingEl.classList.add('hidden');
+
+        if (questions.length === 0) {
+          showToast('Tidak ada butir soal yang berhasil terdeteksi dari DOCX. Pastikan format nomor 1., A., B., Kunci: dsb.', 'error');
+          return;
+        }
+
+        showToast('Berhasil mendeteksi ' + questions.length + ' butir soal dari DOCX!', 'success');
+        renderSubtestQuestionsPreview();
+
+        const saveBtn = document.getElementById('btn-save-subtest-questions');
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerText = 'Simpan ' + questions.length + ' Soal ke Subtest';
+        }
+      } catch (err) {
+        if (loadingEl) loadingEl.classList.add('hidden');
+        showToast('Gagal memproses file DOCX: ' + err.message, 'error');
+      }
+    }
+
+    function renderSubtestQuestionsPreview() {
+      const container = document.getElementById('subtest-docx-preview-container');
+      const listEl = document.getElementById('subtest-questions-preview-list');
+      const counterEl = document.getElementById('subtest-preview-counter');
+      const pageInfo = document.getElementById('subtest-preview-page-info');
+      const prevBtn = document.getElementById('btn-subtest-prev-page');
+      const nextBtn = document.getElementById('btn-subtest-next-page');
+
+      if (!container || !listEl) return;
+      container.classList.remove('hidden');
+
+      const questions = window._subtestUploadQuestions || [];
+      if (counterEl) counterEl.innerText = questions.length + ' Soal';
+
+      const totalPages = Math.max(1, Math.ceil(questions.length / window._subtestPreviewPerPage));
+      if (window._subtestPreviewPage > totalPages) window._subtestPreviewPage = totalPages;
+      if (window._subtestPreviewPage < 1) window._subtestPreviewPage = 1;
+
+      if (pageInfo) pageInfo.innerText = window._subtestPreviewPage + ' / ' + totalPages;
+      if (prevBtn) prevBtn.disabled = (window._subtestPreviewPage <= 1);
+      if (nextBtn) nextBtn.disabled = (window._subtestPreviewPage >= totalPages);
+
+      const start = (window._subtestPreviewPage - 1) * window._subtestPreviewPerPage;
+      const end = start + window._subtestPreviewPerPage;
+      const slice = questions.slice(start, end);
+
+      let html = '';
+      slice.forEach(function(q, i) {
+        const actualIdx = start + i;
+        html += '<div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-2">' +
+          '<div class="flex items-center justify-between pb-1 border-b border-gray-200">' +
+            '<span class="font-bold text-gray-900">Soal No. ' + (q.nomor || (actualIdx + 1)) + '</span>' +
+            '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800">Kunci: ' + (q.kunci || '-') + '</span>' +
+          '</div>' +
+          '<div class="text-gray-800 leading-relaxed font-medium">' + renderMathPreviewText(q.pertanyaan) + '</div>' +
+          '<div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-gray-600">' +
+            '<div><b>A:</b> ' + renderMathPreviewText(q.a) + '</div>' +
+            '<div><b>B:</b> ' + renderMathPreviewText(q.b) + '</div>' +
+            '<div><b>C:</b> ' + renderMathPreviewText(q.c) + '</div>' +
+            '<div><b>D:</b> ' + renderMathPreviewText(q.d) + '</div>' +
+            (q.e ? '<div><b>E:</b> ' + renderMathPreviewText(q.e) + '</div>' : '') +
+          '</div>' +
+          (q.pembahasan ? '<div class="pt-1 border-t border-gray-200 text-[11px] text-indigo-700"><b>Pembahasan:</b> ' + renderMathPreviewText(q.pembahasan) + '</div>' : '') +
+        '</div>';
+      });
+
+      listEl.innerHTML = html;
+      triggerKaTeXRender(listEl);
+    }
+
+    function changeSubtestPreviewPage(delta) {
+      window._subtestPreviewPage += delta;
+      renderSubtestQuestionsPreview();
+    }
+
+    async function saveUploadedQuestionsToSubtest() {
+      const creds = getCredentials();
+      if (!creds || !window._subtestUploadTargetId || !window._subtestUploadTargetPaketId) return;
+
+      const questions = window._subtestUploadQuestions || [];
+      if (questions.length === 0) return showToast('Tidak ada soal untuk disimpan', 'error');
+
+      const saveBtn = document.getElementById('btn-save-subtest-questions');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<div class="loader inline-block border-white border-t-transparent w-4 h-4 mr-2"></div> Menyimpan ke Firestore...';
+      }
+
+      // Format pertanyaan dan opsi dengan LaTeX
+      const formatted = questions.map(function(q, idx) {
+        return {
+          nomor: idx + 1,
+          pertanyaan: convertMathToLatex(q.pertanyaan),
+          a: convertMathToLatex(q.a),
+          b: convertMathToLatex(q.b),
+          c: convertMathToLatex(q.c),
+          d: convertMathToLatex(q.d),
+          e: convertMathToLatex(q.e || ''),
+          kunci: q.kunci || 'A',
+          pembahasan: convertMathToLatex(q.pembahasan || '')
+        };
+      });
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerText = 'Simpan ke Subtest';
+          }
+
+          if (res && res.error) {
+            showToast('Gagal menyimpan: ' + res.error, 'error');
+          } else {
+            showToast('Berhasil menyimpan ' + (res.count || formatted.length) + ' butir soal ke subtest!', 'success');
+            closeUploadDocxSubtestModal();
+            loadSubtestsForActivePaket();
+            loadAdminPaketTryout();
+          }
+        })
+        .withFailureHandler(function(err) {
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerText = 'Simpan ke Subtest';
+          }
+          showToast('Error: ' + err.message, 'error');
+        })
+        .saveAdminSubtestQuestions(window._subtestUploadTargetId, window._subtestUploadTargetPaketId, formatted, creds.username, creds.password);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Quick Upload Modal Controller
+    // ─────────────────────────────────────────────────────────
+    function openQuickUploadTryoutModal() {
+      const paketSelect = document.getElementById('quick-upload-paket-select');
+      const subtestSelect = document.getElementById('quick-upload-subtest-select');
+      const proceedBtn = document.getElementById('btn-proceed-quick-upload');
+
+      if (!paketSelect) return;
+      if (subtestSelect) {
+        subtestSelect.innerHTML = '<option value="">-- Pilih Paket Terlebih Dahulu --</option>';
+        subtestSelect.disabled = true;
+      }
+      if (proceedBtn) proceedBtn.disabled = true;
+
+      const pakets = allTryoutData || [];
+      let optHtml = '<option value="">-- Pilih Paket Tryout --</option>';
+      pakets.forEach(function(p) {
+        optHtml += '<option value="' + p.paket_id + '" data-nama="' + String(p.nama_paket || '').replace(/"/g, '&quot;') + '" data-jenis="' + (p.jenis_test || 'SNBT') + '">' +
+          p.nama_paket + ' (' + p.paket_id + ')' +
+        '</option>';
+      });
+      paketSelect.innerHTML = optHtml;
+
+      _showModal('modal-quick-upload-tryout', 'modal-quick-upload-tryout-box');
+    }
+
+    function closeQuickUploadTryoutModal() {
+      _hideModal('modal-quick-upload-tryout', 'modal-quick-upload-tryout-box');
+    }
+
+    function onQuickUploadPaketChange() {
+      const paketSelect = document.getElementById('quick-upload-paket-select');
+      const subtestSelect = document.getElementById('quick-upload-subtest-select');
+      const proceedBtn = document.getElementById('btn-proceed-quick-upload');
+      if (!paketSelect || !subtestSelect) return;
+
+      const paketId = paketSelect.value;
+      if (!paketId) {
+        subtestSelect.innerHTML = '<option value="">-- Pilih Paket Terlebih Dahulu --</option>';
+        subtestSelect.disabled = true;
+        if (proceedBtn) proceedBtn.disabled = true;
+        return;
+      }
+
+      subtestSelect.innerHTML = '<option value="">Memuat subtest...</option>';
+      subtestSelect.disabled = true;
+
+      const creds = getCredentials();
+      if (!creds) return;
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          const subtests = (res && res.subtests) || [];
+          if (subtests.length === 0) {
+            subtestSelect.innerHTML = '<option value="">(Belum ada subtest di paket ini)</option>';
+            subtestSelect.disabled = true;
+            if (proceedBtn) proceedBtn.disabled = true;
+            showToast('Paket ini belum memiliki subtest. Silakan buka "Subtest & Soal" di tabel untuk membuat subtest.', 'warning');
+            return;
+          }
+
+          let optHtml = '<option value="">-- Pilih Subtest --</option>';
+          subtests.forEach(function(s) {
+            optHtml += '<option value="' + s.subtest_id + '" data-judul="' + String(s.judul_subtest || '').replace(/"/g, '&quot;') + '">' +
+              s.judul_subtest + ' (' + (s.durasi_menit || 0) + ' Menit, ' + (s.soal_count || 0) + ' Soal)' +
+            '</option>';
+          });
+
+          subtestSelect.innerHTML = optHtml;
+          subtestSelect.disabled = false;
+          subtestSelect.onchange = function() {
+            if (proceedBtn) proceedBtn.disabled = !subtestSelect.value;
+          };
+        })
+        .withFailureHandler(function(err) {
+          subtestSelect.innerHTML = '<option value="">Gagal memuat subtest</option>';
+          showToast('Error: ' + err.message, 'error');
+        })
+        .getAdminSubtests(paketId, creds.username, creds.password);
+    }
+
+    function startQuickUploadAction() {
+      const paketSelect = document.getElementById('quick-upload-paket-select');
+      const subtestSelect = document.getElementById('quick-upload-subtest-select');
+      if (!paketSelect || !subtestSelect) return;
+
+      const paketId = paketSelect.value;
+      const subtestId = subtestSelect.value;
+      if (!paketId || !subtestId) return;
+
+      const selPaketOpt = paketSelect.options[paketSelect.selectedIndex];
+      const namaPaket = selPaketOpt ? selPaketOpt.getAttribute('data-nama') : paketId;
+
+      const selSubtestOpt = subtestSelect.options[subtestSelect.selectedIndex];
+      const judulSubtest = selSubtestOpt ? selSubtestOpt.getAttribute('data-judul') : subtestId;
+
+      closeQuickUploadTryoutModal();
+      openUploadDocxForSubtest(subtestId, judulSubtest, paketId, namaPaket);
     }
 
     function filterTryoutTable() {
@@ -2533,6 +3398,7 @@
       if (container) container.classList.add('hidden');
       _clearAllTryoutAlerts();
       toggleDocxTemplateGuide(false);
+      onTryoutJenisChange();
 
       _showModal('modal-tryout', 'modal-tryout-box');
     }
@@ -2564,6 +3430,27 @@
       if (container) container.classList.add('hidden');
       _clearAllTryoutAlerts();
       toggleDocxTemplateGuide(false);
+
+      // Muat data subtest untuk form tryout
+      window._tryoutFormSubtests = [];
+      const editCreds = getCredentials();
+      if (editCreds && pkg.paket_id) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.success && res.subtests && res.subtests.length > 0) {
+              window._tryoutFormSubtests = res.subtests.map(function(s) {
+                return { judul: s.judul_subtest, durasi: s.durasi_menit, subtest_id: s.subtest_id };
+              });
+              renderSubtestFormRows();
+              recalcSubtestDurations();
+            } else {
+              onTryoutJenisChange();
+            }
+          })
+          .getAdminSubtests(pkg.paket_id, editCreds.username, editCreds.password);
+      } else {
+        onTryoutJenisChange();
+      }
 
       _showModal('modal-tryout', 'modal-tryout-box');
     }
@@ -2671,6 +3558,7 @@
         allow_retake: document.getElementById('tryout-form-allow-retake').checked,
         deskripsi: convertMathToLatex(document.getElementById('tryout-form-deskripsi').value.trim()),
         is_premium_only: true,
+        subtests: getTryoutFormSubtests(),
         soal: rawQuestions
       };
 
