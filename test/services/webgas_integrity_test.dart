@@ -142,6 +142,14 @@ void main() {
       expect(content, contains('All-Access Bundle'));
       expect(content, contains('FAQ'));
 
+      // Hidden Admin Portal check (must not be visible to students/public)
+      expect(content, isNot(contains('?page=admin')));
+      expect(content, isNot(contains('Portal Admin')));
+
+      // Logo & WhatsApp check
+      expect(content, contains('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAABc'));
+      expect(content, contains('6289693652230'));
+
       // Script hydration
       expect(content, contains('google.script.run'));
       expect(content, contains('getLandingPageSettings()'));
@@ -154,6 +162,10 @@ void main() {
       expect(content, contains('id="nav-tab-landing-config"'));
       expect(content, contains('🎨 Setting Landing Page'));
       expect(content, contains('href="?page=landing"'));
+
+      // Logo & WhatsApp in admin
+      expect(content, contains('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAABc'));
+      expect(content, contains('6289693652230'));
 
       // View & Form elements
       expect(content, contains('id="view-landing-config"'));
