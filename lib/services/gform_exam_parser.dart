@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/exam_question_model.dart';
 import '../utils/math_widget_factory.dart';
+import 'math_latex_converter.dart';
 
 class GFormParseResult {
   final bool isValid;
@@ -193,7 +194,28 @@ class GFormExamParser {
             rowTitle = 'Pernyataan ${r + 1}';
           }
 
-          final fullGridPertanyaan = '$fullPertanyaan\n\n📌 $rowTitle';
+          String fullGridPertanyaan = '$fullPertanyaan\n\n📌 $rowTitle';
+
+          // Jika kolom kisi lebih dari 5, cantumkan semua nama kolom di teks pertanyaan agar pilihan tidak terpotong
+          if (rowCols.length > 5) {
+            final colLabels = <String>[];
+            for (int c = 0; c < rowCols.length; c++) {
+              final colData = rowCols[c];
+              if (colData is List && colData.isNotEmpty) {
+                final txt = _normalizeMathInText(colData[0]?.toString() ?? '');
+                if (txt.isNotEmpty) colLabels.add('${String.fromCharCode(65 + (c < 26 ? c : 0))}. $txt');
+              }
+            }
+            if (colLabels.isNotEmpty) {
+              fullGridPertanyaan += '\n\n📋 *Semua Pilihan Kolom:* ${colLabels.join(' | ')}';
+            }
+
+            if (!warnings.any((w) => w.contains('lebih dari 5 kolom'))) {
+              warnings.add(
+                'Ditemukan soal kisi dengan ${rowCols.length} kolom pilihan. Kolom 1 s.d. 5 dipetakan ke Opsi A s.d. E, dan seluruh nama kolom dicantumkan lengkap pada teks pertanyaan agar siswa tetap dapat membaca seluruh alternatif jawaban.',
+              );
+            }
+          }
 
           String oA = '', oB = '', oC = '', oD = '', oE = '';
           for (int c = 0; c < rowCols.length && c < 5; c++) {
@@ -418,7 +440,7 @@ class GFormExamParser {
 
   static String _normalizeMathInText(String text) {
     if (text.isEmpty) return '';
-    return text;
+    return MathLatexConverter.convertPlainTextToLatex(text);
   }
 }
 

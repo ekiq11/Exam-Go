@@ -318,5 +318,14 @@ void main() {
       expect(res.isValid, isFalse);
       expect(res.errors, isNotEmpty);
     });
+
+    test('Validasi deteksi restricted domain Google Form', () async {
+      // Form yang meminta login organisasi ditolak dengan panduan jelas
+      final res = await GFormExamParser.parseFromUrl(
+        formUrl: 'https://docs.google.com/forms/d/e/invalid_restricted_form/viewform',
+      );
+      expect(res.isValid, isFalse);
+      expect(res.errors, isNotEmpty);
+    });
   });
 }
