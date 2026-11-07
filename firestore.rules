@@ -6,8 +6,19 @@ service cloud.firestore {
       allow read, write: if true;
     }
     
-    // Paket Tryout Nasional & Internal
+    // Paket Tryout, Subtest & Butir Soal (Native ExamGO)
     match /paket_tryout/{document=**} {
+      allow read, write: if true;
+    }
+    match /subtest/{document=**} {
+      allow read, write: if true;
+    }
+    match /tryout_soal/{document=**} {
+      allow read, write: if true;
+    }
+
+    // Jawaban & Rekap Nilai Siswa
+    match /jawaban_tryout/{document=**} {
       allow read, write: if true;
     }
     

@@ -13,6 +13,9 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../services/exam_pdf_exporter.dart';
 
 // ─── Konstanta Warna & Style ──────────────────────────────────────────────────
 const _kGreen  = Color(0xFF2E7D32);
@@ -97,9 +100,10 @@ class _TeacherMonitoringListScreenState extends State<TeacherMonitoringListScree
     final parsed = validList.map((item) {
       final parts = item.split('|');
       return {
-        'examId':    parts.isNotEmpty     ? parts[0] : '',
+        'examId':    parts.isNotEmpty ? parts[0] : '',
         'title':     parts.length > 1 ? parts[1] : 'Ujian',
         'timestamp': parts.length > 2 ? parts[2] : '0',
+        'url':       parts.length > 3 ? parts[3] : '',
       };
     }).toList();
     if (mounted) setState(() { _history = parsed; _loading = false; });
@@ -392,6 +396,7 @@ class _TeacherMonitoringListScreenState extends State<TeacherMonitoringListScree
               builder: (_) => TeacherMonitoringDetailScreen(
                 examId: item['examId']!,
                 title: item['title']!,
+                url: item['url'],
               ),
             )),
             child: Padding(
@@ -438,6 +443,32 @@ class _TeacherMonitoringListScreenState extends State<TeacherMonitoringListScree
                             Text(timeStr, style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey.shade500)),
                           ],
                         ),
+                        const SizedBox(height: 6),
+                        Builder(
+                          builder: (_) {
+                            final rawUrl = item['url'] ?? '';
+                            final isExt = rawUrl.startsWith('http://') || rawUrl.startsWith('https://');
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: isExt ? const Color(0xFFEFF6FF) : const Color(0xFFECFDF5),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isExt ? const Color(0xFFBFDBFE) : const Color(0xFFA7F3D0),
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: Text(
+                                isExt ? 'Tautan Eksternal (URL)' : 'Soal CBT Native',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: isExt ? const Color(0xFF1D4ED8) : const Color(0xFF065F46),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -469,11 +500,13 @@ class _TeacherMonitoringListScreenState extends State<TeacherMonitoringListScree
 class TeacherMonitoringDetailScreen extends StatefulWidget {
   final String examId;
   final String title;
+  final String? url;
 
   const TeacherMonitoringDetailScreen({
     super.key,
     required this.examId,
     required this.title,
+    this.url,
   });
 
   @override
@@ -486,6 +519,8 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
   String _scoreSearchQuery = '';
   String _selectedFilter = 'Semua';
   bool _isExporting = false;
+  bool _isExportingPdf = false;
+  bool _isNativeExam = true;
   late TabController _tabController;
 
   @override
@@ -493,6 +528,34 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _registerTokenForThisExam();
+    _checkExamSource();
+  }
+
+  Future<void> _checkExamSource() async {
+    final rawUrl = widget.url?.trim() ?? '';
+    if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+      if (mounted) setState(() => _isNativeExam = false);
+      return;
+    }
+    if (rawUrl.startsWith('EXAMGO_TRYOUT://') || rawUrl.startsWith('EXAMGO_EVENT://')) {
+      if (mounted) setState(() => _isNativeExam = true);
+      return;
+    }
+
+    try {
+      final doc = await FirebaseFirestore.instance.collection('paket_tryout').doc(widget.examId).get();
+      if (mounted) {
+        setState(() {
+          _isNativeExam = doc.exists;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isNativeExam = !rawUrl.startsWith('http');
+        });
+      }
+    }
   }
 
   /// Mendaftarkan token guru HANYA untuk ujian ini, agar notifikasi terisolasi per pengawas.
@@ -744,8 +807,8 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
                       unselectedLabelColor: Colors.grey.shade600,
                       labelStyle: GoogleFonts.poppins(fontSize: 12.5, fontWeight: FontWeight.w600),
                       unselectedLabelStyle: GoogleFonts.poppins(fontSize: 12.5, fontWeight: FontWeight.w500),
-                      tabs: const [
-                        Tab(
+                      tabs: [
+                        const Tab(
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -759,9 +822,12 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.leaderboard_rounded, size: 16),
-                              SizedBox(width: 6),
-                              Text('Rekap Nilai'),
+                              Icon(
+                                _isNativeExam ? Icons.leaderboard_rounded : Icons.link_off_rounded,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(_isNativeExam ? 'Rekap Nilai' : 'Rekap Nilai (Nonaktif)'),
                             ],
                           ),
                         ),
@@ -892,7 +958,7 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
           child: isLoading
               ? const Center(child: CircularProgressIndicator(color: _kGreenL))
               : hasError
-                  ? Center(child: Text('Error: $errorMessage'))
+                  ? _buildLiveErrorCard(errorMessage)
                   : filteredStudents.isEmpty
                       ? _buildEmptyState()
                       : ListView.builder(
@@ -908,6 +974,11 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
   }
 
   Widget _buildScoreRekapTab() {
+    // 1. Jika sumber ujian dari URL eksternal (Google Form / CBT Web) -> nonaktifkan
+    if (!_isNativeExam) {
+      return _buildExternalUrlDisabledRekapView();
+    }
+
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('jawaban_tryout')
@@ -918,16 +989,7 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
           return const Center(child: CircularProgressIndicator(color: _kGreenL));
         }
         if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(
-                'Gagal memuat data nilai: ${snapshot.error}',
-                style: GoogleFonts.poppins(fontSize: 13, color: Colors.red),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          );
+          return _buildFirestoreErrorCard(snapshot.error);
         }
 
         final docs = snapshot.data?.docs ?? [];
@@ -1014,25 +1076,55 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
                           ],
                         ),
                       ),
-                      ElevatedButton.icon(
-                        onPressed: _isExporting ? null : () => _exportToCsv(allScores),
-                        icon: _isExporting
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: _kGreen),
-                              )
-                            : const Icon(Icons.file_download_outlined, size: 16, color: _kGreen),
-                        label: Text(
-                          _isExporting ? 'Mengekspor...' : 'Ekspor CSV',
-                          style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.bold, color: _kGreen),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        alignment: WrapAlignment.end,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: (_isExporting || _isExportingPdf)
+                                ? null
+                                : () => _exportToPdf(allScores),
+                            icon: _isExportingPdf
+                                ? const SizedBox(
+                                    width: 13,
+                                    height: 13,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: _kGreen),
+                                  )
+                                : const Icon(Icons.picture_as_pdf_rounded, size: 15, color: _kGreen),
+                            label: Text(
+                              _isExportingPdf ? 'Menyusun...' : 'Unduh PDF',
+                              style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.bold, color: _kGreen),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: (_isExporting || _isExportingPdf)
+                                ? null
+                                : () => _exportToCsv(allScores),
+                            icon: _isExporting
+                                ? const SizedBox(
+                                    width: 13,
+                                    height: 13,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  )
+                                : const Icon(Icons.table_chart_outlined, size: 15, color: Colors.white),
+                            label: Text(
+                              _isExporting ? 'CSV...' : 'CSV',
+                              style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.white70),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -1365,6 +1457,267 @@ class _TeacherMonitoringDetailScreenState extends State<TeacherMonitoringDetailS
     } finally {
       if (mounted) setState(() => _isExporting = false);
     }
+  }
+
+  Future<void> _exportToPdf(List<Map<String, dynamic>> allScores) async {
+    if (allScores.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Belum ada data nilai siswa untuk diunduh.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isExportingPdf = true);
+    try {
+      await ExamPdfExporter.exportAndSharePdf(
+        examTitle: widget.title,
+        examId: widget.examId,
+        scores: allScores,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Dokumen PDF rekap nilai berhasil dibuat dan siap diunduh/dibagikan.'),
+            backgroundColor: _kGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal membuat PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isExportingPdf = false);
+    }
+  }
+
+  Widget _buildExternalUrlDisabledRekapView() {
+    final rawUrl = widget.url?.trim() ?? '';
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFBFDBFE)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFBFDBFE)),
+                ),
+                child: const Icon(Icons.link_off_rounded, color: Color(0xFF2563EB), size: 36),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Rekap Nilai Otomatis Dinonaktifkan',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0F172A),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Ujian Tautan Eksternal (URL / Web Form)',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1D4ED8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Ujian ini menggunakan lembar soal eksternal dari tautan web (seperti Google Form atau CBT Web sekolah). Jawaban dan penilaian dikirim langsung ke sistem sumber tersebut.\n\n'
+                '• Rekap nilai dan lembar respons tersimpan di akun Google Form / Spreadsheet Anda.\n'
+                '• Untuk mengaktifkan rekap nilai otomatis & leaderboard real-time di aplikasi ExamGO, silakan terbitkan paket soal melalui menu "Buat & Upload Soal" (Tempel Google Form / Word).',
+                style: GoogleFonts.poppins(
+                  fontSize: 12.5,
+                  color: const Color(0xFF475569),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) ...[
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final uri = Uri.tryParse(rawUrl);
+                    if (uri != null && await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  icon: const Icon(Icons.open_in_browser_rounded, size: 16, color: Colors.white),
+                  label: Text(
+                    'Buka Tautan Ujian di Browser',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _kGreen,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFirestoreErrorCard(Object? error) {
+    final errStr = error?.toString().toLowerCase() ?? '';
+    final isPermission = errStr.contains('permission-denied') || errStr.contains('permission');
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFFDE68A)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFBEB),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFFDE68A)),
+                ),
+                child: const Icon(Icons.shield_outlined, color: Color(0xFFD97706), size: 34),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                isPermission ? 'Izin Akses Basis Data Diperlukan' : 'Gagal Menghubungkan Nilai',
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0F172A),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                isPermission
+                    ? 'Sistem keamanan Firestore memerlukan pembaruan aturan izin (Firestore Security Rules) agar data nilai siswa dapat dimuat oleh aplikasi.\n\nLembar jawaban siswa yang telah disubmit tetap tersimpan aman di server.'
+                    : 'Terjadi kendala jaringan saat memuat data rekap nilai siswa. Silakan periksa koneksi internet Anda dan coba lagi.',
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: const Color(0xFF475569),
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 18),
+              ElevatedButton.icon(
+                onPressed: () => setState(() {}),
+                icon: const Icon(Icons.refresh_rounded, size: 16, color: Colors.white),
+                label: Text(
+                  'Muat Ulang Data',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _kGreen,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLiveErrorCard(String? errorMessage) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_off_rounded, size: 48, color: Colors.grey.shade400),
+            const SizedBox(height: 12),
+            Text(
+              'Gagal Memuat Aktivitas Live',
+              style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey.shade700),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Periksa koneksi internet perangkat atau coba muat ulang sesi monitoring.',
+              style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade500),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 14),
+            OutlinedButton.icon(
+              onPressed: () => setState(() {}),
+              icon: const Icon(Icons.refresh_rounded, size: 16, color: _kGreen),
+              label: Text('Coba Lagi', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: _kGreen)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: _kGreen),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildTopMetricRow(int active, int blocked, int finished, int offline, int total) {

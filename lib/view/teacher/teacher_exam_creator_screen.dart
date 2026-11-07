@@ -19,7 +19,8 @@ class TeacherExamCreatorScreen extends StatefulWidget {
   const TeacherExamCreatorScreen({super.key});
 
   @override
-  State<TeacherExamCreatorScreen> createState() => _TeacherExamCreatorScreenState();
+  State<TeacherExamCreatorScreen> createState() =>
+      _TeacherExamCreatorScreenState();
 }
 
 class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
@@ -28,7 +29,8 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
   int _currentStep = 0;
 
   late TabController _sourceTabController;
-  int _selectedSourceTab = 1; // 0: Word .docx, 1: Google Form (Default Google Form sebagai rekomendasi utama)
+  int _selectedSourceTab =
+      1; // 0: Word .docx, 1: Google Form (Default Google Form sebagai rekomendasi utama)
 
   final _titleController = TextEditingController(text: 'Try Out Akbar 2026');
   final _gformUrlController = TextEditingController();
@@ -59,7 +61,11 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
   @override
   void initState() {
     super.initState();
-    _sourceTabController = TabController(length: 2, vsync: this, initialIndex: 1);
+    _sourceTabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: 1,
+    );
     _applyCategoryPreset(_selectedCategory);
     _loadTeacherLicenseStatus();
   }
@@ -96,13 +102,48 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           _jenisWaktu = 'per_subtest';
           _durationController.text = '210';
           _subtests = [
-            ExamSubtest(subtestId: 'ST1', paketId: '', judul: 'Penalaran Umum', durasiMenit: 30),
-            ExamSubtest(subtestId: 'ST2', paketId: '', judul: 'Pengetahuan & Pemahaman Umum (PPU)', durasiMenit: 15),
-            ExamSubtest(subtestId: 'ST3', paketId: '', judul: 'Pemahaman Bacaan & Menulis (PBM)', durasiMenit: 25),
-            ExamSubtest(subtestId: 'ST4', paketId: '', judul: 'Pengetahuan Kuantitatif', durasiMenit: 20),
-            ExamSubtest(subtestId: 'ST5', paketId: '', judul: 'Literasi Bahasa Indonesia', durasiMenit: 40),
-            ExamSubtest(subtestId: 'ST6', paketId: '', judul: 'Literasi Bahasa Inggris', durasiMenit: 40),
-            ExamSubtest(subtestId: 'ST7', paketId: '', judul: 'Penalaran Matematika', durasiMenit: 40),
+            ExamSubtest(
+              subtestId: 'ST1',
+              paketId: '',
+              judul: 'Penalaran Umum',
+              durasiMenit: 30,
+            ),
+            ExamSubtest(
+              subtestId: 'ST2',
+              paketId: '',
+              judul: 'Pengetahuan & Pemahaman Umum (PPU)',
+              durasiMenit: 15,
+            ),
+            ExamSubtest(
+              subtestId: 'ST3',
+              paketId: '',
+              judul: 'Pemahaman Bacaan & Menulis (PBM)',
+              durasiMenit: 25,
+            ),
+            ExamSubtest(
+              subtestId: 'ST4',
+              paketId: '',
+              judul: 'Pengetahuan Kuantitatif',
+              durasiMenit: 20,
+            ),
+            ExamSubtest(
+              subtestId: 'ST5',
+              paketId: '',
+              judul: 'Literasi Bahasa Indonesia',
+              durasiMenit: 40,
+            ),
+            ExamSubtest(
+              subtestId: 'ST6',
+              paketId: '',
+              judul: 'Literasi Bahasa Inggris',
+              durasiMenit: 40,
+            ),
+            ExamSubtest(
+              subtestId: 'ST7',
+              paketId: '',
+              judul: 'Penalaran Matematika',
+              durasiMenit: 40,
+            ),
           ];
           break;
 
@@ -110,9 +151,24 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           _jenisWaktu = 'per_paket';
           _durationController.text = '100';
           _subtests = [
-            ExamSubtest(subtestId: 'ST1', paketId: '', judul: 'Tes Wawasan Kebangsaan (TWK)', durasiMenit: 30),
-            ExamSubtest(subtestId: 'ST2', paketId: '', judul: 'Tes Intelegensia Umum (TIU)', durasiMenit: 35),
-            ExamSubtest(subtestId: 'ST3', paketId: '', judul: 'Tes Karakteristik Pribadi (TKP)', durasiMenit: 35),
+            ExamSubtest(
+              subtestId: 'ST1',
+              paketId: '',
+              judul: 'Tes Wawasan Kebangsaan (TWK)',
+              durasiMenit: 30,
+            ),
+            ExamSubtest(
+              subtestId: 'ST2',
+              paketId: '',
+              judul: 'Tes Intelegensia Umum (TIU)',
+              durasiMenit: 35,
+            ),
+            ExamSubtest(
+              subtestId: 'ST3',
+              paketId: '',
+              judul: 'Tes Karakteristik Pribadi (TKP)',
+              durasiMenit: 35,
+            ),
           ];
           break;
 
@@ -120,9 +176,24 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           _jenisWaktu = 'per_subtest';
           _durationController.text = '225';
           _subtests = [
-            ExamSubtest(subtestId: 'ST1', paketId: '', judul: 'Matematika', durasiMenit: 75),
-            ExamSubtest(subtestId: 'ST2', paketId: '', judul: 'Bahasa Indonesia', durasiMenit: 75),
-            ExamSubtest(subtestId: 'ST3', paketId: '', judul: 'Bahasa Inggris', durasiMenit: 75),
+            ExamSubtest(
+              subtestId: 'ST1',
+              paketId: '',
+              judul: 'Matematika',
+              durasiMenit: 75,
+            ),
+            ExamSubtest(
+              subtestId: 'ST2',
+              paketId: '',
+              judul: 'Bahasa Indonesia',
+              durasiMenit: 75,
+            ),
+            ExamSubtest(
+              subtestId: 'ST3',
+              paketId: '',
+              judul: 'Bahasa Inggris',
+              durasiMenit: 75,
+            ),
           ];
           break;
 
@@ -130,8 +201,18 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           _jenisWaktu = 'per_subtest';
           _durationController.text = '120';
           _subtests = [
-            ExamSubtest(subtestId: 'ST1', paketId: '', judul: 'Matematika', durasiMenit: 60),
-            ExamSubtest(subtestId: 'ST2', paketId: '', judul: 'Bahasa Indonesia', durasiMenit: 60),
+            ExamSubtest(
+              subtestId: 'ST1',
+              paketId: '',
+              judul: 'Matematika',
+              durasiMenit: 60,
+            ),
+            ExamSubtest(
+              subtestId: 'ST2',
+              paketId: '',
+              judul: 'Bahasa Indonesia',
+              durasiMenit: 60,
+            ),
           ];
           break;
 
@@ -139,8 +220,18 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           _jenisWaktu = 'per_subtest';
           _durationController.text = '90';
           _subtests = [
-            ExamSubtest(subtestId: 'ST1', paketId: '', judul: 'Matematika', durasiMenit: 45),
-            ExamSubtest(subtestId: 'ST2', paketId: '', judul: 'Bahasa Indonesia', durasiMenit: 45),
+            ExamSubtest(
+              subtestId: 'ST1',
+              paketId: '',
+              judul: 'Matematika',
+              durasiMenit: 45,
+            ),
+            ExamSubtest(
+              subtestId: 'ST2',
+              paketId: '',
+              judul: 'Bahasa Indonesia',
+              durasiMenit: 45,
+            ),
           ];
           break;
 
@@ -149,7 +240,12 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           _jenisWaktu = 'per_paket';
           _durationController.text = '90';
           _subtests = [
-            ExamSubtest(subtestId: 'ST1', paketId: '', judul: 'Soal Ujian', durasiMenit: 90),
+            ExamSubtest(
+              subtestId: 'ST1',
+              paketId: '',
+              judul: 'Soal Ujian',
+              durasiMenit: 90,
+            ),
           ];
           break;
       }
@@ -173,8 +269,11 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
       );
 
       final tempDir = await getTemporaryDirectory();
-      final sanitizedTitle = title.replaceAll(RegExp(r'[^\w\s\-]'), '').replaceAll(' ', '_');
-      final fileName = '${sanitizedTitle.isNotEmpty ? sanitizedTitle : 'Template_Soal_ExamGO'}.docx';
+      final sanitizedTitle = title
+          .replaceAll(RegExp(r'[^\w\s\-]'), '')
+          .replaceAll(' ', '_');
+      final fileName =
+          '${sanitizedTitle.isNotEmpty ? sanitizedTitle : 'Template_Soal_ExamGO'}.docx';
       final file = File('${tempDir.path}/$fileName');
       await file.writeAsBytes(bytes, flush: true);
 
@@ -183,7 +282,11 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -195,7 +298,9 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           ),
           backgroundColor: AppColors.primaryGreen,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           duration: const Duration(seconds: 3),
         ),
       );
@@ -205,7 +310,8 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           files: [
             XFile(
               file.path,
-              mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+              mimeType:
+                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             ),
           ],
           subject: 'Template Soal ExamGO (.docx)',
@@ -216,10 +322,15 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal menyiapkan template: $e', style: GoogleFonts.poppins(fontSize: 13)),
+            content: Text(
+              'Gagal menyiapkan template: $e',
+              style: GoogleFonts.poppins(fontSize: 13),
+            ),
             backgroundColor: const Color(0xFFDC2626),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -233,7 +344,9 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
   // ─── Dialog Edit / Tambah Subtest ─────────────────────────────
   void _showSubtestDialog({ExamSubtest? existing, int? index}) {
     final titleCtrl = TextEditingController(text: existing?.judul ?? '');
-    final durCtrl = TextEditingController(text: (existing?.durasiMenit ?? 30).toString());
+    final durCtrl = TextEditingController(
+      text: (existing?.durasiMenit ?? 30).toString(),
+    );
 
     showDialog(
       context: context,
@@ -250,13 +363,21 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                 color: AppColors.primaryGreen.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.splitscreen_rounded, color: AppColors.primaryGreen, size: 22),
+              child: const Icon(
+                Icons.splitscreen_rounded,
+                color: AppColors.primaryGreen,
+                size: 22,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 existing != null ? 'Edit Subtest' : 'Tambah Subtest Baru',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: const Color(0xFF0F172A)),
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: const Color(0xFF0F172A),
+                ),
               ),
             ),
           ],
@@ -266,40 +387,97 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Nama / Topik Subtest', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF334155))),
+              Text(
+                'Nama / Topik Subtest',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF334155),
+                ),
+              ),
               const SizedBox(height: 6),
               TextField(
                 controller: titleCtrl,
                 autofocus: true,
-                style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF0F172A)),
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: const Color(0xFF0F172A),
+                ),
                 decoration: InputDecoration(
                   hintText: 'Misal: Penalaran Matematika',
-                  hintStyle: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF94A3B8)),
+                  hintStyle: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: const Color(0xFF94A3B8),
+                  ),
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5)),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: AppColors.primaryGreen,
+                      width: 1.5,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
-              Text('Alokasi Waktu (Menit)', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF334155))),
+              Text(
+                'Alokasi Waktu (Menit)',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF334155),
+                ),
+              ),
               const SizedBox(height: 6),
               TextField(
                 controller: durCtrl,
                 keyboardType: TextInputType.number,
-                style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF0F172A)),
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: const Color(0xFF0F172A),
+                ),
                 decoration: InputDecoration(
                   hintText: '30',
                   suffixText: 'menit',
-                  suffixStyle: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
+                  suffixStyle: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF64748B),
+                  ),
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5)),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: AppColors.primaryGreen,
+                      width: 1.5,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -308,7 +486,14 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Batal', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontWeight: FontWeight.w600, fontSize: 13)),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.poppins(
+                color: const Color(0xFF64748B),
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -321,12 +506,14 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                   existing.judul = newTitle;
                   existing.durasiMenit = newDur;
                 } else {
-                  _subtests.add(ExamSubtest(
-                    subtestId: 'ST${_subtests.length + 1}',
-                    paketId: '',
-                    judul: newTitle,
-                    durasiMenit: newDur,
-                  ));
+                  _subtests.add(
+                    ExamSubtest(
+                      subtestId: 'ST${_subtests.length + 1}',
+                      paketId: '',
+                      judul: newTitle,
+                      durasiMenit: newDur,
+                    ),
+                  );
                 }
               });
               Navigator.pop(ctx);
@@ -335,9 +522,18 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
               backgroundColor: AppColors.primaryGreen,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: Text('Simpan', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            child: Text(
+              'Simpan',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
           ),
         ],
       ),
@@ -403,7 +599,8 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
       if (parseRes.isValid) {
         _showSuccessDialog(
           title: 'Soal Berhasil Divalidasi!',
-          message: '${parseRes.package?.totalSoal ?? 0} butir soal berhasil diekstrak dan gambar otomatis terhubung ke Google Drive.',
+          message:
+              '${parseRes.package?.totalSoal ?? 0} butir soal berhasil diekstrak dan gambar otomatis terhubung ke Google Drive.',
           package: parseRes.package,
         );
       } else {
@@ -432,7 +629,10 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
   Future<void> _fetchAndParseGForm() async {
     final url = _gformUrlController.text.trim();
     if (url.isEmpty) {
-      _showErrorDialog('Tautan Kosong', 'Silakan masukkan tautan Google Form publik terlebih dahulu.');
+      _showErrorDialog(
+        'Tautan Kosong',
+        'Silakan masukkan tautan Google Form publik terlebih dahulu.',
+      );
       return;
     }
 
@@ -468,11 +668,15 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
       if (parseRes.isValid) {
         _showSuccessDialog(
           title: 'Google Form Berhasil Dikonversi!',
-          message: '${parseRes.package?.totalSoal ?? 0} butir soal berhasil diekstrak ke tampilan native ExamGO.',
+          message:
+              '${parseRes.package?.totalSoal ?? 0} butir soal berhasil diekstrak ke tampilan native ExamGO.',
           package: parseRes.package,
         );
       } else {
-        _showErrorDialog('Format Google Form Belum Sesuai', parseRes.errors.join('\n\n'));
+        _showErrorDialog(
+          'Format Google Form Belum Sesuai',
+          parseRes.errors.join('\n\n'),
+        );
       }
     } catch (e) {
       if (!mounted) return;
@@ -495,10 +699,15 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
     if (_currentPackage == null || _currentPackage!.totalSoal == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Belum ada soal yang valid untuk dipratinjau.', style: GoogleFonts.poppins(fontSize: 13)),
+          content: Text(
+            'Belum ada soal yang valid untuk dipratinjau.',
+            style: GoogleFonts.poppins(fontSize: 13),
+          ),
           backgroundColor: const Color(0xFFDC2626),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
       return;
@@ -509,7 +718,8 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
         : 'Ujian Baru';
     _currentPackage!.kategori = _selectedCategory;
     _currentPackage!.jenisWaktu = _jenisWaktu;
-    _currentPackage!.durasiMenit = int.tryParse(_durationController.text.trim()) ?? 90;
+    _currentPackage!.durasiMenit =
+        int.tryParse(_durationController.text.trim()) ?? 90;
 
     if (_subtests.isNotEmpty) {
       final allQuestions = <ExamQuestion>[];
@@ -552,13 +762,21 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                 color: const Color(0xFFDCFCE7),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 24),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: Color(0xFF16A34A),
+                size: 24,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 title,
-                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A)),
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0F172A),
+                ),
               ),
             ),
           ],
@@ -569,7 +787,11 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           children: [
             Text(
               message,
-              style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF334155), height: 1.4),
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: const Color(0xFF334155),
+                height: 1.4,
+              ),
             ),
             if (package != null) ...[
               const SizedBox(height: 14),
@@ -583,8 +805,14 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildMetricSnippet('Total Soal', '${package.totalSoal} Soal'),
-                    _buildMetricSnippet('Subtest', '${package.subtests.length} Babak'),
+                    _buildMetricSnippet(
+                      'Total Soal',
+                      '${package.totalSoal} Soal',
+                    ),
+                    _buildMetricSnippet(
+                      'Subtest',
+                      '${package.subtests.length} Babak',
+                    ),
                     _buildMetricSnippet('Kategori', package.kategori),
                   ],
                 ),
@@ -595,20 +823,40 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Tutup', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
+            child: Text(
+              'Tutup',
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF64748B),
+              ),
+            ),
           ),
           ElevatedButton.icon(
             onPressed: () {
               Navigator.pop(ctx);
               _goToPreview();
             },
-            icon: const Icon(Icons.visibility_rounded, size: 16, color: Colors.white),
-            label: Text('Pratinjau Soal', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+            icon: const Icon(
+              Icons.visibility_rounded,
+              size: 16,
+              color: Colors.white,
+            ),
+            label: Text(
+              'Pratinjau Soal',
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryGreen,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
         ],
@@ -619,9 +867,22 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
   Widget _buildMetricSnippet(String label, String value) {
     return Column(
       children: [
-        Text(value, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF0F172A),
+          ),
+        ),
         const SizedBox(height: 2),
-        Text(label, style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF64748B))),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 10.5,
+            color: const Color(0xFF64748B),
+          ),
+        ),
       ],
     );
   }
@@ -642,13 +903,21 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                 color: const Color(0xFFFEF2F2),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.error_outline_rounded, color: Color(0xFFDC2626), size: 24),
+              child: const Icon(
+                Icons.error_outline_rounded,
+                color: Color(0xFFDC2626),
+                size: 24,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 title,
-                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A)),
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0F172A),
+                ),
               ),
             ),
           ],
@@ -658,7 +927,11 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           child: SingleChildScrollView(
             child: Text(
               message,
-              style: GoogleFonts.poppins(fontSize: 12.5, color: const Color(0xFF475569), height: 1.45),
+              style: GoogleFonts.poppins(
+                fontSize: 12.5,
+                color: const Color(0xFF475569),
+                height: 1.45,
+              ),
             ),
           ),
         ),
@@ -668,11 +941,24 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
               Navigator.pop(ctx);
               _openFormatGuideScreen();
             },
-            icon: const Icon(Icons.menu_book_rounded, size: 16, color: AppColors.primaryGreen),
-            label: Text('Panduan Format', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
+            icon: const Icon(
+              Icons.menu_book_rounded,
+              size: 16,
+              color: AppColors.primaryGreen,
+            ),
+            label: Text(
+              'Panduan Format',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryGreen,
+              ),
+            ),
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: AppColors.primaryGreen),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
           ElevatedButton(
@@ -681,9 +967,18 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
               backgroundColor: AppColors.primaryGreen,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: Text('Mengerti', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            child: Text(
+              'Mengerti',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
           ),
         ],
       ),
@@ -695,7 +990,8 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => DocxFormatGuideScreen(initialCategory: _selectedCategory),
+        builder: (_) =>
+            DocxFormatGuideScreen(initialCategory: _selectedCategory),
       ),
     );
   }
@@ -710,11 +1006,19 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           children: [
             Text(
               'Buat Paket Ujian',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18, color: const Color(0xFF0F172A)),
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: const Color(0xFF0F172A),
+              ),
             ),
             Text(
               'Mode Pengajar • Buat, Impor & Konversi Soal Otomatis',
-              style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B), fontWeight: FontWeight.w500),
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                color: const Color(0xFF64748B),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -728,7 +1032,11 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
               color: const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A), size: 18),
+            child: const Icon(
+              Icons.arrow_back_rounded,
+              color: Color(0xFF0F172A),
+              size: 18,
+            ),
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -740,7 +1048,11 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                 color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.help_outline_rounded, color: AppColors.primaryGreen, size: 20),
+              child: const Icon(
+                Icons.help_outline_rounded,
+                color: AppColors.primaryGreen,
+                size: 20,
+              ),
             ),
             tooltip: 'Panduan Format Soal DOCX',
             onPressed: _openFormatGuideScreen,
@@ -764,7 +1076,10 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 16,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -801,12 +1116,20 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
         ),
         child: Row(
           children: [
-            const Icon(Icons.verified_rounded, color: AppColors.primaryGreen, size: 20),
+            const Icon(
+              Icons.verified_rounded,
+              color: AppColors.primaryGreen,
+              size: 20,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 'Akun Guru Premium: Akses penuh terbitkan paket ujian tanpa batas.',
-                style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF065F46)),
+                style: GoogleFonts.poppins(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF065F46),
+                ),
               ),
             ),
           ],
@@ -824,17 +1147,26 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
       ),
       child: Row(
         children: [
-          const Icon(Icons.card_giftcard_rounded, color: Color(0xFF2563EB), size: 20),
+          const Icon(
+            Icons.card_giftcard_rounded,
+            color: Color(0xFF2563EB),
+            size: 20,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               'Mode Percobaan: Sisa $_remainingUploads dari 3 kali kuota buat & terbitkan soal gratis.',
-              style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF1E40AF)),
+              style: GoogleFonts.poppins(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1E40AF),
+              ),
             ),
           ),
           if (_remainingUploads <= 1)
             InkWell(
-              onTap: () => PremiumTokenDialog.show(context, userType: 'TEACHER_PREMIUM'),
+              onTap: () =>
+                  PremiumTokenDialog.show(context, userType: 'TEACHER_PREMIUM'),
               borderRadius: BorderRadius.circular(8),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -844,7 +1176,11 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                 ),
                 child: Text(
                   'Upgrade',
-                  style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -918,15 +1254,23 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                   color: isDone
                       ? AppColors.primaryGreen
                       : isCurrent
-                          ? AppColors.primaryGreen
-                          : const Color(0xFFCBD5E1),
+                      ? AppColors.primaryGreen
+                      : const Color(0xFFCBD5E1),
                 ),
                 child: Center(
                   child: isDone && !isCurrent
-                      ? const Icon(Icons.check_rounded, color: Colors.white, size: 14)
+                      ? const Icon(
+                          Icons.check_rounded,
+                          color: Colors.white,
+                          size: 14,
+                        )
                       : Text(
                           stepNumber,
-                          style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                 ),
               ),
@@ -940,8 +1284,8 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                     color: isCurrent
                         ? const Color(0xFF0F172A)
                         : isDone
-                            ? const Color(0xFF334155)
-                            : const Color(0xFF94A3B8),
+                        ? const Color(0xFF334155)
+                        : const Color(0xFF94A3B8),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -987,7 +1331,8 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
         _buildSectionHeader(
           icon: Icons.edit_note_rounded,
           title: 'Informasi Dasar Paket Ujian',
-          subtitle: 'Masukkan nama paket serta target kategori ujian untuk mengaktifkan preset otomatis.',
+          subtitle:
+              'Masukkan nama paket serta target kategori ujian untuk mengaktifkan preset otomatis.',
         ),
         const SizedBox(height: 16),
 
@@ -995,28 +1340,73 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Judul / Nama Paket Ujian', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF334155))),
+              Text(
+                'Judul / Nama Paket Ujian',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF334155),
+                ),
+              ),
               const SizedBox(height: 8),
               TextField(
                 controller: _titleController,
-                style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF0F172A)),
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: const Color(0xFF0F172A),
+                ),
                 decoration: InputDecoration(
                   hintText: 'Misal: Try Out Akbar SNBT 2026',
-                  hintStyle: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF94A3B8)),
-                  prefixIcon: const Icon(Icons.school_outlined, size: 20, color: Color(0xFF64748B)),
+                  hintStyle: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: const Color(0xFF94A3B8),
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.school_outlined,
+                    size: 20,
+                    color: Color(0xFF64748B),
+                  ),
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5)),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: AppColors.primaryGreen,
+                      width: 1.5,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
 
-              Text('Pilih Kategori Ujian', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF334155))),
+              Text(
+                'Pilih Kategori Ujian',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF334155),
+                ),
+              ),
               const SizedBox(height: 4),
-              Text('Memilih kategori akan otomatis menyesuaikan alokasi subtest dan durasi standar.', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+              Text(
+                'Memilih kategori akan otomatis menyesuaikan alokasi subtest dan durasi standar.',
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
               const SizedBox(height: 12),
               _buildModernCategoryGrid(),
             ],
@@ -1028,7 +1418,8 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
         _buildSectionHeader(
           icon: Icons.timer_outlined,
           title: 'Pengaturan Waktu & Durasi',
-          subtitle: 'Tentukan apakah durasi dihitung global untuk seluruh soal atau terbagi mandiri per subtest.',
+          subtitle:
+              'Tentukan apakah durasi dihitung global untuk seluruh soal atau terbagi mandiri per subtest.',
         ),
         const SizedBox(height: 16),
 
@@ -1036,7 +1427,14 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Model Perhitungan Timer', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF334155))),
+              Text(
+                'Model Perhitungan Timer',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF334155),
+                ),
+              ),
               const SizedBox(height: 10),
               Row(
                 children: [
@@ -1061,23 +1459,56 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
               ),
               const SizedBox(height: 16),
 
-              Text('Total Durasi Ujian (Menit)', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF334155))),
+              Text(
+                'Total Durasi Ujian (Menit)',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF334155),
+                ),
+              ),
               const SizedBox(height: 8),
               TextField(
                 controller: _durationController,
                 keyboardType: TextInputType.number,
-                style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF0F172A)),
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: const Color(0xFF0F172A),
+                ),
                 decoration: InputDecoration(
                   hintText: '90',
                   suffixText: 'menit',
-                  suffixStyle: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
-                  prefixIcon: const Icon(Icons.access_time_rounded, size: 20, color: Color(0xFF64748B)),
+                  suffixStyle: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF64748B),
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.access_time_rounded,
+                    size: 20,
+                    color: Color(0xFF64748B),
+                  ),
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5)),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: AppColors.primaryGreen,
+                      width: 1.5,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -1089,12 +1520,48 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
 
   Widget _buildModernCategoryGrid() {
     final categories = [
-      {'id': ExamCategory.snbt, 'title': 'SNBT UTBK', 'subtitle': '7 Subtest (TPS & Literasi)', 'badge': 'Standar PTN', 'icon': Icons.account_balance_rounded},
-      {'id': ExamCategory.skd, 'title': 'SKD Kedinasan', 'subtitle': '3 Subtest (TWK, TIU, TKP)', 'badge': 'CPNS / Ikdin', 'icon': Icons.military_tech_rounded},
-      {'id': ExamCategory.tkaSma, 'title': 'TKA SMA', 'subtitle': 'Wajib & Peminatan Jurusan', 'badge': 'Tingkat SMA', 'icon': Icons.school_rounded},
-      {'id': ExamCategory.tkaSmp, 'title': 'TKA SMP', 'subtitle': 'Matematika & B. Indonesia', 'badge': 'Tingkat SMP', 'icon': Icons.menu_book_rounded},
-      {'id': ExamCategory.tkaSd, 'title': 'TKA SD', 'subtitle': 'Dasar Akademik Numerasi', 'badge': 'Tingkat SD', 'icon': Icons.child_care_rounded},
-      {'id': ExamCategory.umum, 'title': 'Ujian Umum', 'subtitle': 'Ulangan Harian, UTS, & UAS', 'badge': 'Fleksibel', 'icon': Icons.assignment_rounded},
+      {
+        'id': ExamCategory.snbt,
+        'title': 'SNBT UTBK',
+        'subtitle': '7 Subtest (TPS & Literasi)',
+        'badge': 'Standar PTN',
+        'icon': Icons.account_balance_rounded,
+      },
+      {
+        'id': ExamCategory.skd,
+        'title': 'SKD Kedinasan',
+        'subtitle': '3 Subtest (TWK, TIU, TKP)',
+        'badge': 'CPNS / Ikdin',
+        'icon': Icons.military_tech_rounded,
+      },
+      {
+        'id': ExamCategory.tkaSma,
+        'title': 'TKA SMA',
+        'subtitle': 'Wajib & Peminatan Jurusan',
+        'badge': 'Tingkat SMA',
+        'icon': Icons.school_rounded,
+      },
+      {
+        'id': ExamCategory.tkaSmp,
+        'title': 'TKA SMP',
+        'subtitle': 'Matematika & B. Indonesia',
+        'badge': 'Tingkat SMP',
+        'icon': Icons.menu_book_rounded,
+      },
+      {
+        'id': ExamCategory.tkaSd,
+        'title': 'TKA SD',
+        'subtitle': 'Dasar Akademik Numerasi',
+        'badge': 'Tingkat SD',
+        'icon': Icons.child_care_rounded,
+      },
+      {
+        'id': ExamCategory.umum,
+        'title': 'Ujian Umum',
+        'subtitle': 'Ulangan Harian, UTS, & UAS',
+        'badge': 'Fleksibel',
+        'icon': Icons.assignment_rounded,
+      },
     ];
 
     return GridView.builder(
@@ -1121,12 +1588,16 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
               color: isSelected ? const Color(0xFFF0FDF4) : Colors.white,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isSelected ? AppColors.primaryGreen : const Color(0xFFE2E8F0),
+                color: isSelected
+                    ? AppColors.primaryGreen
+                    : const Color(0xFFE2E8F0),
                 width: isSelected ? 1.8 : 1.0,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: isSelected ? AppColors.primaryGreen.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.02),
+                  color: isSelected
+                      ? AppColors.primaryGreen.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.02),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),
@@ -1142,15 +1613,28 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primaryGreen.withValues(alpha: 0.15) : const Color(0xFFF1F5F9),
+                        color: isSelected
+                            ? AppColors.primaryGreen.withValues(alpha: 0.15)
+                            : const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(cat['icon'] as IconData, size: 16, color: isSelected ? AppColors.primaryGreen : const Color(0xFF64748B)),
+                      child: Icon(
+                        cat['icon'] as IconData,
+                        size: 16,
+                        color: isSelected
+                            ? AppColors.primaryGreen
+                            : const Color(0xFF64748B),
+                      ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
+                        color: isSelected
+                            ? const Color(0xFFDCFCE7)
+                            : const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -1158,7 +1642,9 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                         style: GoogleFonts.poppins(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: isSelected ? const Color(0xFF166534) : const Color(0xFF64748B),
+                          color: isSelected
+                              ? const Color(0xFF166534)
+                              : const Color(0xFF64748B),
                         ),
                       ),
                     ),
@@ -1172,14 +1658,19 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: isSelected ? const Color(0xFF15803D) : const Color(0xFF0F172A),
+                        color: isSelected
+                            ? const Color(0xFF15803D)
+                            : const Color(0xFF0F172A),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       cat['subtitle'] as String,
-                      style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF64748B)),
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.5,
+                        color: const Color(0xFF64748B),
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1211,16 +1702,22 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           color: isSelected ? const Color(0xFFF0FDF4) : const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.primaryGreen : const Color(0xFFE2E8F0),
+            color: isSelected
+                ? AppColors.primaryGreen
+                : const Color(0xFFE2E8F0),
             width: isSelected ? 1.6 : 1.0,
           ),
         ),
         child: Row(
           children: [
             Icon(
-              isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+              isSelected
+                  ? Icons.radio_button_checked_rounded
+                  : Icons.radio_button_off_rounded,
               size: 18,
-              color: isSelected ? AppColors.primaryGreen : const Color(0xFF94A3B8),
+              color: isSelected
+                  ? AppColors.primaryGreen
+                  : const Color(0xFF94A3B8),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -1231,13 +1728,20 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                     title,
                     style: GoogleFonts.poppins(
                       fontSize: 12.5,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                      color: isSelected ? const Color(0xFF15803D) : const Color(0xFF0F172A),
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w600,
+                      color: isSelected
+                          ? const Color(0xFF15803D)
+                          : const Color(0xFF0F172A),
                     ),
                   ),
                   Text(
                     desc,
-                    style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF64748B)),
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      color: const Color(0xFF64748B),
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1254,7 +1758,10 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
   // STEP 2: STRUKTUR & ALOKASI SUBTEST
   // ─────────────────────────────────────────────────────────────
   Widget _buildStep2SubtestsView() {
-    final totalMenit = _subtests.fold<int>(0, (sum, st) => sum + st.durasiMenit);
+    final totalMenit = _subtests.fold<int>(
+      0,
+      (sum, st) => sum + st.durasiMenit,
+    );
 
     return Column(
       key: const ValueKey('step_2_subtests'),
@@ -1263,16 +1770,26 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
         _buildSectionHeader(
           icon: Icons.splitscreen_rounded,
           title: 'Struktur Subtest & Alokasi Menit',
-          subtitle: 'Pengajar dapat menyesuaikan daftar subtest, menambah babak baru, atau mengubah alokasi menit.',
+          subtitle:
+              'Pengajar dapat menyesuaikan daftar subtest, menambah babak baru, atau mengubah alokasi menit.',
           action: ElevatedButton.icon(
             onPressed: () => _showSubtestDialog(),
             icon: const Icon(Icons.add_rounded, size: 16, color: Colors.white),
-            label: Text('Tambah Subtest', style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+            label: Text(
+              'Tambah Subtest',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryGreen,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
         ),
@@ -1305,7 +1822,11 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                         color: const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.format_list_numbered_rounded, color: Color(0xFF475569), size: 18),
+                      child: const Icon(
+                        Icons.format_list_numbered_rounded,
+                        color: Color(0xFF475569),
+                        size: 18,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -1314,11 +1835,18 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                         children: [
                           Text(
                             '${_subtests.length} Subtest Aktif',
-                            style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A)),
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF0F172A),
+                            ),
                           ),
                           Text(
                             'Paket "$_selectedCategory"',
-                            style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B)),
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              color: const Color(0xFF64748B),
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1330,7 +1858,10 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFDCFCE7),
                   borderRadius: BorderRadius.circular(8),
@@ -1338,11 +1869,19 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.timer_outlined, color: Color(0xFF166534), size: 14),
+                    const Icon(
+                      Icons.timer_outlined,
+                      color: Color(0xFF166534),
+                      size: 14,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Total: $totalMenit Menit',
-                      style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF166534)),
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF166534),
+                      ),
                     ),
                   ],
                 ),
@@ -1363,11 +1902,28 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
             child: Center(
               child: Column(
                 children: [
-                  const Icon(Icons.splitscreen_rounded, size: 36, color: Color(0xFFCBD5E1)),
+                  const Icon(
+                    Icons.splitscreen_rounded,
+                    size: 36,
+                    color: Color(0xFFCBD5E1),
+                  ),
                   const SizedBox(height: 8),
-                  Text('Belum ada subtest yang dibuat', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
+                  Text(
+                    'Belum ada subtest yang dibuat',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF475569),
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text('Klik tombol "Tambah Subtest" di atas untuk menambahkan babak ujian.', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8))),
+                  Text(
+                    'Klik tombol "Tambah Subtest" di atas untuk menambahkan babak ujian.',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1404,7 +1960,11 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                     child: Center(
                       child: Text(
                         '${idx + 1}',
-                        style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryGreen,
+                        ),
                       ),
                     ),
                   ),
@@ -1415,7 +1975,11 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                       children: [
                         Text(
                           st.judul,
-                          style: GoogleFonts.poppins(fontSize: 13.5, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A)),
+                          style: GoogleFonts.poppins(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF0F172A),
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Wrap(
@@ -1423,7 +1987,10 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                           runSpacing: 4,
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF1F5F9),
                                 borderRadius: BorderRadius.circular(6),
@@ -1431,25 +1998,40 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.schedule_rounded, size: 12, color: Color(0xFF64748B)),
+                                  const Icon(
+                                    Icons.schedule_rounded,
+                                    size: 12,
+                                    color: Color(0xFF64748B),
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${st.durasiMenit} Menit',
-                                    style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF475569),
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
                             if (st.soalList.isNotEmpty)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFDCFCE7),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   '${st.soalList.length} Butir Soal',
-                                  style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF166534)),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF166534),
+                                  ),
                                 ),
                               ),
                           ],
@@ -1467,10 +2049,15 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                         color: const Color(0xFFEFF6FF),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF2563EB)),
+                      child: const Icon(
+                        Icons.edit_outlined,
+                        size: 16,
+                        color: Color(0xFF2563EB),
+                      ),
                     ),
                     tooltip: 'Edit Subtest',
-                    onPressed: () => _showSubtestDialog(existing: st, index: idx),
+                    onPressed: () =>
+                        _showSubtestDialog(existing: st, index: idx),
                   ),
                   const SizedBox(width: 4),
                   IconButton(
@@ -1482,7 +2069,11 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                         color: const Color(0xFFFEF2F2),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFDC2626)),
+                      child: const Icon(
+                        Icons.delete_outline_rounded,
+                        size: 16,
+                        color: Color(0xFFDC2626),
+                      ),
                     ),
                     tooltip: 'Hapus Subtest',
                     onPressed: () {
@@ -1508,7 +2099,8 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
         _buildSectionHeader(
           icon: Icons.cloud_upload_rounded,
           title: 'Unggah Dokumen Soal Ujian',
-          subtitle: 'Pilih file Word (.docx) atau masukkan link Google Form untuk konversi otomatis ke tampilan ExamGO.',
+          subtitle:
+              'Pilih file Word (.docx) atau masukkan link Google Form untuk konversi otomatis ke tampilan ExamGO.',
         ),
         const SizedBox(height: 16),
 
@@ -1536,14 +2128,21 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                         borderRadius: BorderRadius.circular(10),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 180),
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: _selectedSourceTab == 0 ? Colors.white : Colors.transparent,
+                            color: _selectedSourceTab == 0
+                                ? Colors.white
+                                : Colors.transparent,
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: _selectedSourceTab == 0
                                 ? [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.05),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.05,
+                                      ),
                                       blurRadius: 4,
                                       offset: const Offset(0, 1),
                                     ),
@@ -1556,16 +2155,22 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                               Icon(
                                 Icons.description_rounded,
                                 size: 16,
-                                color: _selectedSourceTab == 0 ? AppColors.primaryGreen : const Color(0xFF64748B),
+                                color: _selectedSourceTab == 0
+                                    ? AppColors.primaryGreen
+                                    : const Color(0xFF64748B),
                               ),
                               const SizedBox(width: 6),
                               Flexible(
                                 child: Text(
                                   'Word (.docx)',
                                   style: GoogleFonts.poppins(
-                                    fontWeight: _selectedSourceTab == 0 ? FontWeight.bold : FontWeight.w500,
+                                    fontWeight: _selectedSourceTab == 0
+                                        ? FontWeight.bold
+                                        : FontWeight.w500,
                                     fontSize: 12.5,
-                                    color: _selectedSourceTab == 0 ? AppColors.primaryGreen : const Color(0xFF64748B),
+                                    color: _selectedSourceTab == 0
+                                        ? AppColors.primaryGreen
+                                        : const Color(0xFF64748B),
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -1588,14 +2193,21 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                         borderRadius: BorderRadius.circular(10),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 180),
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: _selectedSourceTab == 1 ? Colors.white : Colors.transparent,
+                            color: _selectedSourceTab == 1
+                                ? Colors.white
+                                : Colors.transparent,
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: _selectedSourceTab == 1
                                 ? [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.05),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.05,
+                                      ),
                                       blurRadius: 4,
                                       offset: const Offset(0, 1),
                                     ),
@@ -1608,16 +2220,22 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                               Icon(
                                 Icons.link_rounded,
                                 size: 16,
-                                color: _selectedSourceTab == 1 ? AppColors.primaryGreen : const Color(0xFF64748B),
+                                color: _selectedSourceTab == 1
+                                    ? AppColors.primaryGreen
+                                    : const Color(0xFF64748B),
                               ),
                               const SizedBox(width: 6),
                               Flexible(
                                 child: Text(
-                                  'Google Form ⭐ Rekomendasi',
+                                  '⭐ Google Form',
                                   style: GoogleFonts.poppins(
-                                    fontWeight: _selectedSourceTab == 1 ? FontWeight.bold : FontWeight.w500,
+                                    fontWeight: _selectedSourceTab == 1
+                                        ? FontWeight.bold
+                                        : FontWeight.w500,
                                     fontSize: 12,
-                                    color: _selectedSourceTab == 1 ? AppColors.primaryGreen : const Color(0xFF64748B),
+                                    color: _selectedSourceTab == 1
+                                        ? AppColors.primaryGreen
+                                        : const Color(0xFF64748B),
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -1670,11 +2288,13 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
               color: _isLoading
                   ? const Color(0xFFF0FDF4)
                   : _pickedFileName != null
-                      ? const Color(0xFFF0FDF4)
-                      : const Color(0xFFF8FAFC),
+                  ? const Color(0xFFF0FDF4)
+                  : const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: _isLoading || _pickedFileName != null ? AppColors.primaryGreen : const Color(0xFFCBD5E1),
+                color: _isLoading || _pickedFileName != null
+                    ? AppColors.primaryGreen
+                    : const Color(0xFFCBD5E1),
                 width: 1.5,
               ),
             ),
@@ -1685,17 +2305,27 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                       const SizedBox(
                         width: 28,
                         height: 28,
-                        child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.primaryGreen),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: AppColors.primaryGreen,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Text(
                         'Sedang Mengunggah & Memvalidasi...',
-                        style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF15803D)),
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF15803D),
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         _loadingStatus,
-                        style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF166534)),
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: const Color(0xFF166534),
+                        ),
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1714,18 +2344,25 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          _pickedFileName != null ? Icons.task_rounded : Icons.upload_file_rounded,
+                          _pickedFileName != null
+                              ? Icons.task_rounded
+                              : Icons.upload_file_rounded,
                           size: 26,
-                          color: _pickedFileName != null ? AppColors.primaryGreen : const Color(0xFF64748B),
+                          color: _pickedFileName != null
+                              ? AppColors.primaryGreen
+                              : const Color(0xFF64748B),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _pickedFileName ?? 'Ketuk untuk Memilih File Dokumen (.docx)',
+                        _pickedFileName ??
+                            'Ketuk untuk Memilih File Dokumen (.docx)',
                         style: GoogleFonts.poppins(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: _pickedFileName != null ? const Color(0xFF15803D) : const Color(0xFF0F172A),
+                          color: _pickedFileName != null
+                              ? const Color(0xFF15803D)
+                              : const Color(0xFF0F172A),
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 1,
@@ -1738,7 +2375,9 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                             : 'Mendukung gambar, tabel, rumus normal & simbol sains',
                         style: GoogleFonts.poppins(
                           fontSize: 11,
-                          color: _pickedFileName != null ? const Color(0xFF166534) : const Color(0xFF64748B),
+                          color: _pickedFileName != null
+                              ? const Color(0xFF166534)
+                              : const Color(0xFF64748B),
                         ),
                       ),
                     ],
@@ -1750,21 +2389,43 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: _isDownloadingTemplate ? null : _downloadTemplateDocx,
+                onPressed: _isDownloadingTemplate
+                    ? null
+                    : _downloadTemplateDocx,
                 icon: _isDownloadingTemplate
-                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.download_rounded, size: 16, color: Colors.white),
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.download_rounded,
+                        size: 16,
+                        color: Colors.white,
+                      ),
                 label: Text(
                   'Unduh Template',
-                  style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGreen,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 10,
+                  ),
                 ),
               ),
             ),
@@ -1772,17 +2433,30 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _openFormatGuideScreen,
-                icon: const Icon(Icons.menu_book_rounded, size: 16, color: AppColors.primaryGreen),
+                icon: const Icon(
+                  Icons.menu_book_rounded,
+                  size: 16,
+                  color: AppColors.primaryGreen,
+                ),
                 label: Text(
                   'Panduan Lengkap',
-                  style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primaryGreen),
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primaryGreen,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: AppColors.primaryGreen),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 10,
+                  ),
                 ),
               ),
             ),
@@ -1817,7 +2491,11 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                   color: const Color(0xFF059669),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 16),
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: Colors.white,
+                  size: 16,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -1825,7 +2503,7 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '⭐ REKOMENDASI UTAMA: Tempel Link Langsung Jadi CBT',
+                      '⭐ Rekomendasi: Tempel Link Langsung Jadi CBT',
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -1847,33 +2525,74 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
             ],
           ),
         ),
-        Text('Tautan Google Form:', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF334155))),
+        Text(
+          'Tautan Google Form:',
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF334155),
+          ),
+        ),
         const SizedBox(height: 6),
         TextField(
           controller: _gformUrlController,
-          style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF0F172A)),
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            color: const Color(0xFF0F172A),
+          ),
           decoration: InputDecoration(
             hintText: 'https://docs.google.com/forms/d/e/.../viewform',
-            hintStyle: GoogleFonts.poppins(fontSize: 12.5, color: const Color(0xFF94A3B8)),
+            hintStyle: GoogleFonts.poppins(
+              fontSize: 12.5,
+              color: const Color(0xFF94A3B8),
+            ),
             filled: true,
             fillColor: const Color(0xFFF8FAFC),
-            prefixIcon: const Icon(Icons.link_rounded, size: 20, color: Color(0xFF64748B)),
-            contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5)),
+            prefixIcon: const Icon(
+              Icons.link_rounded,
+              size: 20,
+              color: Color(0xFF64748B),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 12,
+              horizontal: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: AppColors.primaryGreen,
+                width: 1.5,
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 12),
         ElevatedButton.icon(
           onPressed: _isLoading ? null : _fetchAndParseGForm,
           icon: const Icon(Icons.sync_rounded, color: Colors.white, size: 18),
-          label: Text('Ambil & Konversi Soal Google Form', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white)),
+          label: Text(
+            'Ambil & Konversi Soal Google Form',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: Colors.white,
+            ),
+          ),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primaryGreen,
             elevation: 0,
             padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         ),
         const SizedBox(height: 10),
@@ -1887,12 +2606,20 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF64748B)),
+              const Icon(
+                Icons.info_outline_rounded,
+                size: 16,
+                color: Color(0xFF64748B),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Soal dan gambar diekstrak otomatis dari Google Form publik. Kunci jawaban dapat disetel sekaligus menggunakan fitur "⚡ Kunci Cepat" di layar Preview.',
-                  style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B), height: 1.35),
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: const Color(0xFF64748B),
+                    height: 1.35,
+                  ),
                 ),
               ),
             ],
@@ -1928,13 +2655,20 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
               const SizedBox(
                 width: 18,
                 height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2.2, color: AppColors.primaryGreen),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  color: AppColors.primaryGreen,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Memproses Dokumen & Media...',
-                  style: GoogleFonts.poppins(fontSize: 13.5, fontWeight: FontWeight.bold, color: const Color(0xFF166534)),
+                  style: GoogleFonts.poppins(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF166534),
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1948,7 +2682,11 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                 ),
                 child: Text(
                   '$percent%',
-                  style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF15803D)),
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF15803D),
+                  ),
                 ),
               ),
             ],
@@ -1966,12 +2704,20 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.info_outline_rounded, size: 14, color: Color(0xFF15803D)),
+              const Icon(
+                Icons.info_outline_rounded,
+                size: 14,
+                color: Color(0xFF15803D),
+              ),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   _loadingStatus,
-                  style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF15803D), fontWeight: FontWeight.w500),
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: const Color(0xFF15803D),
+                    fontWeight: FontWeight.w500,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1985,7 +2731,8 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
 
   // ─── Validation Result Report Card ────────────────────────────
   Widget _buildValidationReportCard() {
-    final isValid = (_docxResult?.isValid ?? false) || (_gformResult?.isValid ?? false);
+    final isValid =
+        (_docxResult?.isValid ?? false) || (_gformResult?.isValid ?? false);
     final errors = _docxResult?.errors ?? _gformResult?.errors ?? [];
     final warnings = _docxResult?.warnings ?? _gformResult?.warnings ?? [];
 
@@ -2002,12 +2749,20 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           children: [
             Row(
               children: [
-                const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 20),
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: Color(0xFF16A34A),
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Format Valid & Siap Dipratinjau',
-                    style: GoogleFonts.poppins(fontSize: 13.5, fontWeight: FontWeight.bold, color: const Color(0xFF15803D)),
+                    style: GoogleFonts.poppins(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF15803D),
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -2017,7 +2772,10 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
             const SizedBox(height: 6),
             Text(
               '${_currentPackage?.totalSoal ?? 0} butir soal berhasil diekstrak dan siap dipublikasikan.',
-              style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF166534)),
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: const Color(0xFF166534),
+              ),
             ),
             if (warnings.isNotEmpty) ...[
               const SizedBox(height: 10),
@@ -2030,7 +2788,17 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: warnings.map((w) => Text('• $w', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF854D0E)))).toList(),
+                  children: warnings
+                      .map(
+                        (w) => Text(
+                          '• $w',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: const Color(0xFF854D0E),
+                          ),
+                        ),
+                      )
+                      .toList(),
                 ),
               ),
             ],
@@ -2050,12 +2818,20 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           children: [
             Row(
               children: [
-                const Icon(Icons.error_outline_rounded, color: Color(0xFFDC2626), size: 20),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: Color(0xFFDC2626),
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Format Soal Belum Sesuai',
-                    style: GoogleFonts.poppins(fontSize: 13.5, fontWeight: FontWeight.bold, color: const Color(0xFF991B1B)),
+                    style: GoogleFonts.poppins(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF991B1B),
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -2063,18 +2839,32 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
               ],
             ),
             const SizedBox(height: 8),
-            ...errors.map((e) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('• ', style: TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.bold)),
-                      Expanded(
-                        child: Text(e, style: GoogleFonts.poppins(fontSize: 11.5, color: const Color(0xFF7F1D1D))),
+            ...errors.map(
+              (e) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '• ',
+                      style: TextStyle(
+                        color: Color(0xFFDC2626),
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
-                )),
+                    ),
+                    Expanded(
+                      child: Text(
+                        e,
+                        style: GoogleFonts.poppins(
+                          fontSize: 11.5,
+                          color: const Color(0xFF7F1D1D),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       );
@@ -2083,7 +2873,8 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
 
   // ─── Sticky Bottom Action Bar ─────────────────────────────────
   Widget _buildStickyBottomBar() {
-    final canPreview = _currentPackage != null && _currentPackage!.totalSoal > 0;
+    final canPreview =
+        _currentPackage != null && _currentPackage!.totalSoal > 0;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
@@ -2107,12 +2898,28 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                   : () {
                       setState(() => _currentStep -= 1);
                     },
-              icon: const Icon(Icons.arrow_back_rounded, size: 16, color: Color(0xFF475569)),
-              label: Text('Kembali', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
+              icon: const Icon(
+                Icons.arrow_back_rounded,
+                size: 16,
+                color: Color(0xFF475569),
+              ),
+              label: Text(
+                'Kembali',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF475569),
+                ),
+              ),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Color(0xFFCBD5E1)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -2134,7 +2941,10 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                     ? const SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : Icon(
                         _currentStep == 2
@@ -2147,13 +2957,17 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                   _isLoading
                       ? 'Sedang Memproses (${(_loadingProgress * 100).toInt()}%)...'
                       : _currentStep == 0
-                          ? 'Lanjut: Atur Subtest (${_subtests.length})'
-                          : _currentStep == 1
-                              ? 'Lanjut: Unggah & Konversi Soal'
-                              : canPreview
-                                  ? 'Pratinjau Soal (${_currentPackage!.totalSoal} Soal)'
-                                  : 'Pilih & Validasi Dokumen Soal',
-                  style: GoogleFonts.poppins(fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.white),
+                      ? 'Lanjut: Atur Subtest (${_subtests.length})'
+                      : _currentStep == 1
+                      ? 'Lanjut: Unggah & Konversi Soal'
+                      : canPreview
+                      ? 'Pratinjau Soal (${_currentPackage!.totalSoal} Soal)'
+                      : 'Pilih & Validasi Dokumen Soal',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -2161,7 +2975,9 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                   backgroundColor: AppColors.primaryGreen,
                   disabledBackgroundColor: const Color(0xFFCBD5E1),
                   elevation: (_currentStep < 2 || canPreview) ? 1 : 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
@@ -2195,19 +3011,24 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
             Expanded(
               child: Text(
                 title,
-                style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A)),
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0F172A),
+                ),
               ),
             ),
-            if (action != null) ...[
-              const SizedBox(width: 8),
-              action,
-            ],
+            if (action != null) ...[const SizedBox(width: 8), action],
           ],
         ),
         const SizedBox(height: 4),
         Text(
           subtitle,
-          style: GoogleFonts.poppins(fontSize: 11.5, color: const Color(0xFF64748B), height: 1.35),
+          style: GoogleFonts.poppins(
+            fontSize: 11.5,
+            color: const Color(0xFF64748B),
+            height: 1.35,
+          ),
         ),
       ],
     );
