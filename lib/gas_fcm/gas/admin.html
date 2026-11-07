@@ -717,6 +717,10 @@
             <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             Hapus Terpilih (<span id="selected-tryout-count">0</span>)
           </button>
+          <button onclick="openSheetSyncModal()" class="inline-flex items-center px-4 py-2.5 border border-emerald-300 rounded-xl shadow-sm text-sm font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+            Sinkron Bank Soal (Sheets)
+          </button>
           <button onclick="openQuickUploadTryoutModal()" class="inline-flex items-center px-4 py-2.5 border border-indigo-200 rounded-xl shadow-sm text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
             <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
             Upload Soal DOCX
@@ -1875,6 +1879,150 @@
           Lanjut ke Upload DOCX &rarr;
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal Sinkronisasi Bank Soal dari Google Sheets (2-Step Staging & Commit) -->
+  <div id="modal-sheet-sync" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/60 backdrop-blur-sm transition-opacity opacity-0 p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl p-6 sm:p-8 max-h-[92vh] overflow-y-auto transform transition-transform scale-95 flex flex-col" id="modal-sheet-sync-box">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-gray-100 mb-5">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-700">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+              Sinkronisasi Bank Soal Google Sheets
+              <span class="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800">2-Step Staging & Delta</span>
+            </h3>
+            <p class="text-xs text-gray-500">Tarik data sementara dari spreadsheet, pratinjau paket baru & subtest, lalu commit ke Firestore tanpa mengubah isi spreadsheet asli.</p>
+          </div>
+        </div>
+        <button onclick="closeSheetSyncModal()" class="text-gray-400 hover:text-gray-600 p-2 rounded-xl hover:bg-gray-100 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Step 1: Input URL / ID Sheet & Fetch Action -->
+      <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 sm:p-5 mb-5 space-y-3">
+        <div class="flex flex-col md:flex-row md:items-end gap-3">
+          <div class="flex-1">
+            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+              <span>Tautan / ID Google Spreadsheet Bank Soal</span>
+              <span class="text-[11px] font-medium text-emerald-600 flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                Read-Only (Aman: Spreadsheet tidak diubah)
+              </span>
+            </label>
+            <div class="relative">
+              <input type="text" id="sheet-sync-url-input" value="https://docs.google.com/spreadsheets/d/1VLByNy1aYrfY1gXiATg-sqzR3KH8HkHMdIUJw4bboMg/edit" placeholder="https://docs.google.com/spreadsheets/d/..." class="w-full pl-4 pr-10 py-2.5 bg-white rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-xs sm:text-sm font-mono text-slate-800 transition-all">
+              <button onclick="document.getElementById('sheet-sync-url-input').value = 'https://docs.google.com/spreadsheets/d/1VLByNy1aYrfY1gXiATg-sqzR3KH8HkHMdIUJw4bboMg/edit'" title="Reset URL ke Default" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-600 p-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              </button>
+            </div>
+          </div>
+          <button id="btn-fetch-sheet-preview" onclick="fetchSheetPreview()" class="inline-flex items-center justify-center px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm transition-all shadow-md hover:shadow-lg whitespace-nowrap">
+            <svg id="sheet-fetch-spinner" class="hidden -ml-1 mr-2 h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <svg id="sheet-fetch-icon" class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+            Tarik & Pratinjau Sementara
+          </button>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-500">
+          <span>Target Tab: <b>tryout_soal</b> (gid 370672055), <b>paket_tryout</b> (gid 1773556508), <b>subtest</b> (gid 1806613765), <b>jadwal_ujian</b> (gid 1401624701).</span>
+        </div>
+      </div>
+
+      <!-- Preview State: Loading Skeleton -->
+      <div id="sheet-sync-loading" class="hidden py-12 text-center">
+        <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-emerald-500 border-t-transparent mb-3"></div>
+        <p class="text-sm font-semibold text-slate-700">Membaca spreadsheet & menganalisis delta data di Firestore...</p>
+        <p class="text-xs text-slate-400 mt-1">Mengelompokkan paket baru, subtest, bobot, dan butir soal.</p>
+      </div>
+
+      <!-- Preview State: Empty / Initial -->
+      <div id="sheet-sync-empty" class="py-12 text-center text-slate-400">
+        <svg class="mx-auto h-12 w-12 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        <p class="text-sm font-medium text-slate-600">Belum ada data pratinjau yang ditarik.</p>
+        <p class="text-xs text-slate-400 mt-1">Klik tombol <b>Tarik & Pratinjau Sementara</b> di atas untuk membaca isi spreadsheet.</p>
+      </div>
+
+      <!-- Preview State: Content Loaded -->
+      <div id="sheet-sync-content" class="hidden flex-1 flex-col space-y-4">
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-800">Paket Baru (Siap Sync)</span>
+            <div class="text-2xl font-black text-emerald-700 mt-0.5" id="sheet-kpi-new">0</div>
+          </div>
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-600">Sudah di Firestore (Skip)</span>
+            <div class="text-2xl font-black text-slate-600 mt-0.5" id="sheet-kpi-synced">0</div>
+          </div>
+          <div class="bg-indigo-50/70 border border-indigo-200 rounded-2xl p-3">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-indigo-800">Total Subtest</span>
+            <div class="text-2xl font-black text-indigo-700 mt-0.5" id="sheet-kpi-subtests">0</div>
+          </div>
+          <div class="bg-amber-50/70 border border-amber-200 rounded-2xl p-3">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-amber-800">Total Butir Soal</span>
+            <div class="text-2xl font-black text-amber-700 mt-0.5" id="sheet-kpi-questions">0</div>
+          </div>
+        </div>
+
+        <!-- Toolbar / Quick Filters -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+          <div class="flex items-center space-x-2 text-xs">
+            <button onclick="toggleSheetFilter('all')" id="btn-filter-sheet-all" class="px-3 py-1.5 rounded-lg font-bold bg-slate-900 text-white transition-colors">Semua Paket (<span id="count-sheet-all">0</span>)</button>
+            <button onclick="toggleSheetFilter('new')" id="btn-filter-sheet-new" class="px-3 py-1.5 rounded-lg font-medium text-slate-600 hover:bg-slate-100 transition-colors">Hanya Baru (<span id="count-sheet-new">0</span>)</button>
+          </div>
+          <div class="flex items-center space-x-3 text-xs">
+            <button onclick="selectOnlyNewSheetRows()" class="text-emerald-700 hover:text-emerald-800 font-semibold underline">Pilih Hanya Paket Baru</button>
+            <span class="text-slate-300">|</span>
+            <button onclick="selectAllSheetRows(true)" class="text-slate-600 hover:text-slate-800 font-medium">Pilih Semua</button>
+            <span class="text-slate-300">|</span>
+            <button onclick="selectAllSheetRows(false)" class="text-slate-600 hover:text-slate-800 font-medium">Batal Semua</button>
+          </div>
+        </div>
+
+        <!-- Table Staging -->
+        <div class="border border-slate-200 rounded-2xl overflow-hidden overflow-x-auto shadow-sm max-h-[38vh]">
+          <table class="min-w-full divide-y divide-slate-200 text-xs">
+            <thead class="bg-slate-100/80 sticky top-0 z-10 text-slate-700 uppercase font-bold tracking-wider">
+              <tr>
+                <th class="w-10 px-3 py-3 text-center">
+                  <input type="checkbox" id="sheet-checkbox-header" onchange="onHeaderCheckboxChange(this.checked)" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
+                </th>
+                <th class="px-4 py-3 text-left">Paket Tryout</th>
+                <th class="px-3 py-3 text-left">Jenis & Waktu</th>
+                <th class="px-3 py-3 text-left">Subtest & Soal</th>
+                <th class="px-3 py-3 text-left">Status Delta</th>
+                <th class="px-3 py-3 text-center">Detail</th>
+              </tr>
+            </thead>
+            <tbody id="sheet-staging-tbody" class="bg-white divide-y divide-slate-100">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Footer / Step 2 Commit Action -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6 pt-4 border-t border-gray-100">
+        <div class="text-xs text-slate-500 text-center sm:text-left">
+          <span id="sheet-selected-summary" class="font-bold text-slate-800">0 paket dipilih.</span>
+          <span class="text-slate-400 block sm:inline sm:ml-1">Hanya paket yang dicentang yang akan disimpan ke Firestore.</span>
+        </div>
+        <div class="flex items-center space-x-3 w-full sm:w-auto">
+          <button onclick="closeSheetSyncModal()" class="flex-1 sm:flex-initial px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-sm transition-colors">Tutup</button>
+          <button id="btn-commit-sheet-sync" onclick="commitSheetSyncToFirestore()" disabled class="flex-1 sm:flex-initial inline-flex items-center justify-center px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl text-sm transition-all shadow-md hover:shadow-lg">
+            <svg id="commit-spinner" class="hidden -ml-1 mr-2 h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <svg id="commit-icon" class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Sinkronkan ke Firestore Sekarang
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -3454,6 +3602,341 @@
           showToast('Error: ' + err.message, 'error');
         })
         .saveAdminSubtestQuestions(window._subtestUploadTargetId, window._subtestUploadTargetPaketId, formatted, creds.username, creds.password);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Google Sheets Bank Soal Sync Controller (2-Step Staging & Delta)
+    // ─────────────────────────────────────────────────────────
+    let lastSheetPreviewData = null;
+    let currentSheetFilter = 'all';
+
+    function openSheetSyncModal() {
+      _showModal('modal-sheet-sync', 'modal-sheet-sync-box');
+      if (!lastSheetPreviewData) {
+        fetchSheetPreview();
+      }
+    }
+
+    function closeSheetSyncModal() {
+      _hideModal('modal-sheet-sync', 'modal-sheet-sync-box');
+    }
+
+    function fetchSheetPreview() {
+      const creds = getCredentials();
+      if (!creds) return;
+
+      const urlInput = document.getElementById('sheet-sync-url-input');
+      const sheetUrl = (urlInput ? urlInput.value : '').trim();
+
+      const btn = document.getElementById('btn-fetch-sheet-preview');
+      const spinner = document.getElementById('sheet-fetch-spinner');
+      const icon = document.getElementById('sheet-fetch-icon');
+      const loadingEl = document.getElementById('sheet-sync-loading');
+      const emptyEl = document.getElementById('sheet-sync-empty');
+      const contentEl = document.getElementById('sheet-sync-content');
+
+      if (btn) btn.disabled = true;
+      if (spinner) spinner.classList.remove('hidden');
+      if (icon) icon.classList.add('hidden');
+      if (emptyEl) emptyEl.classList.add('hidden');
+      if (contentEl) contentEl.classList.add('hidden');
+      if (loadingEl) loadingEl.classList.remove('hidden');
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (btn) btn.disabled = false;
+          if (spinner) spinner.classList.add('hidden');
+          if (icon) icon.classList.remove('hidden');
+          if (loadingEl) loadingEl.classList.add('hidden');
+
+          if (res && res.error) {
+            showToast('Gagal menarik spreadsheet: ' + res.error, 'error');
+            if (emptyEl) emptyEl.classList.remove('hidden');
+            return;
+          }
+
+          lastSheetPreviewData = res;
+          renderSheetPreview(res);
+          showToast('Data sheet berhasil ditarik sementara (' + (res.packages ? res.packages.length : 0) + ' paket)', 'success');
+        })
+        .withFailureHandler(function(err) {
+          if (btn) btn.disabled = false;
+          if (spinner) spinner.classList.add('hidden');
+          if (icon) icon.classList.remove('hidden');
+          if (loadingEl) loadingEl.classList.add('hidden');
+          if (emptyEl) emptyEl.classList.remove('hidden');
+          showToast('Koneksi server gagal: ' + (err.message || err), 'error');
+        })
+        .previewTryoutFromSheets(sheetUrl, creds.username, creds.password);
+    }
+
+    function renderSheetPreview(data) {
+      const emptyEl = document.getElementById('sheet-sync-empty');
+      const contentEl = document.getElementById('sheet-sync-content');
+      if (!data || !data.packages || data.packages.length === 0) {
+        if (contentEl) contentEl.classList.add('hidden');
+        if (emptyEl) emptyEl.classList.remove('hidden');
+        return;
+      }
+
+      if (emptyEl) emptyEl.classList.add('hidden');
+      if (contentEl) contentEl.classList.remove('hidden');
+
+      const elKpiNew = document.getElementById('sheet-kpi-new');
+      const elKpiSynced = document.getElementById('sheet-kpi-synced');
+      const elKpiSubtests = document.getElementById('sheet-kpi-subtests');
+      const elKpiQuestions = document.getElementById('sheet-kpi-questions');
+      const elCountAll = document.getElementById('count-sheet-all');
+      const elCountNew = document.getElementById('count-sheet-new');
+
+      if (elKpiNew) elKpiNew.innerText = data.new_packages || 0;
+      if (elKpiSynced) elKpiSynced.innerText = data.already_synced_packages || 0;
+      if (elKpiSubtests) elKpiSubtests.innerText = data.total_subtests || 0;
+      if (elKpiQuestions) elKpiQuestions.innerText = data.total_questions || 0;
+      if (elCountAll) elCountAll.innerText = data.packages.length;
+      if (elCountNew) elCountNew.innerText = data.new_packages || 0;
+
+      renderSheetStagingTable();
+      updateSheetSelectionSummary();
+    }
+
+    function toggleSheetFilter(mode) {
+      currentSheetFilter = mode;
+      const btnAll = document.getElementById('btn-filter-sheet-all');
+      const btnNew = document.getElementById('btn-filter-sheet-new');
+      if (mode === 'all') {
+        if (btnAll) btnAll.className = 'px-3 py-1.5 rounded-lg font-bold bg-slate-900 text-white transition-colors';
+        if (btnNew) btnNew.className = 'px-3 py-1.5 rounded-lg font-medium text-slate-600 hover:bg-slate-100 transition-colors';
+      } else {
+        if (btnAll) btnAll.className = 'px-3 py-1.5 rounded-lg font-medium text-slate-600 hover:bg-slate-100 transition-colors';
+        if (btnNew) btnNew.className = 'px-3 py-1.5 rounded-lg font-bold bg-emerald-700 text-white transition-colors';
+      }
+      renderSheetStagingTable();
+    }
+
+    function renderSheetStagingTable() {
+      if (!lastSheetPreviewData || !lastSheetPreviewData.packages) return;
+      const tbody = document.getElementById('sheet-staging-tbody');
+      if (!tbody) return;
+
+      const packages = lastSheetPreviewData.packages.filter(function(p) {
+        if (currentSheetFilter === 'new') return !p.is_synced;
+        return true;
+      });
+
+      if (packages.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">Tidak ada paket yang sesuai dengan filter.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      packages.forEach(function(pkg) {
+        const isNew = !pkg.is_synced;
+        const statusBadge = isNew
+          ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✨ Baru (Siap Sync)</span>'
+          : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">✓ Sudah di Firestore (Skip)</span>';
+
+        const jenisBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold ' +
+          (pkg.jenis_test === 'SNBT' ? 'bg-indigo-100 text-indigo-800' : (pkg.jenis_test === 'SKD' ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800')) + '">' +
+          pkg.jenis_test + '</span>';
+
+        const rowBg = isNew ? 'hover:bg-emerald-50/40' : 'opacity-80 bg-slate-50/50 hover:bg-slate-100/50';
+
+        html += '<tr class="transition-colors ' + rowBg + '">' +
+          '<td class="px-3 py-3 text-center">' +
+            '<input type="checkbox" onchange="onSheetRowCheckboxChange(this, \'' + pkg.paket_id + '\')" ' + (pkg.selected ? 'checked' : '') + ' class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">' +
+          '</td>' +
+          '<td class="px-4 py-3">' +
+            '<div class="font-bold text-slate-900 text-xs">' + escapeHtml(pkg.nama_paket) + '</div>' +
+            '<div class="text-[11px] font-mono text-slate-400 mt-0.5">ID: ' + escapeHtml(pkg.paket_id) + '</div>' +
+          '</td>' +
+          '<td class="px-3 py-3">' +
+            '<div class="flex items-center gap-1.5">' + jenisBadge + '<span class="text-slate-500 text-[11px] font-mono">' + pkg.jenis_waktu + '</span></div>' +
+            '<div class="text-[11px] text-slate-400 mt-0.5">' + pkg.durasi_menit + ' menit</div>' +
+          '</td>' +
+          '<td class="px-3 py-3">' +
+            '<div class="font-bold text-slate-800">' + (pkg.subtest_count || 0) + ' Subtest</div>' +
+            '<div class="text-[11px] text-emerald-700 font-semibold">' + (pkg.total_soal || 0) + ' Butir Soal</div>' +
+          '</td>' +
+          '<td class="px-3 py-3">' + statusBadge + '</td>' +
+          '<td class="px-3 py-3 text-center">' +
+            '<button onclick="toggleSheetSubtestDetail(\'' + pkg.paket_id + '\')" class="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200">Detail &darr;</button>' +
+          '</td>' +
+        '</tr>';
+
+        // Subtests breakdown row (Accordion)
+        html += '<tr id="subtest-detail-' + pkg.paket_id + '" class="hidden bg-slate-50/90 border-t border-b border-slate-200">' +
+          '<td colspan="6" class="p-3 pl-12">' +
+            '<div class="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">' +
+              '<svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>' +
+              'Daftar Subtest Terhubung (' + (pkg.subtests ? pkg.subtests.length : 0) + '):' +
+            '</div>';
+
+        if (pkg.subtests && pkg.subtests.length > 0) {
+          html += '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">';
+          pkg.subtests.forEach(function(st, sIdx) {
+            html += '<div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-2xs">' +
+              '<div class="font-bold text-slate-800 text-[11px] truncate">' + (sIdx + 1) + '. ' + escapeHtml(st.judul_subtest) + '</div>' +
+              '<div class="flex items-center justify-between text-[10px] text-slate-500 mt-1">' +
+                '<span>' + st.durasi_menit + ' Menit</span>' +
+                '<span class="font-bold text-emerald-700">' + st.soal_count + ' Soal</span>' +
+              '</div>' +
+            '</div>';
+          });
+          html += '</div>';
+        } else {
+          html += '<p class="text-xs text-slate-400 italic">Tidak ada rincian subtest terpisah.</p>';
+        }
+
+        html += '</td></tr>';
+      });
+
+      tbody.innerHTML = html;
+      updateHeaderCheckboxState();
+    }
+
+    function toggleSheetSubtestDetail(paketId) {
+      const row = document.getElementById('subtest-detail-' + paketId);
+      if (row) {
+        row.classList.toggle('hidden');
+      }
+    }
+
+    function onSheetRowCheckboxChange(el, paketId) {
+      if (!lastSheetPreviewData || !lastSheetPreviewData.packages) return;
+      const target = lastSheetPreviewData.packages.find(p => p.paket_id === paketId);
+      if (target) {
+        target.selected = el.checked;
+      }
+      updateHeaderCheckboxState();
+      updateSheetSelectionSummary();
+    }
+
+    function onHeaderCheckboxChange(checked) {
+      if (!lastSheetPreviewData || !lastSheetPreviewData.packages) return;
+      lastSheetPreviewData.packages.forEach(function(p) {
+        if (currentSheetFilter === 'new') {
+          if (!p.is_synced) p.selected = checked;
+        } else {
+          p.selected = checked;
+        }
+      });
+      renderSheetStagingTable();
+      updateSheetSelectionSummary();
+    }
+
+    function selectOnlyNewSheetRows() {
+      if (!lastSheetPreviewData || !lastSheetPreviewData.packages) return;
+      lastSheetPreviewData.packages.forEach(function(p) {
+        p.selected = !p.is_synced;
+      });
+      renderSheetStagingTable();
+      updateSheetSelectionSummary();
+    }
+
+    function selectAllSheetRows(checked) {
+      if (!lastSheetPreviewData || !lastSheetPreviewData.packages) return;
+      lastSheetPreviewData.packages.forEach(function(p) {
+        p.selected = checked;
+      });
+      renderSheetStagingTable();
+      updateSheetSelectionSummary();
+    }
+
+    function updateHeaderCheckboxState() {
+      const headerCb = document.getElementById('sheet-checkbox-header');
+      if (!headerCb || !lastSheetPreviewData || !lastSheetPreviewData.packages) return;
+      const visible = lastSheetPreviewData.packages.filter(p => currentSheetFilter === 'new' ? !p.is_synced : true);
+      if (visible.length === 0) {
+        headerCb.checked = false;
+        return;
+      }
+      headerCb.checked = visible.every(p => p.selected);
+    }
+
+    function updateSheetSelectionSummary() {
+      const summaryEl = document.getElementById('sheet-selected-summary');
+      const commitBtn = document.getElementById('btn-commit-sheet-sync');
+      if (!lastSheetPreviewData || !lastSheetPreviewData.packages) {
+        if (summaryEl) summaryEl.innerText = '0 paket dipilih.';
+        if (commitBtn) commitBtn.disabled = true;
+        return;
+      }
+
+      const selected = lastSheetPreviewData.packages.filter(p => p.selected);
+      let totalSoalSelected = 0;
+      let totalSubtestsSelected = 0;
+      selected.forEach(function(p) {
+        totalSoalSelected += (p.total_soal || 0);
+        totalSubtestsSelected += (p.subtest_count || 0);
+      });
+
+      if (summaryEl) {
+        summaryEl.innerHTML = '<b class="text-emerald-700">' + selected.length + ' paket terpilih</b> (' +
+          totalSubtestsSelected + ' subtest • ' + totalSoalSelected + ' soal) siap disinkronkan.';
+      }
+      if (commitBtn) {
+        commitBtn.disabled = selected.length === 0;
+      }
+    }
+
+    function commitSheetSyncToFirestore() {
+      const creds = getCredentials();
+      if (!creds) return;
+      if (!lastSheetPreviewData || !lastSheetPreviewData.packages) return;
+
+      const selected = lastSheetPreviewData.packages.filter(p => p.selected);
+      if (selected.length === 0) {
+        showToast('Pilih setidaknya 1 paket untuk disinkronkan.', 'warning');
+        return;
+      }
+
+      const selectedIds = selected.map(p => p.paket_id);
+      let totalQ = 0;
+      selected.forEach(p => { totalQ += (p.total_soal || 0); });
+
+      const confirmMsg = 'Konfirmasi Sinkronisasi ke Firestore:\n\n' +
+        '• Jumlah Paket: ' + selected.length + ' paket\n' +
+        '• Estimasi Soal: ' + totalQ + ' butir soal\n' +
+        '• Sumber: Google Sheets (Read-Only: tidak akan diubah)\n\n' +
+        'Lanjutkan proses sinkronisasi?';
+
+      if (!confirm(confirmMsg)) return;
+
+      const btn = document.getElementById('btn-commit-sheet-sync');
+      const spinner = document.getElementById('commit-spinner');
+      const icon = document.getElementById('commit-icon');
+
+      if (btn) btn.disabled = true;
+      if (spinner) spinner.classList.remove('hidden');
+      if (icon) icon.classList.add('hidden');
+
+      const urlInput = document.getElementById('sheet-sync-url-input');
+      const sheetUrl = (urlInput ? urlInput.value : '').trim();
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (btn) btn.disabled = false;
+          if (spinner) spinner.classList.add('hidden');
+          if (icon) icon.classList.remove('hidden');
+
+          if (res && res.error) {
+            showToast('Gagal sinkronisasi: ' + res.error, 'error');
+            return;
+          }
+
+          showToast(res.message || 'Sinkronisasi berhasil!', 'success');
+          closeSheetSyncModal();
+          lastSheetPreviewData = null; // Invalidate staging data
+          loadAdminPaketTryout(); // Refresh main table
+        })
+        .withFailureHandler(function(err) {
+          if (btn) btn.disabled = false;
+          if (spinner) spinner.classList.add('hidden');
+          if (icon) icon.classList.remove('hidden');
+          showToast('Koneksi server gagal: ' + (err.message || err), 'error');
+        })
+        .syncTryoutSheetsToFirestore(sheetUrl, selectedIds, false, creds.username, creds.password);
     }
 
     // ─────────────────────────────────────────────────────────

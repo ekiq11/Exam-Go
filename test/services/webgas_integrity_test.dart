@@ -209,5 +209,37 @@ void main() {
       expect(content, contains('appstore_url:'));
       expect(content, contains('function saveLandingPageSettings('));
     });
+
+    test('Kode.js and admin.html contain Google Sheets tryout sync and delta detection', () {
+      final kodeContent = kodeJsFile.readAsStringSync();
+      final adminContent = adminHtmlFile.readAsStringSync();
+
+      // Kode.js endpoints and helpers
+      expect(kodeContent, contains('function previewTryoutFromSheets('));
+      expect(kodeContent, contains('function syncTryoutSheetsToFirestore('));
+      expect(kodeContent, contains('1VLByNy1aYrfY1gXiATg-sqzR3KH8HkHMdIUJw4bboMg'));
+      expect(kodeContent, contains('370672055')); // Soal GID
+      expect(kodeContent, contains('1773556508')); // Paket GID
+      expect(kodeContent, contains('1806613765')); // Subtest GID
+      expect(kodeContent, contains('1401624701')); // Jadwal GID
+      expect(kodeContent, contains('_formatDriveImageUrl'));
+
+      // admin.html UI and modal
+      expect(adminContent, contains('openSheetSyncModal()'));
+      expect(adminContent, contains('id="modal-sheet-sync"'));
+      expect(adminContent, contains('id="sheet-sync-url-input"'));
+      expect(adminContent, contains('id="btn-fetch-sheet-preview"'));
+      expect(adminContent, contains('id="sheet-staging-tbody"'));
+      expect(adminContent, contains('id="btn-commit-sheet-sync"'));
+
+      // admin.html JS controller functions
+      expect(adminContent, contains('function openSheetSyncModal()'));
+      expect(adminContent, contains('function closeSheetSyncModal()'));
+      expect(adminContent, contains('function fetchSheetPreview()'));
+      expect(adminContent, contains('function renderSheetPreview('));
+      expect(adminContent, contains('function renderSheetStagingTable()'));
+      expect(adminContent, contains('function commitSheetSyncToFirestore()'));
+      expect(adminContent, contains('function selectOnlyNewSheetRows()'));
+    });
   });
 }
