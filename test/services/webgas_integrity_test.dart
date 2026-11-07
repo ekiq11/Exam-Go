@@ -257,6 +257,16 @@ void main() {
       expect(adminContent, contains('function renderSheetStagingTable()'));
       expect(adminContent, contains('function commitSheetSyncToFirestore()'));
       expect(adminContent, contains('function selectOnlyNewSheetRows()'));
+
+      // Question Preview & Scrollable Table features
+      expect(adminContent, contains('id="modal-sheet-question-preview"'));
+      expect(adminContent, contains('id="preview-sheet-questions-list"'));
+      expect(adminContent, contains('function openSheetQuestionsPreviewModal('));
+      expect(adminContent, contains('function closeSheetQuestionsPreviewModal()'));
+      expect(adminContent, contains('function renderSheetQuestionsContent('));
+      expect(adminContent, contains('function renderTablePreview('));
+      expect(adminContent, contains('function renderQuestionImage('));
+      expect(adminContent, contains('overflow-y-auto shadow-sm max-h-[52vh]'));
     });
   });
 }

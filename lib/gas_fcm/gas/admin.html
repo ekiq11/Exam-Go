@@ -1985,10 +1985,10 @@
           </div>
         </div>
 
-        <!-- Table Staging -->
-        <div class="border border-slate-200 rounded-2xl overflow-hidden overflow-x-auto shadow-sm max-h-[38vh]">
+        <!-- Table Staging (Scrollable Vertically & Horizontally) -->
+        <div class="border border-slate-200 rounded-2xl overflow-x-auto overflow-y-auto shadow-sm max-h-[52vh] relative">
           <table class="min-w-full divide-y divide-slate-200 text-xs">
-            <thead class="bg-slate-100/80 sticky top-0 z-10 text-slate-700 uppercase font-bold tracking-wider">
+            <thead class="bg-slate-100/95 sticky top-0 z-10 text-slate-700 uppercase font-bold tracking-wider shadow-2xs backdrop-blur-xs">
               <tr>
                 <th class="w-10 px-3 py-3 text-center">
                   <input type="checkbox" id="sheet-checkbox-header" onchange="onHeaderCheckboxChange(this.checked)" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
@@ -2023,6 +2023,50 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Modal Pratinjau Butir Soal Pre-Sync (Preview Soal, Gambar, Tabel & LaTeX) -->
+  <div id="modal-sheet-question-preview" class="fixed inset-0 z-[65] hidden items-center justify-center bg-gray-950/70 backdrop-blur-sm transition-opacity opacity-0 p-3 sm:p-6">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col border border-slate-200 overflow-hidden transform transition-transform scale-95" id="modal-sheet-questions-box">
+      <!-- Header -->
+      <div class="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 bg-slate-50/90">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-lg shadow-2xs">
+            📝
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+              <span id="preview-sheet-modal-title">Pratinjau Butir Soal</span>
+              <span id="preview-sheet-modal-badge" class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">0 Soal</span>
+            </h3>
+            <p id="preview-sheet-modal-subtitle" class="text-xs text-slate-500 mt-0.5">Memeriksa kelengkapan teks, lampiran gambar, tabel terformat, rumus matematika KaTeX, dan kunci jawaban sebelum disimpan ke Firestore.</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeSheetQuestionsPreviewModal()" class="text-slate-400 hover:text-slate-700 p-2 rounded-xl hover:bg-slate-200/60 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Filter / Subtest Navigation Bar -->
+      <div id="preview-sheet-subtest-bar" class="px-5 py-2.5 bg-white border-b border-slate-100 flex items-center gap-2 overflow-x-auto text-xs">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Question Cards Scroll Container -->
+      <div id="preview-sheet-questions-list" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 max-h-[68vh] bg-slate-50/60">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-between p-4 border-t border-slate-100 bg-white">
+        <div class="text-xs text-slate-500 font-medium">
+          <span id="preview-sheet-footer-counter">0 butir soal siap disinkronkan</span>
+        </div>
+        <button type="button" onclick="closeSheetQuestionsPreviewModal()" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors">
+          Tutup Pratinjau
+        </button>
+      </div>
     </div>
   </div>
 
@@ -3778,8 +3822,16 @@
               '<div class="text-[11px] text-emerald-700 font-semibold">' + (pkg.total_soal || 0) + ' Butir Soal</div>' +
             '</td>' +
             '<td class="px-3 py-3">' + statusBadge + '</td>' +
-            '<td class="px-3 py-3 text-center">' +
-              '<button type="button" onclick="toggleSheetSubtestDetail(\'' + safePid + '\')" class="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-emerald-700 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200">Rincian &darr;</button>' +
+            '<td class="px-3 py-3 text-center whitespace-nowrap">' +
+              '<div class="flex items-center justify-center gap-1.5">' +
+                '<button type="button" onclick="openSheetQuestionsPreviewModal(\'' + safePid + '\')" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors border border-emerald-200 shadow-2xs" title="Pratinjau butir soal paket ini">' +
+                  '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>' +
+                  'Preview Soal' +
+                '</button>' +
+                '<button type="button" onclick="toggleSheetSubtestDetail(\'' + safePid + '\')" class="px-2 py-1 text-[11px] font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200" title="Buka rincian subtest">' +
+                  'Subtest &darr;' +
+                '</button>' +
+              '</div>' +
             '</td>' +
           '</tr>';
 
@@ -3794,11 +3846,19 @@
           if (pkg.subtests && pkg.subtests.length > 0) {
             html += '<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">';
             pkg.subtests.forEach(function(st, sIdx) {
-              html += '<div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-2xs">' +
-                '<div class="font-bold text-slate-800 text-[11px] truncate">' + (sIdx + 1) + '. ' + escapeHtml(st.judul_subtest) + '</div>' +
-                '<div class="flex items-center justify-between text-[10px] text-slate-500 mt-1">' +
-                  '<span>⏱️ ' + st.durasi_menit + ' Menit</span>' +
-                  '<span class="font-bold text-emerald-700">📝 ' + st.soal_count + ' Soal</span>' +
+              html += '<div class="bg-white border border-slate-200 rounded-xl p-2.5 shadow-2xs flex flex-col justify-between">' +
+                '<div>' +
+                  '<div class="font-bold text-slate-800 text-[11px] truncate" title="' + escapeHtml(st.judul_subtest) + '">' + (sIdx + 1) + '. ' + escapeHtml(st.judul_subtest) + '</div>' +
+                  '<div class="flex items-center justify-between text-[10px] text-slate-500 mt-1">' +
+                    '<span>⏱️ ' + st.durasi_menit + ' Menit</span>' +
+                    '<span class="font-bold text-emerald-700">📝 ' + st.soal_count + ' Soal</span>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="mt-2 pt-1.5 border-t border-slate-100">' +
+                  '<button type="button" onclick="openSheetQuestionsPreviewModal(\'' + safePid + '\', \'' + escapeHtml(st.subtest_id) + '\')" class="w-full py-1 px-2 text-[11px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors flex items-center justify-center gap-1 shadow-2xs">' +
+                    '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>' +
+                    'Pratinjau Soal (' + st.soal_count + ')' +
+                  '</button>' +
                 '</div>' +
               '</div>';
             });
@@ -3962,6 +4022,309 @@
           showToast('Koneksi server gagal: ' + (err.message || err), 'error');
         })
         .syncTryoutSheetsToFirestore(sheetUrl, selectedIds, false, creds.username, creds.password);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Google Sheets Question Preview Controller (Pre-Sync Preview)
+    // ─────────────────────────────────────────────────────────
+    let currentPreviewPaketId = null;
+    let currentPreviewSubtestId = null;
+
+    function renderMathPreviewText(str) {
+      if (!str) return '';
+      return escapeHtml(String(str));
+    }
+
+    function renderTablePreview(rawTabel) {
+      if (!rawTabel) return '';
+      const s = String(rawTabel).trim();
+      if (!s) return '';
+
+      // Case 1: HTML table tag directly
+      if (s.toLowerCase().includes('<table')) {
+        return '<div class="overflow-x-auto my-3 rounded-xl border border-slate-200 bg-white shadow-2xs">' +
+          '<div class="p-2">' + s + '</div>' +
+        '</div>';
+      }
+
+      // Case 2: Delimited format (=== or ,/ and ||| or -)
+      if (s.includes('===') || s.includes(',/') || s.includes('|||')) {
+        try {
+          const rowsArr = s.includes('===') ? s.split('===') : s.split(',/');
+          const delim = s.includes('|||') ? '|||' : (s.includes('||') ? '||' : '-');
+          let ths = '';
+          let trs = '';
+          for (let k = 0; k < rowsArr.length; k++) {
+            let rStr = rowsArr[k].trim();
+            if (!rStr) continue;
+            let parts = rStr.split(delim).map(c => c.trim());
+            if (parts.length > 0 && parts[0] === '') parts.shift();
+            if (parts.length === 0) continue;
+
+            if (ths === '') {
+              ths = parts.map(c => '<th class="border border-slate-300 px-3 py-2 bg-slate-100 font-bold text-slate-800 text-left text-xs">' + escapeHtml(c) + '</th>').join('');
+            } else {
+              trs += '<tr class="hover:bg-slate-50 border-b border-slate-100">' + parts.map(td => '<td class="border border-slate-200 px-3 py-2 text-slate-700 text-xs">' + escapeHtml(td) + '</td>').join('') + '</tr>';
+            }
+          }
+          if (ths) {
+            return '<div class="overflow-x-auto my-3 rounded-xl border border-slate-200 bg-white shadow-2xs">' +
+              '<table class="min-w-full text-xs border-collapse border border-slate-300"><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table>' +
+            '</div>';
+          }
+        } catch(err) {
+          console.warn('Table delimited parse error:', err);
+        }
+      }
+
+      // Case 3: Markdown table (| Col 1 | Col 2 |)
+      if (s.includes('|')) {
+        try {
+          const lines = s.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+          let ths = '';
+          let trs = '';
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            if (line.match(/^\|?(\s*[-:]+\s*\|?)+$/)) continue; // Separator row
+            const parts = line.split('|').map(c => c.trim()).filter((c, idx, arr) => !(idx === 0 && c === '') && !(idx === arr.length - 1 && c === ''));
+            if (parts.length === 0) continue;
+
+            if (ths === '') {
+              ths = parts.map(c => '<th class="border border-slate-300 px-3 py-2 bg-slate-100 font-bold text-slate-800 text-left text-xs">' + escapeHtml(c) + '</th>').join('');
+            } else {
+              trs += '<tr class="hover:bg-slate-50 border-b border-slate-100">' + parts.map(td => '<td class="border border-slate-200 px-3 py-2 text-slate-700 text-xs">' + escapeHtml(td) + '</td>').join('') + '</tr>';
+            }
+          }
+          if (ths) {
+            return '<div class="overflow-x-auto my-3 rounded-xl border border-slate-200 bg-white shadow-2xs">' +
+              '<table class="min-w-full text-xs border-collapse border border-slate-300"><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table>' +
+            '</div>';
+          }
+        } catch(err) {
+          console.warn('Markdown table parse error:', err);
+        }
+      }
+
+      return '<div class="overflow-x-auto my-3 p-3 bg-slate-50 rounded-xl border border-slate-200 font-mono text-xs text-slate-700 whitespace-pre">' + escapeHtml(s) + '</div>';
+    }
+
+    function renderQuestionImage(url, label) {
+      if (!url) return '';
+      const safeUrl = escapeHtml(url);
+      return '<div class="my-3 text-center bg-slate-50/80 p-3 rounded-2xl border border-slate-200 shadow-2xs">' +
+        '<div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">' + (label || 'Lampiran Gambar') + '</div>' +
+        '<img src="' + safeUrl + '" alt="Gambar Soal" loading="lazy" class="max-h-64 max-w-full w-auto rounded-xl mx-auto object-contain bg-white p-1 border border-slate-200 shadow-2xs" ' +
+          'onerror="this.onerror=null; this.parentElement.innerHTML=\'<div class=\\\'text-xs text-amber-800 bg-amber-50 p-2.5 rounded-xl border border-amber-200\\\'>⚠️ Gambar Google Drive memerlukan izin akses publik. <a href=\\\'' + safeUrl + '\\\' target=\\\'_blank\\\' class=\\\'underline font-bold text-emerald-700 ml-1\\\'>Buka langsung &nearr;</a></div>\';">' +
+        '<div class="mt-1.5"><a href="' + safeUrl + '" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 hover:underline">🔍 Buka gambar resolusi penuh di tab baru &nearr;</a></div>' +
+      '</div>';
+    }
+
+    function openSheetQuestionsPreviewModal(paketId, optSubtestId) {
+      if (!lastSheetPreviewData || !lastSheetPreviewData.packages) {
+        showToast('Data pratinjau belum dimuat.', 'warning');
+        return;
+      }
+      const pkg = lastSheetPreviewData.packages.find(p => p.paket_id === paketId);
+      if (!pkg) {
+        showToast('Paket tidak ditemukan.', 'error');
+        return;
+      }
+
+      currentPreviewPaketId = paketId;
+      currentPreviewSubtestId = optSubtestId || null;
+
+      // Update Modal Header Texts
+      const titleEl = document.getElementById('preview-sheet-modal-title');
+      const badgeEl = document.getElementById('preview-sheet-modal-badge');
+      const subEl = document.getElementById('preview-sheet-modal-subtitle');
+      if (titleEl) titleEl.innerText = pkg.nama_paket + ' (' + pkg.paket_id + ')';
+      if (badgeEl) badgeEl.innerText = (pkg.total_soal || 0) + ' Butir Soal';
+      if (subEl) {
+        subEl.innerText = 'Jenis: ' + pkg.jenis_test + ' • ' + (pkg.subtest_count || 0) + ' Subtest • Durasi: ' + (pkg.durasi_menit || 0) + ' Menit';
+      }
+
+      // Render Subtest Navigation Bar
+      renderPreviewSubtestBar(pkg);
+
+      // Render Questions
+      renderSheetQuestionsContent(pkg);
+
+      // Show Modal
+      _showModal('modal-sheet-question-preview', 'modal-sheet-questions-box');
+    }
+
+    function closeSheetQuestionsPreviewModal() {
+      _hideModal('modal-sheet-question-preview', 'modal-sheet-questions-box');
+    }
+
+    function selectPreviewSubtestFilter(subtestId) {
+      currentPreviewSubtestId = subtestId || null;
+      if (!lastSheetPreviewData || !lastSheetPreviewData.packages) return;
+      const pkg = lastSheetPreviewData.packages.find(p => p.paket_id === currentPreviewPaketId);
+      if (!pkg) return;
+      renderPreviewSubtestBar(pkg);
+      renderSheetQuestionsContent(pkg);
+    }
+
+    function renderPreviewSubtestBar(pkg) {
+      const barEl = document.getElementById('preview-sheet-subtest-bar');
+      if (!barEl) return;
+
+      const subtests = pkg.subtests || [];
+      if (subtests.length <= 1) {
+        barEl.classList.add('hidden');
+        return;
+      }
+      barEl.classList.remove('hidden');
+
+      let html = '<span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap mr-1">Filter Subtest:</span>';
+      const isAllActive = !currentPreviewSubtestId;
+      html += '<button type="button" onclick="selectPreviewSubtestFilter(null)" class="px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-colors ' +
+        (isAllActive ? 'bg-slate-900 text-white shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200') + '">' +
+        'Semua Subtest (' + (pkg.total_soal || 0) + ')' +
+      '</button>';
+
+      subtests.forEach(function(st, sIdx) {
+        const isActive = currentPreviewSubtestId === st.subtest_id;
+        html += '<button type="button" onclick="selectPreviewSubtestFilter(\'' + escapeHtml(st.subtest_id) + '\')" class="px-3 py-1.5 rounded-xl font-medium whitespace-nowrap transition-colors ' +
+          (isActive ? 'bg-emerald-700 text-white font-bold shadow-2xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200') + '">' +
+          (sIdx + 1) + '. ' + escapeHtml(st.judul_subtest) + ' (' + st.soal_count + ')' +
+        '</button>';
+      });
+
+      barEl.innerHTML = html;
+    }
+
+    function renderSheetQuestionsContent(pkg) {
+      const listEl = document.getElementById('preview-sheet-questions-list');
+      const counterEl = document.getElementById('preview-sheet-footer-counter');
+      if (!listEl) return;
+
+      // Extract all questions for the package
+      let allQuestions = [];
+      if (pkg.questions && Array.isArray(pkg.questions) && pkg.questions.length > 0) {
+        allQuestions = pkg.questions;
+      } else if (pkg.subtests && Array.isArray(pkg.subtests)) {
+        pkg.subtests.forEach(function(st) {
+          if (st.questions && Array.isArray(st.questions)) {
+            allQuestions = allQuestions.concat(st.questions);
+          }
+        });
+      }
+
+      let filtered = allQuestions;
+      if (currentPreviewSubtestId) {
+        filtered = allQuestions.filter(function(q) {
+          return q.subtest_id === currentPreviewSubtestId;
+        });
+      }
+
+      if (counterEl) {
+        counterEl.innerText = 'Menampilkan ' + filtered.length + ' dari ' + allQuestions.length + ' butir soal';
+      }
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = '<div class="py-16 text-center text-slate-400">' +
+          '<div class="text-4xl mb-2">📭</div>' +
+          '<div class="font-bold text-slate-600 text-sm">Tidak ada butir soal yang ditemukan.</div>' +
+          '<p class="text-xs text-slate-400 mt-1">Periksa tab tryout_soal (GID 370672055) di spreadsheet Anda.</p>' +
+        '</div>';
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(function(q, qIdx) {
+        const qNum = q.nomor_soal || (qIdx + 1);
+        const kunci = (q.kunci || 'A').toUpperCase();
+
+        // Opsi A - E
+        let opsiHtml = '';
+        ['a', 'b', 'c', 'd', 'e'].forEach(function(opt) {
+          const optText = q['opsi_' + opt] || q[opt] || '';
+          const optImg = q['gam_' + opt] || '';
+          if (!optText && !optImg) return;
+
+          const isKey = (kunci === opt.toUpperCase());
+          const cardStyle = isKey
+            ? 'bg-emerald-50/90 border-emerald-300 ring-1 ring-emerald-300 text-emerald-950 font-medium'
+            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50/80';
+          const letterStyle = isKey
+            ? 'bg-emerald-700 text-white font-bold'
+            : 'bg-slate-100 text-slate-700 font-bold border border-slate-200';
+
+          let optImgHtml = '';
+          if (optImg) {
+            optImgHtml = '<div class="mt-1.5"><img src="' + escapeHtml(optImg) + '" alt="Opsi ' + opt.toUpperCase() + '" loading="lazy" class="max-h-28 rounded-lg border border-slate-200 object-contain bg-white p-1"></div>';
+          }
+
+          opsiHtml += '<div class="flex items-start gap-2.5 p-2.5 rounded-xl border transition-colors ' + cardStyle + '">' +
+            '<div class="w-6 h-6 rounded-lg flex items-center justify-center text-xs flex-shrink-0 mt-0.5 ' + letterStyle + '">' +
+              opt.toUpperCase() +
+            '</div>' +
+            '<div class="flex-1 text-xs leading-relaxed">' +
+              '<div class="flex items-center justify-between">' +
+                '<span>' + (escapeHtml(optText) || '<i>(Gambar saja)</i>') + '</span>' +
+                (isKey ? '<span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">✓ Kunci Jawaban</span>' : '') +
+              '</div>' +
+              optImgHtml +
+            '</div>' +
+          '</div>';
+        });
+
+        // Question Image & Table
+        const imgHtml = renderQuestionImage(q.gambar, 'Lampiran Gambar Soal No. ' + qNum);
+        const tblHtml = renderTablePreview(q.tabel);
+
+        // Explanation (Pembahasan)
+        let pembHtml = '';
+        if (q.pembahasan && q.pembahasan.trim()) {
+          pembHtml = '<div class="mt-3 p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl text-xs text-indigo-900 leading-relaxed">' +
+            '<div class="font-bold text-indigo-800 flex items-center gap-1 mb-1">💡 Pembahasan:</div>' +
+            '<div>' + escapeHtml(q.pembahasan).replace(/\n/g, '<br/>') + '</div>' +
+          '</div>';
+        }
+
+        html += '<div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-2xs hover:shadow-sm transition-all">' +
+          '<div class="flex items-center justify-between pb-2.5 mb-3 border-b border-slate-100">' +
+            '<div class="flex items-center space-x-2">' +
+              '<span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 font-black text-xs flex items-center justify-center">' + qNum + '</span>' +
+              '<span class="font-bold text-slate-800 text-xs">Butir Soal #' + qNum + '</span>' +
+              (q.subtest_id ? '<span class="text-[10px] font-mono text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">' + escapeHtml(q.subtest_id) + '</span>' : '') +
+            '</div>' +
+            '<div class="flex items-center space-x-2">' +
+              '<span class="px-2.5 py-0.5 rounded-full font-bold text-[11px] bg-emerald-100 text-emerald-800 border border-emerald-200">Kunci: ' + kunci + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="text-xs sm:text-sm text-slate-800 leading-relaxed font-normal mb-3 whitespace-pre-line">' +
+            (escapeHtml(q.pertanyaan) || '<i class="text-slate-400">[Teks Pertanyaan Kosong]</i>') +
+          '</div>' +
+          tblHtml +
+          imgHtml +
+          '<div class="space-y-2 mt-3">' +
+            opsiHtml +
+          '</div>' +
+          pembHtml +
+        '</div>';
+      });
+
+      listEl.innerHTML = html;
+
+      // Render KaTeX Math Formulas
+      if (window.renderMathInElement) {
+        try {
+          renderMathInElement(listEl, {
+            throwOnError: false,
+            delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+            ]
+          });
+        } catch(kErr) {
+          console.warn('KaTeX render error on question list:', kErr);
+        }
+      }
     }
 
     // ─────────────────────────────────────────────────────────
