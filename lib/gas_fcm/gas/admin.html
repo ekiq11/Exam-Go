@@ -846,17 +846,17 @@
           </div>
           <!-- Mode Tabs -->
           <div class="inline-flex p-1 bg-gray-100 rounded-xl">
-            <button id="tab-gen-master" onclick="switchGenMode('master')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-examgo-primary shadow-sm transition-all">
-              🏫 Master Voucher (1000+ Siswa)
-            </button>
-            <button id="tab-gen-batch" onclick="switchGenMode('batch')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-600 hover:text-gray-900 transition-all">
+            <button id="tab-gen-batch" onclick="switchGenMode('batch')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white text-examgo-primary shadow-sm transition-all">
               🎟️ Token Unik (Lynk.id)
+            </button>
+            <button id="tab-gen-master" onclick="switchGenMode('master')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-600 hover:text-gray-900 transition-all">
+              🏫 Master Voucher (1000+ Siswa)
             </button>
           </div>
         </div>
 
         <!-- FORM 1: MASTER VOUCHER SEKOLAH (SOLUSI 1 KODE UNTUK 1000+ SISWA) -->
-        <div id="box-gen-master" class="block">
+        <div id="box-gen-master" class="hidden">
           <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-3">
             <div>
               <div class="flex items-center justify-between mb-1">
@@ -894,7 +894,7 @@
         </div>
 
         <!-- FORM 2: GENERATOR TOKEN BATCH (LYNK.ID) -->
-        <div id="box-gen-batch" class="hidden">
+        <div id="box-gen-batch" class="block">
           <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-4">
             <div>
               <div class="flex items-center justify-between mb-1">
@@ -912,11 +912,12 @@
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Peruntukan Akun</label>
-              <select id="gen-token-type" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none">
-                <option value="TEACHER_PREMIUM">👨‍🏫 Guru Premium (Lynk.id)</option>
+              <select id="gen-token-type" onchange="onTokenTypeChange()" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none font-semibold">
                 <option value="STUDENT_LIFETIME" selected>🎓 Siswa Lifetime (Lynk.id)</option>
+                <option value="TEACHER_PREMIUM">👨‍🏫 Guru Premium (Lynk.id)</option>
                 <option value="EVENT">🎯 Tiket Event Tryout (Lynk.id)</option>
               </select>
+              <span id="gen-token-hint" class="text-[11px] text-purple-700 font-semibold mt-1 block">🎓 Prefix: SISWA-XXXX-YYYY (Akses Tryout Selamanya)</span>
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Jumlah Token</label>
@@ -931,8 +932,8 @@
               </select>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Tautan Soal (Opsional)</label>
-              <input type="text" id="gen-token-target" placeholder="Misal: TONAS2026" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none uppercase font-mono">
+              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Tautan Soal / Event</label>
+              <input type="text" id="gen-token-target" placeholder="Tidak perlu (Khusus Event)" disabled class="w-full px-3 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm font-medium focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none uppercase font-mono disabled:opacity-50 disabled:cursor-not-allowed">
             </div>
             <div class="flex items-end">
               <button id="btn-generate-tokens" onclick="executeGenerateTokens()" class="w-full py-2.5 px-3 bg-examgo-primary hover:bg-examgo-primaryHover text-white rounded-xl font-bold shadow-sm transition-all flex items-center justify-center text-sm">
@@ -2812,6 +2813,8 @@
       document.getElementById('view-licenses').classList.remove('hidden');
       document.getElementById('fab-delete-all').style.display = 'none';
       _updateNavActive('licenses');
+      if (typeof switchGenMode === 'function') switchGenMode('batch');
+      if (typeof onTokenTypeChange === 'function') onTokenTypeChange();
       loadLicenses();
       loadPartnerSchools();
     }
@@ -5637,6 +5640,10 @@
             <td class="px-6 py-4">${deviceStr}</td>
             <td class="px-6 py-4">${activatedStr}</td>
             <td class="px-6 py-4 text-right space-x-1.5 whitespace-nowrap">
+              <button onclick="copySingleToken('${item.token}', '${item.type}')" title="Salin Kode & Format Kirim" class="inline-flex items-center text-emerald-700 hover:text-white bg-emerald-50 hover:bg-emerald-600 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors border border-emerald-200">
+                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                Salin
+              </button>
               <button onclick="openEditTokenModal('${item.token}', '${item.type}', '${item.targetExam === '-' ? '' : item.targetExam}', ${item.isUsed})" class="inline-flex items-center text-blue-600 hover:text-white bg-blue-50 hover:bg-blue-600 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors border border-blue-200">
                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                 Edit
@@ -5807,7 +5814,80 @@
       });
     }
 
-    let currentGenMode = 'master';
+    let currentGenMode = 'batch';
+
+    function onTokenTypeChange() {
+      const typeEl = document.getElementById('gen-token-type');
+      const hintEl = document.getElementById('gen-token-hint');
+      const targetInput = document.getElementById('gen-token-target');
+      if (!typeEl) return;
+
+      const type = typeEl.value;
+      if (type === 'TEACHER_PREMIUM') {
+        if (hintEl) {
+          hintEl.className = 'text-[11px] text-blue-700 font-semibold mt-1 block';
+          hintEl.innerText = '👨‍🏫 Prefix: GURU-XXXX-YYYY (Akses Mode Guru & Buat Soal Unlimited)';
+        }
+        if (targetInput) {
+          targetInput.value = '';
+          targetInput.disabled = true;
+          targetInput.placeholder = 'Tidak perlu (Khusus Guru)';
+          targetInput.classList.add('bg-gray-100', 'cursor-not-allowed', 'opacity-50');
+          targetInput.classList.remove('bg-gray-50');
+        }
+      } else if (type === 'EVENT') {
+        if (hintEl) {
+          hintEl.className = 'text-[11px] text-amber-700 font-semibold mt-1 block';
+          hintEl.innerText = '🎯 Prefix: EVENT-XXXX-YYYY (Tiket Ujian / Tryout Spesifik)';
+        }
+        if (targetInput) {
+          targetInput.disabled = false;
+          targetInput.placeholder = 'ID Soal/Paket (Misal: SNBT-001)';
+          targetInput.classList.remove('bg-gray-100', 'cursor-not-allowed', 'opacity-50');
+          targetInput.classList.add('bg-gray-50');
+        }
+      } else {
+        if (hintEl) {
+          hintEl.className = 'text-[11px] text-purple-700 font-semibold mt-1 block';
+          hintEl.innerText = '🎓 Prefix: SISWA-XXXX-YYYY (Akses Tryout Siswa Selamanya)';
+        }
+        if (targetInput) {
+          targetInput.value = '';
+          targetInput.disabled = true;
+          targetInput.placeholder = 'Tidak perlu (Siswa Lifetime)';
+          targetInput.classList.add('bg-gray-100', 'cursor-not-allowed', 'opacity-50');
+          targetInput.classList.remove('bg-gray-50');
+        }
+      }
+    }
+
+    function copySingleToken(token, type) {
+      if (!token) return;
+      const roleText = type === 'TEACHER_PREMIUM'
+        ? '👨‍🏫 Guru Premium (Mode Guru & Buat Soal)'
+        : (type === 'EVENT' ? '🎯 Tiket Event Tryout' : '🎓 Siswa Lifetime (Akses Tryout Selamanya)');
+      const steps = type === 'TEACHER_PREMIUM'
+        ? '1. Buka aplikasi ExamGO > Masuk "Mode Guru" di bawah.\n2. Buat PIN Guru 6 angka.\n3. Ketuk kartu "Lisensi & Status Akun".\n4. Masukkan kode: *' + token + '*\n5. Tekan "Aktivasi Sekarang". Akun Guru Premium aktif selamanya!'
+        : (type === 'EVENT'
+          ? '1. Buka aplikasi ExamGO.\n2. Di beranda, masukkan kode pada kartu "🎯 Masuk Event" / "Token Ujian": *' + token + '*\n3. Anda langsung terdaftar ke sesi ujian!'
+          : '1. Buka aplikasi ExamGO.\n2. Di beranda, ketuk kartu "Lisensi & Status Akun".\n3. Masukkan kode: *' + token + '*\n4. Tekan "Aktivasi Sekarang". Akun Siswa Premium aktif selamanya!');
+
+      let msg = `*LISENSI RESMI EXAMGO*\n`;
+      msg += `👤 *Status:* ${roleText}\n`;
+      msg += `🔑 *Kode Lisensi:* *${token}*\n\n`;
+      msg += `*Tautan Unduh Aplikasi Resmi:*\n`;
+      msg += `• Play Store: https://play.google.com/store/apps/details?id=com.kemenag.examgo\n`;
+      msg += `• App Store: https://apps.apple.com/id/app/examgo/id6759708435\n\n`;
+      msg += `*Cara Aktivasi:*\n${steps}\n\n`;
+      msg += `_Catatan: 1 Kode berlaku permanen untuk 1 perangkat._`;
+
+      navigator.clipboard.writeText(msg).then(() => {
+        showToast('Format pesan WA untuk token ' + token + ' berhasil disalin!', 'success');
+      }).catch(() => {
+        navigator.clipboard.writeText(token);
+        showToast('Kode ' + token + ' disalin!', 'success');
+      });
+    }
 
     function switchGenMode(mode) {
       currentGenMode = mode;

@@ -283,8 +283,11 @@ void main() {
       expect(adminContent, contains('id="generated-count-badge"'));
       expect(adminContent, contains('function downloadTokensAsTxt()'));
       expect(adminContent, contains('copyTokensForWhatsApp()'));
+      expect(adminContent, contains('function onTokenTypeChange()'));
+      expect(adminContent, contains('function copySingleToken('));
       expect(adminContent, contains('TEACHER_PREMIUM'));
       expect(adminContent, contains('STUDENT_LIFETIME'));
+      expect(kodeContent, contains('setValues(rows)'));
 
       // Landing page settings save auth & link persistence
       expect(adminContent, contains('.saveLandingPageSettings(settings, creds.username || creds.user, creds.password || creds.pass);'));
