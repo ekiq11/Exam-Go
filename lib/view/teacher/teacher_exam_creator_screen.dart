@@ -10,6 +10,8 @@ import '../../models/exam_question_model.dart';
 import '../../services/docx_exam_parser.dart';
 import '../../services/docx_template_generator.dart';
 import '../../services/gform_exam_parser.dart';
+import '../../services/license_service.dart';
+import '../widgets/premium_token_dialog.dart';
 import 'docx_format_guide_screen.dart';
 import 'teacher_exam_preview_screen.dart';
 
@@ -50,11 +52,28 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
   int? _pickedFileSize;
   bool _isDownloadingTemplate = false;
 
+  bool _isTeacherPremium = false;
+  int _remainingUploads = 3;
+  bool _hasLoadedLicense = false;
+
   @override
   void initState() {
     super.initState();
     _sourceTabController = TabController(length: 2, vsync: this, initialIndex: 1);
     _applyCategoryPreset(_selectedCategory);
+    _loadTeacherLicenseStatus();
+  }
+
+  Future<void> _loadTeacherLicenseStatus() async {
+    final isPrem = await LicenseService.instance.isTeacherPremium();
+    final rem = await LicenseService.instance.getRemainingTeacherUploads();
+    if (mounted) {
+      setState(() {
+        _isTeacherPremium = isPrem;
+        _remainingUploads = rem;
+        _hasLoadedLicense = true;
+      });
+    }
   }
 
   @override
@@ -746,12 +765,18 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(opacity: animation, child: child);
-                  },
-                  child: _buildActiveStepView(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_hasLoadedLicense) _buildTeacherLicenseBanner(),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(opacity: animation, child: child);
+                      },
+                      child: _buildActiveStepView(),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -760,6 +785,70 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
             _buildStickyBottomBar(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTeacherLicenseBanner() {
+    if (_isTeacherPremium) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFECFDF5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFA7F3D0)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.verified_rounded, color: AppColors.primaryGreen, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Akun Guru Premium: Akses penuh terbitkan paket ujian tanpa batas.',
+                style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF065F46)),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFBFDBFE)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.card_giftcard_rounded, color: Color(0xFF2563EB), size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Mode Percobaan: Sisa $_remainingUploads dari 3 kali kuota buat & terbitkan soal gratis.',
+              style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF1E40AF)),
+            ),
+          ),
+          if (_remainingUploads <= 1)
+            InkWell(
+              onTap: () => PremiumTokenDialog.show(context, userType: 'TEACHER_PREMIUM'),
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2563EB),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Upgrade',
+                  style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

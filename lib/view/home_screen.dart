@@ -525,12 +525,15 @@ class _HomeScreenState extends State<HomeScreen>
     }
 
     // Cek apakah ini ujian native ExamGO Tryout (Docx/GForm) atau Event
-    final isNative = url.startsWith('EXAMGO_TRYOUT://') || url.startsWith('EXAMGO_EVENT://') || examId.isNotEmpty;
+    final isNative =
+        url.startsWith('EXAMGO_TRYOUT://') ||
+        url.startsWith('EXAMGO_EVENT://') ||
+        examId.isNotEmpty;
     final token = url.startsWith('EXAMGO_EVENT://')
         ? url.replaceFirst('EXAMGO_EVENT://', '')
         : (url.startsWith('EXAMGO_TRYOUT://')
-            ? url.replaceFirst('EXAMGO_TRYOUT://', '')
-            : examId);
+              ? url.replaceFirst('EXAMGO_TRYOUT://', '')
+              : examId);
 
     if (isNative && token.isNotEmpty) {
       try {
@@ -635,7 +638,7 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                       ),
                       Text(
-                        'Akses bebas ujian & paket tryout nasional selamanya',
+                        'Akses bebas ujian & paket tryout selamanya',
                         style: GoogleFonts.poppins(
                           fontSize: 10.5,
                           color: const Color(0xFFB45309),
@@ -655,10 +658,7 @@ class _HomeScreenState extends State<HomeScreen>
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: const Color(0xFFE2E8F0),
-              width: 1.2,
-            ),
+            border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF0F172A).withValues(alpha: 0.04),
@@ -673,7 +673,10 @@ class _HomeScreenState extends State<HomeScreen>
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFECFDF5),
                       borderRadius: BorderRadius.circular(20),
@@ -727,7 +730,7 @@ class _HomeScreenState extends State<HomeScreen>
                 children: [
                   Expanded(
                     child: Text(
-                      'Bebas ujian sekolah & QR. Buka akses Tryout Nasional SNBT, Pembahasan, & Sertifikat dengan Lynk.id.',
+                      'Bebas ujian sekolah & QR. Buka akses Tryout SNBT, Pembahasan, & Sertifikat dengan Lynk.id.',
                       style: GoogleFonts.poppins(
                         fontSize: 11,
                         color: const Color(0xFF64748B),
@@ -847,7 +850,7 @@ class _HomeScreenState extends State<HomeScreen>
                         children: [
                           Flexible(
                             child: Text(
-                              'Paket Tryout Nasional',
+                              'Paket Tryout',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.poppins(
@@ -1943,7 +1946,7 @@ class _HomeScreenState extends State<HomeScreen>
             }
           } catch (_) {}
 
-          // 2. Fallback 1: Cek dokumen paket_tryout native (Tryout Nasional / Ujian Khusus / Event)
+          // 2. Fallback 1: Cek dokumen paket_tryout native (Tryout / Ujian Khusus / Event)
           try {
             final pkgDoc = await FirebaseFirestore.instance
                 .collection('paket_tryout')
@@ -1952,8 +1955,9 @@ class _HomeScreenState extends State<HomeScreen>
             if (pkgDoc.exists) {
               popLoading();
               final pData = pkgDoc.data() ?? {};
-              final title = pData['nama_paket'] ?? 'Tryout Nasional';
-              final isEventPkg = pData['jenis_test']?.toString().toUpperCase() == 'EVENT' ||
+              final title = pData['nama_paket'] ?? 'Tryout';
+              final isEventPkg =
+                  pData['jenis_test']?.toString().toUpperCase() == 'EVENT' ||
                   pData['is_event'] == true ||
                   token.startsWith('EVENT');
 
@@ -1998,7 +2002,8 @@ class _HomeScreenState extends State<HomeScreen>
           if (actResult.isSuccess ||
               actResult.message.contains('aktif kembali')) {
             final targetExam = actResult.targetExamId;
-            final isEvent = token.startsWith('EVENT-') ||
+            final isEvent =
+                token.startsWith('EVENT-') ||
                 actResult.message.toLowerCase().contains('event') ||
                 (targetExam != null && targetExam.isNotEmpty);
 

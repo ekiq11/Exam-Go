@@ -13,6 +13,7 @@ import '../../services/license_service.dart';
 import '../../services/monitoring_service.dart';
 import '../../services/qr_payload.dart';
 import '../../utils/math_widget_factory.dart';
+import '../widgets/premium_token_dialog.dart';
 import 'teacher_exam_published_dialog.dart';
 
 class TeacherExamPreviewScreen extends StatefulWidget {
@@ -212,6 +213,14 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
   }
 
   Future<void> _publishExam([String? customToken]) async {
+    final canUpload = await LicenseService.instance.canTeacherUploadExam();
+    if (!canUpload) {
+      if (mounted) {
+        PremiumTokenDialog.show(context, userType: 'TEACHER_PREMIUM');
+      }
+      return;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList('teacher_exam_history') ?? [];
 
