@@ -126,7 +126,24 @@ void main() {
       expect(content, contains('hero-title-text'));
       expect(content, contains('hero-subtitle-text'));
       expect(content, contains('btn-hero-lynkid'));
-      expect(content, contains('btn-hero-apk'));
+      expect(content, isNot(contains('github.com/ekiq11/Exam-Go/releases')));
+
+      // Official Store download links check (Verified Store Downloads)
+      expect(content, contains('https://play.google.com/store/apps/details?id=com.kemenag.examgo'));
+      expect(content, contains('https://apps.apple.com/id/app/examgo/id6759708435'));
+      expect(content, contains('btn-hero-playstore'));
+      expect(content, contains('btn-hero-appstore'));
+
+      // Social Proof & Testimonials
+      expect(content, contains('id="testimoni"'));
+      expect(content, contains('Fathir Ramadhan'));
+      expect(content, contains('Arya Pratama'));
+      expect(content, contains('Zahra Nadhira'));
+
+      // Realtime Live Purchase Activity Toast
+      expect(content, contains('id="live-purchase-toast"'));
+      expect(content, contains('livePurchases'));
+      expect(content, contains('showLivePurchaseToast'));
 
       // Event Promo showcase
       expect(content, contains('featured-event-title'));
