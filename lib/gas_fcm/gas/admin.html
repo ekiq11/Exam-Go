@@ -119,7 +119,11 @@
         </div>
         <div class="flex items-center space-x-3 hidden" id="nav-user">
           <div class="flex items-center space-x-1 mr-2 bg-black/15 rounded-xl p-1">
-            <button id="nav-tab-exams" onclick="showExamsView()" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-white bg-white/20 shadow-sm transition-all">
+            <button id="nav-tab-dashboard" onclick="showDashboardView()" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-white bg-white/20 shadow-sm transition-all flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+              <span>Dashboard</span>
+            </button>
+            <button id="nav-tab-exams" onclick="showExamsView()" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all">
               📋 Sesi Ujian
             </button>
             <button id="nav-tab-tryout" onclick="showTryoutView()" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all">
@@ -141,8 +145,353 @@
   <!-- Main Content -->
   <main id="main-content" class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden transition-opacity duration-500 opacity-0">
     
+    <!-- DASHBOARD VIEW (Executive Overview) -->
+    <div id="view-dashboard" class="space-y-6">
+      
+      <!-- 1. Hero & Welcome Banner -->
+      <div class="relative overflow-hidden bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg">
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div class="space-y-2 max-w-2xl">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold tracking-wide border border-white/20">
+              <span class="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+              <span>ExamGO Assessment Engine v2.0 • Online</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">
+              Pusat Kendali Ujian & Tryout Nasional
+            </h1>
+            <p class="text-sm text-emerald-100/90 leading-relaxed font-normal">
+              Pantau jalannya ujian sekolah, manajemen bank soal tryout (SNBT, SKD, TKA), distribusi lisensi Lynk.id, serta integritas keamanan kiosk anti-curang dalam satu layar.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
+            <button onclick="loadDashboardData(true)" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-xs font-bold text-white transition-all border border-white/20 shadow-sm">
+              <svg id="dashboard-refresh-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              <span>Segarkan Data</span>
+            </button>
+            <button onclick="cleanupAbandonedSessionsAction()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-950/60 text-xs font-bold text-emerald-100 transition-all border border-emerald-500/30 shadow-sm">
+              <svg class="w-4 h-4 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              <span>Auto Cleanup Sesi</span>
+            </button>
+          </div>
+        </div>
+        <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-emerald-500/20 rounded-full blur-2xl pointer-events-none"></div>
+      </div>
+
+      <!-- 2. High-Impact KPI Stat Cards (5 metrics) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        
+        <!-- Card 1: Sesi Ujian Aktif -->
+        <div onclick="showExamsView()" class="cursor-pointer bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all group">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Sesi Ujian Sekolah</span>
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            </div>
+          </div>
+          <div class="text-3xl font-extrabold text-gray-900 mb-1" id="dash-stat-exams">-</div>
+          <div class="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span>Firestore Live Monitoring</span>
+          </div>
+        </div>
+
+        <!-- Card 2: Paket Tryout Terdaftar -->
+        <div onclick="showTryoutView()" class="cursor-pointer bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Paket Tryout</span>
+            <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            </div>
+          </div>
+          <div class="text-3xl font-extrabold text-gray-900 mb-1" id="dash-stat-tryout-total">-</div>
+          <div class="text-xs text-gray-500 font-medium">
+            <span class="text-emerald-600 font-bold" id="dash-stat-tryout-active">0</span> Aktif • <span class="text-gray-400 font-bold" id="dash-stat-tryout-draft">0</span> Draft
+          </div>
+        </div>
+
+        <!-- Card 3: Total Butir Soal -->
+        <div onclick="showTryoutView()" class="cursor-pointer bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-amber-200 transition-all group">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Butir Soal</span>
+            <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            </div>
+          </div>
+          <div class="text-3xl font-extrabold text-gray-900 mb-1" id="dash-stat-soal-total">-</div>
+          <div class="text-xs text-gray-500 font-medium">
+            Format KaTeX & Gambar
+          </div>
+        </div>
+
+        <!-- Card 4: Lisensi Siswa Premium -->
+        <div onclick="showLicensesView()" class="cursor-pointer bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-purple-200 transition-all group">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Token Lynk.id</span>
+            <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+            </div>
+          </div>
+          <div class="text-3xl font-extrabold text-gray-900 mb-1" id="dash-stat-licenses-total">-</div>
+          <div class="text-xs text-gray-500 font-medium">
+            <span class="text-purple-600 font-bold" id="dash-stat-licenses-used">0</span> Terpakai • <span class="text-gray-400 font-bold" id="dash-stat-licenses-avail">0</span> Ready
+          </div>
+        </div>
+
+        <!-- Card 5: Sekolah Mitra -->
+        <div onclick="showLicensesView()" class="cursor-pointer bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all group">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Sekolah Mitra</span>
+            <div class="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+            </div>
+          </div>
+          <div class="text-3xl font-extrabold text-gray-900 mb-1" id="dash-stat-partners-total">-</div>
+          <div class="text-xs text-teal-700 font-medium">
+            Partner CBT Binaan
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 3. Quick Action Hub (Aksi Cepat 1-Klik) -->
+      <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-bold text-gray-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            Aksi Cepat Administrator
+          </h2>
+          <span class="text-xs text-gray-400 font-medium">Pintas operasional berkala</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          
+          <button onclick="openCreateTryoutModal()" class="flex flex-col items-center justify-center p-4 rounded-2xl bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-100 text-emerald-900 transition-all text-center group">
+            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center mb-2 shadow-sm group-hover:scale-105 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            </div>
+            <span class="text-xs font-bold leading-tight">Buat Paket Tryout</span>
+            <span class="text-[10px] text-emerald-700/80 mt-0.5">SNBT • SKD • TKA</span>
+          </button>
+
+          <button onclick="openQuickUploadTryoutModal()" class="flex flex-col items-center justify-center p-4 rounded-2xl bg-indigo-50/70 hover:bg-indigo-100/70 border border-indigo-100 text-indigo-900 transition-all text-center group">
+            <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center mb-2 shadow-sm group-hover:scale-105 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+            </div>
+            <span class="text-xs font-bold leading-tight">Upload Soal DOCX</span>
+            <span class="text-[10px] text-indigo-700/80 mt-0.5">Rumus KaTeX & Subtest</span>
+          </button>
+
+          <button onclick="showLicensesView()" class="flex flex-col items-center justify-center p-4 rounded-2xl bg-purple-50/70 hover:bg-purple-100/70 border border-purple-100 text-purple-900 transition-all text-center group">
+            <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center mb-2 shadow-sm group-hover:scale-105 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+            </div>
+            <span class="text-xs font-bold leading-tight">Token Lynk.id</span>
+            <span class="text-[10px] text-purple-700/80 mt-0.5">Voucher Batch & Master</span>
+          </button>
+
+          <button onclick="openAddPartnerModal()" class="flex flex-col items-center justify-center p-4 rounded-2xl bg-teal-50/70 hover:bg-teal-100/70 border border-teal-100 text-teal-900 transition-all text-center group">
+            <div class="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center mb-2 shadow-sm group-hover:scale-105 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+            </div>
+            <span class="text-xs font-bold leading-tight">Sekolah Mitra</span>
+            <span class="text-[10px] text-teal-700/80 mt-0.5">Kode Prefix Sekolah</span>
+          </button>
+
+          <button onclick="showExamsView()" class="flex flex-col items-center justify-center p-4 rounded-2xl bg-blue-50/70 hover:bg-blue-100/70 border border-blue-100 text-blue-900 transition-all text-center group">
+            <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center mb-2 shadow-sm group-hover:scale-105 transition-transform">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            </div>
+            <span class="text-xs font-bold leading-tight">Monitoring Sesi Ujian</span>
+            <span class="text-[10px] text-blue-700/80 mt-0.5">Daftar Siswa & Sesi</span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- 4. Deep Insights & Operational Widgets (Two-Column Layout) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Column: Tryout Category Breakdown & Recent Tryouts (7 of 12) -->
+        <div class="lg:col-span-7 space-y-6">
+          
+          <!-- Widget 4A: Sebaran Kategori Tryout -->
+          <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+              <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
+                Sebaran Kategori & Materi Tryout
+              </h3>
+              <span class="text-xs font-semibold text-gray-400" id="dash-cat-total-label">0 Paket Terdata</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="dash-category-grid">
+              <div class="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-100 text-center">
+                <div class="text-[11px] font-bold text-emerald-800 uppercase tracking-wide">SNBT (UTBK)</div>
+                <div class="text-2xl font-extrabold text-emerald-950 mt-1" id="dash-cat-snbt">0</div>
+                <div class="text-[10px] text-emerald-700 font-medium">7 Subtest • 210m</div>
+              </div>
+              <div class="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-100 text-center">
+                <div class="text-[11px] font-bold text-indigo-800 uppercase tracking-wide">SKD CPNS</div>
+                <div class="text-2xl font-extrabold text-indigo-950 mt-1" id="dash-cat-skd">0</div>
+                <div class="text-[10px] text-indigo-700 font-medium">3 Subtest • 100m</div>
+              </div>
+              <div class="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-100 text-center">
+                <div class="text-[11px] font-bold text-amber-800 uppercase tracking-wide">TKA AKADEMIK</div>
+                <div class="text-2xl font-extrabold text-amber-950 mt-1" id="dash-cat-tka">0</div>
+                <div class="text-[10px] text-amber-700 font-medium">3 Subtest • 225m</div>
+              </div>
+              <div class="p-3.5 rounded-2xl bg-purple-50/60 border border-purple-100 text-center">
+                <div class="text-[11px] font-bold text-purple-800 uppercase tracking-wide">UMUM</div>
+                <div class="text-2xl font-extrabold text-purple-950 mt-1" id="dash-cat-umum">0</div>
+                <div class="text-[10px] text-purple-700 font-medium">Tes Standar</div>
+              </div>
+            </div>
+
+            <!-- Visual Progress Bar Breakdown -->
+            <div class="space-y-1.5 pt-1">
+              <div class="h-3 w-full bg-gray-100 rounded-full overflow-hidden flex" id="dash-category-bar">
+                <div id="dash-bar-snbt" class="bg-emerald-500 h-full transition-all duration-500" style="width: 25%"></div>
+                <div id="dash-bar-skd" class="bg-indigo-500 h-full transition-all duration-500" style="width: 25%"></div>
+                <div id="dash-bar-tka" class="bg-amber-500 h-full transition-all duration-500" style="width: 25%"></div>
+                <div id="dash-bar-umum" class="bg-purple-500 h-full transition-all duration-500" style="width: 25%"></div>
+              </div>
+              <div class="flex items-center justify-between text-[11px] text-gray-400 font-medium">
+                <span>Distribusi materi terdaftar di database</span>
+                <span id="dash-soal-summary-label">0 Soal Siap Diujikan</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Widget 4B: Paket Tryout Terbaru & Status Jadwal -->
+          <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+              <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Jadwal & Paket Tryout Terkini
+              </h3>
+              <button onclick="showTryoutView()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors">
+                Buka Semua Paket &rarr;
+              </button>
+            </div>
+
+            <div id="dash-recent-tryouts-container" class="space-y-2.5">
+              <div class="text-center py-6 text-gray-400 text-xs">Memuat data paket tryout...</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: System Status, Anti-Cheat, & Partner Schools (5 of 12) -->
+        <div class="lg:col-span-5 space-y-6">
+          
+          <!-- Widget 4C: Integrasi & Cloud Health Status -->
+          <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-4">
+            <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2 pb-2 border-b border-gray-100">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+              Integritas Layanan & Server Cloud
+            </h3>
+            
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100 text-xs">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                  <div>
+                    <div class="font-bold text-gray-900">Google Apps Script Backend</div>
+                    <div class="text-[11px] text-gray-500">API Web App v66 Live</div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Aktif</span>
+              </div>
+
+              <div class="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100 text-xs">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                  <div>
+                    <div class="font-bold text-gray-900">Firebase Firestore DB</div>
+                    <div class="text-[11px] text-gray-500">Multi-collection Rules Terbuka</div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Terhubung</span>
+              </div>
+
+              <div class="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100 text-xs">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                  <div>
+                    <div class="font-bold text-gray-900">Google Drive Engine</div>
+                    <div class="text-[11px] text-gray-500">Penyimpanan Rumus & Gambar</div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Siap</span>
+              </div>
+
+              <div class="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100 text-xs">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                  <div>
+                    <div class="font-bold text-gray-900">FCM Push Notification</div>
+                    <div class="text-[11px] text-gray-500">Peringatan Pelanggaran Guru</div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Siap</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Widget 4D: Fitur Keamanan CBT & Kiosk Anti-Curang -->
+          <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-6 text-white shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-700/60">
+              <h3 class="text-sm font-bold flex items-center gap-2 text-white">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                Protokol Anti-Curang ExamGO
+              </h3>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">Kiosk Terkunci</span>
+            </div>
+            
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Seluruh siswa yang mengerjakan ujian dan tryout dilindungi oleh pembatas sistem:
+            </p>
+
+            <div class="space-y-2 text-xs">
+              <div class="flex items-center gap-2 text-slate-200">
+                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                <span>Blokir Screenshot, Screen Recording & Split Screen</span>
+              </div>
+              <div class="flex items-center gap-2 text-slate-200">
+                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                <span>Deteksi Keluar Aplikasi otomatis lapor ke Guru (FCM)</span>
+              </div>
+              <div class="flex items-center gap-2 text-slate-200">
+                <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                <span>Timer Subtest Mandiri & Lock Babak Selesai ala UTBK</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Widget 4E: Sekolah Mitra Preview -->
+          <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-4">
+            <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+              <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                Sekolah Mitra & Voucher
+              </h3>
+              <button onclick="openAddPartnerModal()" class="text-xs font-bold text-teal-600 hover:text-teal-800 transition-colors">
+                + Tambah Mitra
+              </button>
+            </div>
+
+            <div id="dash-partners-preview-container" class="space-y-2">
+              <div class="text-center py-4 text-gray-400 text-xs">Memuat data mitra...</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
     <!-- EXAMS VIEW -->
-    <div id="view-exams">
+    <div id="view-exams" class="hidden">
       <!-- Header & Stats -->
       <div class="md:flex md:items-center md:justify-between mb-8">
         <div class="flex-1 min-w-0">
@@ -1535,8 +1884,8 @@
             document.getElementById('checkbox-all').checked = false;
             updateSelectedCount();
             
-            // Gunakan langsung response dari attemptLogin, tanpa request ulang ke server!
-            processLoadDataResponse(response, false);
+            // Tampilkan Executive Dashboard sebagai tampilan utama
+            showDashboardView();
           }
         })
         .withFailureHandler(function(err) {
@@ -1896,7 +2245,22 @@
     // Students Logic
     // ─────────────────────────────────────────────────────────
 
+    function showDashboardView() {
+      const viewDash = document.getElementById('view-dashboard');
+      if (viewDash) viewDash.classList.remove('hidden');
+      document.getElementById('view-exams').classList.add('hidden');
+      document.getElementById('view-students').classList.add('hidden');
+      document.getElementById('view-tryout').classList.add('hidden');
+      document.getElementById('view-licenses').classList.add('hidden');
+      const fab = document.getElementById('fab-delete-all');
+      if (fab) fab.style.display = 'none';
+      _updateNavActive('dashboard');
+      loadDashboardData();
+    }
+
     function showExamsView() {
+      const viewDash = document.getElementById('view-dashboard');
+      if (viewDash) viewDash.classList.add('hidden');
       document.getElementById('view-students').classList.add('hidden');
       document.getElementById('view-licenses').classList.add('hidden');
       document.getElementById('view-tryout').classList.add('hidden');
@@ -1910,6 +2274,8 @@
     }
 
     function showTryoutView() {
+      const viewDash = document.getElementById('view-dashboard');
+      if (viewDash) viewDash.classList.add('hidden');
       document.getElementById('view-exams').classList.add('hidden');
       document.getElementById('view-students').classList.add('hidden');
       document.getElementById('view-licenses').classList.add('hidden');
@@ -1920,6 +2286,8 @@
     }
 
     function showLicensesView() {
+      const viewDash = document.getElementById('view-dashboard');
+      if (viewDash) viewDash.classList.add('hidden');
       document.getElementById('view-exams').classList.add('hidden');
       document.getElementById('view-students').classList.add('hidden');
       document.getElementById('view-tryout').classList.add('hidden');
@@ -1931,15 +2299,209 @@
     }
 
     function _updateNavActive(view) {
+      const tabDashboard = document.getElementById('nav-tab-dashboard');
       const tabExams = document.getElementById('nav-tab-exams');
       const tabTryout = document.getElementById('nav-tab-tryout');
       const tabLicenses = document.getElementById('nav-tab-licenses');
-      const activeClass = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-white bg-white/20 shadow-sm transition-all";
-      const inactiveClass = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all";
+      const activeClass = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-white bg-white/20 shadow-sm transition-all flex items-center gap-1.5";
+      const inactiveClass = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5";
 
+      if (tabDashboard) tabDashboard.className = view === 'dashboard' ? activeClass : inactiveClass;
       if (tabExams) tabExams.className = view === 'exams' ? activeClass : inactiveClass;
       if (tabTryout) tabTryout.className = view === 'tryout' ? activeClass : inactiveClass;
       if (tabLicenses) tabLicenses.className = view === 'licenses' ? activeClass : inactiveClass;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Dashboard Logic & High-Performance Summary
+    // ─────────────────────────────────────────────────────────
+    let lastDashboardSummary = null;
+
+    function loadDashboardData(forceRefresh = false) {
+      const creds = getCredentials();
+      if (!creds) return;
+
+      const refreshIcon = document.getElementById('dashboard-refresh-icon');
+      if (refreshIcon) refreshIcon.classList.add('animate-spin');
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+          if (res && res.error) {
+            showToast('Gagal memuat ringkasan: ' + res.error, 'error');
+            return;
+          }
+          lastDashboardSummary = res;
+          renderDashboardSummary(res);
+        })
+        .withFailureHandler(function(err) {
+          if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+          showToast('Koneksi server gagal: ' + err.message, 'error');
+        })
+        .getAdminDashboardSummary(creds.username, creds.password);
+    }
+
+    function renderDashboardSummary(data) {
+      if (!data) return;
+
+      // 1. Stat KPI
+      const elExams = document.getElementById('dash-stat-exams');
+      if (elExams) elExams.innerText = (data.exams && data.exams.total) || 0;
+
+      const elTryoutTot = document.getElementById('dash-stat-tryout-total');
+      if (elTryoutTot) elTryoutTot.innerText = (data.tryout && data.tryout.total) || 0;
+
+      const elTryoutAct = document.getElementById('dash-stat-tryout-active');
+      if (elTryoutAct) elTryoutAct.innerText = (data.tryout && data.tryout.active) || 0;
+
+      const elTryoutDraft = document.getElementById('dash-stat-tryout-draft');
+      if (elTryoutDraft) elTryoutDraft.innerText = (data.tryout && data.tryout.draft) || 0;
+
+      const elSoalTot = document.getElementById('dash-stat-soal-total');
+      if (elSoalTot) elSoalTot.innerText = (data.tryout && data.tryout.total_soal) || 0;
+
+      const elLicTot = document.getElementById('dash-stat-licenses-total');
+      if (elLicTot) elLicTot.innerText = (data.licenses && data.licenses.total) || 0;
+
+      const elLicUsed = document.getElementById('dash-stat-licenses-used');
+      if (elLicUsed) elLicUsed.innerText = (data.licenses && data.licenses.used) || 0;
+
+      const elLicAvail = document.getElementById('dash-stat-licenses-avail');
+      if (elLicAvail) elLicAvail.innerText = (data.licenses && data.licenses.available) || 0;
+
+      const elPartnersTot = document.getElementById('dash-stat-partners-total');
+      if (elPartnersTot) elPartnersTot.innerText = (data.partners && data.partners.total) || 0;
+
+      // 2. Categories breakdown
+      const cats = (data.tryout && data.tryout.categories) || { SNBT: 0, SKD: 0, TKA: 0, UMUM: 0 };
+      const elSnbt = document.getElementById('dash-cat-snbt');
+      if (elSnbt) elSnbt.innerText = cats.SNBT || 0;
+      const elSkd = document.getElementById('dash-cat-skd');
+      if (elSkd) elSkd.innerText = cats.SKD || 0;
+      const elTka = document.getElementById('dash-cat-tka');
+      if (elTka) elTka.innerText = cats.TKA || 0;
+      const elUmum = document.getElementById('dash-cat-umum');
+      if (elUmum) elUmum.innerText = cats.UMUM || 0;
+
+      const catTotal = (cats.SNBT || 0) + (cats.SKD || 0) + (cats.TKA || 0) + (cats.UMUM || 0);
+      const catTotalLabel = document.getElementById('dash-cat-total-label');
+      if (catTotalLabel) catTotalLabel.innerText = catTotal + ' Paket Terdata';
+
+      const soalSummaryLabel = document.getElementById('dash-soal-summary-label');
+      if (soalSummaryLabel) soalSummaryLabel.innerText = ((data.tryout && data.tryout.total_soal) || 0) + ' Soal Siap Diujikan';
+
+      // Progress bar distribution
+      if (catTotal > 0) {
+        const pSnbt = Math.round(((cats.SNBT || 0) / catTotal) * 100);
+        const pSkd = Math.round(((cats.SKD || 0) / catTotal) * 100);
+        const pTka = Math.round(((cats.TKA || 0) / catTotal) * 100);
+        const pUmum = Math.max(0, 100 - pSnbt - pSkd - pTka);
+
+        const bSnbt = document.getElementById('dash-bar-snbt');
+        if (bSnbt) bSnbt.style.width = pSnbt + '%';
+        const bSkd = document.getElementById('dash-bar-skd');
+        if (bSkd) bSkd.style.width = pSkd + '%';
+        const bTka = document.getElementById('dash-bar-tka');
+        if (bTka) bTka.style.width = pTka + '%';
+        const bUmum = document.getElementById('dash-bar-umum');
+        if (bUmum) bUmum.style.width = pUmum + '%';
+      }
+
+      // 3. Recent Tryouts list
+      const recentContainer = document.getElementById('dash-recent-tryouts-container');
+      if (recentContainer) {
+        const recents = (data.tryout && data.tryout.recent) || [];
+        if (recents.length === 0) {
+          recentContainer.innerHTML = '<div class="text-center py-6 text-gray-400 text-xs">Belum ada paket tryout yang dibuat. Klik tombol "+ Buat Paket Tryout" di atas untuk memulai.</div>';
+        } else {
+          let rHtml = '';
+          recents.forEach(function(pkg) {
+            const badgeClass = pkg.jenis_test === 'SNBT' ? 'bg-emerald-100 text-emerald-800' :
+              (pkg.jenis_test === 'SKD' ? 'bg-indigo-100 text-indigo-800' :
+              (pkg.jenis_test === 'TKA' ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800'));
+            
+            const scheduleText = pkg.is_lifetime
+              ? '<span class="text-emerald-600 font-bold">⚡ Lifetime</span>'
+              : (pkg.tanggal ? (pkg.tanggal + ' (' + (pkg.jam_mulai || '08:00') + ')') : 'Sesuai Jadwal');
+
+            rHtml += '<div class="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-gray-50/80 hover:bg-gray-50 rounded-2xl border border-gray-100 transition-all gap-3">' +
+              '<div class="flex-1 min-w-0 space-y-1">' +
+                '<div class="flex items-center gap-2">' +
+                  '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ' + badgeClass + '">' + pkg.jenis_test + '</span>' +
+                  '<span class="text-xs font-bold text-gray-900 truncate">' + pkg.nama_paket + '</span>' +
+                '</div>' +
+                '<div class="flex items-center gap-3 text-[11px] text-gray-500 font-medium">' +
+                  '<span>' + scheduleText + '</span>' +
+                  '<span>•</span>' +
+                  '<span>' + pkg.durasi_menit + ' Menit</span>' +
+                  '<span>•</span>' +
+                  '<span>' + (pkg.total_soal || 0) + ' Soal</span>' +
+                '</div>' +
+              '</div>' +
+              '<div class="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">' +
+                '<button type="button" onclick="openSubtestModal(\'' + pkg.paket_id + '\', \'' + String(pkg.nama_paket || '').replace(/'/g, "\\'") + '\', \'' + pkg.jenis_test + '\', \'' + pkg.jenis_waktu + '\')" class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1">' +
+                  '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>' +
+                  'Subtest & Soal' +
+                '</button>' +
+              '</div>' +
+            '</div>';
+          });
+          recentContainer.innerHTML = rHtml;
+        }
+      }
+
+      // 4. Partner Schools preview
+      const partnerContainer = document.getElementById('dash-partners-preview-container');
+      if (partnerContainer) {
+        const schools = (data.partners && data.partners.schools) || [];
+        if (schools.length === 0) {
+          partnerContainer.innerHTML = '<div class="text-center py-4 text-gray-400 text-xs">Belum ada sekolah mitra. Klik "+ Tambah Mitra" untuk mendaftarkan.</div>';
+        } else {
+          let pHtml = '';
+          schools.slice(0, 4).forEach(function(s) {
+            pHtml += '<div class="flex items-center justify-between p-2.5 bg-gray-50 rounded-xl border border-gray-100 text-xs">' +
+              '<div class="flex items-center gap-2">' +
+                '<div class="w-7 h-7 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-[11px]">' + (s.name ? s.name.charAt(0).toUpperCase() : 'S') + '</div>' +
+                '<div>' +
+                  '<div class="font-bold text-gray-900 truncate max-w-[140px] sm:max-w-[180px]">' + s.name + '</div>' +
+                  '<div class="text-[10px] text-gray-400 font-mono">Prefix: ' + s.code + '</div>' +
+                '</div>' +
+              '</div>' +
+              '<span class="px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 text-[10px] font-bold border border-teal-200">' + (s.count || 0) + ' Siswa</span>' +
+            '</div>';
+          });
+          partnerContainer.innerHTML = pHtml;
+        }
+      }
+    }
+
+    function cleanupAbandonedSessionsAction() {
+      showConfirmModal({
+        title: 'Auto Cleanup Sesi Terlantar?',
+        message: 'Tindakan ini akan menghapus sesi ujian di Firestore yang tidak memiliki siswa aktif atau sudah kadaluarsa (>= 10 hari) untuk menghemat kapasitas kuota database.',
+        type: 'danger',
+        confirmText: 'Ya, Bersihkan Sekarang',
+        onConfirm: function(btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<div class="loader inline-block border-white border-t-transparent w-4 h-4 mr-2"></div> Membersihkan...';
+
+          google.script.run
+            .withSuccessHandler(function(res) {
+              closeConfirmModal();
+              if (res && res.success) {
+                showToast('Cleanup berhasil: ' + (res.deleted || 0) + ' sesi terlantar dihapus!', 'success');
+                loadDashboardData(true);
+              } else {
+                showToast('Gagal: ' + ((res && res.error) || 'Terjadi kesalahan'), 'error');
+              }
+            })
+            .withFailureHandler(function(err) {
+              closeConfirmModal();
+              showToast('Error: ' + err.message, 'error');
+            })
+            .cleanupAbandonedExamSessions();
+        }
+      });
     }
 
     // ─────────────────────────────────────────────────────────
@@ -4847,7 +5409,7 @@
         document.getElementById('nav-user').classList.remove('hidden');
         setTimeout(() => mainContent.classList.remove('opacity-0'), 50);
         
-        loadData();
+        showDashboardView();
       } else {
         const loginModal = document.getElementById('login-modal');
         loginModal.classList.replace('hidden', 'flex');

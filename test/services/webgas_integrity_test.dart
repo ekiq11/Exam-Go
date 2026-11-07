@@ -62,6 +62,27 @@ void main() {
       expect(content, contains('function saveUploadedQuestionsToSubtest('));
     });
 
+    test('admin.html contains executive dashboard elements and views', () {
+      final content = adminHtmlFile.readAsStringSync();
+
+      // Dashboard View and components
+      expect(content, contains('id="view-dashboard"'));
+      expect(content, contains('id="nav-tab-dashboard"'));
+      expect(content, contains('id="dash-stat-exams"'));
+      expect(content, contains('id="dash-stat-tryout-total"'));
+      expect(content, contains('id="dash-stat-soal-total"'));
+      expect(content, contains('id="dash-stat-licenses-total"'));
+      expect(content, contains('id="dash-stat-partners-total"'));
+      expect(content, contains('id="dash-recent-tryouts-container"'));
+      expect(content, contains('id="dash-partners-preview-container"'));
+
+      // Dashboard JS functions
+      expect(content, contains('function showDashboardView()'));
+      expect(content, contains('function loadDashboardData('));
+      expect(content, contains('function renderDashboardSummary('));
+      expect(content, contains('function cleanupAbandonedSessionsAction()'));
+    });
+
     test('Kode.js contains required administrative GAS endpoints', () {
       expect(kodeJsFile.existsSync(), isTrue);
       final content = kodeJsFile.readAsStringSync();
@@ -79,6 +100,9 @@ void main() {
       expect(content, contains('function saveAdminSubtest('));
       expect(content, contains('function deleteAdminSubtest('));
       expect(content, contains('function saveAdminSubtestQuestions('));
+
+      // Executive Dashboard Summary endpoint
+      expect(content, contains('function getAdminDashboardSummary('));
     });
 
     test('Master Voucher code sanitizer regex cleans input properly', () {
