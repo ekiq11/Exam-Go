@@ -274,5 +274,22 @@ void main() {
       expect(adminContent, contains('function toYmdDate('));
       expect(kodeContent, contains('function _formatSheetDateToYMD('));
     });
+
+    test('Lynk.id token generation and landing page settings auth are properly wired', () {
+      final kodeContent = kodeJsFile.readAsStringSync();
+      final adminContent = adminHtmlFile.readAsStringSync();
+
+      // Lynk.id token generation
+      expect(adminContent, contains('id="generated-count-badge"'));
+      expect(adminContent, contains('function downloadTokensAsTxt()'));
+      expect(adminContent, contains('copyTokensForWhatsApp()'));
+      expect(adminContent, contains('TEACHER_PREMIUM'));
+      expect(adminContent, contains('STUDENT_LIFETIME'));
+
+      // Landing page settings save auth & link persistence
+      expect(adminContent, contains('.saveLandingPageSettings(settings, creds.username || creds.user, creds.password || creds.pass);'));
+      expect(kodeContent, contains('playstore_url'));
+      expect(kodeContent, contains('appstore_url'));
+    });
   });
 }

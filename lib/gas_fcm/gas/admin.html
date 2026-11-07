@@ -911,20 +911,23 @@
               </select>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Peruntukan</label>
+              <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Peruntukan Akun</label>
               <select id="gen-token-type" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none">
-                <option value="TEACHER_PREMIUM">Guru Premium</option>
-                <option value="STUDENT_LIFETIME">Siswa Lifetime</option>
-                <option value="EVENT">🎯 Peserta Event / Tryout (Lynk.id)</option>
+                <option value="TEACHER_PREMIUM">👨‍🏫 Guru Premium (Lynk.id)</option>
+                <option value="STUDENT_LIFETIME" selected>🎓 Siswa Lifetime (Lynk.id)</option>
+                <option value="EVENT">🎯 Tiket Event Tryout (Lynk.id)</option>
               </select>
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Jumlah Token</label>
               <select id="gen-token-count" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none">
+                <option value="5">5 Token</option>
                 <option value="10">10 Token</option>
                 <option value="25" selected>25 Token</option>
                 <option value="50">50 Token</option>
                 <option value="100">100 Token</option>
+                <option value="200">200 Token</option>
+                <option value="500">500 Token</option>
               </select>
             </div>
             <div>
@@ -932,31 +935,42 @@
               <input type="text" id="gen-token-target" placeholder="Misal: TONAS2026" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-1 focus:ring-examgo-primary focus:bg-white outline-none uppercase font-mono">
             </div>
             <div class="flex items-end">
-              <button id="btn-generate-tokens" onclick="executeGenerateTokens()" class="w-full py-2.5 px-3 bg-examgo-primary hover:bg-examgo-primaryHover text-white rounded-xl font-semibold shadow-sm transition-all flex items-center justify-center text-sm">
-                <span>⚡ Generate</span>
+              <button id="btn-generate-tokens" onclick="executeGenerateTokens()" class="w-full py-2.5 px-3 bg-examgo-primary hover:bg-examgo-primaryHover text-white rounded-xl font-bold shadow-sm transition-all flex items-center justify-center text-sm">
+                <span>⚡ Generate Token</span>
               </button>
             </div>
           </div>
         </div>
 
         <!-- Output Box (Master Voucher / Batch Tokens) -->
-        <div id="generated-output-box" class="hidden mt-4 p-4 bg-emerald-50/80 border border-emerald-200 rounded-2xl">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
-            <div class="text-sm font-bold text-emerald-900" id="generated-output-title">
-              ✅ Master Voucher Siap Dibagikan!
+        <div id="generated-output-box" class="hidden mt-4 p-5 bg-emerald-50/90 border border-emerald-200 rounded-2xl shadow-sm transition-all">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-bold text-emerald-950" id="generated-output-title">
+                ✅ Token Berhasil Digenerate!
+              </span>
+              <span id="generated-count-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-700 text-white shadow-2xs">
+                0 Token
+              </span>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              <button onclick="copyGeneratedTokens()" class="inline-flex items-center px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all">
+              <button type="button" onclick="copyGeneratedTokens()" class="inline-flex items-center px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-2xs transition-all">
                 <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
-                Salin Teks
+                📋 Salin Kode (Lynk.id)
               </button>
-              <button onclick="copyTokensForWhatsApp()" class="inline-flex items-center px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold shadow-sm transition-all">
-                <span>📱 Salin Pengumuman WhatsApp Sekolah</span>
+              <button type="button" onclick="downloadTokensAsTxt()" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-2xs transition-all">
+                <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                💾 Unduh .txt
+              </button>
+              <button type="button" onclick="copyTokensForWhatsApp()" class="inline-flex items-center px-3 py-1.5 bg-emerald-900 hover:bg-slate-900 text-white rounded-xl text-xs font-bold shadow-2xs transition-all">
+                <span>📱 Salin Format Pembeli (WA / Email)</span>
               </button>
             </div>
           </div>
-          <textarea id="generated-tokens-textarea" rows="4" readonly class="w-full p-3 font-mono text-xs bg-white border border-emerald-200 rounded-xl text-gray-800 focus:outline-none select-all"></textarea>
-          <p class="text-xs text-emerald-700 mt-2" id="generated-output-tip">💡 Cukup bagikan 1 kode ini di grup WhatsApp atau mading sekolah. Siswa tinggal buka aplikasi dan masukkan kode tersebut.</p>
+          <textarea id="generated-tokens-textarea" rows="5" readonly class="w-full p-3 font-mono text-xs bg-white border border-emerald-300 rounded-xl text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 select-all shadow-inner"></textarea>
+          <p class="text-xs text-emerald-800 mt-2" id="generated-output-tip">
+            💡 <b>Siap untuk Lynk.id:</b> Salin token di atas lalu paste langsung ke kolom <i>Serial Key / Voucher</i> di dashboard produk Lynk.id Anda. Setiap pembeli otomatis mendapatkan 1 token unik.
+          </p>
         </div>
       </div>
 
@@ -1195,17 +1209,10 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              <div>
-                <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">Tautan Toko Lynk.id (Pembelian Token) <span class="text-red-500">*</span></label>
-                <input type="url" id="set-lynkid-url" class="w-full px-4 py-2.5 bg-gray-50/70 hover:bg-white focus:bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-sm font-mono text-purple-700 transition-all" placeholder="https://lynk.id/examgo">
-                <span class="text-[11px] text-gray-400 mt-1 block">Semua tombol "Beli di Lynk.id" akan otomatis mengarah ke tautan ini.</span>
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">Tautan Download APK Alternatif / GitHub</label>
-                <input type="url" id="set-apk-url" class="w-full px-4 py-2.5 bg-gray-50/70 hover:bg-white focus:bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500/20 focus:border-gray-500 outline-none text-sm font-mono text-gray-700 transition-all" placeholder="https://github.com/ekiq11/Exam-Go/releases/latest">
-                <span class="text-[11px] text-gray-400 mt-1 block">Tautan alternatif jika siswa mengunduh file mentah APK langsung.</span>
-              </div>
+            <div class="pt-2">
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">Tautan Toko Lynk.id (Pembelian Token) <span class="text-red-500">*</span></label>
+              <input type="url" id="set-lynkid-url" class="w-full px-4 py-2.5 bg-gray-50/70 hover:bg-white focus:bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-sm font-mono text-purple-700 transition-all" placeholder="https://lynk.id/examgo">
+              <span class="text-[11px] text-gray-400 mt-1 block">Semua tombol "Beli di Lynk.id" akan otomatis mengarah ke tautan ini.</span>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
@@ -2315,10 +2322,21 @@
     // Central creds helper used by token & license functions
     function getCredentials() {
       if (!currentUser || !currentPass) {
-        showToast('Sesi habis, silakan login ulang.', 'error');
-        return null;
+        const auth = safeGetAuth();
+        if (auth && auth.user && auth.pass) {
+          currentUser = auth.user;
+          currentPass = auth.pass;
+        } else {
+          showToast('Sesi habis, silakan login ulang.', 'error');
+          return null;
+        }
       }
-      return { username: currentUser, password: currentPass };
+      return { 
+        username: currentUser, 
+        password: currentPass,
+        user: currentUser,
+        pass: currentPass 
+      };
     }
     function safeSetAuth(user, pass) { 
       try { 
@@ -6132,7 +6150,7 @@
       const btn = document.getElementById('btn-generate-tokens');
       
       btn.disabled = true;
-      btn.innerHTML = '<div class="loader inline-block w-4 h-4 mr-2"></div> Generating...';
+      btn.innerHTML = '<div class="loader inline-block w-4 h-4 mr-2"></div> Menghasilkan Token...';
 
       google.script.run
         .withSuccessHandler(function(res) {
@@ -6143,29 +6161,64 @@
             return;
           }
           const tokens = res.tokens || [];
-          document.getElementById('generated-count-badge').innerText = tokens.length;
-          document.getElementById('generated-tokens-textarea').value = tokens.join('\n');
-          document.getElementById('generated-output-box').classList.remove('hidden');
-          showToast(`Berhasil membuat ${tokens.length} token untuk ${school}!`, 'success');
+          const countBadge = document.getElementById('generated-count-badge');
+          if (countBadge) countBadge.innerText = tokens.length + ' Token';
+
+          const titleEl = document.getElementById('generated-output-title');
+          if (titleEl) {
+            const roleName = type === 'TEACHER_PREMIUM' ? 'Guru Premium' : (type === 'EVENT' ? 'Event Tryout' : 'Siswa Lifetime');
+            titleEl.innerHTML = `✅ Berhasil Generate <b>${tokens.length} Token</b> ${roleName} (${school})!`;
+          }
+
+          const tipEl = document.getElementById('generated-output-tip');
+          if (tipEl) {
+            tipEl.innerHTML = `💡 <b>Siap untuk Lynk.id:</b> Klik <i>Salin Kode (Lynk.id)</i> lalu paste langsung ke kolom <i>Serial Numbers / Voucher</i> di produk Lynk.id Anda. Setiap pembeli akan otomatis menerima 1 token unik.`;
+          }
+
+          const textarea = document.getElementById('generated-tokens-textarea');
+          if (textarea) textarea.value = tokens.join('\n');
+
+          const box = document.getElementById('generated-output-box');
+          if (box) box.classList.remove('hidden');
+
+          showToast(`Berhasil generate ${tokens.length} token untuk ${school}!`, 'success');
           loadLicenses();
         })
         .withFailureHandler(function(err) {
           btn.disabled = false;
           btn.innerHTML = '<span>⚡ Generate Token</span>';
-          showToast('Error: ' + err.message, 'error');
+          showToast('Error: ' + (err.message || err), 'error');
         })
         .generateLicenseTokens(creds.username, creds.password, type, count, targetExam, school);
     }
 
     function copyGeneratedTokens() {
       const textarea = document.getElementById('generated-tokens-textarea');
+      if (!textarea || !textarea.value) return showToast('Tidak ada token untuk disalin.', 'warning');
       textarea.select();
       navigator.clipboard.writeText(textarea.value).then(() => {
-        showToast('Semua token berhasil disalin ke clipboard!', 'success');
+        showToast('Daftar token (1 baris 1 kode) berhasil disalin untuk Lynk.id!', 'success');
       }).catch(() => {
         document.execCommand('copy');
         showToast('Token disalin!', 'success');
       });
+    }
+
+    function downloadTokensAsTxt() {
+      const textarea = document.getElementById('generated-tokens-textarea');
+      if (!textarea || !textarea.value) return showToast('Tidak ada token untuk diunduh.', 'warning');
+      const type = document.getElementById('gen-token-type').value;
+      const role = type === 'TEACHER_PREMIUM' ? 'guru' : (type === 'EVENT' ? 'event' : 'siswa');
+      const blob = new Blob([textarea.value], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `examgo_tokens_${role}_${new Date().toISOString().slice(0, 10)}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('File token (.txt) berhasil diunduh!', 'success');
     }
 
     function copyTokensForWhatsApp() {
@@ -6178,9 +6231,12 @@
         msg += `🏫 *Sekolah:* ${school}\n`;
         msg += `🔑 *Kode Master Voucher:* *${code}*\n`;
         msg += `👥 *Kuota Akses:* ${quota} Siswa\n\n`;
-        msg += `Halo Siswa-Siswi ${school},\nUntuk mengaktifkan akun Siswa Premium selamanya di aplikasi ExamGO:\n\n`;
-        msg += `1. Buka aplikasi *ExamGO* di ponsel Android Anda.\n`;
-        msg += `2. Di halaman utama, ketuk kartu *Lisensi & Status Akun*.\n`;
+        msg += `*Tautan Unduh Aplikasi Resmi:*\n`;
+        msg += `• Google Play Store: https://play.google.com/store/apps/details?id=com.kemenag.examgo\n`;
+        msg += `• Apple App Store (iOS): https://apps.apple.com/id/app/examgo/id6759708435\n\n`;
+        msg += `*Cara Aktivasi Siswa:*\n`;
+        msg += `1. Buka aplikasi *ExamGO* di ponsel Anda.\n`;
+        msg += `2. Di beranda utama, ketuk kartu *Lisensi & Status Akun*.\n`;
         msg += `3. Masukkan Kode Voucher: *${code}*\n`;
         msg += `4. Tekan tombol *Aktivasi Sekarang*.\n\n`;
         msg += `Status akun Anda akan langsung aktif menjadi *Siswa Premium Permanen* tanpa batasan kuota ujian!\n\n`;
@@ -6205,27 +6261,31 @@
       }
 
       const roleText = type === 'TEACHER_PREMIUM' 
-        ? 'Guru Premium (Pembuat & Monitoring Soal)' 
-        : (type === 'EVENT' ? 'Peserta Event & Tryout Lynk.id' : 'Siswa Lifetime (Akses Ujian Bebas)');
+        ? '👨‍🏫 Guru Premium (Pembuat & Pengawas Ujian)' 
+        : (type === 'EVENT' ? '🎯 Peserta Event Tryout' : '🎓 Siswa Lifetime (Akses Penuh Selamanya)');
+      
       const steps = type === 'TEACHER_PREMIUM'
-        ? '1. Buka aplikasi ExamGO di ponsel Android Anda.\n2. Buka menu "Mode Guru" di bagian bawah.\n3. Masukkan PIN Guru Anda (atau buat baru jika pertama kali).\n4. Ketuk banner lisensi "Upgrade / Masukkan Kode Lisensi".\n5. Masukkan salah satu kode di bawah ini lalu tekan Aktivasi.'
+        ? '1. Unduh & buka aplikasi ExamGO di ponsel Anda.\n2. Masuk ke menu "Mode Guru" di navigasi bawah.\n3. Masukkan PIN Guru Anda (atau buat 6 angka baru jika pertama kali).\n4. Ketuk kartu "Lisensi & Status Akun" > Masukkan salah satu Kode Lisensi di bawah ini.\n5. Tekan "Aktivasi Sekarang". Akun Guru Premium aktif selamanya!'
         : (type === 'EVENT'
-          ? '1. Buka aplikasi ExamGO di ponsel Android Anda.\n2. Di halaman utama, masukkan kode token ini pada kolom "Masukkan Token Ujian / Event" atau tombol "🎯 Masuk Event".\n3. Anda akan langsung masuk ke Dashboard Event Resmi untuk mulai mengerjakan ujian dan melihat peringkat nilai!'
-          : '1. Buka aplikasi ExamGO di ponsel Android Anda.\n2. Di halaman utama, ketuk kartu "Lisensi & Status Akun".\n3. Masukkan salah satu kode di bawah ini.\n4. Tekan tombol "Aktivasi Sekarang".');
+          ? '1. Unduh & buka aplikasi ExamGO di ponsel Anda.\n2. Di beranda utama, masukkan kode tiket pada kolom "Token Ujian / Event" atau tombol "🎯 Masuk Event".\n3. Anda langsung terdaftar ke ruang ujian dan siap mengerjakan saat jadwal dimulai!'
+          : '1. Unduh & buka aplikasi ExamGO di ponsel Anda.\n2. Di beranda utama, ketuk kartu "Lisensi & Status Akun".\n3. Masukkan salah satu Kode Lisensi di bawah ini.\n4. Tekan tombol "Aktivasi Sekarang". Akun Siswa Premium Aktif Selamanya!');
 
-      let msg = `*DAFTAR KODE AKTIVASI LISENSI RESMI EXAMGO*\n`;
-      msg += `🏫 *Institusi / Sekolah:* ${school}\n`;
+      let msg = `*KONFIRMASI LISENSI RESMI EXAMGO (LYNK.ID)*\n`;
       msg += `👤 *Peruntukan:* ${roleText}\n`;
-      msg += `🔢 *Jumlah Lisensi:* ${tokens.length} Perangkat\n\n`;
-      msg += `*Panduan Cara Aktivasi:*\n${steps}\n\n`;
-      msg += `*Daftar Kode Token (1 Kode Khusus 1 Ponsel):*\n`;
+      msg += `🏷️ *Channel:* ${school}\n`;
+      msg += `🔢 *Jumlah Lisensi:* ${tokens.length} Kode\n\n`;
+      msg += `*Tautan Unduh Aplikasi Resmi:*\n`;
+      msg += `• Google Play Store: https://play.google.com/store/apps/details?id=com.kemenag.examgo\n`;
+      msg += `• Apple App Store (iOS): https://apps.apple.com/id/app/examgo/id6759708435\n\n`;
+      msg += `*Langkah-Langkah Aktivasi:*\n${steps}\n\n`;
+      msg += `*Daftar Kode Lisensi (1 Kode untuk 1 Perangkat):*\n`;
       tokens.forEach((tok, idx) => {
         msg += `${idx + 1}. \`${tok}\`\n`;
       });
-      msg += `\n_Catatan: Setiap kode lisensi terkunci otomatis pada ponsel pertama yang mengaktifkannya. Harap bagikan masing-masing 1 kode secara pribadi ke setiap guru/siswa._`;
+      msg += `\n_Catatan: Kode lisensi terkunci otomatis ke perangkat ponsel saat aktivasi. Simpan kode Anda dengan baik._`;
 
       navigator.clipboard.writeText(msg).then(() => {
-        showToast('Format pesan WhatsApp untuk ' + school + ' berhasil disalin!', 'success');
+        showToast('Format pesan WhatsApp/Email berhasil disalin!', 'success');
       }).catch(() => {
         showToast('Gagal menyalin otomatis.', 'error');
       });
@@ -6688,7 +6748,7 @@
           }
           showToast('Gagal menyimpan: ' + (err.message || err), 'error');
         })
-        .saveLandingPageSettings(settings, creds.user, creds.pass);
+        .saveLandingPageSettings(settings, creds.username || creds.user, creds.password || creds.pass);
     }
 
     window.onload = () => {
