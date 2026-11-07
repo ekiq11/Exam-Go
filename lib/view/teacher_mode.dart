@@ -456,6 +456,7 @@ class TeacherDashboardScreen extends StatefulWidget {
 
 class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   bool _isTeacherPremium = false;
+  int _remainingTeacherUploads = 3;
   bool _isLoadingLicense = true;
   int _activeExamCount = 0;
 
@@ -467,11 +468,13 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
   Future<void> _checkLicenseStatus() async {
     final premium = await LicenseService.instance.isTeacherPremium();
+    final remainingUploads = await LicenseService.instance.getRemainingTeacherUploads();
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList('teacher_exam_history') ?? [];
     if (mounted) {
       setState(() {
         _isTeacherPremium = premium;
+        _remainingTeacherUploads = remainingUploads;
         _activeExamCount = list.length;
         _isLoadingLicense = false;
       });
@@ -812,20 +815,38 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               color: const Color(0xFF1B5E20),
               title: 'Buat & Upload Soal',
               subtitle: _isTeacherPremium
-                  ? 'Upload DOCX / Google Form & atur TKA/SNBT/SKD'
-                  : 'Upload DOCX / Google Form (Perlu Lisensi Premium)',
+                  ? '⭐ Rekomendasi: Tempel Google Form / Upload DOCX'
+                  : (_remainingTeacherUploads > 0
+                      ? '⭐ Tempel Google Form (Coba Gratis: Sisa $_remainingTeacherUploads x)'
+                      : 'Tempel Google Form / DOCX (Perlu Lisensi Premium)'),
               trailing: _isTeacherPremium
                   ? null
-                  : const Icon(
-                      Icons.lock_rounded,
-                      size: 20,
-                      color: Color(0xFFD97706),
-                    ),
+                  : (_remainingTeacherUploads > 0
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFFFCD34D)),
+                          ),
+                          child: Text(
+                            'Free $_remainingTeacherUploads x',
+                            style: GoogleFonts.poppins(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFB45309),
+                            ),
+                          ),
+                        )
+                      : const Icon(
+                          Icons.lock_rounded,
+                          size: 20,
+                          color: Color(0xFFD97706),
+                        )),
               onTap: () async {
-                final isPremium = await LicenseService.instance
-                    .isTeacherPremium();
+                final canUpload = await LicenseService.instance.canTeacherUploadExam();
                 if (!context.mounted) return;
-                if (!isPremium) {
+                if (!canUpload) {
                   _showTeacherLicenseDialog(
                     context,
                     onActivated: _checkLicenseStatus,

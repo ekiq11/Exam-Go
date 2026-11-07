@@ -34,11 +34,13 @@ class LicenseService {
   static final LicenseService instance = LicenseService._();
 
   static const int maxFreeAttempts = 5;
+  static const int maxFreeTeacherUploads = 3;
 
   // Local Storage Keys
   static const String _kStudentPremiumKey = 'license_student_is_premium';
   static const String _kStudentAttemptsKey = 'license_student_exam_count';
   static const String _kTeacherPremiumKey = 'license_teacher_is_premium';
+  static const String _kTeacherUploadsKey = 'license_teacher_upload_count';
 
   FirebaseFirestore? _firestore;
 
@@ -157,6 +159,29 @@ class LicenseService {
     }
 
     return false;
+  }
+
+  /// Sisa kuota coba gratis buat & upload soal untuk guru (maksimal 3x)
+  Future<int> getRemainingTeacherUploads() async {
+    if (await isTeacherPremium()) return 9999; // Unlimited
+    final prefs = await SharedPreferences.getInstance();
+    final count = prefs.getInt(_kTeacherUploadsKey) ?? 0;
+    return (maxFreeTeacherUploads - count).clamp(0, maxFreeTeacherUploads);
+  }
+
+  /// Cek apakah guru diizinkan mengakses fitur Buat & Upload Soal (Premium atau sisa coba > 0)
+  Future<bool> canTeacherUploadExam() async {
+    if (await isTeacherPremium()) return true;
+    final remaining = await getRemainingTeacherUploads();
+    return remaining > 0;
+  }
+
+  /// Catat penggunaan 1 kuota coba upload soal guru (dipanggil saat menerbitkan paket soal)
+  Future<void> recordTeacherUploadAttempt() async {
+    if (await isTeacherPremium()) return;
+    final prefs = await SharedPreferences.getInstance();
+    final current = prefs.getInt(_kTeacherUploadsKey) ?? 0;
+    await prefs.setInt(_kTeacherUploadsKey, current + 1);
   }
 
   // ─── SISI EVENT TRYOUT (Lynk.id Tiket Event) ─────────────────────

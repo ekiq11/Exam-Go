@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constant/app_colors.dart';
 import '../../models/exam_question_model.dart';
+import '../../services/license_service.dart';
 import '../../services/monitoring_service.dart';
 import '../../services/qr_payload.dart';
 import '../../utils/math_widget_factory.dart';
@@ -315,6 +316,7 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
         list.removeLast();
       }
       await prefs.setStringList('teacher_exam_history', list);
+      await LicenseService.instance.recordTeacherUploadAttempt();
 
       if (!mounted) return;
 

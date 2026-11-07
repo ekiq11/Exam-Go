@@ -26,7 +26,7 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
   int _currentStep = 0;
 
   late TabController _sourceTabController;
-  int _selectedSourceTab = 0; // 0: Word .docx, 1: Google Form
+  int _selectedSourceTab = 1; // 0: Word .docx, 1: Google Form (Default Google Form sebagai rekomendasi utama)
 
   final _titleController = TextEditingController(text: 'Try Out Akbar 2026');
   final _gformUrlController = TextEditingController();
@@ -53,7 +53,7 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
   @override
   void initState() {
     super.initState();
-    _sourceTabController = TabController(length: 2, vsync: this);
+    _sourceTabController = TabController(length: 2, vsync: this, initialIndex: 1);
     _applyCategoryPreset(_selectedCategory);
   }
 
@@ -1524,10 +1524,10 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                               const SizedBox(width: 6),
                               Flexible(
                                 child: Text(
-                                  'Google Form',
+                                  'Google Form ⭐ Rekomendasi',
                                   style: GoogleFonts.poppins(
                                     fontWeight: _selectedSourceTab == 1 ? FontWeight.bold : FontWeight.w500,
-                                    fontSize: 12.5,
+                                    fontSize: 12,
                                     color: _selectedSourceTab == 1 ? AppColors.primaryGreen : const Color(0xFF64748B),
                                   ),
                                   maxLines: 1,
@@ -1707,6 +1707,57 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFECFDF5), Color(0xFFF0FDF4)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFA7F3D0)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF059669),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 16),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '⭐ REKOMENDASI UTAMA: Tempel Link Langsung Jadi CBT',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF065F46),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Paling praktis & cepat! Cukup salin tautan Google Form kuis Anda. Soal, gambar, opsi jawaban, dan kisi langsung dikonversi menjadi ujian CBT anti-curang.',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: const Color(0xFF047857),
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
         Text('Tautan Google Form:', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF334155))),
         const SizedBox(height: 6),
         TextField(

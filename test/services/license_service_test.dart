@@ -84,6 +84,29 @@ void main() {
       expect(canTake, isTrue);
     });
 
+    test('Teacher Free 3x Trial Uploads work correctly', () async {
+      // Default: guru gratis mendapatkan 3x kesempatan coba
+      expect(await LicenseService.instance.getRemainingTeacherUploads(), equals(3));
+      expect(await LicenseService.instance.canTeacherUploadExam(), isTrue);
+
+      // Pakai 1x coba
+      await LicenseService.instance.recordTeacherUploadAttempt();
+      expect(await LicenseService.instance.getRemainingTeacherUploads(), equals(2));
+      expect(await LicenseService.instance.canTeacherUploadExam(), isTrue);
+
+      // Pakai 2x coba lagi (total 3x)
+      await LicenseService.instance.recordTeacherUploadAttempt();
+      await LicenseService.instance.recordTeacherUploadAttempt();
+      expect(await LicenseService.instance.getRemainingTeacherUploads(), equals(0));
+      expect(await LicenseService.instance.canTeacherUploadExam(), isFalse);
+
+      // Setelah upgrade ke Premium, akses kembali tak terbatas
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('license_teacher_is_premium', true);
+      expect(await LicenseService.instance.canTeacherUploadExam(), isTrue);
+      expect(await LicenseService.instance.getRemainingTeacherUploads(), equals(9999));
+    });
+
     test('getDeviceId returns non-empty string without throwing', () async {
       final deviceId = await LicenseService.instance.getDeviceId();
       expect(deviceId, isNotEmpty);
