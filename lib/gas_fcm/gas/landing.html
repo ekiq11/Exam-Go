@@ -11,6 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   
+    <!-- KaTeX CSS & JS for Math Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -124,15 +129,44 @@
         </p>
 
         <!-- CTA Buttons -->
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-4">
-          <a id="btn-hero-lynkid" href="https://lynk.id" target="_blank" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-base shadow-xl shadow-brand-500/30 hover:shadow-brand-500/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 group">
-            <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
-            <span>Dapatkan Token di Lynk.id Sekarang</span>
-          </a>
-          <a id="btn-hero-apk" href="https://github.com/ekiq11/Exam-Go/releases/latest" target="_blank" class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-sm">
-            <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-            <span>Download APK ExamGO (Gratis)</span>
-          </a>
+        <div class="space-y-4 pt-4">
+          <!-- Primary CTA Button -->
+          <div class="flex items-center justify-center">
+            <a id="btn-hero-lynkid" href="https://lynk.id" target="_blank" class="w-full sm:w-auto px-10 py-4 rounded-2xl bg-gradient-to-r from-brand-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-base sm:text-lg shadow-xl shadow-brand-500/30 hover:shadow-brand-500/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 group">
+              <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+              <span>Dapatkan Token di Lynk.id Sekarang &rarr;</span>
+            </a>
+          </div>
+
+          <!-- Official Store Download Buttons -->
+          <div class="flex flex-wrap items-center justify-center gap-3">
+            <!-- Google Play Store -->
+            <a id="btn-hero-playstore" href="https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id" target="_blank" class="px-5 py-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700/80 transition-all flex items-center gap-3 shadow-md hover:border-brand-500/50 hover:scale-[1.02]">
+              <svg class="w-6 h-6 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3.609 1.814L13.792 12 3.61 22.186a1.986 1.986 0 01-.61-1.428V3.242c0-.555.223-1.059.61-1.428zm11.235 11.238l2.25 2.25-11.45 6.543 9.2-8.793zm0-2.104l-9.2-8.793 11.45 6.543-2.25 2.25zm1.464 1.052l3.438-1.965c.78-.445.78-1.173 0-1.618l-3.438-1.965-2.25 2.25 2.25 2.25z"/>
+              </svg>
+              <div class="text-left">
+                <div class="text-[9px] text-slate-400 uppercase tracking-widest font-semibold leading-none">TEMUKAN DI</div>
+                <div class="text-xs font-bold text-white leading-tight">Google Play</div>
+              </div>
+            </a>
+
+            <!-- Apple App Store -->
+            <a id="btn-hero-appstore" href="https://apps.apple.com/id/app/examgo/id6759708435?l=id" target="_blank" class="px-5 py-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700/80 transition-all flex items-center gap-3 shadow-md hover:border-brand-500/50 hover:scale-[1.02]">
+              <svg class="w-6 h-6 text-slate-100 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.79 1.07-1.9 0.95-3.02-.93.04-2.11.64-2.77 1.42-.58.68-1.09 1.8-0.95 2.88 1.05.08 2.14-.54 2.77-1.28z"/>
+              </svg>
+              <div class="text-left">
+                <div class="text-[9px] text-slate-400 uppercase tracking-widest font-semibold leading-none">UNDUH DI</div>
+                <div class="text-xs font-bold text-white leading-tight">App Store</div>
+              </div>
+            </a>
+
+            <!-- Direct APK link -->
+            <a id="btn-hero-apk" href="https://github.com/ekiq11/Exam-Go/releases/latest" target="_blank" class="text-xs font-medium text-slate-400 hover:text-brand-300 underline transition-colors px-2 py-1">
+              Atau unduh file APK langsung
+            </a>
+          </div>
         </div>
 
         <!-- Micro Social Proof -->
@@ -474,14 +508,24 @@
           </p>
         </div>
 
-        <div class="bg-slate-900/60 p-6 rounded-3xl border border-slate-800 relative">
-          <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 font-extrabold text-xl flex items-center justify-center mb-4 border border-indigo-500/30">
-            2
+        <div class="bg-slate-900/60 p-6 rounded-3xl border border-slate-800 relative flex flex-col justify-between">
+          <div>
+            <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 font-extrabold text-xl flex items-center justify-center mb-4 border border-indigo-500/30">
+              2
+            </div>
+            <h3 class="text-base font-bold text-white mb-2">Download di Play Store & App Store</h3>
+            <p class="text-xs text-slate-400 leading-relaxed mb-4">
+              Instal aplikasi resmi ExamGO langsung dari Google Play Store (Android) atau Apple App Store (iOS). Ringan (~25 MB), aman, dan bebas lag.
+            </p>
           </div>
-          <h3 class="text-base font-bold text-white mb-2">Download APK ExamGO</h3>
-          <p class="text-xs text-slate-400 leading-relaxed">
-            Unduh file APK aplikasi ExamGO Android (hanya ~25 MB, ringan dan responsif di semua tipe smartphone Android).
-          </p>
+          <div class="flex items-center gap-2 pt-3 border-t border-slate-800/80">
+            <a id="btn-step-playstore" href="https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id" target="_blank" class="flex-1 py-2 px-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-bold text-emerald-400 hover:border-emerald-500/50 transition-colors text-center">
+              Google Play
+            </a>
+            <a id="btn-step-appstore" href="https://apps.apple.com/id/app/examgo/id6759708435?l=id" target="_blank" class="flex-1 py-2 px-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-bold text-slate-200 hover:border-slate-600 transition-colors text-center">
+              App Store (iOS)
+            </a>
+          </div>
         </div>
 
         <div class="bg-slate-900/60 p-6 rounded-3xl border border-slate-800 relative">
@@ -693,9 +737,193 @@
     </a>
   </div>
 
-  <!-- Client-side Dynamic Auto-Hydration Script -->
+  <!-- Client-side Dynamic Auto-Hydration & KaTeX Rendering Script -->
   <script>
+    function renderAllMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+          ],
+          ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+          throwOnError: false
+        });
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', function() {
+      renderAllMath();
+      setTimeout(renderAllMath, 200);
+      setTimeout(renderAllMath, 800);
+
+      // Load dynamic settings from Google Apps Script if available
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(s) {
+            if (!s) return;
+            
+            // 1. Texts
+            if (s.hero_badge) document.getElementById('hero-badge-text').innerText = s.hero_badge;
+            if (s.hero_title) document.getElementById('hero-title-text').innerText = s.hero_title;
+            if (s.hero_subtitle) document.getElementById('hero-subtitle-text').innerText = s.hero_subtitle;
+            if (s.featured_event_title) document.getElementById('featured-event-title').innerText = s.featured_event_title;
+            if (s.featured_event_desc) document.getElementById('featured-event-desc').innerText = s.featured_event_desc;
+            if (s.featured_event_date) document.getElementById('featured-event-date').innerText = s.featured_event_date;
+            if (s.promo_price_original) document.getElementById('promo-price-original').innerText = s.promo_price_original;
+            if (s.promo_price_discount) document.getElementById('promo-price-discount').innerText = s.promo_price_discount;
+            if (s.promo_tag) document.getElementById('promo-tag-text').innerText = s.promo_tag;
+            
+            // 2. Announcement banner
+            const annBar = document.getElementById('landing-announcement-bar');
+            if (annBar) {
+              if (s.is_announcement_active === false) {
+                annBar.style.display = 'none';
+              } else if (s.announcement_text) {
+                document.getElementById('announcement-text').innerText = s.announcement_text;
+              }
+            }
+
+            // 3. Featured Event section visibility
+            const evSection = document.getElementById('event-promo');
+            if (evSection && s.is_featured_event_active === false) {
+              evSection.style.display = 'none';
+            }
+
+            // 4. Update Lynk.id Links across all CTA buttons
+            if (s.lynkid_url) {
+              const lynkButtons = ['btn-nav-lynkid', 'btn-hero-lynkid', 'btn-promo-lynkid', 'btn-plan-starter', 'btn-plan-bundle', 'btn-final-lynkid', 'btn-mobile-lynkid'];
+              lynkButtons.forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.href = s.lynkid_url;
+              });
+            }
+
+            // 5. Update Play Store, App Store & APK download URL
+            if (s.playstore_url) {
+              const ps = document.getElementById('btn-hero-playstore');
+              if (ps) ps.href = s.playstore_url;
+              const psStep = document.getElementById('btn-step-playstore');
+              if (psStep) psStep.href = s.playstore_url;
+            }
+            if (s.appstore_url) {
+              const as = document.getElementById('btn-hero-appstore');
+              if (as) as.href = s.appstore_url;
+              const asStep = document.getElementById('btn-step-appstore');
+              if (asStep) asStep.href = s.appstore_url;
+            }
+            if (s.download_apk_url) {
+              const apkBtn = document.getElementById('btn-hero-apk');
+              if (apkBtn) apkBtn.href = s.download_apk_url;
+            }
+            // Re-render math formulas if settings contained dynamic LaTeX
+            renderAllMath();
+
+            // 6. Update WhatsApp links
+            if (s.whatsapp_number) {
+              const waNum = s.whatsapp_number.replace(/[^0-9]/g, '');
+              const waMsg = encodeURIComponent(s.whatsapp_message || 'Halo Admin ExamGO...');
+              const waLink = 'https://wa.me/' + waNum + '?text=' + waMsg;
+              
+              const waEls = ['btn-plan-school', 'btn-final-wa', 'footer-wa-link', 'btn-mobile-wa'];
+              waEls.forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.href = waLink;
+              });
+            }
+          })
+          .getLandingPageSettings();
+      }
+    });
+  </script>
+</body>
+</html>
+
+, right: '
+      // Load dynamic settings from Google Apps Script if available
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(s) {
+            if (!s) return;
+            
+            // 1. Texts
+            if (s.hero_badge) document.getElementById('hero-badge-text').innerText = s.hero_badge;
+            if (s.hero_title) document.getElementById('hero-title-text').innerText = s.hero_title;
+            if (s.hero_subtitle) document.getElementById('hero-subtitle-text').innerText = s.hero_subtitle;
+            if (s.featured_event_title) document.getElementById('featured-event-title').innerText = s.featured_event_title;
+            if (s.featured_event_desc) document.getElementById('featured-event-desc').innerText = s.featured_event_desc;
+            if (s.featured_event_date) document.getElementById('featured-event-date').innerText = s.featured_event_date;
+            if (s.promo_price_original) document.getElementById('promo-price-original').innerText = s.promo_price_original;
+            if (s.promo_price_discount) document.getElementById('promo-price-discount').innerText = s.promo_price_discount;
+            if (s.promo_tag) document.getElementById('promo-tag-text').innerText = s.promo_tag;
+            
+            // 2. Announcement banner
+            const annBar = document.getElementById('landing-announcement-bar');
+            if (annBar) {
+              if (s.is_announcement_active === false) {
+                annBar.style.display = 'none';
+              } else if (s.announcement_text) {
+                document.getElementById('announcement-text').innerText = s.announcement_text;
+              }
+            }
+
+            // 3. Featured Event section visibility
+            const evSection = document.getElementById('event-promo');
+            if (evSection && s.is_featured_event_active === false) {
+              evSection.style.display = 'none';
+            }
+
+            // 4. Update Lynk.id Links across all CTA buttons
+            if (s.lynkid_url) {
+              const lynkButtons = ['btn-nav-lynkid', 'btn-hero-lynkid', 'btn-promo-lynkid', 'btn-plan-starter', 'btn-plan-bundle', 'btn-final-lynkid', 'btn-mobile-lynkid'];
+              lynkButtons.forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.href = s.lynkid_url;
+              });
+            }
+
+            // 5. Update APK download URL
+            if (s.download_apk_url) {
+              const apkBtn = document.getElementById('btn-hero-apk');
+              if (apkBtn) apkBtn.href = s.download_apk_url;
+            }
+
+            // 6. Update WhatsApp links
+            if (s.whatsapp_number) {
+              const waNum = s.whatsapp_number.replace(/[^0-9]/g, '');
+              const waMsg = encodeURIComponent(s.whatsapp_message || 'Halo Admin ExamGO...');
+              const waLink = 'https://wa.me/' + waNum + '?text=' + waMsg;
+              
+              const waEls = ['btn-plan-school', 'btn-final-wa', 'footer-wa-link', 'btn-mobile-wa'];
+              waEls.forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.href = waLink;
+              });
+            }
+          })
+          .getLandingPageSettings();
+      }
+    });
+  </script>
+</body>
+</html>
+
+, display: false},
+            {left: '\(', right: '\)', display: false},
+            {left: '\[', right: '\]', display: true}
+          ],
+          ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+          throwOnError: false
+        });
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      renderAllMath();
+      setTimeout(renderAllMath, 200);
+      setTimeout(renderAllMath, 800);
       // Load dynamic settings from Google Apps Script if available
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run

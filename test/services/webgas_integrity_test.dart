@@ -150,6 +150,17 @@ void main() {
       expect(content, contains('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAABc'));
       expect(content, contains('6289693652230'));
 
+      // KaTeX LaTeX support check
+      expect(content, contains('katex.min.css'));
+      expect(content, contains('katex.min.js'));
+      expect(content, contains('renderAllMath()'));
+
+      // Official Store download links check
+      expect(content, contains('https://play.google.com/store/apps/details?id=com.kemenag.examgo'));
+      expect(content, contains('https://apps.apple.com/id/app/examgo/id6759708435'));
+      expect(content, contains('btn-hero-playstore'));
+      expect(content, contains('btn-hero-appstore'));
+
       // Script hydration
       expect(content, contains('google.script.run'));
       expect(content, contains('getLandingPageSettings()'));
@@ -173,6 +184,8 @@ void main() {
       expect(content, contains('id="set-event-title"'));
       expect(content, contains('id="set-event-active"'));
       expect(content, contains('id="set-lynkid-url"'));
+      expect(content, contains('id="set-playstore-url"'));
+      expect(content, contains('id="set-appstore-url"'));
       expect(content, contains('id="set-wa-number"'));
       expect(content, contains('id="btn-save-landing-settings"'));
 
@@ -192,6 +205,8 @@ void main() {
 
       // Settings Endpoints
       expect(content, contains('function getLandingPageSettings()'));
+      expect(content, contains('playstore_url:'));
+      expect(content, contains('appstore_url:'));
       expect(content, contains('function saveLandingPageSettings('));
     });
   });

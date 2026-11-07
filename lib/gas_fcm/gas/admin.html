@@ -1156,14 +1156,27 @@
           <div class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
+                <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">Tautan Google Play Store (Android)</label>
+                <input type="url" id="set-playstore-url" class="w-full px-4 py-2.5 bg-gray-50/70 hover:bg-white focus:bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-sm font-mono text-emerald-700 transition-all" placeholder="https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id">
+                <span class="text-[11px] text-gray-400 mt-1 block">Tombol unduh "Google Play" akan mengarah ke link resmi ini.</span>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">Tautan Apple App Store (iOS)</label>
+                <input type="url" id="set-appstore-url" class="w-full px-4 py-2.5 bg-gray-50/70 hover:bg-white focus:bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-mono text-blue-700 transition-all" placeholder="https://apps.apple.com/id/app/examgo/id6759708435?l=id">
+                <span class="text-[11px] text-gray-400 mt-1 block">Tombol unduh "App Store" akan mengarah ke link resmi Apple ini.</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div>
                 <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">Tautan Toko Lynk.id (Pembelian Token) <span class="text-red-500">*</span></label>
                 <input type="url" id="set-lynkid-url" class="w-full px-4 py-2.5 bg-gray-50/70 hover:bg-white focus:bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-sm font-mono text-purple-700 transition-all" placeholder="https://lynk.id/examgo">
                 <span class="text-[11px] text-gray-400 mt-1 block">Semua tombol "Beli di Lynk.id" akan otomatis mengarah ke tautan ini.</span>
               </div>
               <div>
-                <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">Tautan Download APK ExamGO Android <span class="text-red-500">*</span></label>
-                <input type="url" id="set-apk-url" class="w-full px-4 py-2.5 bg-gray-50/70 hover:bg-white focus:bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-sm font-mono text-emerald-700 transition-all" placeholder="https://github.com/ekiq11/Exam-Go/releases/latest">
-                <span class="text-[11px] text-gray-400 mt-1 block">Tombol "Download APK ExamGO" akan mengarah ke link unduh file aplikasi.</span>
+                <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">Tautan Download APK Alternatif / GitHub</label>
+                <input type="url" id="set-apk-url" class="w-full px-4 py-2.5 bg-gray-50/70 hover:bg-white focus:bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500/20 focus:border-gray-500 outline-none text-sm font-mono text-gray-700 transition-all" placeholder="https://github.com/ekiq11/Exam-Go/releases/latest">
+                <span class="text-[11px] text-gray-400 mt-1 block">Tautan alternatif jika siswa mengunduh file mentah APK langsung.</span>
               </div>
             </div>
 
@@ -5653,6 +5666,8 @@
           if (document.getElementById('set-promo-discount')) document.getElementById('set-promo-discount').value = s.promo_price_discount || '';
           if (document.getElementById('set-promo-tag')) document.getElementById('set-promo-tag').value = s.promo_tag || '';
           if (document.getElementById('set-lynkid-url')) document.getElementById('set-lynkid-url').value = s.lynkid_url || '';
+          if (document.getElementById('set-playstore-url')) document.getElementById('set-playstore-url').value = s.playstore_url || 'https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id';
+          if (document.getElementById('set-appstore-url')) document.getElementById('set-appstore-url').value = s.appstore_url || 'https://apps.apple.com/id/app/examgo/id6759708435?l=id';
           if (document.getElementById('set-apk-url')) document.getElementById('set-apk-url').value = s.download_apk_url || '';
           if (document.getElementById('set-wa-number')) document.getElementById('set-wa-number').value = s.whatsapp_number || '';
           if (document.getElementById('set-wa-msg')) document.getElementById('set-wa-msg').value = s.whatsapp_message || '';
@@ -5686,6 +5701,8 @@
         promo_price_discount: document.getElementById('set-promo-discount')?.value?.trim() || '',
         promo_tag: document.getElementById('set-promo-tag')?.value?.trim() || '',
         lynkid_url: document.getElementById('set-lynkid-url')?.value?.trim() || '',
+        playstore_url: document.getElementById('set-playstore-url')?.value?.trim() || '',
+        appstore_url: document.getElementById('set-appstore-url')?.value?.trim() || '',
         download_apk_url: document.getElementById('set-apk-url')?.value?.trim() || '',
         whatsapp_number: document.getElementById('set-wa-number')?.value?.trim() || '',
         whatsapp_message: document.getElementById('set-wa-msg')?.value?.trim() || '',
