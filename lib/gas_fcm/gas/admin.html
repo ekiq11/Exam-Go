@@ -150,7 +150,7 @@
           </div>
 
           <!-- Secondary Action: Open Landing Page -->
-          <a href="?page=landing" target="_blank" class="hidden 2xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold border border-slate-800 hover:border-slate-700 transition-all shadow-xs flex-shrink-0">
+          <a href="https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec" target="_blank" onclick="openLandingPage(event)" class="btn-open-landing-page hidden 2xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold border border-slate-800 hover:border-slate-700 transition-all shadow-xs flex-shrink-0">
             <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
             <span>Landing Page</span>
             <span class="text-slate-500 text-[10px]">&nearr;</span>
@@ -1087,7 +1087,7 @@
             </p>
           </div>
           <div class="flex flex-wrap items-center gap-3 self-start md:self-auto">
-            <a href="?page=landing" target="_blank" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-900 text-xs font-bold transition-all shadow-md">
+            <a href="https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec" target="_blank" onclick="openLandingPage(event)" class="btn-open-landing-page inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-900 text-xs font-bold transition-all shadow-md">
               <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
               <span>Buka Landing Page</span>
             </a>
@@ -6831,7 +6831,47 @@
         .saveLandingPageSettings(settings, creds.username || creds.user, creds.password || creds.pass);
     }
 
+    function getActualLandingUrl() {
+      // 1. Ambil URL outer window dari document.referrer (URL resmi Web App)
+      try {
+        if (document.referrer && document.referrer.includes('/exec')) {
+          const u = new URL(document.referrer);
+          u.searchParams.delete('page');
+          u.searchParams.delete('admin');
+          return u.toString();
+        }
+      } catch(e) {}
+
+      // 2. Fallback ke URL deployment Web App resmi
+      return 'https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec';
+    }
+
+    function openLandingPage(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      const url = getActualLandingUrl();
+      window.open(url, '_blank');
+    }
+
+    function syncLandingLinks() {
+      const url = getActualLandingUrl();
+      const links = document.querySelectorAll('.btn-open-landing-page');
+      links.forEach(a => {
+        a.href = url;
+      });
+
+      if (typeof google !== 'undefined' && google.script && google.script.url && google.script.url.getLocation) {
+        google.script.url.getLocation(function(loc) {
+          if (loc && loc.url) {
+            links.forEach(a => {
+              a.href = loc.url;
+            });
+          }
+        });
+      }
+    }
+
     window.onload = () => {
+      syncLandingLinks();
       const auth = safeGetAuth();
       if (auth) {
         currentUser = auth.user;
