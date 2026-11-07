@@ -118,6 +118,10 @@
           <span class="text-xl font-bold text-white tracking-wide">ExamGO <span class="font-normal opacity-80">Admin</span></span>
         </div>
         <div class="flex items-center space-x-3 hidden" id="nav-user">
+          <a href="?page=landing" target="_blank" class="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition-all border border-white/20">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            <span>Lihat Landing Page</span>
+          </a>
           <div class="flex items-center space-x-1 mr-2 bg-black/15 rounded-xl p-1">
             <button id="nav-tab-dashboard" onclick="showDashboardView()" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-white bg-white/20 shadow-sm transition-all flex items-center gap-1.5">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
@@ -131,6 +135,9 @@
             </button>
             <button id="nav-tab-licenses" onclick="showLicensesView()" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all">
               🔑 Token Lynk.id
+            </button>
+            <button id="nav-tab-landing-config" onclick="showLandingConfigView()" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all">
+              🎨 Setting Landing Page
             </button>
           </div>
           <div class="h-8 w-8 rounded-full bg-examgo-pale text-examgo-primary flex items-center justify-center font-bold" id="user-avatar">
@@ -1017,6 +1024,165 @@
       <button id="fab-delete-all" onclick="openDeleteAllModal()" class="flex items-center justify-center w-14 h-14 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all transform active:scale-90">
         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
       </button>
+    </div>
+
+    <!-- LANDING PAGE CONFIGURATION VIEW -->
+    <div id="view-landing-config" class="hidden space-y-6">
+      
+      <!-- Header -->
+      <div class="md:flex md:items-center md:justify-between mb-6">
+        <div class="flex-1 min-w-0">
+          <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate flex items-center gap-2">
+            Pengaturan Landing Page Publik
+            <span class="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+              Promosi & Penjualan Lynk.id
+            </span>
+          </h2>
+          <p class="mt-2 text-sm text-gray-500">Sesuaikan materi promosi, event tryout unggulan, harga diskon, tautan Lynk.id, dan kontak WhatsApp yang tampil di halaman depan untuk calon siswa.</p>
+        </div>
+        <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 space-x-3 gap-y-2 justify-end">
+          <a href="?page=landing" target="_blank" class="inline-flex items-center px-4 py-2.5 border border-indigo-200 rounded-xl shadow-sm text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-all">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            Buka Landing Page Publik
+          </a>
+          <button onclick="loadLandingSettingsToForm()" class="inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
+            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            Reset Form
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm space-y-6 max-w-4xl">
+        
+        <!-- Section 1: Hero & Headline Promo -->
+        <div class="space-y-4 pb-6 border-b border-gray-100">
+          <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            1. Headline & Teks Utama (Hero Section)
+          </h3>
+          
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Badge Teks Teratas</label>
+            <input type="text" id="set-hero-badge" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-medium" placeholder="Misal: 🔥 SIMULASI ASLI UTBK SNBT & SKD BKN 2026">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Judul Utama (Headline)</label>
+            <input type="text" id="set-hero-title" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-bold text-gray-900" placeholder="Misal: Raih Kampus Impian & Kedinasan 2026 Tanpa Panik Waktu Habis!">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Sub-judul / Penjelasan Singkat</label>
+            <textarea id="set-hero-subtitle" rows="3" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-medium" placeholder="Jelaskan keunggulan utama ExamGO..."></textarea>
+          </div>
+        </div>
+
+        <!-- Section 2: Event Tryout Unggulan -->
+        <div class="space-y-4 pb-6 border-b border-gray-100">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+              2. Event Tryout Akbar yang Dipromosikan
+            </h3>
+            <label class="flex items-center space-x-2 cursor-pointer text-xs font-bold text-indigo-700">
+              <input type="checkbox" id="set-event-active" checked class="w-4 h-4 text-indigo-600 rounded">
+              <span>Tampilkan Bagian Promo Event</span>
+            </label>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Nama Event Tryout</label>
+              <input type="text" id="set-event-title" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-medium" placeholder="Misal: Tryout Akbar UTBK SNBT 2026 Gelombang 1">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Jadwal / Tanggal Event</label>
+              <input type="text" id="set-event-date" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-medium" placeholder="Misal: Sabtu - Minggu, 15 - 16 November 2026">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Deskripsi Singkat Event</label>
+            <input type="text" id="set-event-desc" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-medium" placeholder="Misal: 7 Subtest Lengkap (Penalaran Umum, PPU, PBM, PK, Lit Indo, Lit Ing, PM). Penilaian IRT & pembahasan.">
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Harga Normal (Coret)</label>
+              <input type="text" id="set-promo-original" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-medium" placeholder="Misal: Rp 50.000">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Harga Promo (Diskon)</label>
+              <input type="text" id="set-promo-discount" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-bold text-emerald-700" placeholder="Misal: Rp 19.000">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Badge Promo</label>
+              <input type="text" id="set-promo-tag" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-medium" placeholder="Misal: Diskon 62% Khusus Siswa!">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Tautan Lynk.id & Download APK & WhatsApp -->
+        <div class="space-y-4 pb-6 border-b border-gray-100">
+          <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+            3. Tautan Konversi & CTA (Lynk.id, APK, & WhatsApp)
+          </h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Tautan Toko Lynk.id (Pembelian Token) <span class="text-red-500">*</span></label>
+              <input type="url" id="set-lynkid-url" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-mono text-purple-700" placeholder="https://lynk.id/examgo">
+              <span class="text-[11px] text-gray-400 mt-0.5 block">Semua tombol "Beli di Lynk.id" akan mengarah ke link ini.</span>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Tautan Download APK ExamGO Android <span class="text-red-500">*</span></label>
+              <input type="url" id="set-apk-url" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-mono text-emerald-700" placeholder="https://github.com/ekiq11/Exam-Go/releases/latest">
+              <span class="text-[11px] text-gray-400 mt-0.5 block">Tombol "Download APK ExamGO" akan mengarah ke link ini.</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Nomor WhatsApp Admin (Dengan Kode Negara)</label>
+              <input type="text" id="set-wa-number" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-mono" placeholder="Misal: 6281234567890">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Pesan Pembuka WhatsApp</label>
+              <input type="text" id="set-wa-msg" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-medium" placeholder="Halo Admin ExamGO, saya ingin membeli token tryout...">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Banner Pengumuman Teratas -->
+        <div class="space-y-4 pb-6">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+              4. Banner Pengumuman Paling Atas (Announcement Bar)
+            </h3>
+            <label class="flex items-center space-x-2 cursor-pointer text-xs font-bold text-amber-700">
+              <input type="checkbox" id="set-announcement-active" checked class="w-4 h-4 text-amber-600 rounded">
+              <span>Aktifkan Bar Pengumuman</span>
+            </label>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Teks Pengumuman</label>
+            <input type="text" id="set-announcement-text" class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-medium" placeholder="Misal: ⚡ Pendaftaran Tryout SNBT Gelombang 1 Dibuka! Kuota terbatas 1.000 peserta.">
+          </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
+          <button id="btn-save-landing-settings" onclick="submitLandingSettingsForm()" class="px-6 py-3 rounded-xl bg-examgo-primary hover:bg-examgo-primaryHover text-white font-bold text-sm shadow-md transition-all flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            <span>Simpan Pengaturan Landing Page</span>
+          </button>
+        </div>
+
+      </div>
+
     </div>
 
   </main>
@@ -2246,6 +2412,8 @@
     // ─────────────────────────────────────────────────────────
 
     function showDashboardView() {
+      const viewLand = document.getElementById('view-landing-config');
+      if (viewLand) viewLand.classList.add('hidden');
       const viewDash = document.getElementById('view-dashboard');
       if (viewDash) viewDash.classList.remove('hidden');
       document.getElementById('view-exams').classList.add('hidden');
@@ -2259,6 +2427,8 @@
     }
 
     function showExamsView() {
+      const viewLand = document.getElementById('view-landing-config');
+      if (viewLand) viewLand.classList.add('hidden');
       const viewDash = document.getElementById('view-dashboard');
       if (viewDash) viewDash.classList.add('hidden');
       document.getElementById('view-students').classList.add('hidden');
@@ -2274,6 +2444,8 @@
     }
 
     function showTryoutView() {
+      const viewLand = document.getElementById('view-landing-config');
+      if (viewLand) viewLand.classList.add('hidden');
       const viewDash = document.getElementById('view-dashboard');
       if (viewDash) viewDash.classList.add('hidden');
       document.getElementById('view-exams').classList.add('hidden');
@@ -2288,6 +2460,8 @@
     function showLicensesView() {
       const viewDash = document.getElementById('view-dashboard');
       if (viewDash) viewDash.classList.add('hidden');
+      const viewLand = document.getElementById('view-landing-config');
+      if (viewLand) viewLand.classList.add('hidden');
       document.getElementById('view-exams').classList.add('hidden');
       document.getElementById('view-students').classList.add('hidden');
       document.getElementById('view-tryout').classList.add('hidden');
@@ -2298,6 +2472,21 @@
       loadPartnerSchools();
     }
 
+    function showLandingConfigView() {
+      const viewDash = document.getElementById('view-dashboard');
+      if (viewDash) viewDash.classList.add('hidden');
+      document.getElementById('view-exams').classList.add('hidden');
+      document.getElementById('view-students').classList.add('hidden');
+      document.getElementById('view-tryout').classList.add('hidden');
+      document.getElementById('view-licenses').classList.add('hidden');
+      const viewLand = document.getElementById('view-landing-config');
+      if (viewLand) viewLand.classList.remove('hidden');
+      const fab = document.getElementById('fab-delete-all');
+      if (fab) fab.style.display = 'none';
+      _updateNavActive('landing-config');
+      loadLandingSettingsToForm();
+    }
+
     function _updateNavActive(view) {
       const tabDashboard = document.getElementById('nav-tab-dashboard');
       const tabExams = document.getElementById('nav-tab-exams');
@@ -2306,10 +2495,12 @@
       const activeClass = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-white bg-white/20 shadow-sm transition-all flex items-center gap-1.5";
       const inactiveClass = "px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5";
 
+      const tabLanding = document.getElementById('nav-tab-landing-config');
       if (tabDashboard) tabDashboard.className = view === 'dashboard' ? activeClass : inactiveClass;
       if (tabExams) tabExams.className = view === 'exams' ? activeClass : inactiveClass;
       if (tabTryout) tabTryout.className = view === 'tryout' ? activeClass : inactiveClass;
       if (tabLicenses) tabLicenses.className = view === 'licenses' ? activeClass : inactiveClass;
+      if (tabLanding) tabLanding.className = view === 'landing-config' ? activeClass : inactiveClass;
     }
 
     // ─────────────────────────────────────────────────────────
@@ -5394,6 +5585,101 @@
           showToast('Gagal menyimpan data', 'error');
         })
         .updateStudentData(currentExamId, id, name, nis, currentUser, currentPass);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Landing Page Configuration Controllers
+    // ─────────────────────────────────────────────────────────
+    function loadLandingSettingsToForm() {
+      const btn = document.getElementById('btn-save-landing-settings');
+      if (btn) btn.disabled = true;
+      showToast('Memuat konfigurasi landing page...', 'info');
+
+      google.script.run
+        .withSuccessHandler(function(s) {
+          if (btn) btn.disabled = false;
+          if (!s) {
+            showToast('Pengaturan default dimuat', 'info');
+            return;
+          }
+          if (document.getElementById('set-hero-badge')) document.getElementById('set-hero-badge').value = s.hero_badge || '';
+          if (document.getElementById('set-hero-title')) document.getElementById('set-hero-title').value = s.hero_title || '';
+          if (document.getElementById('set-hero-subtitle')) document.getElementById('set-hero-subtitle').value = s.hero_subtitle || '';
+          if (document.getElementById('set-event-active')) document.getElementById('set-event-active').checked = s.is_featured_event_active !== false;
+          if (document.getElementById('set-event-title')) document.getElementById('set-event-title').value = s.featured_event_title || '';
+          if (document.getElementById('set-event-date')) document.getElementById('set-event-date').value = s.featured_event_date || '';
+          if (document.getElementById('set-event-desc')) document.getElementById('set-event-desc').value = s.featured_event_desc || '';
+          if (document.getElementById('set-promo-original')) document.getElementById('set-promo-original').value = s.promo_price_original || '';
+          if (document.getElementById('set-promo-discount')) document.getElementById('set-promo-discount').value = s.promo_price_discount || '';
+          if (document.getElementById('set-promo-tag')) document.getElementById('set-promo-tag').value = s.promo_tag || '';
+          if (document.getElementById('set-lynkid-url')) document.getElementById('set-lynkid-url').value = s.lynkid_url || '';
+          if (document.getElementById('set-apk-url')) document.getElementById('set-apk-url').value = s.download_apk_url || '';
+          if (document.getElementById('set-wa-number')) document.getElementById('set-wa-number').value = s.whatsapp_number || '';
+          if (document.getElementById('set-wa-msg')) document.getElementById('set-wa-msg').value = s.whatsapp_message || '';
+          if (document.getElementById('set-announcement-active')) document.getElementById('set-announcement-active').checked = s.is_announcement_active !== false;
+          if (document.getElementById('set-announcement-text')) document.getElementById('set-announcement-text').value = s.announcement_text || '';
+          showToast('Data konfigurasi berhasil dimuat');
+        })
+        .withFailureHandler(function(err) {
+          if (btn) btn.disabled = false;
+          showToast('Gagal memuat konfigurasi: ' + (err.message || err), 'error');
+        })
+        .getLandingPageSettings();
+    }
+
+    function submitLandingSettingsForm() {
+      const creds = getCredentials();
+      if (!creds) {
+        showToast('Sesi telah berakhir, silakan login ulang', 'error');
+        return;
+      }
+
+      const settings = {
+        hero_badge: document.getElementById('set-hero-badge')?.value?.trim() || '',
+        hero_title: document.getElementById('set-hero-title')?.value?.trim() || '',
+        hero_subtitle: document.getElementById('set-hero-subtitle')?.value?.trim() || '',
+        is_featured_event_active: document.getElementById('set-event-active')?.checked ?? true,
+        featured_event_title: document.getElementById('set-event-title')?.value?.trim() || '',
+        featured_event_date: document.getElementById('set-event-date')?.value?.trim() || '',
+        featured_event_desc: document.getElementById('set-event-desc')?.value?.trim() || '',
+        promo_price_original: document.getElementById('set-promo-original')?.value?.trim() || '',
+        promo_price_discount: document.getElementById('set-promo-discount')?.value?.trim() || '',
+        promo_tag: document.getElementById('set-promo-tag')?.value?.trim() || '',
+        lynkid_url: document.getElementById('set-lynkid-url')?.value?.trim() || '',
+        download_apk_url: document.getElementById('set-apk-url')?.value?.trim() || '',
+        whatsapp_number: document.getElementById('set-wa-number')?.value?.trim() || '',
+        whatsapp_message: document.getElementById('set-wa-msg')?.value?.trim() || '',
+        is_announcement_active: document.getElementById('set-announcement-active')?.checked ?? true,
+        announcement_text: document.getElementById('set-announcement-text')?.value?.trim() || ''
+      };
+
+      const btn = document.getElementById('btn-save-landing-settings');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.innerHTML = '<div class="loader"></div> Menyimpan...';
+        btn.disabled = true;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }
+          if (res && res.error) {
+            showToast(res.error, 'error');
+          } else {
+            showToast('Konfigurasi Landing Page berhasil disimpan & live!', 'success');
+          }
+        })
+        .withFailureHandler(function(err) {
+          if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }
+          showToast('Gagal menyimpan: ' + (err.message || err), 'error');
+        })
+        .saveLandingPageSettings(settings, creds.user, creds.pass);
     }
 
     window.onload = () => {

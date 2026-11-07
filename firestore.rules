@@ -22,8 +22,16 @@ service cloud.firestore {
       allow read, write: if true;
     }
     
-    // Token Lisensi Lynk.id (Guru & Siswa)
+    // Token Lisensi Lynk.id (Guru & Siswa) & Sekolah Mitra
     match /license_tokens/{document=**} {
+      allow read, write: if true;
+    }
+    match /partner_schools/{document=**} {
+      allow read, write: if true;
+    }
+
+    // Pengaturan Aplikasi & Landing Page
+    match /app_settings/{document=**} {
       allow read, write: if true;
     }
     

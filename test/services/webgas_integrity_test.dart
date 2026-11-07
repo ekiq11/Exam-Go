@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('WebGAS & Admin Integrity Tests', () {
     final adminHtmlFile = File('lib/gas_fcm/gas/admin.html');
+    final landingHtmlFile = File('lib/gas_fcm/gas/landing.html');
     final kodeJsFile = File('lib/gas_fcm/gas/Kode.js');
 
     test('admin.html exists and is readable', () {
@@ -106,14 +107,80 @@ void main() {
     });
 
     test('Master Voucher code sanitizer regex cleans input properly', () {
-      String sanitizeMasterCode(String raw) {
-        return raw.trim().toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
-      }
+        String sanitizeMasterCode(String raw) {
+          return raw.trim().toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+        }
 
-      expect(sanitizeMasterCode('man 1 mataram'), equals('MAN1MATARAM'));
-      expect(sanitizeMasterCode('SMAN-2-KOTA!'), equals('SMAN2KOTA'));
-      expect(sanitizeMasterCode('  mts_01_lombok  '), equals('MTS01LOMBOK'));
-      expect(sanitizeMasterCode('ABC 123 @#\$%'), equals('ABC123'));
+        expect(sanitizeMasterCode('man 1 mataram'), equals('MAN1MATARAM'));
+        expect(sanitizeMasterCode('SMAN-2-KOTA!'), equals('SMAN2KOTA'));
+        expect(sanitizeMasterCode('  mts_01_lombok  '), equals('MTS01LOMBOK'));
+        expect(sanitizeMasterCode('ABC 123 @#\$%'), equals('ABC123'));
+      });
+
+    test('landing.html exists, has high-converting sales structure and valid elements', () {
+      expect(landingHtmlFile.existsSync(), isTrue);
+      final content = landingHtmlFile.readAsStringSync();
+
+      // Brand & Hero elements
+      expect(content, contains('ExamGO'));
+      expect(content, contains('hero-title-text'));
+      expect(content, contains('hero-subtitle-text'));
+      expect(content, contains('btn-hero-lynkid'));
+      expect(content, contains('btn-hero-apk'));
+
+      // Event Promo showcase
+      expect(content, contains('featured-event-title'));
+      expect(content, contains('featured-event-desc'));
+      expect(content, contains('featured-event-date'));
+      expect(content, contains('promo-price-discount'));
+      expect(content, contains('btn-promo-lynkid'));
+
+      // Value props & Pricing
+      expect(content, contains('100% Kiosk Mode Terkunci'));
+      expect(content, contains('Penalaran Umum (TPS)'));
+      expect(content, contains('Single Event Tryout'));
+      expect(content, contains('All-Access Bundle'));
+      expect(content, contains('FAQ'));
+
+      // Script hydration
+      expect(content, contains('google.script.run'));
+      expect(content, contains('getLandingPageSettings()'));
+    });
+
+    test('admin.html contains landing page configuration tab, views and handlers', () {
+      final content = adminHtmlFile.readAsStringSync();
+
+      // Navigation & Header
+      expect(content, contains('id="nav-tab-landing-config"'));
+      expect(content, contains('🎨 Setting Landing Page'));
+      expect(content, contains('href="?page=landing"'));
+
+      // View & Form elements
+      expect(content, contains('id="view-landing-config"'));
+      expect(content, contains('id="set-hero-title"'));
+      expect(content, contains('id="set-event-title"'));
+      expect(content, contains('id="set-event-active"'));
+      expect(content, contains('id="set-lynkid-url"'));
+      expect(content, contains('id="set-wa-number"'));
+      expect(content, contains('id="btn-save-landing-settings"'));
+
+      // JS controller functions
+      expect(content, contains('function showLandingConfigView()'));
+      expect(content, contains('function loadLandingSettingsToForm()'));
+      expect(content, contains('function submitLandingSettingsForm()'));
+    });
+
+    test('Kode.js contains landing page routing and settings endpoints', () {
+      final content = kodeJsFile.readAsStringSync();
+
+      // Routing in doGet
+      expect(content, contains('function doGet(e)'));
+      expect(content, contains("HtmlService.createHtmlOutputFromFile('landing')"));
+      expect(content, contains("HtmlService.createHtmlOutputFromFile('admin')"));
+
+      // Settings Endpoints
+      expect(content, contains('function getLandingPageSettings()'));
+      expect(content, contains('function saveLandingPageSettings('));
     });
   });
 }

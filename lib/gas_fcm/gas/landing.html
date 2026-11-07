@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ExamGO — Platform Tryout SNBT, SKD & CBT Ujian Sekolah #1</title>
+  <meta name="description" content="Simulasi CBT resmi paling presisi untuk pejuang UTBK SNBT & SKD Kedinasan 2026. Timer mandiri per-subtes, sistem penilaian IRT, rumus KaTeX tajam, dan proteksi kiosk anti-curang.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .glow-emerald {
+      box-shadow: 0 0 40px -10px rgba(16, 185, 129, 0.4);
+    }
+    .gradient-hero {
+      background: radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.15) 0%, transparent 60%),
+                  radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- 1. Urgent Announcement Top Bar -->
+  <div id="landing-announcement-bar" class="bg-gradient-to-r from-brand-600 via-teal-600 to-indigo-600 text-white text-xs sm:text-sm py-2 px-4 shadow-md text-center font-medium relative z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-center gap-2 flex-wrap">
+      <span class="px-2 py-0.5 rounded-full bg-white/20 text-white font-bold text-[11px] uppercase tracking-wider">⚡ PENGUMUMAN</span>
+      <span id="announcement-text">Pendaftaran Tryout Akbar SNBT 2026 Gelombang 1 Dibuka! Kuota promo diskon terbatas.</span>
+      <a href="#event-promo" class="underline font-bold hover:text-brand-100 transition-colors ml-1">Lihat Promo &rarr;</a>
+    </div>
+  </div>
+
+  <!-- 2. Modern Floating Header / Nav -->
+  <header class="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/80 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-teal-400 p-0.5 shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
+          <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+            <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+        </div>
+        <div>
+          <span class="text-xl font-extrabold tracking-tight text-white flex items-center gap-1.5">
+            ExamGO <span class="text-xs px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-400 border border-brand-500/20 font-bold">CBT #1</span>
+          </span>
+          <span class="text-[10px] text-slate-400 font-medium block">Simulasi SNBT & SKD Nasional</span>
+        </div>
+      </a>
+
+      <!-- Desktop Nav Links -->
+      <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-300">
+        <a href="#fitur" class="hover:text-brand-400 transition-colors">Fitur Kiosk</a>
+        <a href="#materi" class="hover:text-brand-400 transition-colors">Materi Subtest</a>
+        <a href="#event-promo" class="hover:text-brand-400 transition-colors flex items-center gap-1">
+          <span>Event Tryout</span>
+          <span class="w-2 h-2 rounded-full bg-brand-400 animate-ping"></span>
+        </a>
+        <a href="#harga" class="hover:text-brand-400 transition-colors">Harga Paket</a>
+        <a href="#faq" class="hover:text-brand-400 transition-colors">FAQ</a>
+      </nav>
+
+      <!-- Header CTA Buttons -->
+      <div class="flex items-center gap-3">
+        <a href="?page=admin" class="hidden sm:inline-flex text-xs font-bold text-slate-400 hover:text-white px-3 py-2 rounded-xl transition-colors">
+          Portal Admin
+        </a>
+        <a id="btn-nav-lynkid" href="https://lynk.id" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white text-xs sm:text-sm font-bold shadow-lg shadow-brand-500/25 transition-all hover:scale-[1.02] active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+          <span>Beli Akses Lynk.id</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- 3. Hero Section (Conversion Hook) -->
+  <section class="relative pt-12 pb-20 sm:pt-20 sm:pb-32 gradient-hero overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      
+      <div class="text-center max-w-3xl mx-auto space-y-6">
+        
+        <!-- Eyebrow Badge -->
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-xs font-bold tracking-wide shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-brand-400 animate-pulse"></span>
+          <span id="hero-badge-text">🔥 SIMULASI ASLI UTBK SNBT & SKD BKN 2026</span>
+        </div>
+
+        <!-- Main Headline -->
+        <h1 id="hero-title-text" class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.15]">
+          Raih Kampus Impian & Kedinasan 2026 <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-teal-300">Tanpa Panik Waktu Habis!</span>
+        </h1>
+
+        <!-- Subtitle -->
+        <p id="hero-subtitle-text" class="text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto font-normal">
+          Aplikasi Ujian CBT Terkunci #1 di Indonesia. Simulasi persis sistem resmi SNPMB & BKN: timer mandiri per-subtes, rumus matematika KaTeX tajam, pembahasan tuntas, dan bebas joki.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-4">
+          <a id="btn-hero-lynkid" href="https://lynk.id" target="_blank" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-base shadow-xl shadow-brand-500/30 hover:shadow-brand-500/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 group">
+            <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+            <span>Dapatkan Token di Lynk.id Sekarang</span>
+          </a>
+          <a id="btn-hero-apk" href="https://github.com/ekiq11/Exam-Go/releases/latest" target="_blank" class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700/80 font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-sm">
+            <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            <span>Download APK ExamGO (Gratis)</span>
+          </a>
+        </div>
+
+        <!-- Micro Social Proof -->
+        <div class="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400 font-semibold">
+          <div class="flex items-center gap-1.5">
+            <span class="text-amber-400">★★★★★</span>
+            <span class="text-slate-200">4.9/5 Kepuasan Siswa</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-brand-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+            <span>100% Kiosk Mode Terkunci</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-brand-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+            <span>Timer Mandiri Tiap Subtes</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Hero Visual Mockup: Simulated CBT Student Screen -->
+      <div class="mt-14 max-w-4xl mx-auto relative">
+        <div class="rounded-3xl p-1 bg-gradient-to-b from-brand-500/40 via-slate-800 to-slate-900 shadow-2xl glow-emerald">
+          <div class="bg-slate-900 rounded-[22px] overflow-hidden border border-slate-800">
+            
+            <!-- Window Header -->
+            <div class="bg-slate-950 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+                <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+                <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+                <span class="text-xs text-slate-400 font-mono ml-2">ExamGO Student Session • SNBT UTBK 2026</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 text-[10px] font-bold border border-brand-500/30">KIOSK LOCKED</span>
+              </div>
+            </div>
+
+            <!-- Simulated Exam UI -->
+            <div class="p-6 sm:p-8 space-y-6">
+              
+              <!-- Timer & Subtest Navigation Bar -->
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-3">
+                <div>
+                  <div class="text-[11px] font-bold text-brand-400 uppercase tracking-wider">Babak 1 dari 7 Subtest</div>
+                  <div class="text-base sm:text-lg font-bold text-white">Penalaran Umum (TPS)</div>
+                </div>
+                <div class="flex items-center gap-3 self-end sm:self-auto">
+                  <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 font-mono font-bold text-sm">
+                    <svg class="w-4 h-4 animate-spin text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"></circle><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2"></path></svg>
+                    <span>Sisa Waktu: 24:38</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Question Body Preview -->
+              <div class="space-y-4">
+                <div class="flex items-start gap-3">
+                  <span class="w-7 h-7 rounded-lg bg-brand-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">1</span>
+                  <div class="text-sm sm:text-base text-slate-200 leading-relaxed font-medium">
+                    Jika diketahui fungsi $f(x) = 2x^2 - 4x + 5$ dan garis singgung tegak lurus dengan garis $x + 8y - 10 = 0$, berapakah nilai gradien garis singgung kurva pada titik tersebut?
+                  </div>
+                </div>
+
+                <!-- Multiple Choice Options -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+                  <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-semibold text-slate-300 flex items-center gap-3 hover:border-brand-500/50 transition-all cursor-pointer">
+                    <span class="w-6 h-6 rounded bg-slate-800 text-slate-300 flex items-center justify-center text-[11px] font-bold">A</span>
+                    <span>$m = 4$</span>
+                  </div>
+                  <div class="p-3 rounded-xl bg-brand-500/10 border border-brand-500 text-xs font-semibold text-brand-300 flex items-center gap-3 transition-all cursor-pointer">
+                    <span class="w-6 h-6 rounded bg-brand-500 text-slate-950 flex items-center justify-center text-[11px] font-bold">B</span>
+                    <span>$m = 8$ (Jawaban Terpilih)</span>
+                  </div>
+                  <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-semibold text-slate-300 flex items-center gap-3 hover:border-brand-500/50 transition-all cursor-pointer">
+                    <span class="w-6 h-6 rounded bg-slate-800 text-slate-300 flex items-center justify-center text-[11px] font-bold">C</span>
+                    <span>$m = 12$</span>
+                  </div>
+                  <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-semibold text-slate-300 flex items-center gap-3 hover:border-brand-500/50 transition-all cursor-pointer">
+                    <span class="w-6 h-6 rounded bg-slate-800 text-slate-300 flex items-center justify-center text-[11px] font-bold">D</span>
+                    <span>$m = 16$</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 4. Featured Event Promotion Card (Setting Admin Dinamis) -->
+  <section id="event-promo" class="py-16 bg-slate-900/60 border-y border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-brand-950/40 rounded-3xl p-6 sm:p-10 border border-brand-500/30 shadow-2xl relative overflow-hidden">
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          
+          <div class="space-y-4 max-w-2xl">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/20 text-brand-400 text-xs font-bold border border-brand-500/30">
+              <span id="promo-tag-text">Diskon 62% Khusus Siswa!</span>
+            </div>
+            <h2 id="featured-event-title" class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+              Tryout Akbar UTBK SNBT 2026 Gelombang 1
+            </h2>
+            <p id="featured-event-desc" class="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+              7 Subtest Lengkap (Penalaran Umum, PPU, PBM, PK, Literasi Indo, Literasi Inggris, PM). Penilaian skala UTBK & pembahasan mendalam.
+            </p>
+            <div class="flex items-center gap-3 text-xs sm:text-sm text-slate-300 font-semibold">
+              <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              <span id="featured-event-date">Sabtu - Minggu, 15 - 16 November 2026</span>
+            </div>
+          </div>
+
+          <!-- Price & CTA Box -->
+          <div class="bg-slate-950/90 rounded-2xl p-6 border border-slate-800 text-center lg:text-left space-y-4 min-w-[280px]">
+            <div>
+              <span class="text-xs text-slate-400 block line-through" id="promo-price-original">Rp 50.000</span>
+              <div class="text-3xl font-extrabold text-white mt-0.5" id="promo-price-discount">Rp 19.000</div>
+              <span class="text-[11px] text-brand-400 font-bold block mt-1">Akses Penuh + Pembahasan Lengkap</span>
+            </div>
+            <a id="btn-promo-lynkid" href="https://lynk.id" target="_blank" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-brand-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-sm shadow-lg shadow-brand-500/25 transition-all block text-center">
+              Daftar via Lynk.id Sekarang &rarr;
+            </a>
+            <p class="text-[10px] text-slate-400 text-center">Token dikirim otomatis seketika setelah pembayaran</p>
+          </div>
+
+        </div>
+        <div class="absolute -right-20 -top-20 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 5. Pain vs Solution Comparison -->
+  <section id="fitur" class="py-20 bg-slate-950">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-2xl mx-auto mb-16 space-y-3">
+        <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+          Kenapa Banyak Siswa Gagal di Ujian Nyata?
+        </h2>
+        <p class="text-sm sm:text-base text-slate-400 leading-relaxed">
+          Ujian UTBK & SKD bukan hanya tentang pintar materi, tapi ketahanan mental dan kecepatan menghadapi batas waktu per-subtes.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        
+        <!-- The Wrong Way: Tryout Biasa -->
+        <div class="bg-red-950/10 border border-red-900/30 rounded-3xl p-6 sm:p-8 space-y-4">
+          <div class="flex items-center gap-3 pb-3 border-b border-red-900/30 text-red-400 font-bold text-base">
+            <span class="w-7 h-7 rounded-full bg-red-500/20 flex items-center justify-center text-sm">✕</span>
+            <span>Simulasi & Tryout Biasa</span>
+          </div>
+          <ul class="space-y-3 text-sm text-slate-300">
+            <li class="flex items-start gap-2.5">
+              <span class="text-red-400 font-bold mt-0.5">•</span>
+              <span><b>Timer 1 Total:</b> Siswa kehabisan waktu di subtes akhir karena salah strategi alokasi waktu.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-red-400 font-bold mt-0.5">•</span>
+              <span><b>Banyak Joki & Contekan:</b> Tidak ada penguncian layar, siswa bisa split screen mencari contekan.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-red-400 font-bold mt-0.5">•</span>
+              <span><b>Server Sering Down:</b> Lag parah saat ribuan siswa login bersamaan di akhir pekan.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-red-400 font-bold mt-0.5">•</span>
+              <span><b>Tanpa Pembahasan Jelas:</b> Hanya menampilkan skor tanpa tahu letak kesalahan langkah pengerjaan.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- The ExamGO Way -->
+        <div class="bg-brand-950/20 border border-brand-500/30 rounded-3xl p-6 sm:p-8 space-y-4 shadow-xl shadow-brand-500/5">
+          <div class="flex items-center gap-3 pb-3 border-b border-brand-500/30 text-brand-400 font-bold text-base">
+            <span class="w-7 h-7 rounded-full bg-brand-500/20 flex items-center justify-center text-sm">✓</span>
+            <span>Keunggulan Mutlak ExamGO</span>
+          </div>
+          <ul class="space-y-3 text-sm text-slate-200">
+            <li class="flex items-start gap-2.5">
+              <span class="text-brand-400 font-bold mt-0.5">✓</span>
+              <span><b>Timer Mandiri Per-Subtes:</b> Persis UTBK asli. Waktu habis otomatis berpindah dan babak terkunci.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-brand-400 font-bold mt-0.5">✓</span>
+              <span><b>100% Kiosk Mode Terkunci:</b> Blokir screenshot, rekam layar, dan lapor otomatis ke guru jika keluar aplikasi.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-brand-400 font-bold mt-0.5">✓</span>
+              <span><b>Serverless Google Cloud:</b> Stabil, super kencang, dan data jawaban tersimpan otomatis per detik.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-brand-400 font-bold mt-0.5">✓</span>
+              <span><b>KaTeX Math & Pembahasan:</b> Rumus pecahan, akar, eksponen tajam di HP dengan trik cepat pembahasan.</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 6. Materi & Subtest Breakdown -->
+  <section id="materi" class="py-20 bg-slate-900/40 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-2xl mx-auto mb-16 space-y-3">
+        <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+          Materi Lengkap Sesuai Kisi-Kisi Terbaru
+        </h2>
+        <p class="text-sm sm:text-base text-slate-400 leading-relaxed">
+          Didesain presisi untuk menguji kemampuan akademik dan skolastik siswa tingkat nasional.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- SNBT UTBK Card -->
+        <div class="bg-slate-950 p-6 rounded-3xl border border-slate-800 hover:border-brand-500/40 transition-all space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <span class="text-lg font-bold text-white">UTBK SNBT 2026</span>
+            <span class="px-2.5 py-0.5 rounded-full bg-brand-500/10 text-brand-400 text-xs font-bold border border-brand-500/20">7 Subtest • 210 Menit</span>
+          </div>
+          <ul class="space-y-2 text-xs text-slate-300 font-medium">
+            <li class="flex items-center justify-between py-1 border-b border-slate-900">
+              <span>1. Penalaran Umum (PU)</span>
+              <span class="text-brand-400 font-bold">30 Menit</span>
+            </li>
+            <li class="flex items-center justify-between py-1 border-b border-slate-900">
+              <span>2. Pengetahuan & Pemahaman Umum (PPU)</span>
+              <span class="text-brand-400 font-bold">15 Menit</span>
+            </li>
+            <li class="flex items-center justify-between py-1 border-b border-slate-900">
+              <span>3. Pemahaman Bacaan & Menulis (PBM)</span>
+              <span class="text-brand-400 font-bold">25 Menit</span>
+            </li>
+            <li class="flex items-center justify-between py-1 border-b border-slate-900">
+              <span>4. Pengetahuan Kuantitatif (PK)</span>
+              <span class="text-brand-400 font-bold">20 Menit</span>
+            </li>
+            <li class="flex items-center justify-between py-1 border-b border-slate-900">
+              <span>5. Literasi Bahasa Indonesia</span>
+              <span class="text-brand-400 font-bold">40 Menit</span>
+            </li>
+            <li class="flex items-center justify-between py-1 border-b border-slate-900">
+              <span>6. Literasi Bahasa Inggris</span>
+              <span class="text-brand-400 font-bold">40 Menit</span>
+            </li>
+            <li class="flex items-center justify-between py-1">
+              <span>7. Penalaran Matematika (PM)</span>
+              <span class="text-brand-400 font-bold">40 Menit</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- SKD CPNS Card -->
+        <div class="bg-slate-950 p-6 rounded-3xl border border-slate-800 hover:border-indigo-500/40 transition-all space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <span class="text-lg font-bold text-white">SKD CPNS / Kedinasan</span>
+            <span class="px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-bold border border-indigo-500/20">3 Subtest • 100 Menit</span>
+          </div>
+          <ul class="space-y-2 text-xs text-slate-300 font-medium">
+            <li class="flex items-center justify-between py-1 border-b border-slate-900">
+              <span>1. Tes Wawasan Kebangsaan (TWK)</span>
+              <span class="text-indigo-400 font-bold">30 Menit (Pass: 65)</span>
+            </li>
+            <li class="flex items-center justify-between py-1 border-b border-slate-900">
+              <span>2. Tes Inteligensia Umum (TIU)</span>
+              <span class="text-indigo-400 font-bold">35 Menit (Pass: 80)</span>
+            </li>
+            <li class="flex items-center justify-between py-1">
+              <span>3. Tes Karakteristik Pribadi (TKP)</span>
+              <span class="text-indigo-400 font-bold">35 Menit (Skor 1-5)</span>
+            </li>
+          </ul>
+          <p class="text-[11px] text-slate-400 leading-relaxed pt-2">
+            Dilengkapi simulasi ambang batas passing grade otomatis sesuai KepmenPAN-RB.
+          </p>
+        </div>
+
+        <!-- TKA & Ujian Sekolah Card -->
+        <div class="bg-slate-950 p-6 rounded-3xl border border-slate-800 hover:border-amber-500/40 transition-all space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <span class="text-lg font-bold text-white">TKA & Ujian Sekolah</span>
+            <span class="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">Materi Akademik</span>
+          </div>
+          <ul class="space-y-2 text-xs text-slate-300 font-medium">
+            <li class="flex items-center justify-between py-1 border-b border-slate-900">
+              <span>1. Matematika Saintek / Soshum</span>
+              <span class="text-amber-400 font-bold">75 Menit</span>
+            </li>
+            <li class="flex items-center justify-between py-1 border-b border-slate-900">
+              <span>2. Bahasa Indonesia</span>
+              <span class="text-amber-400 font-bold">75 Menit</span>
+            </li>
+            <li class="flex items-center justify-between py-1">
+              <span>3. Bahasa Inggris</span>
+              <span class="text-amber-400 font-bold">75 Menit</span>
+            </li>
+          </ul>
+          <p class="text-[11px] text-slate-400 leading-relaxed pt-2">
+            Mendukung pembuatan soal mandiri oleh guru dan ekspor PDF nilai siswa instan.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 7. How It Works (3 Steps) -->
+  <section class="py-20 bg-slate-950">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-2xl mx-auto mb-16 space-y-3">
+        <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+          Cara Memulai Sangat Mudah
+        </h2>
+        <p class="text-sm sm:text-base text-slate-400 leading-relaxed">
+          Hanya butuh 3 menit dari pembelian hingga kamu mulai mengerjakan simulasi tryout di HP.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <div class="bg-slate-900/60 p-6 rounded-3xl border border-slate-800 relative">
+          <div class="w-12 h-12 rounded-2xl bg-brand-500/20 text-brand-400 font-extrabold text-xl flex items-center justify-center mb-4 border border-brand-500/30">
+            1
+          </div>
+          <h3 class="text-base font-bold text-white mb-2">Beli Token di Lynk.id</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Pilih paket tryout yang kamu inginkan di toko Lynk.id, selesaikan pembayaran instan via QRIS, GoPay, OVO, atau ShopeePay.
+          </p>
+        </div>
+
+        <div class="bg-slate-900/60 p-6 rounded-3xl border border-slate-800 relative">
+          <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 font-extrabold text-xl flex items-center justify-center mb-4 border border-indigo-500/30">
+            2
+          </div>
+          <h3 class="text-base font-bold text-white mb-2">Download APK ExamGO</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Unduh file APK aplikasi ExamGO Android (hanya ~25 MB, ringan dan responsif di semua tipe smartphone Android).
+          </p>
+        </div>
+
+        <div class="bg-slate-900/60 p-6 rounded-3xl border border-slate-800 relative">
+          <div class="w-12 h-12 rounded-2xl bg-teal-500/20 text-teal-400 font-extrabold text-xl flex items-center justify-center mb-4 border border-teal-500/30">
+            3
+          </div>
+          <h3 class="text-base font-bold text-white mb-2">Tempel Token & Mulai!</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Masukkan token yang kamu dapatkan ke dalam aplikasi ExamGO, layar akan terkunci aman, dan simulasi tryout resmi langsung dimulai!
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 8. Pricing Table -->
+  <section id="harga" class="py-20 bg-slate-900/40 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-2xl mx-auto mb-16 space-y-3">
+        <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+          Pilihan Paket Investasi Belajar
+        </h2>
+        <p class="text-sm sm:text-base text-slate-400 leading-relaxed">
+          Investasi terjangkau untuk mengamankan kursi di Perguruan Tinggi Negeri dan Sekolah Kedinasan impianmu.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
+        
+        <!-- Plan 1: Satuan Starter -->
+        <div class="bg-slate-950 p-8 rounded-3xl border border-slate-800 flex flex-col justify-between space-y-6">
+          <div class="space-y-4">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">PAKET SATUAN</span>
+            <div class="text-2xl font-bold text-white">Single Event Tryout</div>
+            <div class="flex items-baseline gap-1">
+              <span class="text-4xl font-extrabold text-white">Rp 19.000</span>
+              <span class="text-xs text-slate-400">/ event</span>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">Cocok untuk menguji kemampuan di 1 event tryout akbar spesifik.</p>
+            <ul class="space-y-3 text-xs text-slate-300 pt-2 border-t border-slate-900">
+              <li class="flex items-center gap-2">✓ Akses 1 Paket Tryout Pilihan</li>
+              <li class="flex items-center gap-2">✓ Timer Subtest Mandiri Asli</li>
+              <li class="flex items-center gap-2">✓ Kunci & Pembahasan Lengkap</li>
+              <li class="flex items-center gap-2">✓ Ranking Nasional Siswa</li>
+            </ul>
+          </div>
+          <a id="btn-plan-starter" href="https://lynk.id" target="_blank" class="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs text-center border border-slate-700 transition-colors block">
+            Beli Paket Satuan
+          </a>
+        </div>
+
+        <!-- Plan 2: Best Seller (Pejuang PTN) -->
+        <div class="bg-gradient-to-b from-brand-950/60 via-slate-950 to-slate-950 p-8 rounded-3xl border-2 border-brand-500 shadow-2xl glow-emerald flex flex-col justify-between space-y-6 relative">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-brand-500 text-slate-950 text-xs font-extrabold tracking-wide uppercase shadow-md">
+            🔥 Paling Populer (Best Value)
+          </div>
+          <div class="space-y-4 pt-2">
+            <span class="text-xs font-bold text-brand-400 uppercase tracking-wider">PEJUANG PTN & KEDINASAN</span>
+            <div class="text-2xl font-bold text-white">All-Access Bundle</div>
+            <div class="flex items-baseline gap-2">
+              <span class="text-4xl font-extrabold text-white">Rp 49.000</span>
+              <span class="text-xs text-slate-400 line-through">Rp 120.000</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">Akses seluruh event simulasi SNBT & SKD dengan kesempatan retake berulang.</p>
+            <ul class="space-y-3 text-xs text-slate-200 pt-2 border-t border-slate-800">
+              <li class="flex items-center gap-2 text-brand-300 font-semibold">✓ Akses SEMUA Paket Tryout (SNBT + SKD)</li>
+              <li class="flex items-center gap-2">✓ Fitur Retake Latihan Berulang Kali</li>
+              <li class="flex items-center gap-2">✓ Prioritas Bank Soal Bocoran Terbaru</li>
+              <li class="flex items-center gap-2">✓ Pembahasan Lengkap KaTeX Math</li>
+              <li class="flex items-center gap-2">✓ Ranking & Analisis Skor Komprehensif</li>
+            </ul>
+          </div>
+          <a id="btn-plan-bundle" href="https://lynk.id" target="_blank" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-brand-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-xs text-center shadow-lg shadow-brand-500/25 transition-all block">
+            Beli Paket All-Access di Lynk.id &rarr;
+          </a>
+        </div>
+
+        <!-- Plan 3: Sekolah / Bimbel -->
+        <div class="bg-slate-950 p-8 rounded-3xl border border-slate-800 flex flex-col justify-between space-y-6">
+          <div class="space-y-4">
+            <span class="text-xs font-bold text-teal-400 uppercase tracking-wider">SEKOLAH & BIMBEL</span>
+            <div class="text-2xl font-bold text-white">Voucher Kolektif</div>
+            <div class="flex items-baseline gap-1">
+              <span class="text-3xl font-extrabold text-white">Khusus Sekolah</span>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">Master Voucher sekolah dengan nama khusus (misal: SMAN1KOTA) untuk ratusan siswa.</p>
+            <ul class="space-y-3 text-xs text-slate-300 pt-2 border-t border-slate-900">
+              <li class="flex items-center gap-2">✓ Master Voucher Khusus Sekolah</li>
+              <li class="flex items-center gap-2">✓ Rekap Nilai PDF & CSV Otomatis ke Guru</li>
+              <li class="flex items-center gap-2">✓ Portal Pengawasan Anti-Curang Kiosk</li>
+              <li class="flex items-center gap-2">✓ Bimbingan Setup & Integrasi Gratis</li>
+            </ul>
+          </div>
+          <a id="btn-plan-school" href="https://wa.me/6281234567890" target="_blank" class="w-full py-3.5 rounded-xl bg-teal-900/40 hover:bg-teal-900/60 text-teal-300 border border-teal-500/30 font-bold text-xs text-center transition-colors block">
+            Hubungi Admin Sekolah (WA)
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 9. FAQ Accordion -->
+  <section id="faq" class="py-20 bg-slate-950">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      
+      <div class="text-center space-y-3">
+        <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+          Pertanyaan Sering Diajukan (FAQ)
+        </h2>
+        <p class="text-sm text-slate-400">Semua yang perlu kamu ketahui tentang ExamGO.</p>
+      </div>
+
+      <div class="space-y-4">
+        
+        <details class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
+          <summary class="flex items-center justify-between font-bold text-sm text-white">
+            <span>Bagaimana cara mendapatkan token setelah bayar di Lynk.id?</span>
+            <span class="text-brand-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <p class="mt-3 text-xs text-slate-300 leading-relaxed">
+            Seketika setelah pembayaran berhasil (QRIS/E-Wallet), kode token lisensi akan otomatis muncul di layar konfirmasi Lynk.id dan dikirimkan ke email kamu. Kamu cukup menyalin kode tersebut dan menempelkannya ke aplikasi ExamGO.
+          </p>
+        </details>
+
+        <details class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
+          <summary class="flex items-center justify-between font-bold text-sm text-white">
+            <span>Apakah aplikasi bisa berjalan di semua HP Android?</span>
+            <span class="text-brand-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <p class="mt-3 text-xs text-slate-300 leading-relaxed">
+            Ya! Aplikasi ExamGO didesain sangat ringan (~25 MB) dan kompatibel dengan smartphone Android mulai dari Android 7.0 hingga Android 14+ tanpa memerlukan spesifikasi HP tinggi.
+          </p>
+        </details>
+
+        <details class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
+          <summary class="flex items-center justify-between font-bold text-sm text-white">
+            <span>Apa itu sistem Timer Mandiri Per-Subtes?</span>
+            <span class="text-brand-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <p class="mt-3 text-xs text-slate-300 leading-relaxed">
+            Sesuai aturan resmi UTBK BP3/SNPMB, waktu pengerjaan dihitung mandiri per subtes (misal Penalaran Umum 30 menit). Ketika waktu habis, aplikasi akan langsung mengunci jawaban babak tersebut dan berpindah ke subtes berikutnya tanpa bisa kembali ke babak sebelumnya.
+          </p>
+        </details>
+
+        <details class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
+          <summary class="flex items-center justify-between font-bold text-sm text-white">
+            <span>Apakah ada pembahasan soal setelah selesai tryout?</span>
+            <span class="text-brand-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <p class="mt-3 text-xs text-slate-300 leading-relaxed">
+            Pasti ada! Begitu seluruh subtes selesai dikerjakan, siswa langsung dapat melihat rekap skor per-subtes, kunci jawaban, dan pembahasan rumus langkah demi langkah.
+          </p>
+        </details>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 10. Final High-Urgency CTA -->
+  <section class="py-20 bg-gradient-to-b from-slate-950 via-brand-950/40 to-slate-950 border-t border-slate-800 text-center relative overflow-hidden">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 relative z-10">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-xs font-bold">
+        <span>⚡ JANGAN TUNGGU HARI H</span>
+      </div>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+        Siapkan Dirimu Sekarang, Amankan Kursi Kampus Impianmu!
+      </h2>
+      <p class="text-sm sm:text-base text-slate-300 max-w-xl mx-auto leading-relaxed">
+        Ribuan pejuang PTN dan Kedinasan sudah berlatih dengan simulasi timer ketat ExamGO. Giliranmu membuktikannya hari ini.
+      </p>
+      <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a id="btn-final-lynkid" href="https://lynk.id" target="_blank" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-base shadow-xl shadow-brand-500/30 transition-all transform hover:-translate-y-0.5">
+          Beli Token di Lynk.id Sekarang &rarr;
+        </a>
+        <a id="btn-final-wa" href="https://wa.me/6281234567890" target="_blank" class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-sm transition-all flex items-center justify-center gap-2">
+          <span>Tanya Admin via WhatsApp</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. Footer -->
+  <footer class="bg-slate-950 border-t border-slate-800/80 py-10 text-xs text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+      <div>
+        <span class="font-bold text-white">ExamGO Indonesia</span> • Platform Tryout CBT & Assessment Terkunci
+        <div class="text-slate-400 mt-1">Hak Cipta &copy; 2026 ExamGO. Seluruh hak cipta dilindungi undang-undang.</div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="?page=admin" class="hover:text-white transition-colors">Portal Administrator</a>
+        <span>•</span>
+        <a id="footer-wa-link" href="https://wa.me/6281234567890" target="_blank" class="text-brand-400 hover:text-brand-300 font-bold">Bantuan WhatsApp</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 12. Bottom Sticky CTA on Mobile -->
+  <div class="fixed bottom-0 inset-x-0 z-30 p-3 bg-slate-950/90 backdrop-blur-lg border-t border-slate-800 sm:hidden flex items-center gap-2">
+    <a id="btn-mobile-wa" href="https://wa.me/6281234567890" target="_blank" class="p-3 bg-slate-900 border border-slate-700 rounded-xl text-slate-300 flex items-center justify-center">
+      <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.044c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.073.043.419-.101.824z"/></svg>
+    </a>
+    <a id="btn-mobile-lynkid" href="https://lynk.id" target="_blank" class="flex-1 py-3 bg-gradient-to-r from-brand-600 to-teal-500 text-white font-extrabold text-xs rounded-xl text-center shadow-lg shadow-brand-500/20">
+      Beli Token di Lynk.id &rarr;
+    </a>
+  </div>
+
+  <!-- Client-side Dynamic Auto-Hydration Script -->
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      // Load dynamic settings from Google Apps Script if available
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(s) {
+            if (!s) return;
+            
+            // 1. Texts
+            if (s.hero_badge) document.getElementById('hero-badge-text').innerText = s.hero_badge;
+            if (s.hero_title) document.getElementById('hero-title-text').innerText = s.hero_title;
+            if (s.hero_subtitle) document.getElementById('hero-subtitle-text').innerText = s.hero_subtitle;
+            if (s.featured_event_title) document.getElementById('featured-event-title').innerText = s.featured_event_title;
+            if (s.featured_event_desc) document.getElementById('featured-event-desc').innerText = s.featured_event_desc;
+            if (s.featured_event_date) document.getElementById('featured-event-date').innerText = s.featured_event_date;
+            if (s.promo_price_original) document.getElementById('promo-price-original').innerText = s.promo_price_original;
+            if (s.promo_price_discount) document.getElementById('promo-price-discount').innerText = s.promo_price_discount;
+            if (s.promo_tag) document.getElementById('promo-tag-text').innerText = s.promo_tag;
+            
+            // 2. Announcement banner
+            const annBar = document.getElementById('landing-announcement-bar');
+            if (annBar) {
+              if (s.is_announcement_active === false) {
+                annBar.style.display = 'none';
+              } else if (s.announcement_text) {
+                document.getElementById('announcement-text').innerText = s.announcement_text;
+              }
+            }
+
+            // 3. Featured Event section visibility
+            const evSection = document.getElementById('event-promo');
+            if (evSection && s.is_featured_event_active === false) {
+              evSection.style.display = 'none';
+            }
+
+            // 4. Update Lynk.id Links across all CTA buttons
+            if (s.lynkid_url) {
+              const lynkButtons = ['btn-nav-lynkid', 'btn-hero-lynkid', 'btn-promo-lynkid', 'btn-plan-starter', 'btn-plan-bundle', 'btn-final-lynkid', 'btn-mobile-lynkid'];
+              lynkButtons.forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.href = s.lynkid_url;
+              });
+            }
+
+            // 5. Update APK download URL
+            if (s.download_apk_url) {
+              const apkBtn = document.getElementById('btn-hero-apk');
+              if (apkBtn) apkBtn.href = s.download_apk_url;
+            }
+
+            // 6. Update WhatsApp links
+            if (s.whatsapp_number) {
+              const waNum = s.whatsapp_number.replace(/[^0-9]/g, '');
+              const waMsg = encodeURIComponent(s.whatsapp_message || 'Halo Admin ExamGO...');
+              const waLink = 'https://wa.me/' + waNum + '?text=' + waMsg;
+              
+              const waEls = ['btn-plan-school', 'btn-final-wa', 'footer-wa-link', 'btn-mobile-wa'];
+              waEls.forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.href = waLink;
+              });
+            }
+          })
+          .getLandingPageSettings();
+      }
+    });
+  </script>
+</body>
+</html>
