@@ -64,7 +64,7 @@ class ExamPackage {
     return ExamPackage(
       paketId: data['paket_id']?.toString() ?? id,
       namaPaket: data['nama_paket']?.toString() ?? 'Ujian',
-      kategori: data['kategori']?.toString() ?? ExamCategory.umum,
+      kategori: data['kategori']?.toString() ?? data['jenis_test']?.toString() ?? ExamCategory.umum,
       jenisWaktu: data['jenis_waktu']?.toString() ?? 'per_paket',
       durasiMenit: (data['durasi_menit'] as num?)?.toInt() ?? 90,
       createdAt: data['created_at'] != null
@@ -82,6 +82,7 @@ class ExamSubtest {
   String paketId;
   String judul;
   int durasiMenit;
+  int orderIndex;
   List<ExamQuestion> soalList;
 
   ExamSubtest({
@@ -89,6 +90,7 @@ class ExamSubtest {
     required this.paketId,
     required this.judul,
     this.durasiMenit = 30,
+    this.orderIndex = 0,
     List<ExamQuestion>? soalList,
   }) : soalList = soalList ?? [];
 
@@ -117,6 +119,7 @@ class ExamSubtest {
       paketId: data['paket_id']?.toString() ?? '',
       judul: data['judul_subtest']?.toString() ?? data['judul']?.toString() ?? 'Subtest',
       durasiMenit: (data['durasi_menit'] as num?)?.toInt() ?? 30,
+      orderIndex: (data['order_index'] as num?)?.toInt() ?? 0,
     );
   }
 }

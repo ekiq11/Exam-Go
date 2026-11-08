@@ -317,42 +317,56 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
       List<ExamSubtest> loadedSubtests = [];
       List<ExamQuestion> loadedQuestions = [];
 
-      // ── TAHAP 1: Query Firestore (Multi-Query Resilience seperti myOLCv2) ──
+      // ── TAHAP 1: Query Firestore Langsung & Cepat (< 500ms) ──
       try {
         final db = FirebaseFirestore.instance;
 
-        // 1. Ambil dokumen paket_tryout jika belum ada
-        if (_package == null) {
-          DocumentSnapshot<Map<String, dynamic>>? pkgDoc;
-          final d1 = await db.collection('paket_tryout').doc(tokenUpper).get().timeout(const Duration(seconds: 8));
-          if (d1.exists) {
-            pkgDoc = d1;
-          } else {
-            final d2 = await db.collection('paket_tryout').doc(tokenRaw).get().timeout(const Duration(seconds: 8));
-            if (d2.exists) {
-              pkgDoc = d2;
-            } else {
-              final q1 = await db.collection('paket_tryout').where('paket_id', isEqualTo: tokenUpper).limit(1).get().timeout(const Duration(seconds: 8));
-              if (q1.docs.isNotEmpty) pkgDoc = q1.docs.first;
-            }
-          }
+        // Query Paket, Subtest, dan Soal secara Paralel
+        final results = await Future.wait([
+          // 0: Dokumen paket_tryout
+          _package != null
+              ? Future.value(null)
+              : db.collection('paket_tryout').doc(tokenUpper).get().timeout(const Duration(seconds: 8)),
+          // 1: Subtest
+          db.collection('subtest').where('paket_id', isEqualTo: tokenUpper).get().timeout(const Duration(seconds: 8)),
+          // 2: Butir Soal (Langsung by paket_id)
+          db.collection('tryout_soal').where('paket_id', isEqualTo: tokenUpper).get().timeout(const Duration(seconds: 10)),
+        ]);
 
-          if (pkgDoc != null && pkgDoc.data() != null) {
-            _package = ExamPackage.fromFirestore(pkgDoc.data()!, pkgDoc.id);
+        final pkgDocSnap = results[0] as DocumentSnapshot<Map<String, dynamic>>?;
+        final stSnap = results[1] as QuerySnapshot<Map<String, dynamic>>?;
+        final qSnap = results[2] as QuerySnapshot<Map<String, dynamic>>?;
+
+        if (_package == null && pkgDocSnap != null && pkgDocSnap.exists && pkgDocSnap.data() != null) {
+          _package = ExamPackage.fromFirestore(pkgDocSnap.data()!, pkgDocSnap.id);
+        }
+
+        final stDocs = <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+        if (stSnap != null && stSnap.docs.isNotEmpty) {
+          stDocs.addAll(stSnap.docs);
+        }
+
+        final qDocs = <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+        final seenQIds = <String>{};
+        if (qSnap != null && qSnap.docs.isNotEmpty) {
+          for (final d in qSnap.docs) {
+            if (seenQIds.add(d.id)) qDocs.add(d);
           }
         }
 
-        // 2. Ambil subtests
-        final stDocs = <QueryDocumentSnapshot<Map<String, dynamic>>>[];
-        final stSnap1 = await db.collection('subtest').where('paket_id', isEqualTo: tokenUpper).get().timeout(const Duration(seconds: 8));
-        stDocs.addAll(stSnap1.docs);
+        // Fallback jika dokumen paket belum ditemukan
+        if (_package == null) {
+          final d2 = await db.collection('paket_tryout').doc(tokenRaw).get().timeout(const Duration(seconds: 8));
+          if (d2.exists && d2.data() != null) {
+            _package = ExamPackage.fromFirestore(d2.data()!, d2.id);
+          }
+        }
 
+        // Fallback subtests jika tokenRaw berbeda atau prefix
         if (stDocs.isEmpty && tokenRaw != tokenUpper) {
           final stSnap2 = await db.collection('subtest').where('paket_id', isEqualTo: tokenRaw).get().timeout(const Duration(seconds: 8));
           stDocs.addAll(stSnap2.docs);
         }
-
-        // Coba prefix document ID untuk subtest jika belum ada
         if (stDocs.isEmpty) {
           final stPrefix = await db
               .collection('subtest')
@@ -364,15 +378,17 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         }
 
         loadedSubtests = stDocs.map((d) => ExamSubtest.fromFirestore(d.data(), d.id)).toList();
-        loadedSubtests.sort((a, b) => a.subtestId.compareTo(b.subtestId));
+        loadedSubtests.sort((a, b) {
+          if (a.orderIndex != 0 || b.orderIndex != 0) {
+            final cmp = a.orderIndex.compareTo(b.orderIndex);
+            if (cmp != 0) return cmp;
+          }
+          return a.subtestId.compareTo(b.subtestId);
+        });
 
-        // 3. Ambil butir tryout_soal (Kombinasi subtest_id chunk dan paket_id)
-        final qDocs = <QueryDocumentSnapshot<Map<String, dynamic>>>[];
-        final seenQIds = <String>{};
-
-        // (a) Query berdasarkan subtest_id (Identik dengan myOLCv2)
-        final subtestIds = loadedSubtests.map((s) => s.subtestId).where((id) => id.isNotEmpty).toList();
-        if (subtestIds.isNotEmpty) {
+        // Fallback soal jika query by paket_id belum menemukan data
+        if (qDocs.isEmpty && loadedSubtests.isNotEmpty) {
+          final subtestIds = loadedSubtests.map((s) => s.subtestId).where((id) => id.isNotEmpty).toList();
           for (var i = 0; i < subtestIds.length; i += 10) {
             final chunk = subtestIds.sublist(i, (i + 10 > subtestIds.length) ? subtestIds.length : i + 10);
             final sSnap = await db.collection('tryout_soal').where('subtest_id', whereIn: chunk).get().timeout(const Duration(seconds: 10));
@@ -382,46 +398,27 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
           }
         }
 
-        // (b) Query berdasarkan paket_id
-        final qSnapPkg = await db.collection('tryout_soal').where('paket_id', isEqualTo: tokenUpper).get().timeout(const Duration(seconds: 10));
-        for (final d in qSnapPkg.docs) {
-          if (seenQIds.add(d.id)) qDocs.add(d);
-        }
-
         if (qDocs.isEmpty && tokenRaw != tokenUpper) {
-          final qSnapPkg2 = await db.collection('tryout_soal').where('paket_id', isEqualTo: tokenRaw).get().timeout(const Duration(seconds: 10));
-          for (final d in qSnapPkg2.docs) {
+          final qSnapRaw = await db.collection('tryout_soal').where('paket_id', isEqualTo: tokenRaw).get().timeout(const Duration(seconds: 10));
+          for (final d in qSnapRaw.docs) {
             if (seenQIds.add(d.id)) qDocs.add(d);
           }
         }
 
-        // (c) Query berdasarkan prefix Document ID (FieldPath.documentId seperti di myOLCv2)
         if (qDocs.isEmpty) {
-          final docPrefixUpper = await db
+          final docPrefix = await db
               .collection('tryout_soal')
               .where(FieldPath.documentId, isGreaterThanOrEqualTo: '$tokenUpper-')
               .where(FieldPath.documentId, isLessThan: '$tokenUpper-\uf8ff')
               .get()
               .timeout(const Duration(seconds: 10));
-          for (final d in docPrefixUpper.docs) {
+          for (final d in docPrefix.docs) {
             if (seenQIds.add(d.id)) qDocs.add(d);
-          }
-
-          if (qDocs.isEmpty && tokenRaw != tokenUpper) {
-            final docPrefixRaw = await db
-                .collection('tryout_soal')
-                .where(FieldPath.documentId, isGreaterThanOrEqualTo: '$tokenRaw-')
-                .where(FieldPath.documentId, isLessThan: '$tokenRaw-\uf8ff')
-                .get()
-                .timeout(const Duration(seconds: 10));
-            for (final d in docPrefixRaw.docs) {
-              if (seenQIds.add(d.id)) qDocs.add(d);
-            }
           }
         }
 
         loadedQuestions = qDocs.map((d) => ExamQuestion.fromFirestore(d.data(), d.id)).toList();
-        loadedQuestions.sort((a, b) => a.nomorSoal.compareTo(b.nomorSoal));
+        debugPrint('[StudentExam] Sukses muat dari Firestore: ${loadedQuestions.length} butir soal, ${loadedSubtests.length} subtest');
       } catch (fsErr) {
         debugPrint('[StudentExam] Firestore query failed: $fsErr');
       }
@@ -518,21 +515,37 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         durasiMenit: widget.initialSchedule?.durasiMenit ?? 90,
       );
 
-      // Asosiasikan butir soal ke masing-masing subtest
+      // Asosiasikan butir soal ke masing-masing subtest & beri nomor urut berurutan (1..total) seperti myOLCv2
       if (loadedSubtests.isNotEmpty) {
+        int seqNumber = 1;
         for (final st in loadedSubtests) {
-          st.soalList = loadedQuestions.where((q) {
+          final stSoal = loadedQuestions.where((q) {
             final qSt = q.subtestId.trim().toUpperCase();
             final sSt = st.subtestId.trim().toUpperCase();
             return qSt == sSt || (qSt.isNotEmpty && sSt.isNotEmpty && (qSt.contains(sSt) || sSt.contains(qSt)));
           }).toList();
+          stSoal.sort((a, b) => a.soalId.compareTo(b.soalId));
+          for (final q in stSoal) {
+            q.nomorSoal = seqNumber++;
+          }
+          st.soalList = stSoal;
         }
+
         final orphans = loadedQuestions.where((q) => !loadedSubtests.any((st) => st.soalList.contains(q))).toList();
         if (orphans.isNotEmpty && loadedSubtests.isNotEmpty) {
+          orphans.sort((a, b) => a.soalId.compareTo(b.soalId));
+          for (final q in orphans) {
+            q.nomorSoal = seqNumber++;
+          }
           loadedSubtests.first.soalList.addAll(orphans);
         }
         _subtests = loadedSubtests;
       } else {
+        int seqNumber = 1;
+        loadedQuestions.sort((a, b) => a.soalId.compareTo(b.soalId));
+        for (final q in loadedQuestions) {
+          q.nomorSoal = seqNumber++;
+        }
         _subtests = [
           ExamSubtest(
             subtestId: 'ST1',
@@ -544,6 +557,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         ];
       }
 
+      loadedQuestions.sort((a, b) => a.nomorSoal.compareTo(b.nomorSoal));
       _allQuestions.clear();
       _allQuestions.addAll(loadedQuestions);
 
@@ -690,7 +704,12 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   }
 
   // ─── Manajemen Timer Per-Subtest & Global ──────────────────────
-  bool get _isPerSubtest => _package?.jenisWaktu == 'per_subtest';
+  bool get _isPerSubtest {
+    final jw = (_package?.jenisWaktu ?? '').trim().toLowerCase().replaceAll('-', '_').replaceAll(' ', '_');
+    if (jw == 'per_subtest') return true;
+    if (jw == 'per_paket') return false;
+    return _subtests.length > 1;
+  }
 
   List<ExamQuestion> _getActiveQuestions() {
     if (_subtests.isEmpty) return _allQuestions;
