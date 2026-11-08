@@ -497,40 +497,85 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
         color: AppColors.primaryGreen,
         onRefresh: _loadHistory,
         child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
           children: [
-            const SizedBox(height: 80),
             Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF1F5F9),
-                      shape: BoxShape.circle,
+              child: Container(
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
                     ),
-                    child: const Icon(
-                      Icons.history_edu_rounded,
-                      size: 48,
-                      color: Color(0xFF94A3B8),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 68,
+                      height: 68,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFF1F5F9), Color(0xFFE2E8F0)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFCBD5E1)),
+                      ),
+                      child: const Icon(
+                        Icons.history_edu_rounded,
+                        size: 32,
+                        color: Color(0xFF64748B),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Belum Ada Riwayat Tryout',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: const Color(0xFF334155),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Belum Ada Riwayat Ujian',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: const Color(0xFF0F172A),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Kerjakan paket tryout di tab Daftar Tryout.\nHasil pengerjaan & pembahasan akan tersimpan otomatis di sini.',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(fontSize: 12.5, color: const Color(0xFF64748B)),
-                  ),
-                ],
+                    const SizedBox(height: 6),
+                    Text(
+                      'Kerjakan paket tryout di tab Daftar Tryout.\nAnalisis skor dan pembahasan lengkap akan tersimpan otomatis di sini.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: const Color(0xFF64748B),
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: () => _tabController.animateTo(0),
+                      icon: const Icon(Icons.rocket_launch_rounded, size: 16),
+                      label: Text(
+                        'Mulai Kerjakan Tryout',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.5,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryGreen,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -538,101 +583,76 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
       );
     }
 
+    // Hitung KPI Ringkasan
+    final totalUjian = _historyList.length;
+    final totalScore = _historyList.fold<int>(0, (sum, item) => sum + item.finalScore);
+    final avgScore = (totalScore / totalUjian).round();
+    final highestScore = _historyList.map((e) => e.finalScore).reduce((a, b) => a > b ? a : b);
+    final totalLulus = _historyList.where((e) => e.isPassed).length;
+
     return RefreshIndicator(
       color: AppColors.primaryGreen,
       onRefresh: _loadHistory,
       child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-        itemCount: _historyList.length,
+        padding: const EdgeInsets.only(bottom: 32),
+        itemCount: _historyList.length + 1, // +1 untuk header stats
         itemBuilder: (context, index) {
-          final item = _historyList[index];
+          if (index == 0) {
+            return _buildHistoryHeaderStats(
+              totalUjian: totalUjian,
+              avgScore: avgScore,
+              highestScore: highestScore,
+              totalLulus: totalLulus,
+            );
+          }
+
+          final item = _historyList[index - 1];
           final dt = item.submittedAt;
           final dateStr = IndoDateFormatter.formatHariTanggal(dt.toIso8601String(), shortMonth: true);
           final tz = IndoDateFormatter.detectTimeZone(null);
           final timeStr = '$dateStr • ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} $tz';
           final isPassed = item.isPassed;
+          final totalSoal = item.totalSoal > 0
+              ? item.totalSoal
+              : (item.totalBenar + item.totalSalah + item.totalKosong);
+          final accuracy = totalSoal > 0 ? ((item.totalBenar / totalSoal) * 100).round() : 0;
 
           return Container(
-            margin: const EdgeInsets.only(bottom: 14),
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: isPassed ? const Color(0xFFBBF7D0) : const Color(0xFFE2E8F0),
+                color: isPassed ? const Color(0xFFBBF7D0).withValues(alpha: 0.8) : const Color(0xFFE2E8F0),
                 width: isPassed ? 1.4 : 1.0,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Baris Atas: Kategori Badge & Tanggal Ujian
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: isPassed ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        isPassed ? Icons.stars_rounded : Icons.info_outline_rounded,
-                        color: isPassed ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.namaPaket,
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14.5,
-                              color: const Color(0xFF0F172A),
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            timeStr,
-                            style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                    _buildCategoryPill(item.kategori),
+                    Row(
                       children: [
+                        const Icon(Icons.schedule_rounded, size: 12, color: Color(0xFF94A3B8)),
+                        const SizedBox(width: 4),
                         Text(
-                          '${item.finalScore}',
+                          timeStr,
                           style: GoogleFonts.poppins(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: isPassed ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            item.statusKelulusan,
-                            style: GoogleFonts.poppins(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.bold,
-                              color: isPassed ? const Color(0xFF166534) : const Color(0xFF991B1B),
-                            ),
+                            fontSize: 10.5,
+                            color: const Color(0xFF64748B),
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -641,98 +661,258 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                 ),
                 const SizedBox(height: 12),
 
-                // Ringkasan Benar / Salah / Kosong
+                // Bagian Utama: Nama Paket & Hero Skor
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.namaPaket,
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: const Color(0xFF0F172A),
+                              height: 1.3,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                                decoration: BoxDecoration(
+                                  color: isPassed ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      isPassed ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                                      size: 11,
+                                      color: isPassed ? const Color(0xFF166534) : const Color(0xFF991B1B),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      item.statusKelulusan,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: isPassed ? const Color(0xFF166534) : const Color(0xFF991B1B),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (item.predikat.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF1F5F9),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'Predikat: ${item.predikat}',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF475569),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Skor Hero Pill
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isPassed ? const Color(0xFFF0FDF4) : const Color(0xFFFFF1F2),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isPassed ? const Color(0xFFBBF7D0) : const Color(0xFFFECDD3),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'SKOR',
+                            style: GoogleFonts.poppins(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                              color: isPassed ? const Color(0xFF166534) : const Color(0xFF9F1239),
+                            ),
+                          ),
+                          Text(
+                            '${item.finalScore}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
+                              height: 1.05,
+                            ),
+                          ),
+                          Text(
+                            '/ ${item.maxScore}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              color: const Color(0xFF64748B),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Visual Segmented Accuracy Bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: SizedBox(
+                    height: 5,
+                    child: Row(
+                      children: [
+                        if (item.totalBenar > 0)
+                          Expanded(
+                            flex: item.totalBenar,
+                            child: Container(color: const Color(0xFF16A34A)),
+                          ),
+                        if (item.totalSalah > 0)
+                          Expanded(
+                            flex: item.totalSalah,
+                            child: Container(color: const Color(0xFFDC2626)),
+                          ),
+                        if (item.totalKosong > 0)
+                          Expanded(
+                            flex: item.totalKosong,
+                            child: Container(color: const Color(0xFFCBD5E1)),
+                          ),
+                        if (totalSoal == 0)
+                          Expanded(
+                            child: Container(color: const Color(0xFFE2E8F0)),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Rincian Metrik Statistik Modern (Tanpa Emoji)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Text(
-                        '✅ ${item.totalBenar} Benar',
-                        style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF166534)),
-                      ),
-                      Text(
-                        '❌ ${item.totalSalah} Salah',
-                        style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF991B1B)),
-                      ),
-                      Text(
-                        '⚪ ${item.totalKosong} Kosong',
-                        style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B)),
-                      ),
+                      _buildCardStatItem(Icons.check_circle_rounded, '${item.totalBenar} Benar', const Color(0xFF16A34A)),
+                      _buildCardStatItem(Icons.cancel_rounded, '${item.totalSalah} Salah', const Color(0xFFDC2626)),
+                      _buildCardStatItem(Icons.remove_circle_outline_rounded, '${item.totalKosong} Kosong', const Color(0xFF64748B)),
+                      _buildCardStatItem(Icons.percent_rounded, '$accuracy% Akurasi', const Color(0xFF0F766E)),
                     ],
                   ),
                 ),
+                const SizedBox(height: 12),
 
-                const SizedBox(height: 14),
-
-                // Aksi: Lihat Pembahasan & Kerjakan Ulang
+                // Tombol Aksi: Buka Pembahasan & Kerjakan Ulang
                 Row(
                   children: [
                     Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => TryoutDiscussionScreen(
-                                title: item.namaPaket,
-                                kategori: item.kategori,
-                                questions: item.questions,
-                                studentAnswers: item.jawaban,
-                                score: item.finalScore,
-                                statusKelulusan: item.statusKelulusan,
+                      child: SizedBox(
+                        height: 40,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => TryoutDiscussionScreen(
+                                  title: item.namaPaket,
+                                  kategori: item.kategori,
+                                  questions: item.questions,
+                                  studentAnswers: item.jawaban,
+                                  score: item.finalScore,
+                                  statusKelulusan: item.statusKelulusan,
+                                  returnToDashboardOnExit: false,
+                                ),
                               ),
+                            );
+                          },
+                          icon: const Icon(Icons.menu_book_rounded, size: 16),
+                          label: Text(
+                            'Buka Pembahasan',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.5,
+                              color: Colors.white,
                             ),
-                          );
-                        },
-                        icon: const Icon(Icons.menu_book_rounded, size: 16),
-                        label: Text(
-                          'Lihat Pembahasan 📖',
-                          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F766E),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F766E),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
                         ),
                       ),
                     ),
                     if (item.allowRetake) ...[
                       const SizedBox(width: 10),
-                      OutlinedButton.icon(
-                        onPressed: () async {
-                          // Temukan schedule yang cocok untuk dikerjakan ulang
-                          final match = _allSchedules.where((s) => s.paketId == item.token).firstOrNull;
-                          final targetSched = match ??
-                              TryoutSchedule(
-                                paketId: item.token,
-                                namaPaket: item.namaPaket,
-                                jenisTest: item.kategori,
-                                tanggal: '',
-                                isLifetime: true,
-                                allowRetake: true,
-                              );
-                          final shouldStart = await TryoutDetailSheet.show(context, targetSched);
-                          if (shouldStart == true && context.mounted) {
-                            _startTryout(targetSched);
-                          }
-                        },
-                        icon: const Icon(Icons.refresh_rounded, size: 16),
-                        label: Text(
-                          'Kerjakan Ulang',
-                          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF1E293B),
-                          side: const BorderSide(color: Color(0xFFCBD5E1)),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      SizedBox(
+                        height: 40,
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            final match = _allSchedules.where((s) => s.paketId == item.token).firstOrNull;
+                            final targetSched = match ??
+                                TryoutSchedule(
+                                  paketId: item.token,
+                                  namaPaket: item.namaPaket,
+                                  jenisTest: item.kategori,
+                                  tanggal: '',
+                                  isLifetime: true,
+                                  allowRetake: true,
+                                );
+                            final shouldStart = await TryoutDetailSheet.show(context, targetSched);
+                            if (shouldStart == true && context.mounted) {
+                              _startTryout(targetSched);
+                            }
+                          },
+                          icon: const Icon(Icons.replay_rounded, size: 16),
+                          label: Text(
+                            'Kerjakan Ulang',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: const Color(0xFF334155),
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF334155),
+                            side: const BorderSide(color: Color(0xFFCBD5E1)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                          ),
                         ),
                       ),
                     ],
@@ -743,6 +923,200 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
           );
         },
       ),
+    );
+  }
+
+  Widget _buildHistoryHeaderStats({
+    required int totalUjian,
+    required int avgScore,
+    required int highestScore,
+    required int totalLulus,
+  }) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0F766E), Color(0xFF134E4A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F766E).withValues(alpha: 0.22),
+            blurRadius: 16,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.analytics_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Ringkasan Capaian Tryout',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '$totalLulus / $totalUjian Lulus PG',
+                  style: GoogleFonts.poppins(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _buildHeaderStatItem('Total Sesi', '$totalUjian', Icons.assignment_turned_in_rounded),
+              Container(width: 1, height: 32, color: Colors.white.withValues(alpha: 0.2)),
+              _buildHeaderStatItem('Rata-Rata Skor', '$avgScore', Icons.trending_up_rounded),
+              Container(width: 1, height: 32, color: Colors.white.withValues(alpha: 0.2)),
+              _buildHeaderStatItem('Skor Tertinggi', '$highestScore', Icons.emoji_events_rounded, isGold: true),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderStatItem(String label, String value, IconData icon, {bool isGold = false}) {
+    return Expanded(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 14,
+                color: isGold ? const Color(0xFFFDE047) : Colors.white.withValues(alpha: 0.85),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                value,
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: isGold ? const Color(0xFFFDE047) : Colors.white,
+                  height: 1.1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 10,
+              color: Colors.white.withValues(alpha: 0.75),
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryPill(String kategori) {
+    final kat = kategori.trim().toUpperCase();
+    Color bg = const Color(0xFFF0FDF4);
+    Color text = const Color(0xFF15803D);
+    Color border = const Color(0xFFBBF7D0);
+    String label = kat;
+
+    if (kat.contains('SNBT') || kat.contains('UTBK')) {
+      bg = const Color(0xFFEFF6FF);
+      text = const Color(0xFF1D4ED8);
+      border = const Color(0xFFBFDBFE);
+      label = 'UTBK • SNBT';
+    } else if (kat.contains('SKD')) {
+      bg = const Color(0xFFF5F3FF);
+      text = const Color(0xFF6D28D9);
+      border = const Color(0xFFDDD6FE);
+      label = 'CAT • BKN SKD';
+    } else if (kat.contains('TKA')) {
+      bg = const Color(0xFFFFF7ED);
+      text = const Color(0xFFC2410C);
+      border = const Color(0xFFFFEDD5);
+      label = kat;
+    } else if (kat.contains('EVENT')) {
+      bg = const Color(0xFFFEF3C7);
+      text = const Color(0xFFB45309);
+      border = const Color(0xFFFDE68A);
+      label = 'EVENT KHUSUS';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: border),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 9.5,
+          fontWeight: FontWeight.bold,
+          color: text,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCardStatItem(IconData icon, String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12, color: color),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 
