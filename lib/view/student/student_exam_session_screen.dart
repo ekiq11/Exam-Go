@@ -1388,10 +1388,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                 const SizedBox(height: 14),
               ],
 
-              // Tombol Aksi
+              // Tombol Aksi Harmonis ExamGO
               SizedBox(
                 width: double.infinity,
-                height: 42,
+                height: 48,
                 child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(ctx);
@@ -1410,48 +1410,50 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       ),
                     );
                   },
-                  icon: const Icon(Icons.menu_book_rounded, size: 16),
+                  icon: const Icon(Icons.menu_book_rounded, size: 18, color: Colors.white),
                   label: Text(
-                    'Lihat Pembahasan & Kunci 📖',
+                    'Lihat Pembahasan & Kunci',
                     style: GoogleFonts.poppins(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 12.5,
+                      fontSize: 13.5,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F766E),
+                    backgroundColor: AppColors.primaryGreen,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               SizedBox(
                 width: double.infinity,
-                height: 38,
+                height: 46,
                 child: OutlinedButton.icon(
                   onPressed: () {
                     Navigator.pop(ctx);
                     _navigateToDashboard();
                   },
-                  icon: const Icon(Icons.dashboard_outlined, size: 15, color: Color(0xFF475569)),
+                  icon: const Icon(Icons.dashboard_rounded, size: 18, color: Color(0xFF1B5E20)),
                   label: Text(
                     'Kembali ke Dashboard Tryout',
                     style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                      color: const Color(0xFF475569),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: const Color(0xFF1B5E20),
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF475569),
-                    side: const BorderSide(color: Color(0xFFCBD5E1)),
+                    backgroundColor: const Color(0xFFE8F5E9),
+                    foregroundColor: const Color(0xFF1B5E20),
+                    side: const BorderSide(color: Color(0xFFA5D6A7), width: 1.2),
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                 ),

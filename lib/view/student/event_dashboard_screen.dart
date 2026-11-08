@@ -4,7 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../models/exam_question_model.dart';
 import '../../models/tryout_schedule_model.dart';
+import '../../services/exam_cache_service.dart';
 import '../../services/student_tryout_history_service.dart';
 import '../../services/tryout_schedule_service.dart';
 import '../pre_exam_checklist.dart';
@@ -298,7 +300,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
     }
   }
 
-  void _openDiscussion() {
+  Future<void> _openDiscussion() async {
     if (_myHistory != null) {
       Navigator.push(
         context,
@@ -313,13 +315,70 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
           ),
         ),
       );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pembahasan sedang dimuat atau belum tersedia secara offline.'),
-          backgroundColor: Colors.blueGrey,
-        ),
+      return;
+    }
+
+    // Jika riwayat offline kosong, coba muat dari Firestore & Cache lokal
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(color: _kTeal),
+      ),
+    );
+
+    try {
+      final examData = await ExamCacheService.instance.downloadAndCacheExam(
+        paketId: widget.eventId,
+        initialSchedule: _schedule,
       );
+
+      Map<String, String> answers = {};
+      int score = _myScore ?? 0;
+      String statusKelulusan = 'SELESAI';
+
+      if (_studentNis.isNotEmpty) {
+        final doc = await FirebaseFirestore.instance
+            .collection('jawaban_tryout')
+            .doc('${_studentNis}_${widget.eventId}')
+            .get();
+        if (doc.exists) {
+          final data = doc.data()!;
+          if (data['jawaban'] is Map) {
+            final raw = data['jawaban'] as Map;
+            raw.forEach((k, v) => answers[k.toString()] = v.toString());
+          }
+          score = (data['skor_akhir'] as num?)?.toInt() ?? score;
+          statusKelulusan = data['status_kelulusan']?.toString() ?? statusKelulusan;
+        }
+      }
+
+      if (mounted) {
+        Navigator.pop(context); // Tutup loading
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TryoutDiscussionScreen(
+              title: _schedule?.namaPaket ?? 'Pembahasan Event',
+              kategori: _schedule?.jenisTest ?? ExamCategory.umum,
+              questions: examData.questions,
+              studentAnswers: answers,
+              score: score,
+              statusKelulusan: statusKelulusan,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memuat pembahasan: $e'),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
     }
   }
 

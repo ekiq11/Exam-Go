@@ -2154,23 +2154,28 @@ class _HomeScreenState extends State<HomeScreen>
               actResult.message.contains('aktif kembali')) {
             final targetExam = actResult.targetExamId;
             final isEvent =
-                token.startsWith('EVENT-') ||
+                token.startsWith('EVENT') ||
+                token.startsWith('EV') ||
                 actResult.message.toLowerCase().contains('event') ||
-                (targetExam != null && targetExam.isNotEmpty);
+                (targetExam != null && (targetExam.startsWith('EVENT') || targetExam.startsWith('EV')));
 
-            if (isEvent && targetExam != null && targetExam.isNotEmpty) {
+            final resolvedEventId = (targetExam != null && targetExam.isNotEmpty && targetExam != '-')
+                ? targetExam
+                : token;
+
+            if (isEvent) {
               if (mounted) {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => EventDashboardScreen(
-                      eventId: targetExam,
+                      eventId: resolvedEventId,
                       eventToken: token,
                     ),
                   ),
                 );
               }
-            } else if (targetExam != null && targetExam.isNotEmpty) {
+            } else if (targetExam != null && targetExam.isNotEmpty && targetExam != '-') {
               _confirmAndStart(
                 'EXAMGO_TRYOUT://$targetExam',
                 title: 'Tryout Khusus',

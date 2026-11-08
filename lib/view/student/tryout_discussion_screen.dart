@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../constant/app_colors.dart';
 import '../../models/exam_question_model.dart';
 import '../../utils/math_widget_factory.dart';
 import 'tryout_schedule_screen.dart';
@@ -123,7 +124,7 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
               ),
             ],
           ),
-          backgroundColor: const Color(0xFF0F766E),
+          backgroundColor: AppColors.primaryGreen,
           elevation: 0,
           actions: [
             if (widget.score != null)
@@ -174,7 +175,7 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: const BoxDecoration(
-        color: Color(0xFF134E4A),
+        color: Color(0xFF1B5E20),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -228,7 +229,7 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
               ),
             ),
             selected: isSelected,
-            selectedColor: const Color(0xFF0F766E),
+            selectedColor: AppColors.primaryGreen,
             backgroundColor: const Color(0xFFF1F5F9),
             padding: const EdgeInsets.symmetric(horizontal: 6),
             onSelected: (_) {
@@ -288,7 +289,7 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                 color: bg,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: isSelected ? const Color(0xFF0F766E) : Colors.transparent,
+                  color: isSelected ? AppColors.primaryGreen : Colors.transparent,
                   width: isSelected ? 2 : 1,
                 ),
               ),
@@ -596,8 +597,8 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                   icon: const Icon(Icons.arrow_back_rounded, size: 16),
                   label: Text('Sebelumnya', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12)),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF0F766E),
-                    side: const BorderSide(color: Color(0xFF0F766E)),
+                    foregroundColor: AppColors.primaryGreen,
+                    side: const BorderSide(color: AppColors.primaryGreen),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
@@ -612,7 +613,7 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                   icon: const Icon(Icons.arrow_forward_rounded, size: 16),
                   label: Text('Berikutnya', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F766E),
+                    backgroundColor: AppColors.primaryGreen,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 10),

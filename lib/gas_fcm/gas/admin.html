@@ -701,92 +701,121 @@
 
     <!-- PAKET TRYOUT VIEW (Admin Tryout Scheduling) -->
     <div id="view-tryout" class="hidden">
-      <!-- Header -->
-      <div class="md:flex md:items-center md:justify-between mb-8">
-        <div class="flex-1 min-w-0">
-          <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate flex items-center">
-            Paket & Jadwal Tryout
-            <span class="ml-3 inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-              SNBT • SKD • TKA
+      <!-- Header Modern ExamGO -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-8">
+        <div>
+          <div class="flex flex-wrap items-center gap-3">
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Paket & Jadwal Tryout
+            </h2>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/80 shadow-2xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
+              SNBT • SKD • TKA • EVENT
             </span>
-          </h2>
-          <p class="mt-2 text-sm text-gray-500">Jadwalkan tryout nasional resmi admin yang akan otomatis tampil pada akun siswa berlisensi premium.</p>
+          </div>
+          <p class="mt-1.5 text-sm text-slate-500 max-w-2xl">
+            Jadwalkan tryout nasional resmi admin yang otomatis tersinkronisasi ke aplikasi siswa secara realtime & offline-ready.
+          </p>
         </div>
-        <div class="mt-4 flex flex-wrap md:mt-0 md:ml-4 space-x-3 gap-y-2 justify-end">
-          <button id="btn-delete-selected-tryout" onclick="openDeleteSelectedTryoutModal()" class="hidden items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-all">
-            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+        <div class="flex flex-wrap items-center gap-2.5">
+          <button id="btn-delete-selected-tryout" onclick="openDeleteSelectedTryoutModal()" class="hidden items-center px-4 py-2.5 border border-transparent rounded-xl shadow-xs text-xs sm:text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 transition-all cursor-pointer">
+            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             Hapus Terpilih (<span id="selected-tryout-count">0</span>)
           </button>
-          <button onclick="openSheetSyncModal()" class="inline-flex items-center px-4 py-2.5 border border-emerald-300 rounded-xl shadow-sm text-sm font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
-            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+          <button onclick="openSheetSyncModal()" class="inline-flex items-center px-4 py-2.5 border border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-800 rounded-xl shadow-2xs text-xs sm:text-sm font-bold transition-all cursor-pointer">
+            <svg class="-ml-1 mr-2 h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
             Sinkron Bank Soal (Sheets)
           </button>
-          <button onclick="openQuickUploadTryoutModal()" class="inline-flex items-center px-4 py-2.5 border border-indigo-200 rounded-xl shadow-sm text-sm font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
-            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+          <button onclick="openQuickUploadTryoutModal()" class="inline-flex items-center px-4 py-2.5 border border-indigo-200 bg-white hover:bg-indigo-50 text-indigo-700 rounded-xl shadow-2xs text-xs sm:text-sm font-bold transition-all cursor-pointer">
+            <svg class="-ml-1 mr-2 h-4 w-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
             Upload Soal DOCX
           </button>
-          <button onclick="openCreateTryoutModal()" class="inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-examgo-primary hover:bg-examgo-primaryHover transition-all shadow-md hover:shadow-lg">
-            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button onclick="openCreateTryoutModal()" class="inline-flex items-center px-4 py-2.5 border border-transparent rounded-xl shadow-sm text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 hover:shadow-md transition-all cursor-pointer">
+            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            Tambah Paket Tryout
+            + Tambah Paket Tryout
           </button>
-          <button onclick="loadAdminPaketTryout()" class="inline-flex items-center px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:text-examgo-primary transition-all">
-            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button onclick="loadAdminPaketTryout()" class="inline-flex items-center p-2.5 border border-slate-200 rounded-xl shadow-2xs text-slate-600 bg-white hover:bg-slate-50 hover:text-emerald-700 transition-all cursor-pointer" title="Segarkan Data">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            Refresh
           </button>
         </div>
       </div>
 
-      <!-- Stat Cards -->
-      <div class="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
-        <div class="glass-card shadow-sm rounded-2xl p-6">
-          <div class="text-sm font-medium text-gray-500">Total Paket Terdaftar</div>
-          <div class="text-3xl font-bold text-gray-900 mt-1" id="stat-tryout-total">0</div>
+      <!-- Stat Cards Modern SaaS -->
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-8">
+        <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs relative overflow-hidden group hover:shadow-md transition-all">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Paket Terdaftar</span>
+            <div class="w-10 h-10 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center shadow-xs">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            </div>
+          </div>
+          <div class="text-3xl font-extrabold text-slate-900 tracking-tight" id="stat-tryout-total">0</div>
+          <div class="text-[11px] text-slate-400 font-medium mt-1">Paket SNBT, SKD, TKA & Event di Firestore</div>
         </div>
-        <div class="glass-card shadow-sm rounded-2xl p-6 border-l-4 border-emerald-500">
-          <div class="text-sm font-medium text-gray-500">Paket Aktif (Tampil di Siswa)</div>
-          <div class="text-3xl font-bold text-emerald-600 mt-1" id="stat-tryout-active">0</div>
+
+        <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs relative overflow-hidden group hover:shadow-md transition-all">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Paket Aktif (Tampil di Siswa)</span>
+            <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-xs">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+          </div>
+          <div class="text-3xl font-extrabold text-emerald-600 tracking-tight" id="stat-tryout-active">0</div>
+          <div class="text-[11px] text-emerald-600/80 font-medium mt-1">Dapat dikerjakan & terbuka untuk siswa</div>
         </div>
-        <div class="glass-card shadow-sm rounded-2xl p-6 border-l-4 border-gray-400">
-          <div class="text-sm font-medium text-gray-500">Paket Nonaktif / Draft</div>
-          <div class="text-3xl font-bold text-gray-600 mt-1" id="stat-tryout-inactive">0</div>
+
+        <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs relative overflow-hidden group hover:shadow-md transition-all">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Paket Nonaktif / Draft</span>
+            <div class="w-10 h-10 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center shadow-xs">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>
+            </div>
+          </div>
+          <div class="text-3xl font-extrabold text-slate-600 tracking-tight" id="stat-tryout-inactive">0</div>
+          <div class="text-[11px] text-slate-400 font-medium mt-1">Disembunyikan sementara dari katalog siswa</div>
         </div>
       </div>
 
-      <!-- Table Section -->
-      <div class="glass-card shadow-sm rounded-2xl overflow-hidden mb-8">
-        <div class="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h3 class="text-lg leading-6 font-semibold text-gray-900">Daftar Paket & Jadwal Tryout</h3>
+      <!-- Table Section Professional Card -->
+      <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden mb-8">
+        <div class="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-2.5">
+            <h3 class="text-base font-bold text-slate-900">Daftar Paket & Jadwal Tryout</h3>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600" id="tryout-list-counter">
+              0 Paket
+            </span>
+          </div>
           <div class="relative max-w-sm w-full">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+              <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <input type="text" id="search-tryout-input" onkeyup="filterTryoutTable()" class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-examgo-primary focus:border-examgo-primary focus:bg-white sm:text-sm transition-colors" placeholder="Cari nama paket atau jenis...">
+            <input type="text" id="search-tryout-input" onkeyup="filterTryoutTable()" class="block w-full pl-10 pr-3.5 py-2.5 border border-slate-200 rounded-xl leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:bg-white text-xs sm:text-sm font-medium transition-all" placeholder="Cari nama paket, jenis, atau ID...">
           </div>
         </div>
 
         <div class="overflow-x-auto">
-          <table class="block sm:table min-w-full divide-y divide-gray-100">
-            <thead class="hidden sm:table-header-group bg-gray-50/50">
+          <table class="min-w-full divide-y divide-slate-100">
+            <thead class="bg-slate-50/70 border-b border-slate-200/70">
               <tr>
                 <th class="px-4 py-3.5 text-left w-10">
-                  <input type="checkbox" id="checkbox-all-tryout" onchange="toggleAllTryoutCheckboxes(this)" class="rounded text-examgo-primary focus:ring-examgo-primary h-4 w-4">
+                  <input type="checkbox" id="checkbox-all-tryout" onchange="toggleAllTryoutCheckboxes(this)" class="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4 cursor-pointer">
                 </th>
-                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Paket & Jenis</th>
-                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Jadwal Tanggal & Jam</th>
-                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Durasi & Soal</th>
-                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Target Exam ID</th>
-                <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
+                <th class="px-6 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Paket & Kategori</th>
+                <th class="px-6 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Jadwal Pelaksanaan</th>
+                <th class="px-6 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Durasi & Soal</th>
+                <th class="px-6 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Target Exam</th>
+                <th class="px-6 py-3.5 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3.5 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">Aksi Kelola</th>
               </tr>
             </thead>
-            <tbody id="tryout-table-body" class="block sm:table-row-group divide-y divide-gray-100 p-4 sm:p-0">
-              <tr><td colspan="6" class="px-6 py-8 text-center text-gray-400">Klik tab untuk memuat data.</td></tr>
+            <tbody id="tryout-table-body" class="divide-y divide-slate-100">
+              <tr><td colspan="7" class="px-6 py-12 text-center text-slate-400">Klik tab untuk memuat data.</td></tr>
             </tbody>
           </table>
         </div>
@@ -879,21 +908,13 @@
 
         <!-- FORM 1: GENERATOR TOKEN BATCH (LYNK.ID) -->
         <div id="box-gen-batch" class="block pt-6">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Peruntukan Akun (Role)</label>
               <select id="gen-token-type" onchange="onTokenTypeChange()" class="w-full px-3.5 py-3 bg-slate-50/80 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all">
                 <option value="STUDENT_LIFETIME" selected>🎓 Siswa Lifetime (Lynk.id)</option>
                 <option value="TEACHER_PREMIUM">👨‍🏫 Guru Premium (Lynk.id)</option>
                 <option value="EVENT">🎯 Tiket Event Tryout (Lynk.id)</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Format Token</label>
-              <select id="gen-token-format" class="w-full px-3.5 py-3 bg-slate-50/80 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all">
-                <option value="STANDARD" selected>Standar (EVENT-XXXX)</option>
-                <option value="SHORT6">6-Karakter (EVxxxx - Input Manual)</option>
               </select>
             </div>
 
@@ -927,17 +948,25 @@
 
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Target Soal / Paket (Khusus Event)</label>
-              <input type="text" id="gen-token-target" placeholder="Tidak perlu (Akses Akun Penuh)" disabled class="w-full px-3.5 py-3 bg-slate-100/80 border border-slate-200 rounded-xl text-sm font-mono font-medium uppercase outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+              <input type="text" id="gen-token-target" placeholder="CONTOH: SNBT-001" disabled class="w-full px-3.5 py-3 bg-slate-100/80 border border-slate-200 rounded-xl text-sm font-mono font-medium uppercase outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed">
             </div>
           </div>
 
           <!-- Bottom Action Bar (Live Preview & Generate Button) -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
-            <div class="flex items-center gap-2.5">
+            <div class="flex items-center gap-2.5 flex-wrap">
               <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
               <span id="gen-token-hint" class="text-xs font-bold text-slate-700">
                 🎓 Format: SISWA-XXXX-YYYY (Akses Tryout Selamanya • Siap diekspor langsung ke produk Lynk.id)
               </span>
+              <span class="text-slate-300 hidden sm:inline">|</span>
+              <div class="inline-flex items-center gap-1.5">
+                <label class="text-[11px] font-bold text-slate-500 uppercase">Format:</label>
+                <select id="gen-token-format" class="text-xs font-semibold bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-slate-700 shadow-2xs focus:ring-1 focus:ring-emerald-500 outline-none">
+                  <option value="STANDARD" selected>Standar (EVENT-XXXX)</option>
+                  <option value="SHORT6">Singkat (EVxxxx - Manual)</option>
+                </select>
+              </div>
             </div>
             <button id="btn-generate-tokens" onclick="executeGenerateTokens()" type="button" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-sm whitespace-nowrap self-stretch sm:self-auto cursor-pointer">
               <span>⚡ Generate Token Sekarang</span>
@@ -3222,7 +3251,7 @@
     function renderAdminPaketTable(data) {
       const tbody = document.getElementById('tryout-table-body');
       if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">Belum ada paket tryout yang dibuat. Klik tombol <b>Tambah Paket Tryout</b> untuk memulai.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">Belum ada paket tryout yang dibuat. Klik tombol <b>Tambah Paket Tryout</b> untuk memulai.</td></tr>';
         return;
       }
 
@@ -3230,53 +3259,59 @@
       data.forEach(function(pkg) {
         const isAktif = pkg.status === 'aktif';
         const statusBadge = isAktif
-          ? '<span class="px-2.5 py-1 inline-flex text-xs font-bold rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-200">AKTIF</span>'
-          : '<span class="px-2.5 py-1 inline-flex text-xs font-bold rounded-lg bg-gray-100 text-gray-600 border border-gray-200">NONAKTIF</span>';
+          ? '<span class="px-3 py-1 inline-flex text-xs font-bold rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">AKTIF</span>'
+          : '<span class="px-3 py-1 inline-flex text-xs font-bold rounded-lg bg-gray-100 text-gray-600 border border-gray-200">NONAKTIF</span>';
 
-        const jenisBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-bold ' + 
-          (pkg.jenis_test === 'SNBT' ? 'bg-blue-100 text-blue-800' :
-           pkg.jenis_test === 'SKD' ? 'bg-purple-100 text-purple-800' :
-           pkg.jenis_test === 'TKA' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800') + '">' + pkg.jenis_test + '</span>';
+        const jName = (pkg.jenis_test || 'UMUM').toUpperCase();
+        let jClass = 'bg-slate-100 text-slate-700 border-slate-200';
+        if (jName === 'SNBT') jClass = 'bg-blue-50 text-blue-700 border-blue-200';
+        else if (jName === 'SKD') jClass = 'bg-purple-50 text-purple-700 border-purple-200';
+        else if (jName === 'TKA') jClass = 'bg-amber-50 text-amber-700 border-amber-200';
+        
+        const jenisBadge = '<span class="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wide border ' + jClass + '">TRY OUT ' + jName + '</span>';
 
         const safePkg = JSON.stringify(pkg).replace(/'/g, "&#39;");
 
-        html += '<tr class="flex flex-col sm:table-row bg-white border border-gray-100 sm:border-b sm:border-gray-50 rounded-2xl sm:rounded-none mb-4 sm:mb-0 shadow-sm sm:shadow-none hover:bg-examgo-pale/10 transition-colors">' +
-          '<td class="p-4 sm:px-4 sm:py-4">' +
-            '<input type="checkbox" class="tryout-row-checkbox rounded text-examgo-primary focus:ring-examgo-primary h-4 w-4" value="' + pkg.paket_id + '" onchange="updateSelectedTryoutCount()">' +
+        html += '<tr class="flex flex-col sm:table-row bg-white border border-gray-100 sm:border-b sm:border-gray-50 rounded-2xl sm:rounded-none mb-4 sm:mb-0 shadow-sm sm:shadow-none hover:bg-slate-50/70 transition-colors">' +
+          '<td class="p-4 sm:px-4 sm:py-4 align-middle">' +
+            '<input type="checkbox" class="tryout-row-checkbox rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4" value="' + pkg.paket_id + '" onchange="updateSelectedTryoutCount()">' +
           '</td>' +
-          '<td class="p-5 sm:px-6 sm:py-4">' +
-            '<div class="flex items-center space-x-2">' + jenisBadge + '<span class="font-bold text-gray-900 text-sm">' + (pkg.nama_paket || '') + '</span></div>' +
-            '<div class="text-xs text-gray-400 mt-1 font-mono">ID: ' + (pkg.paket_id || '') + '</div>' +
+          '<td class="p-5 sm:px-6 sm:py-4 align-middle">' +
+            '<div class="flex items-center gap-2.5 flex-wrap">' +
+              jenisBadge +
+              '<span class="font-bold text-gray-900 text-sm tracking-tight">' + (pkg.nama_paket || '') + '</span>' +
+            '</div>' +
+            '<div class="text-[11px] text-gray-400 mt-1 font-mono">ID: ' + (pkg.paket_id || '') + '</div>' +
           '</td>' +
-          '<td class="p-5 sm:px-6 sm:py-4 text-xs text-gray-600">' +
+          '<td class="p-5 sm:px-6 sm:py-4 text-xs text-gray-600 align-middle">' +
             (pkg.is_lifetime || !pkg.tanggal
-              ? '<span class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">⚡ Selalu Aktif (Lifetime)</span>'
-              : '<div class="font-bold text-gray-900 text-xs flex items-center gap-1.5"><span class="text-emerald-700">📅</span> ' + formatIndoDate(pkg.tanggal) + '</div>' +
+              ? '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">⚡ Selalu Aktif (Lifetime)</span>'
+              : '<div class="font-bold text-gray-900 text-xs flex items-center gap-1.5"><span class="text-blue-500">📅</span> ' + formatIndoDate(pkg.tanggal) + '</div>' +
                 '<div class="text-gray-500 font-mono text-[11px] mt-0.5 flex items-center gap-1"><span class="text-slate-400">🕒</span> ' + (pkg.jam_mulai || '08:00') + ' - ' + (pkg.jam_selesai || '23:59') + ' WIB</div>') +
             '<div class="mt-1.5">' + (pkg.allow_retake !== false
-              ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">🔄 Bisa Diulang</span>'
-              : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">🔒 1x Kerjakan</span>') + '</div>' +
+              ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">🔄 Bisa Diulang</span>'
+              : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">🔒 1x Kerjakan</span>') + '</div>' +
           '</td>' +
-          '<td class="p-5 sm:px-6 sm:py-4 text-xs text-gray-600">' +
-            '<div class="font-semibold">' + (pkg.durasi_menit || 120) + ' Menit</div>' +
-            '<div class="text-gray-400">' + (pkg.total_soal || 50) + ' Butir Soal</div>' +
+          '<td class="p-5 sm:px-6 sm:py-4 text-xs text-gray-600 align-middle">' +
+            '<div class="font-bold text-slate-800">' + (pkg.durasi_menit || 120) + ' Menit</div>' +
+            '<div class="text-gray-400 text-[11px] mt-0.5">' + (pkg.total_soal || 50) + ' Butir Soal</div>' +
           '</td>' +
-          '<td class="p-5 sm:px-6 sm:py-4">' +
-            (pkg.target_exam_id ? '<span class="px-2 py-1 font-mono text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200 rounded-md">' + pkg.target_exam_id + '</span>' : '<span class="text-xs text-gray-400 italic">Default</span>') +
+          '<td class="p-5 sm:px-6 sm:py-4 align-middle">' +
+            (pkg.target_exam_id ? '<span class="px-2.5 py-1 font-mono text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200 rounded-md">' + pkg.target_exam_id + '</span>' : '<span class="text-xs text-gray-400 italic">Default</span>') +
           '</td>' +
-          '<td class="p-5 sm:px-6 sm:py-4">' + statusBadge + '</td>' +
-          '<td class="p-4 sm:px-6 sm:py-4 text-right">' +
-            '<div class="flex items-center justify-end space-x-2">' +
-              '<button onclick="openEventResultsModal(\'' + pkg.paket_id + '\', \'' + String(pkg.nama_paket || '').replace(/'/g, "\\'") + '\', \'' + String(pkg.jenis_test || 'UMUM') + '\')" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-800 hover:text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 border border-emerald-200" title="Lihat Peringkat & Unduh Hasil Excel/PDF">' +
+          '<td class="p-5 sm:px-6 sm:py-4 align-middle">' + statusBadge + '</td>' +
+          '<td class="p-4 sm:px-6 sm:py-4 text-right align-middle">' +
+            '<div class="flex items-center justify-end space-x-1.5 flex-wrap gap-y-1">' +
+              '<button onclick="openEventResultsModal(\'' + pkg.paket_id + '\', \'' + String(pkg.nama_paket || '').replace(/'/g, "\\'") + '\', \'' + String(pkg.jenis_test || 'UMUM') + '\')" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-800 hover:text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 border border-emerald-200" title="Lihat Peringkat & Unduh Hasil Excel/PDF">' +
                 '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>' +
                 'Hasil Event' +
               '</button>' +
-              '<button onclick="openSubtestModal(\'' + pkg.paket_id + '\', \'' + String(pkg.nama_paket || '').replace(/'/g, "\\'") + '\', \'' + String(pkg.jenis_test || '').replace(/'/g, "\\'") + '\', \'' + String(pkg.jenis_waktu || '').replace(/'/g, "\\'") + '\')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-lg text-xs font-semibold transition-all flex items-center gap-1">' +
-                '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>' +
+              '<button onclick="openSubtestModal(\'' + pkg.paket_id + '\', \'' + String(pkg.nama_paket || '').replace(/'/g, "\\'") + '\', \'' + String(pkg.jenis_test || '').replace(/'/g, "\\'") + '\', \'' + String(pkg.jenis_waktu || '').replace(/'/g, "\\'") + '\')" class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-lg text-xs font-semibold transition-all flex items-center gap-1 border border-indigo-200">' +
+                '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>' +
                 'Subtest & Soal' +
               '</button>' +
-              '<button onclick=\'openEditTryoutModal(' + safePkg + ')\' class="px-3 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-lg text-xs font-semibold transition-all">Edit</button>' +
-              '<button onclick="deleteTryoutPackage(\'' + pkg.paket_id + '\', \'' + String(pkg.nama_paket || '').replace(/'/g, "\\'") + '\')" class="px-3 py-1.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-lg text-xs font-semibold transition-all">Hapus</button>' +
+              '<button onclick=\'openEditTryoutModal(' + safePkg + ')\' class="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white rounded-lg text-xs font-semibold transition-all border border-blue-200">Edit</button>' +
+              '<button onclick="deleteTryoutPackage(\'' + pkg.paket_id + '\', \'' + String(pkg.nama_paket || '').replace(/'/g, "\\'") + '\')" class="px-2.5 py-1.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-lg text-xs font-semibold transition-all border border-red-200">Hapus</button>' +
             '</div>' +
           '</td>' +
         '</tr>';
@@ -5743,10 +5778,10 @@
       let html = '';
       paginatedItems.forEach(item => {
         const typeLabel = item.type === 'TEACHER_PREMIUM' 
-          ? '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Guru Premium</span>'
+          ? '<span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-200">Guru Premium</span>'
           : (item.type === 'EVENT'
-            ? '<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-300">🎯 Event Tryout</span>'
-            : '<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Siswa Lifetime</span>');
+            ? '<span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-50 text-amber-700 border border-amber-200">🎯 Event Tryout</span>'
+            : '<span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-purple-50 text-purple-700 border border-purple-200">Siswa Lifetime</span>');
 
         let schoolBadge = '<span class="text-gray-400 text-xs">Umum</span>';
         if (item.school && item.school !== 'UMUM') {
@@ -5758,51 +5793,53 @@
         }
 
         const targetStr = (item.targetExam && item.targetExam !== '-')
-          ? `<span class="px-2 py-0.5 text-xs font-mono font-bold rounded bg-amber-100 text-amber-900">${item.targetExam}</span>`
+          ? `<span class="px-2.5 py-1 text-xs font-mono font-bold rounded-md bg-amber-50 text-amber-900 border border-amber-200">${item.targetExam}</span>`
           : '<span class="text-gray-400 text-xs">Umum</span>';
         
         const statusLabel = item.isGroup
-          ? `<span class="px-2.5 py-1 text-xs font-bold rounded-full ${item.currentActivations >= item.maxActivations ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}">Master Voucher (${item.currentActivations || 0}/${item.maxActivations})</span>`
+          ? `<span class="px-2.5 py-1 text-xs font-bold rounded-lg ${item.currentActivations >= item.maxActivations ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">Master Voucher (${item.currentActivations || 0}/${item.maxActivations})</span>`
           : (item.isUsed
-            ? '<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800">Terpakai (Aktif)</span>'
-            : '<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800">Tersedia</span>');
+            ? '<span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-50 text-amber-700 border border-amber-200">Terpakai</span>'
+            : '<span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">Tersedia</span>');
 
         const deviceStr = item.isGroup
-          ? `<span class="font-bold text-xs text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${item.currentActivations || 0} HP Terdaftar</span>`
+          ? `<span class="font-bold text-xs text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">${item.currentActivations || 0} HP Terdaftar</span>`
           : (item.isUsed
             ? `<div class="space-y-0.5">
                  <div class="font-bold text-xs text-gray-900">${(item.userName && item.userName !== '-') ? escapeHtml(item.userName) : 'Pengguna Aktif'}</div>
-                 <div class="text-[11px] font-mono text-emerald-700 font-semibold">${(item.userWhatsapp && item.userWhatsapp !== '-') ? 'WA: ' + escapeHtml(item.userWhatsapp) : ''}</div>
+                 <div class="text-[11px] font-mono text-emerald-700 font-semibold flex items-center gap-1">
+                   ${(item.userWhatsapp && item.userWhatsapp !== '-') ? '<span>📱 WA:</span> ' + escapeHtml(item.userWhatsapp) : ''}
+                 </div>
                  <div class="text-[10px] text-gray-400 font-mono">${(item.email && item.email !== '-') ? escapeHtml(item.email) : (item.deviceId && item.deviceId !== '-' ? item.deviceId : '')}</div>
                </div>`
             : '<span class="text-gray-400 text-xs">Belum diaktivasi</span>');
 
         const activatedStr = item.isUsed && item.activatedAt !== '-'
-          ? `<span class="text-xs text-gray-600">${new Date(item.activatedAt).toLocaleString('id-ID')}</span>`
-          : '-';
+          ? `<span class="text-xs text-gray-600 font-medium">${new Date(item.activatedAt).toLocaleString('id-ID')}</span>`
+          : '<span class="text-gray-400 text-xs">-</span>';
 
         html += `
-          <tr class="hover:bg-gray-50/80 transition-colors">
-            <td class="px-4 py-4">
-              <input type="checkbox" class="license-row-checkbox rounded text-examgo-primary focus:ring-examgo-primary h-4 w-4" value="${item.token}" onchange="updateSelectedLicensesCount()">
+          <tr class="hover:bg-slate-50/70 transition-colors">
+            <td class="px-4 py-4 align-middle">
+              <input type="checkbox" class="license-row-checkbox rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4" value="${item.token}" onchange="updateSelectedLicensesCount()">
             </td>
-            <td class="px-6 py-4 font-mono font-bold text-gray-900 tracking-wider">${item.token}</td>
-            <td class="px-6 py-4">${schoolBadge}</td>
-            <td class="px-6 py-4">${typeLabel}</td>
-            <td class="px-6 py-4">${targetStr}</td>
-            <td class="px-6 py-4">${statusLabel}</td>
-            <td class="px-6 py-4">${deviceStr}</td>
-            <td class="px-6 py-4">${activatedStr}</td>
-            <td class="px-6 py-4 text-right space-x-1.5 whitespace-nowrap">
-              <button onclick="copySingleToken('${item.token}', '${item.type}')" title="Salin Kode & Format Kirim" class="inline-flex items-center text-emerald-700 hover:text-white bg-emerald-50 hover:bg-emerald-600 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors border border-emerald-200">
+            <td class="px-6 py-4 align-middle font-mono font-bold text-gray-900 tracking-wider text-sm">${item.token}</td>
+            <td class="px-6 py-4 align-middle">${schoolBadge}</td>
+            <td class="px-6 py-4 align-middle">${typeLabel}</td>
+            <td class="px-6 py-4 align-middle">${targetStr}</td>
+            <td class="px-6 py-4 align-middle">${statusLabel}</td>
+            <td class="px-6 py-4 align-middle">${deviceStr}</td>
+            <td class="px-6 py-4 align-middle">${activatedStr}</td>
+            <td class="px-6 py-4 text-right align-middle space-x-1.5 whitespace-nowrap">
+              <button onclick="copySingleToken('${item.token}', '${item.type}')" title="Salin Kode & Format Kirim" class="inline-flex items-center text-emerald-700 hover:text-white bg-emerald-50 hover:bg-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-emerald-200">
                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
                 Salin
               </button>
-              <button onclick="openEditTokenModal('${item.token}', '${item.type}', '${item.targetExam === '-' ? '' : item.targetExam}', ${item.isUsed})" class="inline-flex items-center text-blue-600 hover:text-white bg-blue-50 hover:bg-blue-600 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors border border-blue-200">
+              <button onclick="openEditTokenModal('${item.token}', '${item.type}', '${item.targetExam === '-' ? '' : item.targetExam}', ${item.isUsed})" class="inline-flex items-center text-blue-600 hover:text-white bg-blue-50 hover:bg-blue-600 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border border-blue-200">
                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                 Edit
               </button>
-              <button onclick="confirmDeleteToken('${item.token}')" class="inline-flex items-center text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors border border-red-200">
+              <button onclick="confirmDeleteToken('${item.token}')" class="inline-flex items-center text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border border-red-200">
                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 Hapus
               </button>
