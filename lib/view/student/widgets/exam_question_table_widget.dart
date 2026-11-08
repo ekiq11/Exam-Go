@@ -10,17 +10,34 @@ import 'package:examgo/utils/math_widget_factory.dart';
 /// 2. Tabel Data Numerik / Statistik sebenarnya -> dirender sebagai tabel rapi, responsif, & scrollable
 class ExamQuestionTableWidget extends StatelessWidget {
   final String tabelStr;
+  final String? subtestJudul;
   final double fontSizeScale;
 
   const ExamQuestionTableWidget({
     super.key,
     required this.tabelStr,
+    this.subtestJudul,
     this.fontSizeScale = 1.0,
   });
 
   /// Deteksi apakah string tabel sebenarnya merupakan teks stimulus / bacaan
-  static bool isReadingPassage(String tabelStr) {
+  static bool isReadingPassage(String tabelStr, {String? subtestJudul}) {
     if (tabelStr.trim().isEmpty) return false;
+
+    // Subtest bacaan/literasi selalu mengalirkan tabel sebagai teks bacaan (bukan tabel angka)
+    if (subtestJudul != null && subtestJudul.trim().isNotEmpty) {
+      final s = subtestJudul.toLowerCase();
+      if (s.contains('bacaan') ||
+          s.contains('literasi') ||
+          s.contains('bahasa') ||
+          s.contains('pemahaman') ||
+          s.contains('menulis') ||
+          s.contains('reading') ||
+          s.contains('english')) {
+        return true;
+      }
+    }
+
     try {
       final rawRows = tabelStr.contains('===') ? tabelStr.split('===') : tabelStr.split(',/');
       final delim = tabelStr.contains('===') ? '|||' : '-';
@@ -53,10 +70,13 @@ class ExamQuestionTableWidget extends StatelessWidget {
         'narasi',
         'artikel',
         'studi kasus',
+        'kalimat',
+        'dialog',
+        'percakapan',
       ];
 
       final maxCols = parsedRows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
-      final hasLongText = parsedRows.any((r) => r.any((c) => c.length > 70));
+      final hasLongText = parsedRows.any((r) => r.any((c) => c.length > 60));
       final headerMatches = parsedRows[0].any((c) =>
           passageKeywords.any((k) => c.toLowerCase().contains(k)));
 
@@ -88,7 +108,7 @@ class ExamQuestionTableWidget extends StatelessWidget {
 
       if (parsedRows.isEmpty) return const SizedBox.shrink();
 
-      if (isReadingPassage(tabelStr)) {
+      if (isReadingPassage(tabelStr, subtestJudul: subtestJudul)) {
         return _buildPassageCard(parsedRows);
       } else {
         return _buildDataTable(parsedRows);
@@ -180,20 +200,14 @@ class ExamQuestionTableWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (label.isNotEmpty)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFECFDF5),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: const Color(0xFFA7F3D0)),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
                     child: Text(
                       label,
                       style: GoogleFonts.poppins(
-                        fontSize: 11 * fontSizeScale,
+                        fontSize: 12 * fontSizeScale,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF065F46),
+                        color: AppColors.primaryGreen,
                       ),
                     ),
                   ),
@@ -213,17 +227,9 @@ class ExamQuestionTableWidget extends StatelessWidget {
       }
     }
 
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 2),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(8),
-        border: const Border(
-          left: BorderSide(color: AppColors.primaryGreen, width: 3.5),
-        ),
-      ),
+    // Teks bacaan ditampilkan mengalir vertikal alami, tanpa kotak/border yang mengganggu
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: paragraphWidgets,

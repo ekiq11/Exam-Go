@@ -362,9 +362,15 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
 
               // Stimulus Teks Bacaan jika ada (di atas pertanyaan)
               if (q.tabel.isNotEmpty &&
-                  ExamQuestionTableWidget.isReadingPassage(q.tabel)) ...[
-                ExamQuestionTableWidget(tabelStr: q.tabel),
-                const SizedBox(height: 8),
+                  ExamQuestionTableWidget.isReadingPassage(
+                    q.tabel,
+                    subtestJudul: widget.title,
+                  )) ...[
+                ExamQuestionTableWidget(
+                  tabelStr: q.tabel,
+                  subtestJudul: widget.title,
+                ),
+                const Divider(height: 20, thickness: 1, color: Color(0xFFF1F5F9)),
               ],
 
               // Pertanyaan Teks
@@ -376,9 +382,15 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
 
               // Tabel Data Numerik jika ada (di bawah pertanyaan)
               if (q.tabel.isNotEmpty &&
-                  !ExamQuestionTableWidget.isReadingPassage(q.tabel)) ...[
+                  !ExamQuestionTableWidget.isReadingPassage(
+                    q.tabel,
+                    subtestJudul: widget.title,
+                  )) ...[
                 const SizedBox(height: 12),
-                ExamQuestionTableWidget(tabelStr: q.tabel),
+                ExamQuestionTableWidget(
+                  tabelStr: q.tabel,
+                  subtestJudul: widget.title,
+                ),
               ],
 
               if (q.gambar.isNotEmpty) ...[

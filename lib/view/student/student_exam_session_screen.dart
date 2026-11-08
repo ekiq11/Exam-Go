@@ -56,6 +56,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
 
   // Index subtest yang sedang aktif (khusus mode per_subtest)
   int _currentSubtestIndex = 0;
+  ExamSubtest? get _currentSubtest =>
+      (_subtests.isNotEmpty && _currentSubtestIndex < _subtests.length)
+          ? _subtests[_currentSubtestIndex]
+          : null;
 
   // Jawaban siswa: soalId -> opsi ('A'..'E')
   final Map<String, String> _answers = {};
@@ -1854,14 +1858,18 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                           const SizedBox(height: 14),
 
                           // 1. Stimulus Teks Bacaan (jika soal memiliki bacaan/wacana)
-                          // Ditempatkan DI ATAS pertanyaan agar alur membaca siswa alami
+                          // Ditempatkan DI ATAS pertanyaan agar alur membaca siswa alami dan elegan
                           if (currentQ.tabel.isNotEmpty &&
-                              ExamQuestionTableWidget.isReadingPassage(currentQ.tabel)) ...[
+                              ExamQuestionTableWidget.isReadingPassage(
+                                currentQ.tabel,
+                                subtestJudul: _currentSubtest?.judul,
+                              )) ...[
                             ExamQuestionTableWidget(
                               tabelStr: currentQ.tabel,
+                              subtestJudul: _currentSubtest?.judul,
                               fontSizeScale: _fontSizeScale,
                             ),
-                            const SizedBox(height: 10),
+                            const Divider(height: 20, thickness: 1, color: Color(0xFFF1F5F9)),
                           ],
 
                           // 2. Teks Pertanyaan Render LaTeX & HTML
@@ -1877,12 +1885,16 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                             ),
                           ),
 
-                          // 3. Tabel Data Statistik/Numerik (jika berupa tabel data angka)
+                          // 3. Tabel Data Statistik/Numerik (HANYA untuk tabel angka/kuantitatif, BUKAN teks bacaan)
                           if (currentQ.tabel.isNotEmpty &&
-                              !ExamQuestionTableWidget.isReadingPassage(currentQ.tabel)) ...[
+                              !ExamQuestionTableWidget.isReadingPassage(
+                                currentQ.tabel,
+                                subtestJudul: _currentSubtest?.judul,
+                              )) ...[
                             const SizedBox(height: 12),
                             ExamQuestionTableWidget(
                               tabelStr: currentQ.tabel,
+                              subtestJudul: _currentSubtest?.judul,
                               fontSizeScale: _fontSizeScale,
                             ),
                           ],
@@ -2266,13 +2278,6 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildQuestionTable(String tabelStr) {
-    return ExamQuestionTableWidget(
-      tabelStr: tabelStr,
-      fontSizeScale: _fontSizeScale,
     );
   }
 

@@ -64,6 +64,17 @@ void main() {
       expect(find.text('Paragraph 2'), findsOneWidget);
     });
 
+    test('isReadingPassage mengenali subtest Pemahaman Bacaan dan Menulis secara otomatis', () {
+      const passageStr = '1|||Kalimat===2|||Dari buku-buku dan tulisan yang beredar...';
+      expect(
+        ExamQuestionTableWidget.isReadingPassage(
+          passageStr,
+          subtestJudul: 'Pemahaman Bacaan dan Menulis',
+        ),
+        isTrue,
+      );
+    });
+
     testWidgets('Tabel Data Statistik/Angka tetap dirender sebagai Table Widget', (tester) async {
       const dataTableStr =
           '1|||Banyak Kucing|||Kelas A|||Kelas B===2|||0|||4|||2===3|||1|||8|||12';

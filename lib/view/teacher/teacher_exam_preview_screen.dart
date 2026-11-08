@@ -626,7 +626,7 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
                           ),
 
                           // Questions in this subtest
-                          ...st.soalList.map((q) => _buildQuestionCard(q)),
+                          ...st.soalList.map((q) => _buildQuestionCard(q, subtestJudul: st.judul)),
                         ],
                       );
                     },
@@ -669,7 +669,7 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
     );
   }
 
-  Widget _buildQuestionCard(ExamQuestion q) {
+  Widget _buildQuestionCard(ExamQuestion q, {String? subtestJudul}) {
     final driveImg = MathHtmlFormatter.convertDriveUrl(q.gambar);
 
     return Container(
@@ -740,17 +740,25 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
 
           const SizedBox(height: 12),
 
-          // Teks Pertanyaan (dengan LaTeX Renderer)
+          // 1. Stimulus Teks Bacaan jika ada (di atas pertanyaan)
+          if (q.tabel.isNotEmpty &&
+              ExamQuestionTableWidget.isReadingPassage(q.tabel, subtestJudul: subtestJudul)) ...[
+            _buildQuestionTable(q.tabel, subtestJudul: subtestJudul),
+            const Divider(height: 20, thickness: 1, color: Color(0xFFF1F5F9)),
+          ],
+
+          // 2. Teks Pertanyaan (dengan LaTeX Renderer)
           HtmlWidget(
             MathHtmlFormatter.format(q.pertanyaan),
             textStyle: GoogleFonts.poppins(fontSize: 13.5, color: const Color(0xFF212121), height: 1.5),
             factoryBuilder: () => MathWidgetFactory(fontSize: 13.5),
           ),
 
-          // Tabel Soal jika ada
-          if (q.tabel.isNotEmpty) ...[
+          // 3. Tabel Numerik jika berupa data statistik (di bawah pertanyaan)
+          if (q.tabel.isNotEmpty &&
+              !ExamQuestionTableWidget.isReadingPassage(q.tabel, subtestJudul: subtestJudul)) ...[
             const SizedBox(height: 10),
-            _buildQuestionTable(q.tabel),
+            _buildQuestionTable(q.tabel, subtestJudul: subtestJudul),
           ],
 
           // Gambar Pertanyaan jika ada
@@ -898,8 +906,11 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
     );
   }
 
-  Widget _buildQuestionTable(String tabelStr) {
-    return ExamQuestionTableWidget(tabelStr: tabelStr);
+  Widget _buildQuestionTable(String tabelStr, {String? subtestJudul}) {
+    return ExamQuestionTableWidget(
+      tabelStr: tabelStr,
+      subtestJudul: subtestJudul,
+    );
   }
 }
 
