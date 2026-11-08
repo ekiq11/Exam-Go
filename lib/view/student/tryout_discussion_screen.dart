@@ -3,6 +3,7 @@ import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/exam_question_model.dart';
 import '../../utils/math_widget_factory.dart';
+import 'tryout_schedule_screen.dart';
 import 'widgets/exam_question_table_widget.dart';
 
 /// Layar pembahasan dan kunci jawaban tryout lengkap dengan rendering LaTeX
@@ -13,6 +14,7 @@ class TryoutDiscussionScreen extends StatefulWidget {
   final Map<String, String> studentAnswers;
   final int? score;
   final String? statusKelulusan;
+  final bool returnToDashboardOnExit;
 
   const TryoutDiscussionScreen({
     super.key,
@@ -22,6 +24,7 @@ class TryoutDiscussionScreen extends StatefulWidget {
     required this.studentAnswers,
     this.score,
     this.statusKelulusan,
+    this.returnToDashboardOnExit = false,
   });
 
   @override
@@ -72,6 +75,17 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
     super.dispose();
   }
 
+  void _onExit() {
+    if (widget.returnToDashboardOnExit) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const TryoutScheduleScreen()),
+        (route) => route.isFirst,
+      );
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final filtered = _filteredQuestions;
@@ -81,65 +95,76 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
 
     final currentQ = filtered.isNotEmpty ? filtered[_currentIndex] : null;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return PopScope(
+      canPop: !widget.returnToDashboardOnExit,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onExit();
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            tooltip: widget.returnToDashboardOnExit ? 'Kembali ke Dashboard Tryout' : 'Kembali',
+            onPressed: _onExit,
+          ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Pembahasan & Kunci',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+              ),
+              Text(
+                widget.title,
+                style: GoogleFonts.poppins(fontSize: 11, color: Colors.white.withValues(alpha: 0.85)),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF0F766E),
+          elevation: 0,
+          actions: [
+            if (widget.score != null)
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(right: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Skor: ${widget.score}',
+                    style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        body: Column(
           children: [
-            Text(
-              'Pembahasan & Kunci',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
-            ),
-            Text(
-              widget.title,
-              style: GoogleFonts.poppins(fontSize: 11, color: Colors.white.withValues(alpha: 0.85)),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            // Ringkasan Statistik
+            _buildSummaryBar(),
+
+            // Filter Chips
+            _buildFilterChips(),
+
+            // Nomor Soal Indicator Horizontal Strip
+            if (filtered.isNotEmpty) _buildNumberSelector(filtered),
+
+            // Main Question Card & Options & Pembahasan
+            Expanded(
+              child: filtered.isEmpty
+                  ? _buildEmptyFilteredState()
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      child: _buildQuestionDetailCard(currentQ!, _currentIndex + 1, filtered.length),
+                    ),
             ),
           ],
         ),
-        backgroundColor: const Color(0xFF0F766E),
-        elevation: 0,
-        actions: [
-          if (widget.score != null)
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(right: 14),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Skor: ${widget.score}',
-                  style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                ),
-              ),
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Ringkasan Statistik
-          _buildSummaryBar(),
-
-          // Filter Chips
-          _buildFilterChips(),
-
-          // Nomor Soal Indicator Horizontal Strip
-          if (filtered.isNotEmpty) _buildNumberSelector(filtered),
-
-          // Main Question Card & Options & Pembahasan
-          Expanded(
-            child: filtered.isEmpty
-                ? _buildEmptyFilteredState()
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    child: _buildQuestionDetailCard(currentQ!, _currentIndex + 1, filtered.length),
-                  ),
-          ),
-        ],
       ),
     );
   }

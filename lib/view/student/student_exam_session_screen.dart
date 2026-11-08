@@ -19,6 +19,7 @@ import '../../services/national_exam_evaluator.dart';
 import '../../services/student_tryout_history_service.dart';
 import '../../utils/math_widget_factory.dart';
 import 'tryout_discussion_screen.dart';
+import 'tryout_schedule_screen.dart';
 import 'widgets/exam_question_table_widget.dart';
 
 class StudentExamSessionScreen extends StatefulWidget {
@@ -1366,307 +1367,311 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     }
   }
 
+  void _navigateToDashboard() {
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const TryoutScheduleScreen()),
+      (route) => route.isFirst,
+    );
+  }
+
   void _showResultDialog(ExamEvaluationResult result) {
     final isPassed = result.isPassed;
     final isSKD = result.category.toUpperCase().contains('SKD');
     final isSNBT = result.category.toUpperCase().contains('SNBT') || result.category.toUpperCase().contains('UTBK');
-
-    Color themeColor;
-    if (isPassed) {
-      themeColor = const Color(0xFF16A34A); // Emerald Green
-    } else {
-      themeColor = const Color(0xFFE11D48); // Rose / Red
-    }
+    final themeColor = isPassed ? const Color(0xFF16A34A) : const Color(0xFFE11D48);
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-        actionsPadding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
-        title: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: themeColor.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                isPassed ? Icons.stars_rounded : Icons.info_outline_rounded,
-                size: 40,
-                color: themeColor,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Ujian Telah Selesai',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: const Color(0xFF0F172A),
-              ),
-            ),
-            Text(
-              isPassed ? '🎉 Selamat! Hasil evaluasi telah memenuhi standar.' : '💪 Evaluasi hasil belajarmu dan terus berlatih.',
-              style: GoogleFonts.poppins(
-                fontSize: 11.5,
-                color: const Color(0xFF64748B),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Kartu Skor Utama
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: isPassed ? const Color(0xFFF0FDF4) : const Color(0xFFFFF1F2),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isPassed ? const Color(0xFFBBF7D0) : const Color(0xFFFECDD3),
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Ringkas
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: themeColor.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isPassed ? Icons.emoji_events_rounded : Icons.info_rounded,
+                      size: 24,
+                      color: themeColor,
                     ),
                   ),
-                  child: Column(
-                    children: [
-                      Text(
-                        isSKD
-                            ? 'TOTAL SKOR SKD (MAKS 550)'
-                            : (isSNBT ? 'SKOR RATA-RATA UTBK (SKALA 1000)' : 'NILAI AKHIR AKADEMIK'),
-                        style: GoogleFonts.poppins(
-                          fontSize: 10.5,
-                          color: isPassed ? const Color(0xFF166534) : const Color(0xFF9F1239),
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${result.finalScore}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w900,
-                          color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
-                          height: 1.1,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      // Status Kelulusan Badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isPassed ? const Color(0xFF16A34A) : const Color(0xFFE11D48),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          result.statusKelulusan,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Evaluasi Hasil Ujian',
                           style: GoogleFonts.poppins(
-                            fontSize: 10.5,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            fontSize: 16,
+                            color: const Color(0xFF0F172A),
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Predikat: ${result.predikat}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: isPassed ? const Color(0xFF166534) : const Color(0xFF9F1239),
+                        Text(
+                          '${result.category} • ${result.statusKelulusan}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: themeColor,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-
-                // Ringkasan Benar, Salah, Kosong, Total
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildMiniStat('Benar', '${result.totalBenar}', const Color(0xFF16A34A)),
-                      _buildMiniStat('Salah', '${result.totalSalah}', const Color(0xFFDC2626)),
-                      _buildMiniStat('Kosong', '${result.totalKosong}', const Color(0xFF64748B)),
-                      _buildMiniStat('Total', '${result.totalSoal}', const Color(0xFF0F172A)),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-
-                // Rincian Nilai per Subtest
-                if (result.subtests.isNotEmpty) ...[
-                  Align(
-                    alignment: Alignment.centerLeft,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: themeColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: themeColor.withValues(alpha: 0.25)),
+                    ),
                     child: Text(
-                      'Rincian Nilai Per Subtest:',
+                      result.predikat,
                       style: GoogleFonts.poppins(
-                        fontSize: 12,
+                        fontSize: 10.5,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF334155),
+                        color: themeColor,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  ...result.subtests.values.map((st) {
-                    final isPassedSt = st.isPassed;
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isPassedSt ? const Color(0xFFE2E8F0) : const Color(0xFFFECDD3),
-                        ),
-                      ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Kartu Skor Utama & Mini Stat Ringkas (Horizontal Split)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                decoration: BoxDecoration(
+                  color: isPassed ? const Color(0xFFF0FDF4) : const Color(0xFFFFF1F2),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isPassed ? const Color(0xFFBBF7D0) : const Color(0xFFFECDD3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Sisi Kiri: Nilai Akhir
+                    Expanded(
+                      flex: 4,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  st.judul,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF0F172A),
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: isPassedSt ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  st.predikat,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: isPassedSt ? const Color(0xFF166534) : const Color(0xFF991B1B),
-                                  ),
-                                ),
-                              ),
-                            ],
+                          Text(
+                            isSKD
+                                ? 'SKOR SKD'
+                                : (isSNBT ? 'RATA-RATA UTBK' : 'NILAI AKHIR'),
+                            style: GoogleFonts.poppins(
+                              fontSize: 9.5,
+                              color: isPassed ? const Color(0xFF166534) : const Color(0xFF9F1239),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.4,
+                            ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
                             children: [
                               Text(
-                                st.isTkp
-                                    ? 'Skor: ${st.skor}/${st.maxSkor} (PG: ${st.passingGrade ?? "-"})'
-                                    : (isSKD
-                                        ? '${st.benar} Benar • Skor: ${st.skor}/${st.maxSkor} (PG: ${st.passingGrade ?? "-"})'
-                                        : '${st.benar}/${st.total} Benar'),
+                                '${result.finalScore}',
                                 style: GoogleFonts.poppins(
-                                  fontSize: 10.5,
-                                  color: const Color(0xFF64748B),
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w900,
+                                  color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
+                                  height: 1.0,
                                 ),
                               ),
+                              const SizedBox(width: 4),
                               Text(
-                                '${st.skor}',
+                                '/ ${result.maxScore}',
                                 style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: isPassedSt ? const Color(0xFF15803D) : const Color(0xFFB91C1C),
+                                  fontSize: 11,
+                                  color: const Color(0xFF64748B),
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
                           ),
                         ],
                       ),
-                    );
-                  }),
-                ],
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => TryoutDiscussionScreen(
-                    title: _package?.namaPaket ?? 'Pembahasan Tryout',
-                    kategori: _package?.kategori ?? ExamCategory.umum,
-                    questions: _allQuestions,
-                    studentAnswers: _answers,
-                    score: result.finalScore,
-                    statusKelulusan: result.statusKelulusan,
+                    ),
+                    Container(width: 1, height: 42, color: const Color(0xFFCBD5E1)),
+                    const SizedBox(width: 12),
+                    // Sisi Kanan: 4 Mini Stat ringkas
+                    Expanded(
+                      flex: 5,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildMiniStat('Benar', '${result.totalBenar}', const Color(0xFF16A34A)),
+                          _buildMiniStat('Salah', '${result.totalSalah}', const Color(0xFFDC2626)),
+                          _buildMiniStat('Kosong', '${result.totalKosong}', const Color(0xFF64748B)),
+                          _buildMiniStat('Soal', '${result.totalSoal}', const Color(0xFF0F172A)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Rincian Subtes (Scrollable dengan batas tinggi maksimal 125px)
+              if (result.subtests.isNotEmpty) ...[
+                Text(
+                  'Rincian Nilai Subtes:',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF334155),
                   ),
                 ),
-              );
-            },
-            icon: const Icon(Icons.menu_book_rounded, size: 16),
-            label: Text(
-              'Lihat Pembahasan & Kunci 📖',
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12.5,
+                const SizedBox(height: 6),
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 125),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Scrollbar(
+                    thumbVisibility: result.subtests.length > 2,
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      itemCount: result.subtests.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                      itemBuilder: (context, i) {
+                        final st = result.subtests.values.elementAt(i);
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  st.judul,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF1E293B),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${st.benar}/${st.total} B • ',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10.5,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                              Text(
+                                '${st.skor} pts',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: st.isPassed ? const Color(0xFF15803D) : const Color(0xFFB91C1C),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
+
+              // Tombol Aksi
+              SizedBox(
+                width: double.infinity,
+                height: 42,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TryoutDiscussionScreen(
+                          title: _package?.namaPaket ?? 'Pembahasan Tryout',
+                          kategori: _package?.kategori ?? ExamCategory.umum,
+                          questions: _allQuestions,
+                          studentAnswers: _answers,
+                          score: result.finalScore,
+                          statusKelulusan: result.statusKelulusan,
+                          returnToDashboardOnExit: true,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.menu_book_rounded, size: 16),
+                  label: Text(
+                    'Lihat Pembahasan & Kunci 📖',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F766E),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
               ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0F766E),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                height: 38,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _navigateToDashboard();
+                  },
+                  icon: const Icon(Icons.dashboard_outlined, size: 15, color: Color(0xFF475569)),
+                  label: Text(
+                    'Kembali ke Dashboard Tryout',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      color: const Color(0xFF475569),
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF475569),
+                    side: const BorderSide(color: Color(0xFFCBD5E1)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
-              minimumSize: const Size(double.infinity, 44),
-            ),
+            ],
           ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.of(context).popUntil((r) => r.isFirst);
-            },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF475569),
-              side: const BorderSide(color: Color(0xFFCBD5E1)),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              minimumSize: const Size(double.infinity, 42),
-            ),
-            child: Text(
-              'Kembali ke Beranda',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.bold,
-                fontSize: 12.5,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1847,7 +1852,13 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _confirmExitDialog();
+        if (!didPop) {
+          if (_isSubmitted) {
+            _navigateToDashboard();
+          } else {
+            _confirmExitDialog();
+          }
+        }
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),

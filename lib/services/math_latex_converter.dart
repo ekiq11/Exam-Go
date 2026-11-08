@@ -24,8 +24,10 @@ class MathLatexConverter {
   static String convertPlainTextToLatex(String input) {
     if (input.trim().isEmpty) return input;
 
-    // Tokenize teks menjadi: tag HTML (<...>), blok LaTeX ($...$), atau teks biasa
-    final pattern = RegExp(r'(<[^>]+>|\$[^\$]+\$)');
+    // Tokenize teks menjadi: tag HTML (<...>), blok LaTeX ($...$, $$...$$, \(...\), \[...\]), atau teks biasa
+    final pattern = RegExp(
+      r'(<[^>]+>|\$\$[\s\S]*?\$\$|\$[^\$]+\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\))',
+    );
     final matches = pattern.allMatches(input);
     final sb = StringBuffer();
     int lastEnd = 0;
@@ -135,9 +137,9 @@ class MathLatexConverter {
       (m) => '\$${m.group(1)!.trim()}\$',
     );
 
-    // 2. Tangkap ekspresi pecahan \frac{...}{...} atau akar \sqrt{...} yang belum diapit $
+    // 2. Tangkap ekspresi pecahan \frac{...}{...} atau akar \sqrt{...} yang belum diapit $ (mendukung nested braces 2 level)
     res = res.replaceAllMapped(
-      RegExp(r'(?<!\$)((\\frac\{[^{}]*\}\{[^{}]*\}|\\sqrt(?:\[[^\]]*\])?\{[^{}]*\})(?:\s*[+\-*\/]\s*(?:\\frac\{[^{}]*\}\{[^{}]*\}|\\sqrt(?:\[[^\]]*\])?\{[^{}]*\}|[a-zA-Z0-9]+))*)(?!\$)'),
+      RegExp(r'(?<!\$)((\\frac\{(?:[^{}]|\{[^{}]*\})*\}\{(?:[^{}]|\{[^{}]*\})*\}|\\sqrt(?:\[[^\]]*\])?\{(?:[^{}]|\{[^{}]*\})*\})(?:\s*[+\-*\/]\s*(?:\\frac\{(?:[^{}]|\{[^{}]*\})*\}\{(?:[^{}]|\{[^{}]*\})*\}|\\sqrt(?:\[[^\]]*\])?\{(?:[^{}]|\{[^{}]*\})*\}|[a-zA-Z0-9]+))*)(?!\$)'),
       (m) => '\$${m.group(1)!.trim()}\$',
     );
 

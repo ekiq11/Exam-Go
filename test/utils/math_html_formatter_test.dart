@@ -98,5 +98,23 @@ void main() {
       expect(output, contains('± 2.971'));
       expect(output, isNot(contains(r'\pm')));
     });
+
+    test('MathHtmlFormatter mengenali format \\(...\\) dan \\[...\\] tanpa merusak kontennya', () {
+      const input = r'Selesaikan persamaan \(\frac{1}{2}x + 3 = 7\) dan rumus display: \[E = mc^2\]';
+      final output = MathHtmlFormatter.format(input);
+
+      expect(output, contains('class="math-tex inline"'));
+      expect(output, contains(Uri.encodeComponent(r'\frac{1}{2}x + 3 = 7')));
+      expect(output, contains('class="math-tex display"'));
+      expect(output, contains(Uri.encodeComponent(r'E = mc^2')));
+    });
+
+    test('MathHtmlFormatter menangani pecahan dengan nested braces di pembilang atau penyebut', () {
+      const input = r'Bentuk sederhana dari \frac{\sqrt{3} + 1}{2} adalah...';
+      final output = MathHtmlFormatter.format(input);
+
+      expect(output, contains('class="math-tex inline"'));
+      expect(output, contains(Uri.encodeComponent(r'\frac{\sqrt{3} + 1}{2}')));
+    });
   });
 }
