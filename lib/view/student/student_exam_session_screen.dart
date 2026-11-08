@@ -522,7 +522,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
       if (loadedSubtests.isNotEmpty) {
         for (final st in loadedSubtests) {
           st.soalList = loadedQuestions.where((q) {
-            return q.subtestId == st.subtestId || q.subtestId.toUpperCase() == st.subtestId.toUpperCase();
+            final qSt = q.subtestId.trim().toUpperCase();
+            final sSt = st.subtestId.trim().toUpperCase();
+            return qSt == sSt || (qSt.isNotEmpty && sSt.isNotEmpty && (qSt.contains(sSt) || sSt.contains(qSt)));
           }).toList();
         }
         final orphans = loadedQuestions.where((q) => !loadedSubtests.any((st) => st.soalList.contains(q))).toList();
@@ -578,7 +580,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     if (gasUrl.isEmpty || apiKey.isEmpty) return null;
 
     try {
-      final resp = await http.post(
+      var resp = await http.post(
         Uri.parse(gasUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -587,6 +589,12 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
           'paketId': paketId,
         }),
       ).timeout(const Duration(seconds: 15));
+
+      // Ikuti redirect 302 jika diarahkan oleh Google Apps Script
+      if (resp.statusCode >= 300 && resp.statusCode < 400 && resp.headers.containsKey('location')) {
+        final redirectUrl = resp.headers['location']!;
+        resp = await http.get(Uri.parse(redirectUrl)).timeout(const Duration(seconds: 15));
+      }
 
       if (resp.statusCode == 200) {
         final json = jsonDecode(resp.body) as Map<String, dynamic>;

@@ -66,7 +66,7 @@ class TryoutScheduleService {
     if (gasUrl.isEmpty || apiKey.isEmpty) return null;
 
     try {
-      final resp = await http.post(
+      var resp = await http.post(
         Uri.parse(gasUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -74,6 +74,12 @@ class TryoutScheduleService {
           'action': 'getJadwalTryout',
         }),
       ).timeout(const Duration(seconds: 10));
+
+      // Ikuti redirect 302 jika diarahkan oleh Google Apps Script
+      if (resp.statusCode >= 300 && resp.statusCode < 400 && resp.headers.containsKey('location')) {
+        final redirectUrl = resp.headers['location']!;
+        resp = await http.get(Uri.parse(redirectUrl)).timeout(const Duration(seconds: 10));
+      }
 
       if (resp.statusCode == 200) {
         final json = jsonDecode(resp.body) as Map<String, dynamic>;

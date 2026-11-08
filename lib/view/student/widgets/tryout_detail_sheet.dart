@@ -47,8 +47,9 @@ class TryoutDetailSheet extends StatelessWidget {
     await LicenseService.instance.recordExamAttempt();
 
     if (!context.mounted) return;
-    await Navigator.push(
-      context,
+    final nav = Navigator.of(context);
+    nav.pop(); // Tutup detail sheet terlebih dahulu agar layar ujian bersih dan tidak tertumpuk modal
+    await nav.push(
       MaterialPageRoute(
         builder: (_) => StudentExamSessionScreen(
           token: schedule.paketId,
