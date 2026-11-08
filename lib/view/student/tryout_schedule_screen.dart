@@ -5,6 +5,7 @@ import 'package:examgo/models/tryout_schedule_model.dart';
 import 'package:examgo/services/license_service.dart';
 import 'package:examgo/services/student_tryout_history_service.dart';
 import 'package:examgo/services/tryout_schedule_service.dart';
+import 'package:examgo/utils/indo_date_formatter.dart';
 import 'package:examgo/view/student/event_dashboard_screen.dart';
 import 'package:examgo/view/student/tryout_discussion_screen.dart';
 import 'package:examgo/view/student/widgets/tryout_card_widget.dart';
@@ -425,7 +426,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
         itemBuilder: (context, index) {
           final item = _historyList[index];
           final dt = item.submittedAt;
-          final timeStr = '${dt.day}/${dt.month}/${dt.year} • ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} WIB';
+          final dateStr = IndoDateFormatter.formatHariTanggal(dt.toIso8601String(), shortMonth: true);
+          final tz = IndoDateFormatter.detectTimeZone(null);
+          final timeStr = '$dateStr • ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} $tz';
           final isPassed = item.isPassed;
 
           return Container(

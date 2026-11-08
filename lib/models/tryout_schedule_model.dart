@@ -1,3 +1,5 @@
+import '../utils/indo_date_formatter.dart';
+
 /// Model data paket & jadwal tryout resmi dari Admin ExamGO
 class TryoutSchedule {
   final String paketId;
@@ -78,28 +80,37 @@ class TryoutSchedule {
 
   bool get isActive => status == 'aktif';
 
+  DateTime? get parsedDate => IndoDateFormatter.parse(tanggal);
+
   bool get isToday {
     if (isLifetime) return true;
     if (tanggal.isEmpty) return true; // Anggap bisa dikerjakan jika tanggal belum diatur
+    final dt = parsedDate;
+    if (dt == null) return true;
     final now = DateTime.now();
-    final todayStr = '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    return tanggal == todayStr;
+    return dt.year == now.year && dt.month == now.month && dt.day == now.day;
   }
 
   bool get isUpcoming {
     if (isLifetime) return false;
     if (tanggal.isEmpty) return false;
+    final dt = parsedDate;
+    if (dt == null) return false;
     final now = DateTime.now();
-    final todayStr = '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    return tanggal.compareTo(todayStr) > 0;
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final dtStart = DateTime(dt.year, dt.month, dt.day);
+    return dtStart.isAfter(todayStart);
   }
 
   bool get isPast {
     if (isLifetime) return false;
     if (tanggal.isEmpty) return false;
+    final dt = parsedDate;
+    if (dt == null) return false;
     final now = DateTime.now();
-    final todayStr = '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    return tanggal.compareTo(todayStr) < 0;
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final dtStart = DateTime(dt.year, dt.month, dt.day);
+    return dtStart.isBefore(todayStart);
   }
 
   String get badgeStatus {
@@ -108,5 +119,9 @@ class TryoutSchedule {
     if (isUpcoming) return 'Mendatang';
     return 'Selesai';
   }
+
+  String get formattedDate => IndoDateFormatter.formatHariTanggal(tanggal);
+  String get formattedTime => IndoDateFormatter.formatJam(jamMulai, jamSelesai, rawDateStr: tanggal);
+  String get formattedFullSchedule => IndoDateFormatter.formatJadwalRingkas(tanggal, jamMulai, jamSelesai, isLifetime: isLifetime);
 }
 

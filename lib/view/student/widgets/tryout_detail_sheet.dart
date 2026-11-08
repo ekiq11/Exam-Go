@@ -54,6 +54,7 @@ class TryoutDetailSheet extends StatelessWidget {
           token: schedule.paketId,
           studentName: name,
           studentNis: nis,
+          initialSchedule: schedule,
         ),
       ),
     );
@@ -150,6 +151,31 @@ class TryoutDetailSheet extends StatelessWidget {
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: const Color(0xFF475569),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          schedule.isLifetime ? Icons.all_inclusive_rounded : Icons.calendar_today_rounded,
+                          size: 13,
+                          color: AppColors.primaryGreen,
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            schedule.isLifetime
+                                ? 'Selalu Aktif (Tanpa Batas Waktu)'
+                                : '${schedule.formattedDate} • ${schedule.formattedTime}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF334155),
+                            ),
                           ),
                         ),
                       ],

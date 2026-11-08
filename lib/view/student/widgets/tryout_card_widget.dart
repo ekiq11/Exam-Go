@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/models/tryout_schedule_model.dart';
+import 'package:examgo/utils/indo_date_formatter.dart';
 
-/// Kartu tampilan paket tryout terjadwal (Diadaptasi dari myOLCv2)
+/// Kartu tampilan paket tryout profesional & bebas overflex (Diadaptasi dari myOLCv2 & ExamGO Design System)
 class TryoutCardWidget extends StatelessWidget {
   final TryoutSchedule schedule;
   final VoidCallback onTap;
@@ -17,14 +19,24 @@ class TryoutCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final isToday = schedule.isToday;
     final isUpcoming = schedule.isUpcoming;
+    final isLifetime = schedule.isLifetime;
 
-    final Color statusColor = isToday
-        ? const Color(0xFF16A34A) // Green
-        : (isUpcoming ? const Color(0xFF0284C7) : const Color(0xFF64748B));
+    // Warna status harmonis sesuai tema aplikasi
+    final Color statusColor = isLifetime
+        ? const Color(0xFF0F766E) // Teal
+        : (isToday
+            ? AppColors.primaryGreen // Emerald / Forest Green
+            : (isUpcoming ? const Color(0xFF0284C7) : const Color(0xFF64748B)));
 
-    final IconData statusIcon = isToday
-        ? Icons.play_circle_fill_rounded
-        : (isUpcoming ? Icons.alarm_rounded : Icons.check_circle_rounded);
+    final IconData statusIcon = isLifetime
+        ? Icons.all_inclusive_rounded
+        : (isToday
+            ? Icons.play_circle_fill_rounded
+            : (isUpcoming ? Icons.alarm_rounded : Icons.check_circle_rounded));
+
+    // Format Hari, Tanggal & Jam Bahasa Indonesia dengan zona waktu
+    final dateStr = IndoDateFormatter.formatHariTanggal(schedule.tanggal, shortMonth: true);
+    final timeStr = IndoDateFormatter.formatJam(schedule.jamMulai, schedule.jamSelesai, rawDateStr: schedule.tanggal);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -32,12 +44,16 @@ class TryoutCardWidget extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isToday ? statusColor.withValues(alpha: 0.35) : const Color(0xFFE2E8F0),
+          color: isToday
+              ? AppColors.primaryGreen.withValues(alpha: 0.35)
+              : const Color(0xFFE2E8F0),
           width: isToday ? 1.5 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isToday ? 0.06 : 0.03),
+            color: isToday
+                ? AppColors.primaryGreen.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -49,42 +65,50 @@ class TryoutCardWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(15),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Status Icon Avatar
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 44,
+                  height: 44,
+                  margin: const EdgeInsets.only(top: 2),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(statusIcon, color: statusColor, size: 26),
+                  child: Icon(statusIcon, color: statusColor, size: 24),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
 
-                // Main Info
+                // Main Information Area
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Judul Paket Tryout
                       Text(
                         schedule.namaPaket,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.bold,
-                          fontSize: 14.5,
+                          fontSize: 14,
                           color: const Color(0xFF0F172A),
+                          height: 1.3,
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Row(
+
+                      // Badges Status & Kategori (Menggunakan Wrap agar BEBAS OVERFLEX)
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
                         children: [
                           // Status Badge
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                             decoration: BoxDecoration(
                               color: statusColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6),
@@ -92,17 +116,16 @@ class TryoutCardWidget extends StatelessWidget {
                             child: Text(
                               schedule.badgeStatus,
                               style: GoogleFonts.poppins(
-                                fontSize: 10.5,
+                                fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 color: statusColor,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 6),
 
-                          // Kategori Badge (SNBT / SKD / TKA)
+                          // Kategori Badge (SNBT / SKD / TKA SMA, dsb)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF1F5F9),
                               borderRadius: BorderRadius.circular(6),
@@ -111,16 +134,17 @@ class TryoutCardWidget extends StatelessWidget {
                             child: Text(
                               schedule.jenisTest,
                               style: GoogleFonts.poppins(
-                                fontSize: 10.5,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w600,
                                 color: const Color(0xFF334155),
                               ),
                             ),
                           ),
-                          if (schedule.allowRetake) ...[
-                            const SizedBox(width: 6),
+
+                          // Badge Bisa Diulang (Jika diizinkan)
+                          if (schedule.allowRetake)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFEFF6FF),
                                 borderRadius: BorderRadius.circular(6),
@@ -129,49 +153,94 @@ class TryoutCardWidget extends StatelessWidget {
                               child: Text(
                                 'Bisa Diulang',
                                 style: GoogleFonts.poppins(
-                                  fontSize: 10,
+                                  fontSize: 9.5,
                                   fontWeight: FontWeight.bold,
                                   color: const Color(0xFF2563EB),
                                 ),
                               ),
                             ),
-                          ],
                         ],
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
+
+                      // Baris Tanggal & Hari Standar Indonesia
                       Row(
                         children: [
                           Icon(
-                            schedule.isLifetime ? Icons.all_inclusive_rounded : Icons.calendar_today_outlined,
+                            isLifetime ? Icons.all_inclusive_rounded : Icons.calendar_today_rounded,
                             size: 13,
-                            color: schedule.isLifetime ? const Color(0xFF0F766E) : Colors.grey.shade500,
+                            color: isLifetime ? const Color(0xFF0F766E) : Colors.grey.shade500,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            schedule.isLifetime
-                                ? 'Tanpa Batas Waktu'
-                                : (schedule.tanggal.isNotEmpty ? schedule.tanggal : 'Fleksibel'),
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              fontWeight: schedule.isLifetime ? FontWeight.w600 : FontWeight.normal,
-                              color: schedule.isLifetime ? const Color(0xFF0F766E) : Colors.grey.shade600,
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              isLifetime ? 'Selalu Aktif (Tanpa Batas Waktu)' : dateStr,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                fontSize: 11,
+                                fontWeight: isLifetime ? FontWeight.w600 : FontWeight.w500,
+                                color: isLifetime ? const Color(0xFF0F766E) : const Color(0xFF475569),
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Icon(Icons.timer_outlined, size: 12, color: Colors.grey.shade500),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+
+                      // Baris Jam Pelaksanaan & Durasi Ujian
+                      Row(
+                        children: [
+                          // Jam Pelaksanaan
+                          if (!isLifetime && schedule.tanggal.isNotEmpty) ...[
+                            Icon(Icons.access_time_rounded, size: 13, color: Colors.grey.shade500),
+                            const SizedBox(width: 5),
+                            Text(
+                              timeStr,
+                              style: GoogleFonts.poppins(
+                                fontSize: 11,
+                                color: const Color(0xFF64748B),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                          ],
+
+                          // Durasi Pengerjaan
+                          Icon(Icons.timer_outlined, size: 13, color: Colors.grey.shade500),
                           const SizedBox(width: 4),
                           Text(
                             '${schedule.durasiMenit} Menit',
-                            style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey.shade600),
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              color: const Color(0xFF64748B),
+                            ),
                           ),
+
+                          // Jumlah Butir Soal (Jika tersedia)
+                          if (schedule.totalSoal > 0) ...[
+                            const SizedBox(width: 10),
+                            Icon(Icons.format_list_numbered_rounded, size: 13, color: Colors.grey.shade500),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${schedule.totalSoal} Soal',
+                              style: GoogleFonts.poppins(
+                                fontSize: 11,
+                                color: const Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(width: 8),
-                const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Color(0xFF94A3B8)),
+                const SizedBox(width: 6),
+                const Padding(
+                  padding: EdgeInsets.only(top: 14),
+                  child: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF94A3B8)),
+                ),
               ],
             ),
           ),

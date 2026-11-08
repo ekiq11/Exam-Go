@@ -73,5 +73,20 @@ void main() {
       expect(map['total_soal'], 50);
       expect(map['subtests'], hasLength(3));
     });
+
+    test('IndoDateFormatter correctly formats JS date strings, WITA/WIB time, and indonesian day/month', () {
+      final schedule = TryoutSchedule.fromMap('TO-SNBT-002', {
+        'nama_paket': 'TRY OUT SNBT 1',
+        'jenis_test': 'TRY OUT SNBT',
+        'tanggal': 'Wed Sep 09 2026 08:00:00 GMT+0800 (Waktu Indonesia Tengah)',
+        'jam_mulai': '17:34',
+        'jam_selesai': '23:59',
+      });
+
+      expect(schedule.formattedDate, 'Rabu, 9 September 2026');
+      expect(schedule.formattedTime, '17:34 - 23:59 WITA');
+      expect(schedule.formattedFullSchedule, contains('Rabu, 9 Sep 2026'));
+      expect(schedule.formattedFullSchedule, contains('17:34-23:59 WITA'));
+    });
   });
 }
