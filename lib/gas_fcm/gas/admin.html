@@ -2230,13 +2230,13 @@
           <table class="w-full text-left border-collapse text-xs">
             <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
               <tr>
-                <th class="px-4 py-3 text-center w-14">Rank</th>
-                <th class="px-5 py-3">Nama Peserta</th>
-                <th class="px-5 py-3">Kontak (WA & Email)</th>
-                <th class="px-4 py-3 text-center">Skor Akhir</th>
-                <th class="px-5 py-3 text-center">Akurasi (B / S / K)</th>
-                <th class="px-4 py-3 text-center">Status Kelulusan</th>
-                <th class="px-4 py-3 text-right">Waktu Selesai</th>
+                <th class="px-5 py-3.5 text-center min-w-[110px]">Peringkat</th>
+                <th class="px-5 py-3.5">Nama Peserta</th>
+                <th class="px-5 py-3.5">Kontak (WA & Email)</th>
+                <th class="px-4 py-3.5 text-center">Skor Akhir</th>
+                <th class="px-5 py-3.5 text-center">Rincian Jawaban</th>
+                <th class="px-4 py-3.5 text-center">Status Kelulusan</th>
+                <th class="px-4 py-3.5 text-right">Waktu Selesai</th>
               </tr>
             </thead>
             <tbody id="event-results-table-body" class="divide-y divide-slate-100 bg-white">
@@ -3306,9 +3306,9 @@
           '<td class="p-5 sm:px-6 sm:py-4 align-middle">' + statusBadge + '</td>' +
           '<td class="p-4 sm:px-6 sm:py-4 text-right align-middle">' +
             '<div class="flex items-center justify-end space-x-1.5 flex-wrap gap-y-1">' +
-              '<button onclick="openEventResultsModal(\'' + pkg.paket_id + '\', \'' + String(pkg.nama_paket || '').replace(/'/g, "\\'") + '\', \'' + String(pkg.jenis_test || 'UMUM') + '\')" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-800 hover:text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 border border-emerald-200" title="Lihat Peringkat & Unduh Hasil Excel/PDF">' +
+              '<button onclick="openEventResultsModal(\'' + pkg.paket_id + '\', \'' + String(pkg.nama_paket || '').replace(/'/g, "\\'") + '\', \'' + String(pkg.jenis_test || 'UMUM') + '\')" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-800 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border border-emerald-200 shadow-2xs hover:shadow-xs cursor-pointer" title="Lihat Nilai, Peringkat & Unduh Hasil Excel/PDF">' +
                 '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>' +
-                'Hasil Event' +
+                'Lihat Nilai' +
               '</button>' +
               '<button onclick="openSubtestModal(\'' + pkg.paket_id + '\', \'' + String(pkg.nama_paket || '').replace(/'/g, "\\'") + '\', \'' + String(pkg.jenis_test || '').replace(/'/g, "\\'") + '\', \'' + String(pkg.jenis_waktu || '').replace(/'/g, "\\'") + '\')" class="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-lg text-xs font-semibold transition-all flex items-center gap-1 border border-indigo-200">' +
                 '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>' +
@@ -7219,13 +7219,13 @@
       // Rows
       let html = '';
       paginated.forEach(item => {
-        let rankBadge = `<span class="font-bold text-slate-600 font-mono">#${item.rank}</span>`;
+        let rankBadge = `<span class="inline-flex items-center justify-center px-3 py-1 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 border border-slate-200 font-mono whitespace-nowrap shadow-2xs">#${item.rank}</span>`;
         if (item.rank === 1) {
-          rankBadge = `<span class="px-2 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">🥇 #1</span>`;
+          rankBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-amber-100 text-amber-950 border border-amber-300 shadow-2xs whitespace-nowrap">🥇 Rank 1</span>`;
         } else if (item.rank === 2) {
-          rankBadge = `<span class="px-2 py-0.5 rounded-full text-xs font-black bg-slate-200 text-slate-800 border border-slate-300 shadow-2xs">🥈 #2</span>`;
+          rankBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-slate-200 text-slate-800 border border-slate-300 shadow-2xs whitespace-nowrap">🥈 Rank 2</span>`;
         } else if (item.rank === 3) {
-          rankBadge = `<span class="px-2 py-0.5 rounded-full text-xs font-black bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">🥉 #3</span>`;
+          rankBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-amber-50 text-amber-900 border border-amber-200 shadow-2xs whitespace-nowrap">🥉 Rank 3</span>`;
         }
 
         const isPassed = item.isPassed;
@@ -7244,7 +7244,7 @@
 
         html += `
           <tr class="hover:bg-slate-50/80 transition-colors">
-            <td class="px-4 py-3.5 text-center">${rankBadge}</td>
+            <td class="px-5 py-3.5 text-center">${rankBadge}</td>
             <td class="px-5 py-3.5">
               <div class="font-bold text-slate-900 text-xs">${escapeHtml(item.nama)}</div>
               <div class="text-[11px] text-slate-400 font-mono">NIS: ${escapeHtml(item.nis)}</div>
@@ -7258,14 +7258,21 @@
               <span class="text-[10px] text-slate-400 block font-medium">/ ${item.maxSkor}</span>
             </td>
             <td class="px-5 py-3.5 text-center">
-              <div class="flex items-center justify-center gap-1.5 text-xs font-semibold">
-                <span class="text-emerald-700 font-bold">${item.benar}B</span>
-                <span class="text-slate-300">•</span>
-                <span class="text-rose-600 font-bold">${item.salah}S</span>
-                <span class="text-slate-300">•</span>
-                <span class="text-slate-500 font-medium">${item.kosong}K</span>
+              <div class="inline-flex items-center justify-center gap-1.5 flex-wrap">
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs" title="Jumlah Jawaban Benar">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  ${item.benar} Benar
+                </span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs" title="Jumlah Jawaban Salah">
+                  <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                  ${item.salah} Salah
+                </span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 shadow-2xs" title="Jumlah Tidak Dijawab (Kosong)">
+                  <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                  ${item.kosong} Kosong
+                </span>
               </div>
-              <div class="text-[10px] text-slate-400 mt-0.5">${item.totalSoal} Soal</div>
+              <div class="text-[10.5px] text-slate-400 font-medium mt-1">Total ${item.totalSoal} Butir Soal</div>
             </td>
             <td class="px-4 py-3.5 text-center">${passBadge}</td>
             <td class="px-4 py-3.5 text-right font-mono text-xs text-slate-500">${dtStr}</td>
@@ -7341,11 +7348,11 @@
         const dtStr = item.submittedAt ? new Date(item.submittedAt).toLocaleString('id-ID') : '-';
         rowsHtml += `
           <tr>
-            <td style="text-align: center; font-weight: bold;">${item.rank}</td>
+            <td style="text-align: center; font-weight: bold;">#${item.rank}</td>
             <td><b>${escapeHtml(item.nama)}</b><br><small style="color: #64748b;">NIS: ${escapeHtml(item.nis)}</small></td>
             <td>${escapeHtml(item.noWa)}<br><small style="color: #64748b;">${escapeHtml(item.email)}</small></td>
             <td style="text-align: center; font-weight: bold; font-size: 13px;">${item.skor}</td>
-            <td style="text-align: center;">${item.benar} / ${item.salah} / ${item.kosong}</td>
+            <td style="text-align: center; font-size: 11px;"><b>${item.benar}</b> Benar &bull; <b>${item.salah}</b> Salah &bull; <b>${item.kosong}</b> Kosong</td>
             <td style="text-align: center; font-weight: bold; color: ${item.isPassed ? '#166534' : '#991b1b'};">${item.isPassed ? 'LULUS PG' : 'BELUM LULUS'}</td>
             <td style="text-align: right; font-size: 11px;">${dtStr}</td>
           </tr>
@@ -7358,7 +7365,7 @@
         return;
       }
 
-      printWindow.document.write(`<!DOCTYPE html><html><head><title>Hasil Resmi Tryout Event — ${escapeHtml(eventName)}</title><style>body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 24px; color: #0f172a; } .header { border-bottom: 2px solid #2e7d32; padding-bottom: 12px; margin-bottom: 20px; } .title { font-size: 20px; font-weight: bold; color: #1b5e20; } .subtitle { font-size: 12px; color: #475569; margin-top: 4px; } .kpi-container { display: flex; gap: 12px; margin-bottom: 20px; } .kpi-card { flex: 1; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; } .kpi-label { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #64748b; } .kpi-value { font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 2px; } table { width: 100%; border-collapse: collapse; font-size: 12px; } th { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-size: 11px; text-transform: uppercase; } td { border: 1px solid #e2e8f0; padding: 8px 10px; } @media print { body { margin: 10mm; } button { display: none; } }</style></head><body><div class="header"><div class="title">ExamGO — Laporan Hasil Tryout Event</div><div class="subtitle">Paket: <b>${escapeHtml(eventName)}</b> | Kategori: <b>${escapeHtml(eventKategori)}</b> | Tanggal Cetak: ${new Date().toLocaleString('id-ID')}</div></div><div class="kpi-container"><div class="kpi-card"><div class="kpi-label">Total Peserta</div><div class="kpi-value">${total}</div></div><div class="kpi-card"><div class="kpi-label">Rata-Rata Skor</div><div class="kpi-value">${avg}</div></div><div class="kpi-card"><div class="kpi-label">Skor Tertinggi</div><div class="kpi-value">${highest}</div></div><div class="kpi-card"><div class="kpi-label">Lulus Passing Grade</div><div class="kpi-value">${lulus} (${total > 0 ? Math.round((lulus/total)*100) : 0}%)</div></div></div><table><thead><tr><th style="text-align: center; width: 45px;">Rank</th><th>Nama Peserta</th><th>Kontak (WA & Email)</th><th style="text-align: center;">Skor</th><th style="text-align: center;">B / S / K</th><th style="text-align: center;">Status</th><th style="text-align: right;">Waktu Selesai</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`);
+      printWindow.document.write(`<!DOCTYPE html><html><head><title>Hasil Resmi Tryout Event — ${escapeHtml(eventName)}</title><style>body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 24px; color: #0f172a; } .header { border-bottom: 2px solid #2e7d32; padding-bottom: 12px; margin-bottom: 20px; } .title { font-size: 20px; font-weight: bold; color: #1b5e20; } .subtitle { font-size: 12px; color: #475569; margin-top: 4px; } .kpi-container { display: flex; gap: 12px; margin-bottom: 20px; } .kpi-card { flex: 1; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; } .kpi-label { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #64748b; } .kpi-value { font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 2px; } table { width: 100%; border-collapse: collapse; font-size: 12px; } th { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-size: 11px; text-transform: uppercase; } td { border: 1px solid #e2e8f0; padding: 8px 10px; } @media print { body { margin: 10mm; } button { display: none; } }</style></head><body><div class="header"><div class="title">ExamGO — Laporan Hasil Tryout Event</div><div class="subtitle">Paket: <b>${escapeHtml(eventName)}</b> | Kategori: <b>${escapeHtml(eventKategori)}</b> | Tanggal Cetak: ${new Date().toLocaleString('id-ID')}</div></div><div class="kpi-container"><div class="kpi-card"><div class="kpi-label">Total Peserta</div><div class="kpi-value">${total}</div></div><div class="kpi-card"><div class="kpi-label">Rata-Rata Skor</div><div class="kpi-value">${avg}</div></div><div class="kpi-card"><div class="kpi-label">Skor Tertinggi</div><div class="kpi-value">${highest}</div></div><div class="kpi-card"><div class="kpi-label">Lulus Passing Grade</div><div class="kpi-value">${lulus} (${total > 0 ? Math.round((lulus/total)*100) : 0}%)</div></div></div><table><thead><tr><th style="text-align: center; width: 60px;">Peringkat</th><th>Nama Peserta</th><th>Kontak (WA & Email)</th><th style="text-align: center;">Skor</th><th style="text-align: center;">Rincian Jawaban</th><th style="text-align: center;">Status</th><th style="text-align: right;">Waktu Selesai</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`);
       printWindow.document.close();
       setTimeout(function() {
         printWindow.focus();
