@@ -87,6 +87,16 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
     }
   }
 
+  void _scrollToChip(int index) {
+    if (!_chipScrollCtrl.hasClients) return;
+    final targetOffset = (index * 40.0) - 100.0;
+    _chipScrollCtrl.animateTo(
+      targetOffset.clamp(0.0, _chipScrollCtrl.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final filtered = _filteredQuestions;
@@ -126,28 +136,11 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
           ),
           backgroundColor: AppColors.primaryGreen,
           elevation: 0,
-          actions: [
-            if (widget.score != null)
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(right: 14),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'Skor: ${widget.score}',
-                    style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                  ),
-                ),
-              ),
-          ],
         ),
         body: Column(
           children: [
-            // Ringkasan Statistik
-            _buildSummaryBar(),
+            // Card Skor Modern & Profesional
+            _buildScoreCard(),
 
             // Filter Chips
             _buildFilterChips(),
@@ -166,42 +159,340 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
             ),
           ],
         ),
+        bottomNavigationBar: filtered.isEmpty ? null : _buildStickyBottomNav(filtered.length),
       ),
     );
   }
 
-  Widget _buildSummaryBar() {
+  Widget _buildScoreCard() {
+    final totalSoal = widget.questions.length;
+    final effectiveScore = widget.score ?? (totalSoal > 0 ? ((_countBenar / totalSoal) * 100).round() : 0);
+    final accuracy = totalSoal > 0 ? ((_countBenar / totalSoal) * 100).toStringAsFixed(1) : '0';
+    final isLulus = widget.statusKelulusan != null && widget.statusKelulusan!.toLowerCase().contains('lulus');
+    final statusText = (widget.statusKelulusan != null && widget.statusKelulusan!.isNotEmpty)
+        ? widget.statusKelulusan!
+        : (effectiveScore >= 65 ? 'Lulus Passing Grade' : 'Belum Memenuhi');
+
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const BoxDecoration(
-        color: Color(0xFF1B5E20),
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1B5E20),
+            Color(0xFF2E7D32),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1B5E20).withValues(alpha: 0.22),
+            offset: const Offset(0, 5),
+            blurRadius: 14,
+          ),
+        ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Column(
         children: [
-          _buildStatPill('Total', '${widget.questions.length}', Colors.white),
-          _buildStatPill('Benar', '$_countBenar', const Color(0xFF4ADE80)),
-          _buildStatPill('Salah', '$_countSalah', const Color(0xFFF87171)),
-          _buildStatPill('Kosong', '$_countKosong', const Color(0xFFCBD5E1)),
+          // Baris Atas: Kategori Badge & Status Pill
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.school_rounded, size: 13, color: Colors.white),
+                      const SizedBox(width: 5),
+                      Text(
+                        'TRYOUT ${widget.kategori.toUpperCase()}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                  decoration: BoxDecoration(
+                    color: (isLulus || effectiveScore >= 65)
+                        ? const Color(0xFF4ADE80).withValues(alpha: 0.22)
+                        : const Color(0xFFFBBF24).withValues(alpha: 0.22),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: (isLulus || effectiveScore >= 65)
+                          ? const Color(0xFF4ADE80).withValues(alpha: 0.5)
+                          : const Color(0xFFFBBF24).withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Text(
+                    statusText.toUpperCase(),
+                    style: GoogleFonts.poppins(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w800,
+                      color: (isLulus || effectiveScore >= 65)
+                          ? const Color(0xFF86EFAC)
+                          : const Color(0xFFFDE68A),
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Baris Tengah: Hero Score & Akurasi
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SKOR HASIL',
+                      style: GoogleFonts.poppins(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.75),
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          '$effectiveScore',
+                          style: GoogleFonts.poppins(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            height: 1.1,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'PTS',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF86EFAC),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Akurasi Jawaban',
+                        style: GoogleFonts.poppins(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withValues(alpha: 0.85),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.bolt_rounded, size: 14, color: Color(0xFFFDE047)),
+                          const SizedBox(width: 2),
+                          Text(
+                            '$accuracy%',
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          // Baris Bawah: 4 Mini Stat Pills (Total, Benar, Salah, Kosong)
+          Container(
+            margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                _buildMiniStatBox('Total', '$totalSoal', Icons.format_list_numbered_rounded, const Color(0xFF475569), const Color(0xFFF8FAFC)),
+                const SizedBox(width: 5),
+                _buildMiniStatBox('Benar', '$_countBenar', Icons.check_circle_rounded, const Color(0xFF15803D), const Color(0xFFDCFCE7)),
+                const SizedBox(width: 5),
+                _buildMiniStatBox('Salah', '$_countSalah', Icons.cancel_rounded, const Color(0xFFB91C1C), const Color(0xFFFEE2E2)),
+                const SizedBox(width: 5),
+                _buildMiniStatBox('Kosong', '$_countKosong', Icons.remove_circle_outline_rounded, const Color(0xFF64748B), const Color(0xFFF1F5F9)),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildStatPill(String label, String value, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          '$label: ',
-          style: GoogleFonts.poppins(fontSize: 11, color: Colors.white.withValues(alpha: 0.75)),
+  Widget _buildMiniStatBox(String label, String value, IconData icon, Color color, Color bg) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(9),
         ),
-        Text(
-          value,
-          style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: color),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 11, color: color),
+                const SizedBox(width: 3),
+                Text(
+                  value,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 1),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w600,
+                color: color.withValues(alpha: 0.85),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildStickyBottomNav(int totalFiltered) {
+    final hasPrev = _currentIndex > 0;
+    final hasNext = _currentIndex < totalFiltered - 1;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            offset: const Offset(0, -3),
+            blurRadius: 10,
+          ),
+        ],
+        border: const Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            // Tombol Sebelumnya
+            Expanded(
+              child: SizedBox(
+                height: 48,
+                child: OutlinedButton.icon(
+                  onPressed: hasPrev
+                      ? () {
+                          setState(() => _currentIndex--);
+                          _scrollToChip(_currentIndex);
+                        }
+                      : null,
+                  icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                  label: Text(
+                    'Sebelumnya',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primaryGreen,
+                    disabledForegroundColor: const Color(0xFF94A3B8),
+                    side: BorderSide(
+                      color: hasPrev ? AppColors.primaryGreen : const Color(0xFFCBD5E1),
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Tombol Berikutnya
+            Expanded(
+              child: SizedBox(
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: hasNext
+                      ? () {
+                          setState(() => _currentIndex++);
+                          _scrollToChip(_currentIndex);
+                        }
+                      : null,
+                  icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                  label: Text(
+                    'Berikutnya',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryGreen,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: const Color(0xFFE2E8F0),
+                    disabledForegroundColor: const Color(0xFF94A3B8),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -583,45 +874,6 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                 ),
             ],
           ),
-        ),
-
-        const SizedBox(height: 20),
-
-        // Navigasi Prev / Next
-        Row(
-          children: [
-            if (_currentIndex > 0)
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => setState(() => _currentIndex--),
-                  icon: const Icon(Icons.arrow_back_rounded, size: 16),
-                  label: Text('Sebelumnya', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12)),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primaryGreen,
-                    side: const BorderSide(color: AppColors.primaryGreen),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-              ),
-            if (_currentIndex > 0 && _currentIndex < totalFiltered - 1)
-              const SizedBox(width: 12),
-            if (_currentIndex < totalFiltered - 1)
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => setState(() => _currentIndex++),
-                  icon: const Icon(Icons.arrow_forward_rounded, size: 16),
-                  label: Text('Berikutnya', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryGreen,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-              ),
-          ],
         ),
       ],
     );
