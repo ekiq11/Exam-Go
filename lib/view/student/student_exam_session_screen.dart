@@ -1152,92 +1152,106 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                           ),
                         ),
                         if (_isSnbt && hasNextSubtest) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFFBEB),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: const Color(0xFFFDE68A)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.lock_clock_rounded,
-                                  size: 14,
-                                  color: Color(0xFFD97706),
-                                ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  'Blocking Time',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF92400E),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                        ] else if (!_isSnbt && hasNextSubtest) ...[
-                          OutlinedButton.icon(
-                            onPressed: () {
+                          // SNBT dengan subtes belum selesai:
+                          // JANGAN tampilkan tombol "Lanjut Subtest" dan JANGAN tampilkan tombol "Kirim Ujian"
+                          // HANYA tampilkan status badge informatif Blocking Time
+                          InkWell(
+                            onTap: () {
                               Navigator.pop(ctx);
-                              _confirmFinishSubtestDialog();
+                              _showBlockingTimeInfoDialog();
                             },
-                            icon: const Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 15,
-                              color: Color(0xFFD97706),
-                            ),
-                            label: Text(
-                              'Lanjut Subtest',
-                              style: GoogleFonts.poppins(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFFD97706),
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFFBEB),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: const Color(0xFFFDE68A)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.lock_clock_rounded,
+                                    size: 15,
+                                    color: Color(0xFFD97706),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Blocking Time Terkunci',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF92400E),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Color(0xFFFDE68A), width: 1.2),
-                              backgroundColor: const Color(0xFFFFFBEB),
-                              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
+                          ),
+                        ] else ...[
+                          // TKA / Non-SNBT atau Subtes Terakhir SNBT atau SKD
+                          if (hasNextSubtest) ...[
+                            // TKA / Non-SNBT boleh tampil tombol Lanjut Subtest
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                _confirmFinishSubtestDialog();
+                              },
+                              icon: const Icon(
+                                Icons.arrow_forward_rounded,
+                                size: 15,
+                                color: Colors.white,
+                              ),
+                              label: Text(
+                                'Lanjut Subtest',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFD97706),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(ctx);
+                              _confirmSubmitDialog();
+                            },
+                            icon: const Icon(
+                              Icons.send_rounded,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                            label: Text(
+                              'Kirim Ujian',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryGreen,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
                         ],
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            _confirmSubmitDialog();
-                          },
-                          icon: const Icon(
-                            Icons.send_rounded,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                          label: Text(
-                            'Kirim Ujian',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryGreen,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   ],
@@ -2239,7 +2253,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
               ),
             ),
 
-            // Sticky Bottom Navigation Bar
+            // Sticky Bottom Navigation Bar Modern & Ergonomis
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
@@ -2247,46 +2261,47 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                 border: const Border(top: BorderSide(color: Color(0xFFE2E8F0))),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 10,
-                    offset: const Offset(0, -3),
+                    color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                    blurRadius: 16,
+                    offset: const Offset(0, -4),
                   ),
                 ],
               ),
               child: Row(
                 children: [
-                  // Tombol Sebelumnya
-                  IconButton.outlined(
-                    onPressed: _currentIndex > 0
+                  // 1. Tombol Sebelumnya
+                  InkWell(
+                    onTap: _currentIndex > 0
                         ? () {
                             setState(() => _currentIndex--);
                             _saveSessionToLocalCache();
                           }
                         : null,
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      size: 16,
-                    ),
-                    style: IconButton.styleFrom(
-                      foregroundColor: const Color(0xFF334155),
-                      disabledForegroundColor: const Color(0xFFCBD5E1),
-                      side: BorderSide(
-                        color: _currentIndex > 0
-                            ? const Color(0xFFCBD5E1)
-                            : const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.circular(14),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: _currentIndex > 0 ? Colors.white : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: _currentIndex > 0 ? const Color(0xFFCBD5E1) : const Color(0xFFE2E8F0),
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      child: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 16,
+                        color: _currentIndex > 0 ? const Color(0xFF334155) : const Color(0xFF94A3B8),
                       ),
-                      padding: const EdgeInsets.all(12),
                     ),
                   ),
                   const SizedBox(width: 8),
 
-                  // Tombol Ragu-Ragu
+                  // 2. Tombol Ragu-Ragu
                   Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
+                    child: InkWell(
+                      onTap: () {
                         setState(() {
                           if (isRagu) {
                             _raguRagu.remove(currentQ.soalId);
@@ -2296,126 +2311,122 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                         });
                         _saveSessionToLocalCache();
                       },
-                      icon: Icon(
-                        isRagu
-                            ? Icons.flag_rounded
-                            : Icons.outlined_flag_rounded,
-                        color: isRagu
-                            ? const Color(0xFFD97706)
-                            : const Color(0xFF64748B),
-                        size: 18,
-                      ),
-                      label: Text(
-                        'Ragu-Ragu',
-                        style: GoogleFonts.poppins(
-                          color: isRagu
-                              ? const Color(0xFFB45309)
-                              : const Color(0xFF334155),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                      borderRadius: BorderRadius.circular(14),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: 46,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: isRagu ? const Color(0xFFFEF3C7) : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isRagu ? const Color(0xFFF59E0B) : const Color(0xFFCBD5E1),
+                            width: isRagu ? 1.5 : 1.0,
+                          ),
+                          boxShadow: isRagu
+                              ? [
+                                  BoxShadow(
+                                    color: const Color(0xFFD97706).withValues(alpha: 0.15),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
                         ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: isRagu
-                            ? const Color(0xFFFEF3C7)
-                            : Colors.transparent,
-                        side: BorderSide(
-                          color: isRagu
-                              ? const Color(0xFFF59E0B)
-                              : const Color(0xFFCBD5E1),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              isRagu ? Icons.flag_rounded : Icons.outlined_flag_rounded,
+                              size: 18,
+                              color: isRagu ? const Color(0xFFD97706) : const Color(0xFF64748B),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Ragu-Ragu',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12.5,
+                                fontWeight: isRagu ? FontWeight.bold : FontWeight.w600,
+                                color: isRagu ? const Color(0xFF92400E) : const Color(0xFF334155),
+                              ),
+                            ),
+                          ],
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
 
-                  // Tombol Berikutnya / Lanjut Subtest (TKA) / Blocking Time (SNBT) / Kumpulkan
+                  // 3. Tombol Aksi Utama (Berikutnya / Blocking Time / Lanjut Subtest / Kumpulkan)
                   if (_currentIndex < activeQuestions.length - 1)
-                    ElevatedButton(
-                      onPressed: () {
+                    InkWell(
+                      onTap: () {
                         setState(() => _currentIndex++);
                         _saveSessionToLocalCache();
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryGreen,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Berikutnya',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              fontSize: 12.5,
+                      borderRadius: BorderRadius.circular(14),
+                      child: Container(
+                        height: 46,
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF0F766E).withValues(alpha: 0.25),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                        ],
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Berikutnya',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontSize: 12.5,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 13,
+                              color: Colors.white,
+                            ),
+                          ],
+                        ),
                       ),
                     )
-                  else if (_isPerSubtest &&
-                      _currentSubtestIndex < _subtests.length - 1)
+                  else if (_isPerSubtest && _currentSubtestIndex < _subtests.length - 1)
                     if (_isSnbt)
                       InkWell(
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.lock_clock_rounded,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      'Sistem Blocking Time SNBT: Subtes otomatis berpindah saat waktu habis (00:00). Silakan manfaatkan waktu untuk periksa kembali jawaban.',
-                                      style: GoogleFonts.poppins(fontSize: 12),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              backgroundColor: const Color(0xFFD97706),
-                              duration: const Duration(seconds: 4),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(12),
+                        onTap: _showBlockingTimeInfoDialog,
+                        borderRadius: BorderRadius.circular(14),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 11,
-                          ),
+                          height: 46,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFEF3C7),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color(0xFFFDE68A),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFFEF3C7), Color(0xFFFFFBEB)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFFFDE68A), width: 1.2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFD97706).withValues(alpha: 0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -2439,60 +2450,88 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                         ),
                       )
                     else
-                      ElevatedButton.icon(
-                        onPressed: _confirmFinishSubtestDialog,
-                        icon: const Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                        label: Text(
-                          'Lanjut Subtest',
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: 12.5,
+                      InkWell(
+                        onTap: _confirmFinishSubtestDialog,
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          height: 46,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFD97706), Color(0xFFF59E0B)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFD97706).withValues(alpha: 0.25),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                           ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD97706),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Lanjut Subtest',
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Icon(
+                                Icons.arrow_forward_rounded,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                            ],
                           ),
                         ),
                       )
                   else
-                    ElevatedButton.icon(
-                      onPressed: _confirmSubmitDialog,
-                      icon: const Icon(
-                        Icons.send_rounded,
-                        size: 15,
-                        color: Colors.white,
-                      ),
-                      label: Text(
-                        'Kumpulkan',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 13,
+                    InkWell(
+                      onTap: _confirmSubmitDialog,
+                      borderRadius: BorderRadius.circular(14),
+                      child: Container(
+                        height: 46,
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF15803D), Color(0xFF22C55E)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF15803D).withValues(alpha: 0.25),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
                         ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryGreen,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.send_rounded,
+                              size: 15,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Kumpulkan',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontSize: 12.5,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -2668,17 +2707,162 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     );
   }
 
+  /// Dialog Edukasi & Regulasi Resmi Sistem Blocking Time (UTBK-SNBT)
+  void _showBlockingTimeInfoDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFEF3C7), Color(0xFFFFFBEB)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFFDE68A), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFD97706).withValues(alpha: 0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.lock_clock_rounded,
+                  color: Color(0xFFD97706),
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Sistem Blocking Time UTBK',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0F172A),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Sesuai Aturan Resmi BPPP & SNPMB Nasional',
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFFD97706),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  children: [
+                    _buildRuleRow(
+                      Icons.timer_outlined,
+                      'Waktu Terkunci per Subtes',
+                      'Setiap subtes memiliki alokasi waktu tersendiri. Anda tidak dapat maju ke subtes berikutnya sebelum waktu habis.',
+                    ),
+                    const Divider(height: 16, color: Color(0xFFE2E8F0)),
+                    _buildRuleRow(
+                      Icons.lock_outline_rounded,
+                      'Berpindah Otomatis (00:00)',
+                      'Saat timer subtes mencapai 00:00, sistem komputer akan langsung mengalihkan layar ke subtes selanjutnya secara otomatis.',
+                    ),
+                    const Divider(height: 16, color: Color(0xFFE2E8F0)),
+                    _buildRuleRow(
+                      Icons.published_with_changes_rounded,
+                      'Periksa Kembali Jawaban',
+                      'Gunakan sisa menit yang ada untuk mengecek kembali jawaban & nomor ragu-ragu. Begitu berpindah, Anda tidak bisa kembali ke subtes ini.',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD97706),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Mengerti, Lanjutkan Pengerjaan',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.5,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRuleRow(IconData icon, String title, String desc) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: const Color(0xFFD97706)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                desc,
+                style: GoogleFonts.poppins(
+                  fontSize: 10.5,
+                  color: const Color(0xFF64748B),
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   void _confirmFinishSubtestDialog() {
     if (_isSnbt) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Sistem Blocking Time SNBT: Subtes hanya berpindah otomatis saat waktu habis (00:00).',
-            style: GoogleFonts.poppins(fontSize: 12),
-          ),
-          backgroundColor: const Color(0xFFD97706),
-        ),
-      );
+      _showBlockingTimeInfoDialog();
       return;
     }
     final subtest = _subtests[_currentSubtestIndex];
@@ -2965,7 +3149,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Regulasi Resmi SNBT: Begitu Anda berpindah subtest, lembar jawaban subtest ini dikunci permanen dan Anda tidak dapat kembali lagi.',
+                        'Regulasi Ujian: Begitu Anda berpindah subtes, lembar jawaban subtes ini dikunci permanen, sisa waktu akan hangus, dan Anda tidak dapat kembali lagi.',
                         style: GoogleFonts.poppins(
                           fontSize: 11,
                           color: const Color(0xFF92400E),
@@ -3032,6 +3216,11 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   }
 
   void _confirmSubmitDialog() {
+    if (_isSnbt && _isPerSubtest && _currentSubtestIndex < _subtests.length - 1) {
+      _showBlockingTimeInfoDialog();
+      return;
+    }
+
     final answeredCount = _answers.length;
     final total = _allQuestions.length;
     final raguCount = _raguRagu.length;
