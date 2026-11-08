@@ -1022,14 +1022,49 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                             ],
                           ),
                           child: ElevatedButton.icon(
-                            onPressed: () {
+                            onPressed: () async {
+                              var questions = item.questions;
+                              if (questions.isEmpty) {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (_) => const Center(
+                                    child: CircularProgressIndicator(color: AppColors.primaryGreen),
+                                  ),
+                                );
+                                try {
+                                  final cached = await ExamCacheService.instance.loadExam(item.token);
+                                  if (cached != null && cached.questions.isNotEmpty) {
+                                    questions = cached.questions;
+                                  } else {
+                                    final downloaded = await ExamCacheService.instance.downloadAndCacheExam(
+                                      paketId: item.token,
+                                    );
+                                    if (downloaded.questions.isNotEmpty) {
+                                      questions = downloaded.questions;
+                                    }
+                                  }
+                                } catch (_) {}
+                                if (context.mounted) Navigator.pop(context);
+                              }
+
+                              if (!context.mounted) return;
+                              if (questions.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Butir soal pembahasan belum tersedia offline atau di server.'),
+                                  ),
+                                );
+                                return;
+                              }
+
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => TryoutDiscussionScreen(
                                     title: item.namaPaket,
                                     kategori: item.kategori,
-                                    questions: item.questions,
+                                    questions: questions,
                                     studentAnswers: item.jawaban,
                                     score: item.finalScore,
                                     statusKelulusan: item.statusKelulusan,

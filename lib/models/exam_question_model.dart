@@ -29,6 +29,7 @@ class ExamPackage {
   List<ExamSubtest> subtests;
   DateTime createdAt;
   String status; // 'ACTIVE', 'DRAFT', 'CLOSED'
+  bool allowRetake; // Izinkan dikerjakan berulang kali
 
   ExamPackage({
     required this.paketId,
@@ -39,6 +40,7 @@ class ExamPackage {
     List<ExamSubtest>? subtests,
     DateTime? createdAt,
     this.status = 'ACTIVE',
+    this.allowRetake = true,
   })  : subtests = subtests ?? [],
         createdAt = createdAt ?? DateTime.now();
 
@@ -54,6 +56,7 @@ class ExamPackage {
       'total_soal': totalSoal,
       'created_at': createdAt.toIso8601String(),
       'status': status,
+      'allow_retake': allowRetake,
       'subtest_count': subtests.length,
       // Ringkasan subtests disimpan di dokumen paket
       'subtests_meta': subtests.map((s) => s.toMetaJson()).toList(),
@@ -71,6 +74,7 @@ class ExamPackage {
           ? DateTime.tryParse(data['created_at'].toString()) ?? DateTime.now()
           : DateTime.now(),
       status: data['status']?.toString() ?? 'ACTIVE',
+      allowRetake: data['allow_retake'] != false && data['bisa_ulang'] != false,
     );
   }
 }

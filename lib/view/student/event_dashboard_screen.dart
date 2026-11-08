@@ -150,17 +150,35 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
       _schedule = widget.initialSchedule;
       return;
     }
+    final effectiveId = widget.eventId.trim();
     try {
-      final doc = await FirebaseFirestore.instance.collection('paket_tryout').doc(widget.eventId).get();
+      final doc = await FirebaseFirestore.instance.collection('paket_tryout').doc(effectiveId).get();
       if (doc.exists) {
         _schedule = TryoutSchedule.fromMap(doc.id, doc.data() ?? {});
       }
     } catch (_) {}
 
-    // Fallback: cari dari daftar aktif
+    // Fallback 1: cari by target_exam_id jika eventId adalah kode target exam
+    if (_schedule == null) {
+      try {
+        final snap = await FirebaseFirestore.instance
+            .collection('paket_tryout')
+            .where('target_exam_id', isEqualTo: effectiveId.toUpperCase())
+            .limit(1)
+            .get();
+        if (snap.docs.isNotEmpty) {
+          _schedule = TryoutSchedule.fromMap(snap.docs.first.id, snap.docs.first.data());
+        }
+      } catch (_) {}
+    }
+
+    // Fallback 2: cari dari daftar aktif lokal / GAS
     if (_schedule == null) {
       final all = await TryoutScheduleService.instance.getActiveSchedules();
-      final match = all.where((s) => s.paketId == widget.eventId).firstOrNull;
+      final match = all.where((s) =>
+        s.paketId.toUpperCase() == effectiveId.toUpperCase() ||
+        (s.targetExamId != null && s.targetExamId!.toUpperCase() == effectiveId.toUpperCase())
+      ).firstOrNull;
       if (match != null) _schedule = match;
     }
 
@@ -175,9 +193,16 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
   }
 
   Future<void> _checkSubmissionStatus() async {
+    final effectivePaketId = _schedule?.paketId ?? widget.eventId;
+
     // 1. Cek dari Riwayat Lokal Siswa
     final localList = await StudentTryoutHistoryService.instance.getHistory();
-    final localMatch = localList.where((h) => h.token == widget.eventId).firstOrNull;
+    final localMatch = localList.where((h) =>
+      h.token == effectivePaketId ||
+      h.token == widget.eventId ||
+      (_schedule?.targetExamId != null && h.token == _schedule!.targetExamId)
+    ).firstOrNull;
+
     if (localMatch != null) {
       _sudahDikerjakan = true;
       _myScore = localMatch.finalScore;
@@ -187,10 +212,16 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
     // 2. Verifikasi ke Firestore (jawaban_tryout)
     if (_studentNis.isNotEmpty) {
       try {
-        final doc = await FirebaseFirestore.instance
+        var doc = await FirebaseFirestore.instance
             .collection('jawaban_tryout')
-            .doc('${_studentNis}_${widget.eventId}')
+            .doc('${_studentNis}_$effectivePaketId')
             .get();
+        if (!doc.exists && effectivePaketId != widget.eventId) {
+          doc = await FirebaseFirestore.instance
+              .collection('jawaban_tryout')
+              .doc('${_studentNis}_${widget.eventId}')
+              .get();
+        }
         if (doc.exists) {
           final data = doc.data()!;
           _sudahDikerjakan = true;
@@ -201,10 +232,11 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
   }
 
   Future<void> _loadLeaderboard() async {
+    final effectivePaketId = _schedule?.paketId ?? widget.eventId;
     try {
       final snap = await FirebaseFirestore.instance
           .collection('jawaban_tryout')
-          .where('token', isEqualTo: widget.eventId)
+          .where('token', isEqualTo: effectivePaketId)
           .get();
 
       if (snap.docs.isNotEmpty) {
@@ -328,8 +360,9 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
     );
 
     try {
+      final effectivePaketId = _schedule?.paketId ?? widget.eventId;
       final examData = await ExamCacheService.instance.downloadAndCacheExam(
-        paketId: widget.eventId,
+        paketId: effectivePaketId,
         initialSchedule: _schedule,
       );
 
@@ -338,10 +371,16 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
       String statusKelulusan = 'SELESAI';
 
       if (_studentNis.isNotEmpty) {
-        final doc = await FirebaseFirestore.instance
+        var doc = await FirebaseFirestore.instance
             .collection('jawaban_tryout')
-            .doc('${_studentNis}_${widget.eventId}')
+            .doc('${_studentNis}_$effectivePaketId')
             .get();
+        if (!doc.exists && effectivePaketId != widget.eventId) {
+          doc = await FirebaseFirestore.instance
+              .collection('jawaban_tryout')
+              .doc('${_studentNis}_${widget.eventId}')
+              .get();
+        }
         if (doc.exists) {
           final data = doc.data()!;
           if (data['jawaban'] is Map) {

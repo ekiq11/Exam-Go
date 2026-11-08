@@ -88,5 +88,27 @@ void main() {
       expect(schedule.formattedFullSchedule, contains('Rabu, 9 Sep 2026'));
       expect(schedule.formattedFullSchedule, contains('17:34-23:59 WITA'));
     });
+
+    test('parses allowRetake and targetExamId correctly', () {
+      final singleAttempt = TryoutSchedule.fromMap('SNBT-002', {
+        'nama_paket': 'Tryout Akbar SNBT',
+        'jenis_test': 'SNBT',
+        'allow_retake': false,
+        'target_exam_id': 'SNBT-001',
+      });
+
+      expect(singleAttempt.allowRetake, isFalse);
+      expect(singleAttempt.targetExamId, 'SNBT-001');
+      expect(singleAttempt.toMap()['allow_retake'], isFalse);
+      expect(singleAttempt.toMap()['target_exam_id'], 'SNBT-001');
+
+      final multiAttempt = TryoutSchedule.fromMap('SNBT-003', {
+        'nama_paket': 'Tryout Bebas',
+        'allow_retake': true,
+      });
+
+      expect(multiAttempt.allowRetake, isTrue);
+      expect(multiAttempt.targetExamId, isNull);
+    });
   });
 }

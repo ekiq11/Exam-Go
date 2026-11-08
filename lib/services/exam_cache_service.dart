@@ -200,6 +200,7 @@ class ExamCacheService {
         kategori: initialSchedule.jenisTest,
         jenisWaktu: initialSchedule.jenisWaktu,
         durasiMenit: initialSchedule.durasiMenit,
+        allowRetake: initialSchedule.allowRetake,
       );
     }
 

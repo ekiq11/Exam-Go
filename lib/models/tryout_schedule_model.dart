@@ -15,6 +15,7 @@ class TryoutSchedule {
   final List<String> subtests;
   final bool isLifetime; // Selalu aktif / tanpa batasan tanggal & jam
   final bool allowRetake; // Bisa dikerjakan berulang kali oleh user
+  final String? targetExamId; // Target ID Ujian (opsional untuk integrasi token event)
 
   const TryoutSchedule({
     required this.paketId,
@@ -30,6 +31,7 @@ class TryoutSchedule {
     this.subtests = const [],
     this.isLifetime = false,
     this.allowRetake = true,
+    this.targetExamId,
   });
 
   factory TryoutSchedule.fromMap(String id, Map<String, dynamic> data) {
@@ -48,6 +50,9 @@ class TryoutSchedule {
         ? data['paket_id'].toString().trim()
         : id;
 
+    final targetId = data['target_exam_id']?.toString().trim().toUpperCase() ??
+        data['target_id']?.toString().trim().toUpperCase();
+
     return TryoutSchedule(
       paketId: effectiveId,
       namaPaket: data['nama_paket']?.toString() ?? data['nama_ujian']?.toString() ?? 'Tryout Nasional',
@@ -62,6 +67,7 @@ class TryoutSchedule {
       subtests: subList,
       isLifetime: data['is_lifetime'] == true || data['lifetime'] == true,
       allowRetake: data['allow_retake'] != false && data['bisa_ulang'] != false,
+      targetExamId: (targetId != null && targetId.isNotEmpty && targetId != 'DEFAULT') ? targetId : null,
     );
   }
 
@@ -79,6 +85,7 @@ class TryoutSchedule {
       'subtests': subtests,
       'is_lifetime': isLifetime,
       'allow_retake': allowRetake,
+      if (targetExamId != null) 'target_exam_id': targetExamId,
     };
   }
 

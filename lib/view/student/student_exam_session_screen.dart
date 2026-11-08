@@ -319,6 +319,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
           kategori: sched.jenisTest,
           jenisWaktu: sched.jenisWaktu,
           durasiMenit: sched.durasiMenit,
+          allowRetake: sched.allowRetake,
         );
       }
 
@@ -1133,6 +1134,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         result: evalResult,
         answers: _answers,
         questions: _allQuestions,
+        allowRetake: _package?.allowRetake ?? (widget.initialSchedule?.allowRetake ?? true),
       );
 
       // Bersihkan cache sesi ujian lokal
