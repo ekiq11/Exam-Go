@@ -22,7 +22,8 @@ class TryoutScheduleScreen extends StatefulWidget {
   State<TryoutScheduleScreen> createState() => _TryoutScheduleScreenState();
 }
 
-class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with SingleTickerProviderStateMixin {
+class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
   List<TryoutSchedule> _allSchedules = [];
@@ -59,10 +60,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    await Future.wait([
-      _loadSchedules(),
-      _loadHistory(),
-    ]);
+    await Future.wait([_loadSchedules(), _loadHistory()]);
     if (mounted) {
       setState(() => _isLoading = false);
     }
@@ -90,7 +88,8 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
     if (_selectedCategory == 'Semua') return _allSchedules;
     return _allSchedules.where((s) {
       final category = _selectedCategory.toUpperCase();
-      return s.jenisTest.contains(category) || s.namaPaket.toUpperCase().contains(category);
+      return s.jenisTest.contains(category) ||
+          s.namaPaket.toUpperCase().contains(category);
     }).toList();
   }
 
@@ -108,13 +107,20 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                 color: const Color(0xFFFEF3C7),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.confirmation_number_rounded, color: Color(0xFFD97706), size: 22),
+              child: const Icon(
+                Icons.confirmation_number_rounded,
+                color: Color(0xFFD97706),
+                size: 22,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 'Masuk Tiket Event',
-                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -125,20 +131,38 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
           children: [
             Text(
               'Masukkan kode token event dari email Lynk.id atau panitia sekolah untuk langsung masuk ke Dashboard Event.',
-              style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: const Color(0xFF64748B),
+              ),
             ),
             const SizedBox(height: 14),
             TextField(
               controller: tokenCtrl,
               textCapitalization: TextCapitalization.characters,
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1),
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
               decoration: InputDecoration(
                 hintText: 'Misal: EVENT-ABCD-1234',
-                hintStyle: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade400),
+                hintStyle: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: Colors.grey.shade400,
+                ),
                 filled: true,
                 fillColor: const Color(0xFFF8FAFC),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: AppColors.primaryGreen,
+                    width: 2,
+                  ),
+                ),
               ),
             ),
           ],
@@ -146,7 +170,10 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey)),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.poppins(color: Colors.grey),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -161,14 +188,14 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
 
               if (!mounted) return;
               final target = res.targetExamId ?? raw;
-              if (res.isSuccess || res.message.contains('aktif kembali') || raw.startsWith('EVENT')) {
+              if (res.isSuccess ||
+                  res.message.contains('aktif kembali') ||
+                  raw.startsWith('EVENT')) {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => EventDashboardScreen(
-                      eventId: target,
-                      eventToken: raw,
-                    ),
+                    builder: (_) =>
+                        EventDashboardScreen(eventId: target, eventToken: raw),
                   ),
                 );
               } else {
@@ -182,9 +209,17 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryGreen,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child: Text('Buka Event', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text(
+              'Buka Event',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -229,7 +264,11 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                 color: Colors.white.withValues(alpha: 0.16),
                 borderRadius: BorderRadius.circular(9),
               ),
-              child: const Icon(Icons.confirmation_number_outlined, color: Colors.white, size: 18),
+              child: const Icon(
+                Icons.confirmation_number_outlined,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
             tooltip: 'Masuk dengan Token Event',
             onPressed: _showEventTokenDialog,
@@ -241,7 +280,11 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                 color: Colors.white.withValues(alpha: 0.16),
                 borderRadius: BorderRadius.circular(9),
               ),
-              child: const Icon(Icons.refresh_rounded, color: Colors.white, size: 18),
+              child: const Icon(
+                Icons.refresh_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
             tooltip: 'Segarkan Data',
             onPressed: _loadData,
@@ -272,8 +315,14 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
               ),
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
-              labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12),
-              unselectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 12),
+              labelStyle: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+              unselectedLabelStyle: GoogleFonts.poppins(
+                fontWeight: FontWeight.w500,
+                fontSize: 12,
+              ),
               labelColor: AppColors.primaryGreen,
               unselectedLabelColor: Colors.white,
               tabs: const [
@@ -339,7 +388,11 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                   color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.workspace_premium_rounded, color: Color(0xFFFBBF24), size: 24),
+                child: const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: Color(0xFFFBBF24),
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -395,7 +448,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                   side: BorderSide(
-                    color: isSelected ? AppColors.primaryGreen : const Color(0xFFE2E8F0),
+                    color: isSelected
+                        ? AppColors.primaryGreen
+                        : const Color(0xFFE2E8F0),
                   ),
                 ),
                 onSelected: (_) => setState(() => _selectedCategory = cat),
@@ -407,7 +462,11 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
         // Main List
         Expanded(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryGreen,
+                  ),
+                )
               : RefreshIndicator(
                   color: AppColors.primaryGreen,
                   onRefresh: _loadData,
@@ -432,7 +491,11 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                                     ),
                                   );
                                 } else {
-                                  final shouldStart = await TryoutDetailSheet.show(context, item);
+                                  final shouldStart =
+                                      await TryoutDetailSheet.show(
+                                        context,
+                                        item,
+                                      );
                                   if (shouldStart == true && context.mounted) {
                                     _startTryout(item);
                                   }
@@ -460,7 +523,10 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
     if (!mounted) return;
 
     // 2. Tampilkan Pre-Exam Checklist (Cek baterai, identitas siswa, aturan)
-    final identity = await PreExamChecklistDialog.show(context, schedule.namaPaket);
+    final identity = await PreExamChecklistDialog.show(
+      context,
+      schedule.namaPaket,
+    );
     if (identity == null || !mounted) return;
 
     final name = identity['name'] ?? 'Siswa';
@@ -489,7 +555,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
 
   Widget _buildHistoryTab() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen));
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primaryGreen),
+      );
     }
 
     if (_historyList.isEmpty) {
@@ -570,8 +638,13 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                         backgroundColor: AppColors.primaryGreen,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ],
@@ -585,9 +658,14 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
 
     // Hitung KPI Ringkasan
     final totalUjian = _historyList.length;
-    final totalScore = _historyList.fold<int>(0, (sum, item) => sum + item.finalScore);
+    final totalScore = _historyList.fold<int>(
+      0,
+      (sum, item) => sum + item.finalScore,
+    );
     final avgScore = (totalScore / totalUjian).round();
-    final highestScore = _historyList.map((e) => e.finalScore).reduce((a, b) => a > b ? a : b);
+    final highestScore = _historyList
+        .map((e) => e.finalScore)
+        .reduce((a, b) => a > b ? a : b);
     final totalLulus = _historyList.where((e) => e.isPassed).length;
 
     return RefreshIndicator(
@@ -608,14 +686,20 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
 
           final item = _historyList[index - 1];
           final dt = item.submittedAt;
-          final dateStr = IndoDateFormatter.formatHariTanggal(dt.toIso8601String(), shortMonth: true);
+          final dateStr = IndoDateFormatter.formatHariTanggal(
+            dt.toIso8601String(),
+            shortMonth: true,
+          );
           final tz = IndoDateFormatter.detectTimeZone(null);
-          final timeStr = '$dateStr • ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} $tz';
+          final timeStr =
+              '$dateStr • ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} $tz';
           final isPassed = item.isPassed;
           final totalSoal = item.totalSoal > 0
               ? item.totalSoal
               : (item.totalBenar + item.totalSalah + item.totalKosong);
-          final accuracy = totalSoal > 0 ? ((item.totalBenar / totalSoal) * 100).round() : 0;
+          final accuracy = totalSoal > 0
+              ? ((item.totalBenar / totalSoal) * 100).round()
+              : 0;
 
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -624,12 +708,14 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: isPassed ? const Color(0xFFBBF7D0).withValues(alpha: 0.8) : const Color(0xFFE2E8F0),
+                color: isPassed
+                    ? const Color(0xFFA5D6A7).withValues(alpha: 0.8)
+                    : const Color(0xFFE0E0E0),
                 width: isPassed ? 1.4 : 1.0,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 14,
                   offset: const Offset(0, 4),
                 ),
@@ -645,13 +731,17 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                     _buildCategoryPill(item.kategori),
                     Row(
                       children: [
-                        const Icon(Icons.schedule_rounded, size: 12, color: Color(0xFF94A3B8)),
+                        const Icon(
+                          Icons.schedule_rounded,
+                          size: 12,
+                          color: AppColors.textSecondary,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           timeStr,
                           style: GoogleFonts.poppins(
                             fontSize: 10.5,
-                            color: const Color(0xFF64748B),
+                            color: AppColors.textSecondary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -674,7 +764,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                             style: GoogleFonts.poppins(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
-                              color: const Color(0xFF0F172A),
+                              color: AppColors.textPrimary,
                               height: 1.3,
                             ),
                             maxLines: 2,
@@ -686,18 +776,27 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                             runSpacing: 4,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2.5,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: isPassed ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
+                                  color: isPassed
+                                      ? AppColors.paleGreen
+                                      : const Color(0xFFFFEBEE),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
-                                      isPassed ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                                      isPassed
+                                          ? Icons.check_circle_rounded
+                                          : Icons.cancel_rounded,
                                       size: 11,
-                                      color: isPassed ? const Color(0xFF166534) : const Color(0xFF991B1B),
+                                      color: isPassed
+                                          ? AppColors.primaryGreen
+                                          : AppColors.error,
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
@@ -705,7 +804,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                                       style: GoogleFonts.poppins(
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
-                                        color: isPassed ? const Color(0xFF166534) : const Color(0xFF991B1B),
+                                        color: isPassed
+                                            ? AppColors.primaryGreen
+                                            : AppColors.error,
                                       ),
                                     ),
                                   ],
@@ -713,9 +814,12 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                               ),
                               if (item.predikat.isNotEmpty)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2.5,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF1F5F9),
+                                    color: AppColors.grey100,
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
@@ -723,7 +827,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                                     style: GoogleFonts.poppins(
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF475569),
+                                      color: AppColors.grey700,
                                     ),
                                   ),
                                 ),
@@ -733,14 +837,21 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                       ),
                     ),
                     const SizedBox(width: 10),
-                    // Skor Hero Pill
+                    // Skor Hero Pill (Harmonisasi Brand ExamGo)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
-                        color: isPassed ? const Color(0xFFF0FDF4) : const Color(0xFFFFF1F2),
+                        color: isPassed
+                            ? AppColors.paleGreen
+                            : const Color(0xFFFFEBEE),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: isPassed ? const Color(0xFFBBF7D0) : const Color(0xFFFECDD3),
+                          color: isPassed
+                              ? const Color(0xFFA5D6A7)
+                              : const Color(0xFFFFCDD2),
                         ),
                       ),
                       child: Column(
@@ -753,15 +864,19 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.5,
-                              color: isPassed ? const Color(0xFF166534) : const Color(0xFF9F1239),
+                              color: isPassed
+                                  ? AppColors.primaryGreen
+                                  : AppColors.error,
                             ),
                           ),
                           Text(
                             '${item.finalScore}',
                             style: GoogleFonts.poppins(
-                              fontSize: 22,
+                              fontSize: 20,
                               fontWeight: FontWeight.w900,
-                              color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
+                              color: isPassed
+                                  ? AppColors.primaryGreen
+                                  : AppColors.error,
                               height: 1.05,
                             ),
                           ),
@@ -769,7 +884,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                             '/ ${item.maxScore}',
                             style: GoogleFonts.poppins(
                               fontSize: 10,
-                              color: const Color(0xFF64748B),
+                              color: AppColors.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -790,128 +905,192 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                         if (item.totalBenar > 0)
                           Expanded(
                             flex: item.totalBenar,
-                            child: Container(color: const Color(0xFF16A34A)),
+                            child: Container(color: AppColors.primaryGreen),
                           ),
                         if (item.totalSalah > 0)
                           Expanded(
                             flex: item.totalSalah,
-                            child: Container(color: const Color(0xFFDC2626)),
+                            child: Container(color: AppColors.error),
                           ),
                         if (item.totalKosong > 0)
                           Expanded(
                             flex: item.totalKosong,
-                            child: Container(color: const Color(0xFFCBD5E1)),
+                            child: Container(color: AppColors.grey300),
                           ),
                         if (totalSoal == 0)
-                          Expanded(
-                            child: Container(color: const Color(0xFFE2E8F0)),
-                          ),
+                          Expanded(child: Container(color: AppColors.grey100)),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 10),
 
-                // Rincian Metrik Statistik Modern (Tanpa Emoji)
+                // Rincian Metrik Statistik Modern (Harmonisasi Brand ExamGo)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: AppColors.backgroundLight,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: AppColors.grey300),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildCardStatItem(Icons.check_circle_rounded, '${item.totalBenar} Benar', const Color(0xFF16A34A)),
-                      _buildCardStatItem(Icons.cancel_rounded, '${item.totalSalah} Salah', const Color(0xFFDC2626)),
-                      _buildCardStatItem(Icons.remove_circle_outline_rounded, '${item.totalKosong} Kosong', const Color(0xFF64748B)),
-                      _buildCardStatItem(Icons.percent_rounded, '$accuracy% Akurasi', const Color(0xFF0F766E)),
+                      _buildCardStatItem(
+                        Icons.check_circle_rounded,
+                        '${item.totalBenar} Benar',
+                        AppColors.primaryGreen,
+                      ),
+                      _buildCardStatItem(
+                        Icons.cancel_rounded,
+                        '${item.totalSalah} Salah',
+                        AppColors.error,
+                      ),
+                      _buildCardStatItem(
+                        Icons.remove_circle_outline_rounded,
+                        '${item.totalKosong} Kosong',
+                        AppColors.textSecondary,
+                      ),
+                      _buildCardStatItem(
+                        Icons.percent_rounded,
+                        '$accuracy% Akurasi',
+                        AppColors.primaryGreen,
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
-                // Tombol Aksi: Buka Pembahasan & Kerjakan Ulang
+                // Tombol Aksi: Redesain Proposional & Harmonis dengan Brand ExamGo
                 Row(
                   children: [
                     Expanded(
+                      flex: item.allowRetake ? 3 : 1,
                       child: SizedBox(
-                        height: 40,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => TryoutDiscussionScreen(
-                                  title: item.namaPaket,
-                                  kategori: item.kategori,
-                                  questions: item.questions,
-                                  studentAnswers: item.jawaban,
-                                  score: item.finalScore,
-                                  statusKelulusan: item.statusKelulusan,
-                                  returnToDashboardOnExit: false,
+                        height: 44,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFF1B5E20),
+                                AppColors.primaryGreen,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primaryGreen.withValues(
+                                  alpha: 0.28,
                                 ),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
                               ),
-                            );
-                          },
-                          icon: const Icon(Icons.menu_book_rounded, size: 16),
-                          label: Text(
-                            'Buka Pembahasan',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12.5,
+                            ],
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => TryoutDiscussionScreen(
+                                    title: item.namaPaket,
+                                    kategori: item.kategori,
+                                    questions: item.questions,
+                                    studentAnswers: item.jawaban,
+                                    score: item.finalScore,
+                                    statusKelulusan: item.statusKelulusan,
+                                    returnToDashboardOnExit: false,
+                                  ),
+                                ),
+                              );
+                            },
+                            icon: const Icon(
+                              Icons.auto_stories_rounded,
+                              size: 16,
                               color: Colors.white,
                             ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0F766E),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                            label: Text(
+                              'Pembahasan',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                color: Colors.white,
+                                //letterSpacing: 0.2,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
                     if (item.allowRetake) ...[
-                      const SizedBox(width: 10),
-                      SizedBox(
-                        height: 40,
-                        child: OutlinedButton.icon(
-                          onPressed: () async {
-                            final match = _allSchedules.where((s) => s.paketId == item.token).firstOrNull;
-                            final targetSched = match ??
-                                TryoutSchedule(
-                                  paketId: item.token,
-                                  namaPaket: item.namaPaket,
-                                  jenisTest: item.kategori,
-                                  tanggal: '',
-                                  isLifetime: true,
-                                  allowRetake: true,
-                                );
-                            final shouldStart = await TryoutDetailSheet.show(context, targetSched);
-                            if (shouldStart == true && context.mounted) {
-                              _startTryout(targetSched);
-                            }
-                          },
-                          icon: const Icon(Icons.replay_rounded, size: 16),
-                          label: Text(
-                            'Kerjakan Ulang',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: const Color(0xFF334155),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: SizedBox(
+                          height: 44,
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              final match = _allSchedules
+                                  .where((s) => s.paketId == item.token)
+                                  .firstOrNull;
+                              final targetSched =
+                                  match ??
+                                  TryoutSchedule(
+                                    paketId: item.token,
+                                    namaPaket: item.namaPaket,
+                                    jenisTest: item.kategori,
+                                    tanggal: '',
+                                    isLifetime: true,
+                                    allowRetake: true,
+                                  );
+                              final shouldStart = await TryoutDetailSheet.show(
+                                context,
+                                targetSched,
+                              );
+                              if (shouldStart == true && context.mounted) {
+                                _startTryout(targetSched);
+                              }
+                            },
+                            icon: const Icon(
+                              Icons.replay_rounded,
+                              size: 16,
+                              color: AppColors.primaryGreen,
                             ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF334155),
-                            side: const BorderSide(color: Color(0xFFCBD5E1)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                            label: Text(
+                              'Ulangi',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                color: AppColors.primaryGreen,
+                              ),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: AppColors.paleGreen.withValues(
+                                alpha: 0.6,
+                              ),
+                              side: const BorderSide(
+                                color: AppColors.primaryGreen,
+                                width: 1.2,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -937,14 +1116,14 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0F766E), Color(0xFF134E4A)],
+          colors: [Color(0xFF1B5E20), AppColors.primaryGreen],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F766E).withValues(alpha: 0.22),
+            color: AppColors.primaryGreen.withValues(alpha: 0.25),
             blurRadius: 16,
             offset: const Offset(0, 5),
           ),
@@ -1001,11 +1180,32 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
           const SizedBox(height: 14),
           Row(
             children: [
-              _buildHeaderStatItem('Total Sesi', '$totalUjian', Icons.assignment_turned_in_rounded),
-              Container(width: 1, height: 32, color: Colors.white.withValues(alpha: 0.2)),
-              _buildHeaderStatItem('Rata-Rata Skor', '$avgScore', Icons.trending_up_rounded),
-              Container(width: 1, height: 32, color: Colors.white.withValues(alpha: 0.2)),
-              _buildHeaderStatItem('Skor Tertinggi', '$highestScore', Icons.emoji_events_rounded, isGold: true),
+              _buildHeaderStatItem(
+                'Total Sesi',
+                '$totalUjian',
+                Icons.assignment_turned_in_rounded,
+              ),
+              Container(
+                width: 1,
+                height: 32,
+                color: Colors.white.withValues(alpha: 0.2),
+              ),
+              _buildHeaderStatItem(
+                'Rata-Rata Skor',
+                '$avgScore',
+                Icons.trending_up_rounded,
+              ),
+              Container(
+                width: 1,
+                height: 32,
+                color: Colors.white.withValues(alpha: 0.2),
+              ),
+              _buildHeaderStatItem(
+                'Skor Tertinggi',
+                '$highestScore',
+                Icons.emoji_events_rounded,
+                isGold: true,
+              ),
             ],
           ),
         ],
@@ -1013,7 +1213,12 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
     );
   }
 
-  Widget _buildHeaderStatItem(String label, String value, IconData icon, {bool isGold = false}) {
+  Widget _buildHeaderStatItem(
+    String label,
+    String value,
+    IconData icon, {
+    bool isGold = false,
+  }) {
     return Expanded(
       child: Column(
         children: [
@@ -1023,7 +1228,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
               Icon(
                 icon,
                 size: 14,
-                color: isGold ? const Color(0xFFFDE047) : Colors.white.withValues(alpha: 0.85),
+                color: isGold
+                    ? const Color(0xFFFDE047)
+                    : Colors.white.withValues(alpha: 0.85),
               ),
               const SizedBox(width: 4),
               Text(
@@ -1056,25 +1263,25 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
 
   Widget _buildCategoryPill(String kategori) {
     final kat = kategori.trim().toUpperCase();
-    Color bg = const Color(0xFFF0FDF4);
-    Color text = const Color(0xFF15803D);
-    Color border = const Color(0xFFBBF7D0);
+    Color bg = AppColors.paleGreen;
+    Color text = AppColors.primaryGreen;
+    Color border = const Color(0xFFA5D6A7);
     String label = kat;
 
     if (kat.contains('SNBT') || kat.contains('UTBK')) {
-      bg = const Color(0xFFEFF6FF);
-      text = const Color(0xFF1D4ED8);
-      border = const Color(0xFFBFDBFE);
+      bg = AppColors.paleGreen;
+      text = AppColors.primaryGreen;
+      border = const Color(0xFFA5D6A7);
       label = 'UTBK • SNBT';
     } else if (kat.contains('SKD')) {
-      bg = const Color(0xFFF5F3FF);
-      text = const Color(0xFF6D28D9);
-      border = const Color(0xFFDDD6FE);
+      bg = const Color(0xFFF1F8E9);
+      text = const Color(0xFF33691E);
+      border = const Color(0xFFC5E1A5);
       label = 'CAT • BKN SKD';
     } else if (kat.contains('TKA')) {
-      bg = const Color(0xFFFFF7ED);
-      text = const Color(0xFFC2410C);
-      border = const Color(0xFFFFEDD5);
+      bg = const Color(0xFFFFF8E1);
+      text = const Color(0xFFE65100);
+      border = const Color(0xFFFFECB3);
       label = kat;
     } else if (kat.contains('EVENT')) {
       bg = const Color(0xFFFEF3C7);
@@ -1155,7 +1362,10 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                     ? 'Paket tryout resmi admin akan segera dijadwalkan.'
                     : 'Tidak ada tryout untuk kategori $_selectedCategory.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 12.5, color: const Color(0xFF64748B)),
+                style: GoogleFonts.poppins(
+                  fontSize: 12.5,
+                  color: const Color(0xFF64748B),
+                ),
               ),
             ],
           ),

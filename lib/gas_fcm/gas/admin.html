@@ -879,13 +879,21 @@
 
         <!-- FORM 1: GENERATOR TOKEN BATCH (LYNK.ID) -->
         <div id="box-gen-batch" class="block pt-6">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-5">
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Peruntukan Akun (Role)</label>
               <select id="gen-token-type" onchange="onTokenTypeChange()" class="w-full px-3.5 py-3 bg-slate-50/80 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all">
                 <option value="STUDENT_LIFETIME" selected>🎓 Siswa Lifetime (Lynk.id)</option>
                 <option value="TEACHER_PREMIUM">👨‍🏫 Guru Premium (Lynk.id)</option>
                 <option value="EVENT">🎯 Tiket Event Tryout (Lynk.id)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Format Token</label>
+              <select id="gen-token-format" class="w-full px-3.5 py-3 bg-slate-50/80 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all">
+                <option value="STANDARD" selected>Standar (EVENT-XXXX)</option>
+                <option value="SHORT6">6-Karakter (EVxxxx - Input Manual)</option>
               </select>
             </div>
 
@@ -2112,6 +2120,111 @@
   </div>
 
   <!-- Notification Toast -->
+  <!-- MODAL: HASIL TRYOUT EVENT (SKD, SNBT, TKA, UMUM) -->
+  <div id="modal-event-results" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-950/70 backdrop-blur-sm transition-opacity opacity-0 p-3 sm:p-6">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[94vh] flex flex-col border border-slate-200 overflow-hidden transform transition-transform scale-95" id="modal-event-results-box">
+      <!-- Modal Header -->
+      <div class="p-5 sm:px-8 sm:py-5 border-b border-slate-200 bg-slate-50/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h3 class="text-lg sm:text-xl font-bold text-slate-900" id="event-res-modal-title">Hasil Tryout Event</h3>
+            <span id="event-res-modal-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase">EVENT</span>
+          </div>
+          <p id="event-res-modal-subtitle" class="text-xs text-slate-500 mt-1">Daftar peringkat, skor, akurasi, dan data kontak peserta event untuk monitoring admin.</p>
+        </div>
+        <div class="flex items-center gap-2 self-stretch sm:self-auto">
+          <button type="button" onclick="exportEventResultsToExcel()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-600 hover:text-white border border-emerald-300 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <span>Unduh Excel</span>
+          </button>
+          <button type="button" onclick="printEventResultsReport()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-blue-800 bg-blue-50 hover:bg-blue-600 hover:text-white border border-blue-300 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            <span>Cetak / PDF</span>
+          </button>
+          <button type="button" onclick="closeEventResultsModal()" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition-all cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Summary Header -->
+      <div class="px-5 sm:px-8 py-4 bg-white border-b border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100">
+          <div class="text-[11px] font-semibold text-slate-500 uppercase">Total Peserta</div>
+          <div class="text-xl sm:text-2xl font-black text-slate-900 mt-0.5" id="event-kpi-total">0</div>
+        </div>
+        <div class="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-100">
+          <div class="text-[11px] font-semibold text-emerald-800 uppercase">Rata-Rata Skor</div>
+          <div class="text-xl sm:text-2xl font-black text-emerald-700 mt-0.5" id="event-kpi-avg">0</div>
+        </div>
+        <div class="p-3 rounded-2xl bg-amber-50/70 border border-amber-100">
+          <div class="text-[11px] font-semibold text-amber-800 uppercase">Skor Tertinggi</div>
+          <div class="text-xl sm:text-2xl font-black text-amber-700 mt-0.5" id="event-kpi-highest">0</div>
+        </div>
+        <div class="p-3 rounded-2xl bg-blue-50/70 border border-blue-100">
+          <div class="text-[11px] font-semibold text-blue-800 uppercase">Lulus Passing Grade</div>
+          <div class="text-xl sm:text-2xl font-black text-blue-700 mt-0.5" id="event-kpi-lulus">0</div>
+        </div>
+      </div>
+
+      <!-- Filter & Search Controls -->
+      <div class="px-5 sm:px-8 py-3 bg-slate-50/50 border-b border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div class="flex-1 flex items-center gap-2">
+          <div class="relative flex-1 max-w-md">
+            <input type="text" id="search-event-results" oninput="onSearchEventResults()" placeholder="Cari nama peserta, NIS, email, nomor WA..." class="w-full pl-9 pr-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all">
+            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </div>
+          <select id="filter-event-results-status" onchange="renderEventResultsTable()" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500/20">
+            <option value="all">Semua Kelulusan</option>
+            <option value="passed">Lulus PG</option>
+            <option value="failed">Belum Lulus</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2 self-end sm:self-auto">
+          <span class="text-xs text-slate-500 font-medium">Tampilkan:</span>
+          <select id="event-results-page-size" onchange="onChangeEventPageSize()" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none">
+            <option value="10">10 / hal</option>
+            <option value="25" selected>25 / hal</option>
+            <option value="50">50 / hal</option>
+            <option value="100">100 / hal</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table Body -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-8">
+        <div class="overflow-x-auto border border-slate-200 rounded-2xl shadow-2xs">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
+              <tr>
+                <th class="px-4 py-3 text-center w-14">Rank</th>
+                <th class="px-5 py-3">Nama Peserta</th>
+                <th class="px-5 py-3">Kontak (WA & Email)</th>
+                <th class="px-4 py-3 text-center">Skor Akhir</th>
+                <th class="px-5 py-3 text-center">Akurasi (B / S / K)</th>
+                <th class="px-4 py-3 text-center">Status Kelulusan</th>
+                <th class="px-4 py-3 text-right">Waktu Selesai</th>
+              </tr>
+            </thead>
+            <tbody id="event-results-table-body" class="divide-y divide-slate-100 bg-white">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="px-5 sm:px-8 py-3.5 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div id="event-results-count-info" class="text-xs text-slate-500 font-medium">
+          Menampilkan 0 dari 0 peserta
+        </div>
+        <div id="event-results-page-controls" class="flex items-center gap-1">
+          <!-- Page numbers rendered via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="fixed bottom-5 right-5 transform transition-all duration-300 translate-y-20 opacity-0 text-white px-6 py-4 rounded-xl shadow-xl z-[60] flex items-center min-w-[300px]">
     <span id="toast-icon" class="mr-3"></span>
     <span id="toast-msg" class="text-sm font-medium flex-1"></span>
@@ -3154,6 +3267,10 @@
           '<td class="p-5 sm:px-6 sm:py-4">' + statusBadge + '</td>' +
           '<td class="p-4 sm:px-6 sm:py-4 text-right">' +
             '<div class="flex items-center justify-end space-x-2">' +
+              '<button onclick="openEventResultsModal(\'' + pkg.paket_id + '\', \'' + String(pkg.nama_paket || '').replace(/'/g, "\\'") + '\', \'' + String(pkg.jenis_test || 'UMUM') + '\')" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-800 hover:text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 border border-emerald-200" title="Lihat Peringkat & Unduh Hasil Excel/PDF">' +
+                '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>' +
+                'Hasil Event' +
+              '</button>' +
               '<button onclick="openSubtestModal(\'' + pkg.paket_id + '\', \'' + String(pkg.nama_paket || '').replace(/'/g, "\\'") + '\', \'' + String(pkg.jenis_test || '').replace(/'/g, "\\'") + '\', \'' + String(pkg.jenis_waktu || '').replace(/'/g, "\\'") + '\')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-lg text-xs font-semibold transition-all flex items-center gap-1">' +
                 '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>' +
                 'Subtest & Soal' +
@@ -5652,8 +5769,12 @@
 
         const deviceStr = item.isGroup
           ? `<span class="font-bold text-xs text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${item.currentActivations || 0} HP Terdaftar</span>`
-          : (item.isUsed && item.deviceId !== '-' 
-            ? `<span class="font-mono text-xs text-gray-800 bg-gray-100 px-2 py-0.5 rounded">${item.deviceId}</span>`
+          : (item.isUsed
+            ? `<div class="space-y-0.5">
+                 <div class="font-bold text-xs text-gray-900">${(item.userName && item.userName !== '-') ? escapeHtml(item.userName) : 'Pengguna Aktif'}</div>
+                 <div class="text-[11px] font-mono text-emerald-700 font-semibold">${(item.userWhatsapp && item.userWhatsapp !== '-') ? 'WA: ' + escapeHtml(item.userWhatsapp) : ''}</div>
+                 <div class="text-[10px] text-gray-400 font-mono">${(item.email && item.email !== '-') ? escapeHtml(item.email) : (item.deviceId && item.deviceId !== '-' ? item.deviceId : '')}</div>
+               </div>`
             : '<span class="text-gray-400 text-xs">Belum diaktivasi</span>');
 
         const activatedStr = item.isUsed && item.activatedAt !== '-'
@@ -6260,6 +6381,7 @@
       const type = document.getElementById('gen-token-type').value;
       const school = document.getElementById('gen-token-school').value;
       const count = document.getElementById('gen-token-count').value;
+      const format = document.getElementById('gen-token-format') ? document.getElementById('gen-token-format').value : 'STANDARD';
       const targetExam = (document.getElementById('gen-token-target').value || '').trim();
       const btn = document.getElementById('btn-generate-tokens');
       
@@ -6286,7 +6408,7 @@
 
           const tipEl = document.getElementById('generated-output-tip');
           if (tipEl) {
-            tipEl.innerHTML = `💡 <b>Siap untuk Lynk.id:</b> Klik <i>Salin Kode (Lynk.id)</i> lalu paste langsung ke kolom <i>Serial Numbers / Voucher</i> di produk Lynk.id Anda. Setiap pembeli akan otomatis menerima 1 token unik.`;
+            tipEl.innerHTML = `💡 <b>Siap untuk Lynk.id & Input Manual ExamGo:</b> Klik <i>Salin Kode</i> lalu bagikan atau paste langsung ke produk Lynk.id / peserta.`;
           }
 
           const textarea = document.getElementById('generated-tokens-textarea');
@@ -6303,7 +6425,7 @@
           btn.innerHTML = '<span>⚡ Generate Token</span>';
           showToast('Error: ' + (err.message || err), 'error');
         })
-        .generateLicenseTokens(creds.username, creds.password, type, count, targetExam, school);
+        .generateLicenseTokens(creds.username, creds.password, type, count, targetExam, school, format);
     }
 
     function copyGeneratedTokens() {
@@ -6902,6 +7024,305 @@
           }
         });
       }
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Hasil Tryout Event (Peringkat, Pagination, Excel & PDF)
+    // ─────────────────────────────────────────────────────────
+    let currentEventResultsData = [];
+    let currentEventResultsMeta = null;
+    let eventResultsCurrentPage = 1;
+    let eventResultsPageSize = 25;
+
+    function openEventResultsModal(eventId, eventName, kategori) {
+      const creds = getCredentials();
+      if (!creds) return;
+
+      const titleEl = document.getElementById('event-res-modal-title');
+      const badgeEl = document.getElementById('event-res-modal-badge');
+      const subtitleEl = document.getElementById('event-res-modal-subtitle');
+      const tbody = document.getElementById('event-results-table-body');
+
+      if (titleEl) titleEl.innerText = eventName || 'Hasil Tryout Event';
+      if (badgeEl) badgeEl.innerText = kategori || 'EVENT';
+      if (subtitleEl) subtitleEl.innerText = 'ID Event: ' + eventId + ' • Memuat hasil pengerjaan peserta...';
+
+      tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-slate-400"><div class="loader inline-block w-6 h-6 border-emerald-600 border-t-transparent mr-2"></div> Sedang memuat hasil peserta tryout event...</td></tr>';
+
+      _showModal('modal-event-results', 'modal-event-results-box');
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.error) {
+            tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-red-500 font-semibold">' + res.error + '</td></tr>';
+            showToast(res.error, 'error');
+            return;
+          }
+
+          currentEventResultsData = res.results || [];
+          currentEventResultsMeta = res.event || { id: eventId, nama: eventName, kategori: kategori };
+          eventResultsCurrentPage = 1;
+
+          // Render KPI
+          const stats = res.stats || {};
+          document.getElementById('event-kpi-total').innerText = stats.totalPeserta || 0;
+          document.getElementById('event-kpi-avg').innerText = stats.avgSkor || 0;
+          document.getElementById('event-kpi-highest').innerText = stats.highestSkor || 0;
+          document.getElementById('event-kpi-lulus').innerText = (stats.lulusCount || 0) + ' (' + (stats.totalPeserta > 0 ? Math.round((stats.lulusCount / stats.totalPeserta) * 100) : 0) + '%)';
+
+          if (subtitleEl) {
+            subtitleEl.innerText = 'Kategori: ' + (currentEventResultsMeta.kategori || 'UMUM') + ' • ' + currentEventResultsData.length + ' peserta telah menyelesaikan tryout.';
+          }
+
+          renderEventResultsTable();
+        })
+        .withFailureHandler(function(err) {
+          tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-red-500 font-semibold">Gagal memuat: ' + (err.message || err) + '</td></tr>';
+          showToast('Error: ' + (err.message || err), 'error');
+        })
+        .getEventTryoutResults(creds.username, creds.password, eventId);
+    }
+
+    function closeEventResultsModal() {
+      _hideModal('modal-event-results', 'modal-event-results-box');
+    }
+
+    function onSearchEventResults() {
+      eventResultsCurrentPage = 1;
+      renderEventResultsTable();
+    }
+
+    function onChangeEventPageSize() {
+      const select = document.getElementById('event-results-page-size');
+      eventResultsPageSize = parseInt(select.value) || 25;
+      eventResultsCurrentPage = 1;
+      renderEventResultsTable();
+    }
+
+    function goToEventResultsPage(page) {
+      eventResultsCurrentPage = page;
+      renderEventResultsTable();
+    }
+
+    function renderEventResultsTable() {
+      const search = (document.getElementById('search-event-results').value || '').trim().toLowerCase();
+      const statusFilter = document.getElementById('filter-event-results-status').value;
+      const tbody = document.getElementById('event-results-table-body');
+      const countInfo = document.getElementById('event-results-count-info');
+      const pageControls = document.getElementById('event-results-page-controls');
+
+      let filtered = currentEventResultsData.filter(item => {
+        if (statusFilter === 'passed' && !item.isPassed) return false;
+        if (statusFilter === 'failed' && item.isPassed) return false;
+        if (search) {
+          const matchName = (item.nama || '').toLowerCase().includes(search);
+          const matchNis = (item.nis || '').toLowerCase().includes(search);
+          const matchEmail = (item.email || '').toLowerCase().includes(search);
+          const matchWa = (item.noWa || '').toLowerCase().includes(search);
+          if (!matchName && !matchNis && !matchEmail && !matchWa) return false;
+        }
+        return true;
+      });
+
+      const totalItems = filtered.length;
+      const totalPages = Math.ceil(totalItems / eventResultsPageSize) || 1;
+      if (eventResultsCurrentPage > totalPages) eventResultsCurrentPage = totalPages;
+      if (eventResultsCurrentPage < 1) eventResultsCurrentPage = 1;
+
+      if (totalItems === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-10 text-center text-slate-400 font-medium">Tidak ada data hasil peserta yang sesuai dengan filter pencarian.</td></tr>';
+        if (countInfo) countInfo.innerText = 'Menampilkan 0 dari 0 peserta';
+        if (pageControls) pageControls.innerHTML = '';
+        return;
+      }
+
+      const startIndex = (eventResultsCurrentPage - 1) * eventResultsPageSize;
+      const endIndex = Math.min(startIndex + eventResultsPageSize, totalItems);
+      const paginated = filtered.slice(startIndex, endIndex);
+
+      if (countInfo) {
+        countInfo.innerText = `Menampilkan ${startIndex + 1} - ${endIndex} dari ${totalItems} peserta`;
+      }
+
+      // Pagination buttons
+      if (pageControls) {
+        let controls = '';
+        controls += `<button type="button" onclick="goToEventResultsPage(${eventResultsCurrentPage - 1})" ${eventResultsCurrentPage <= 1 ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs cursor-pointer">&laquo; Prev</button>`;
+
+        let pages = [];
+        if (totalPages <= 7) {
+          for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+          pages.push(1);
+          let sp = Math.max(2, eventResultsCurrentPage - 1);
+          let ep = Math.min(totalPages - 1, eventResultsCurrentPage + 1);
+          if (sp > 2) pages.push('...');
+          for (let i = sp; i <= ep; i++) pages.push(i);
+          if (ep < totalPages - 1) pages.push('...');
+          pages.push(totalPages);
+        }
+
+        pages.forEach(p => {
+          if (p === '...') {
+            controls += `<span class="px-1.5 py-1 text-slate-400 font-bold select-none text-xs">...</span>`;
+          } else {
+            const isActive = p === eventResultsCurrentPage;
+            controls += `<button type="button" onclick="goToEventResultsPage(${p})" class="px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${isActive ? 'bg-emerald-600 text-white' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}">${p}</button>`;
+          }
+        });
+
+        controls += `<button type="button" onclick="goToEventResultsPage(${eventResultsCurrentPage + 1})" ${eventResultsCurrentPage >= totalPages ? 'disabled' : ''} class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-bold disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs cursor-pointer">Next &raquo;</button>`;
+        pageControls.innerHTML = controls;
+      }
+
+      // Rows
+      let html = '';
+      paginated.forEach(item => {
+        let rankBadge = `<span class="font-bold text-slate-600 font-mono">#${item.rank}</span>`;
+        if (item.rank === 1) {
+          rankBadge = `<span class="px-2 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">🥇 #1</span>`;
+        } else if (item.rank === 2) {
+          rankBadge = `<span class="px-2 py-0.5 rounded-full text-xs font-black bg-slate-200 text-slate-800 border border-slate-300 shadow-2xs">🥈 #2</span>`;
+        } else if (item.rank === 3) {
+          rankBadge = `<span class="px-2 py-0.5 rounded-full text-xs font-black bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">🥉 #3</span>`;
+        }
+
+        const isPassed = item.isPassed;
+        const passBadge = isPassed
+          ? `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">LULUS PG</span>`
+          : `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">BELUM LULUS</span>`;
+
+        const waDisplay = (item.noWa && item.noWa !== '-') 
+          ? `<div class="text-[11px] font-mono text-emerald-700 font-semibold flex items-center gap-1"><span>📱</span> ${escapeHtml(item.noWa)}</div>`
+          : '';
+        const emailDisplay = (item.email && item.email !== '-')
+          ? `<div class="text-[10.5px] text-slate-400 font-mono truncate max-w-[170px]">${escapeHtml(item.email)}</div>`
+          : '';
+
+        const dtStr = item.submittedAt ? new Date(item.submittedAt).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+
+        html += `
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="px-4 py-3.5 text-center">${rankBadge}</td>
+            <td class="px-5 py-3.5">
+              <div class="font-bold text-slate-900 text-xs">${escapeHtml(item.nama)}</div>
+              <div class="text-[11px] text-slate-400 font-mono">NIS: ${escapeHtml(item.nis)}</div>
+            </td>
+            <td class="px-5 py-3.5">
+              ${waDisplay || '<span class="text-slate-400 text-xs">-</span>'}
+              ${emailDisplay}
+            </td>
+            <td class="px-4 py-3.5 text-center">
+              <span class="font-black text-sm ${isPassed ? 'text-emerald-700' : 'text-slate-800'}">${item.skor}</span>
+              <span class="text-[10px] text-slate-400 block font-medium">/ ${item.maxSkor}</span>
+            </td>
+            <td class="px-5 py-3.5 text-center">
+              <div class="flex items-center justify-center gap-1.5 text-xs font-semibold">
+                <span class="text-emerald-700 font-bold">${item.benar}B</span>
+                <span class="text-slate-300">•</span>
+                <span class="text-rose-600 font-bold">${item.salah}S</span>
+                <span class="text-slate-300">•</span>
+                <span class="text-slate-500 font-medium">${item.kosong}K</span>
+              </div>
+              <div class="text-[10px] text-slate-400 mt-0.5">${item.totalSoal} Soal</div>
+            </td>
+            <td class="px-4 py-3.5 text-center">${passBadge}</td>
+            <td class="px-4 py-3.5 text-right font-mono text-xs text-slate-500">${dtStr}</td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    function exportEventResultsToExcel() {
+      if (!currentEventResultsData || currentEventResultsData.length === 0) {
+        showToast('Tidak ada data hasil peserta untuk diunduh.', 'warning');
+        return;
+      }
+
+      const eventName = (currentEventResultsMeta && currentEventResultsMeta.nama) ? currentEventResultsMeta.nama : 'Event';
+      const eventKategori = (currentEventResultsMeta && currentEventResultsMeta.kategori) ? currentEventResultsMeta.kategori : 'UMUM';
+
+      let csv = '\uFEFF'; // UTF-8 BOM
+      csv += `"PERINGKAT","NAMA PESERTA","NIS/ID","NO WHATSAPP","EMAIL","KATEGORI","SKOR AKHIR","MAX SKOR","BENAR","SALAH","KOSONG","TOTAL SOAL","STATUS KELULUSAN","PREDIKAT","WAKTU SELESAI"\n`;
+
+      currentEventResultsData.forEach(item => {
+        const dtStr = item.submittedAt ? new Date(item.submittedAt).toISOString().replace('T', ' ').slice(0, 19) : '-';
+        const row = [
+          item.rank,
+          `"${String(item.nama || '').replace(/"/g, '""')}"`,
+          `"${String(item.nis || '').replace(/"/g, '""')}"`,
+          `"${String(item.noWa || '').replace(/"/g, '""')}"`,
+          `"${String(item.email || '').replace(/"/g, '""')}"`,
+          `"${String(item.kategori || eventKategori).replace(/"/g, '""')}"`,
+          item.skor,
+          item.maxSkor,
+          item.benar,
+          item.salah,
+          item.kosong,
+          item.totalSoal,
+          `"${String(item.status || (item.isPassed ? 'LULUS PG' : 'BELUM LULUS')).replace(/"/g, '""')}"`,
+          `"${String(item.predikat || '-').replace(/"/g, '""')}"`,
+          `"${dtStr}"`
+        ];
+        csv += row.join(',') + '\n';
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const safeName = eventName.replace(/[^a-zA-Z0-9_\-]/g, '_');
+      link.href = url;
+      link.download = `Hasil_Tryout_${safeName}_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('Hasil tryout event berhasil diunduh (Excel CSV)!', 'success');
+    }
+
+    function printEventResultsReport() {
+      if (!currentEventResultsData || currentEventResultsData.length === 0) {
+        showToast('Tidak ada data hasil peserta untuk dicetak.', 'warning');
+        return;
+      }
+
+      const eventName = (currentEventResultsMeta && currentEventResultsMeta.nama) ? currentEventResultsMeta.nama : 'Event Tryout';
+      const eventKategori = (currentEventResultsMeta && currentEventResultsMeta.kategori) ? currentEventResultsMeta.kategori : 'UMUM';
+      const total = currentEventResultsData.length;
+      const lulus = currentEventResultsData.filter(i => i.isPassed).length;
+      const avg = total > 0 ? Math.round(currentEventResultsData.reduce((s, i) => s + i.skor, 0) / total) : 0;
+      const highest = currentEventResultsData.reduce((max, i) => i.skor > max ? i.skor : max, 0);
+
+      let rowsHtml = '';
+      currentEventResultsData.forEach(item => {
+        const dtStr = item.submittedAt ? new Date(item.submittedAt).toLocaleString('id-ID') : '-';
+        rowsHtml += `
+          <tr>
+            <td style="text-align: center; font-weight: bold;">${item.rank}</td>
+            <td><b>${escapeHtml(item.nama)}</b><br><small style="color: #64748b;">NIS: ${escapeHtml(item.nis)}</small></td>
+            <td>${escapeHtml(item.noWa)}<br><small style="color: #64748b;">${escapeHtml(item.email)}</small></td>
+            <td style="text-align: center; font-weight: bold; font-size: 13px;">${item.skor}</td>
+            <td style="text-align: center;">${item.benar} / ${item.salah} / ${item.kosong}</td>
+            <td style="text-align: center; font-weight: bold; color: ${item.isPassed ? '#166534' : '#991b1b'};">${item.isPassed ? 'LULUS PG' : 'BELUM LULUS'}</td>
+            <td style="text-align: right; font-size: 11px;">${dtStr}</td>
+          </tr>
+        `;
+      });
+
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        showToast('Harap izinkan popup browser untuk membuka laporan cetak.', 'warning');
+        return;
+      }
+
+      printWindow.document.write(`<!DOCTYPE html><html><head><title>Hasil Resmi Tryout Event — ${escapeHtml(eventName)}</title><style>body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 24px; color: #0f172a; } .header { border-bottom: 2px solid #2e7d32; padding-bottom: 12px; margin-bottom: 20px; } .title { font-size: 20px; font-weight: bold; color: #1b5e20; } .subtitle { font-size: 12px; color: #475569; margin-top: 4px; } .kpi-container { display: flex; gap: 12px; margin-bottom: 20px; } .kpi-card { flex: 1; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; } .kpi-label { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #64748b; } .kpi-value { font-size: 18px; font-weight: 800; color: #0f172a; margin-top: 2px; } table { width: 100%; border-collapse: collapse; font-size: 12px; } th { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-size: 11px; text-transform: uppercase; } td { border: 1px solid #e2e8f0; padding: 8px 10px; } @media print { body { margin: 10mm; } button { display: none; } }</style></head><body><div class="header"><div class="title">ExamGO — Laporan Hasil Tryout Event</div><div class="subtitle">Paket: <b>${escapeHtml(eventName)}</b> | Kategori: <b>${escapeHtml(eventKategori)}</b> | Tanggal Cetak: ${new Date().toLocaleString('id-ID')}</div></div><div class="kpi-container"><div class="kpi-card"><div class="kpi-label">Total Peserta</div><div class="kpi-value">${total}</div></div><div class="kpi-card"><div class="kpi-label">Rata-Rata Skor</div><div class="kpi-value">${avg}</div></div><div class="kpi-card"><div class="kpi-label">Skor Tertinggi</div><div class="kpi-value">${highest}</div></div><div class="kpi-card"><div class="kpi-label">Lulus Passing Grade</div><div class="kpi-value">${lulus} (${total > 0 ? Math.round((lulus/total)*100) : 0}%)</div></div></div><table><thead><tr><th style="text-align: center; width: 45px;">Rank</th><th>Nama Peserta</th><th>Kontak (WA & Email)</th><th style="text-align: center;">Skor</th><th style="text-align: center;">B / S / K</th><th style="text-align: center;">Status</th><th style="text-align: right;">Waktu Selesai</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`);
+      printWindow.document.close();
+      setTimeout(function() {
+        printWindow.focus();
+        printWindow.print();
+      }, 400);
     }
 
     window.onload = () => {

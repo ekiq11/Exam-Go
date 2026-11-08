@@ -104,6 +104,19 @@ void main() {
 
       // Executive Dashboard Summary endpoint
       expect(content, contains('function getAdminDashboardSummary('));
+
+      // Event tryout results endpoint
+      expect(content, contains('function getEventTryoutResults('));
+    });
+
+    test('admin.html contains event tryout results modal, pagination and export functions', () {
+      final content = adminHtmlFile.readAsStringSync();
+      expect(content, contains('modal-event-results'));
+      expect(content, contains('event-results-table-body'));
+      expect(content, contains('openEventResultsModal('));
+      expect(content, contains('renderEventResultsTable('));
+      expect(content, contains('exportEventResultsToExcel('));
+      expect(content, contains('printEventResultsReport('));
     });
 
     test('Master Voucher code sanitizer regex cleans input properly', () {

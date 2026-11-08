@@ -1729,6 +1729,137 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
+  Future<Map<String, String>?> _promptUserProfileIfNeeded() async {
+    final prefs = await SharedPreferences.getInstance();
+    String name = prefs.getString('student_name') ?? '';
+    String email = prefs.getString('student_email') ?? '';
+    String wa = prefs.getString('student_whatsapp') ?? '';
+
+    if (name.isNotEmpty && email.isNotEmpty && wa.isNotEmpty) {
+      return {'name': name, 'email': email, 'whatsapp': wa};
+    }
+
+    final nameCtrl = TextEditingController(text: name);
+    final emailCtrl = TextEditingController(text: email);
+    final waCtrl = TextEditingController(text: wa);
+
+    if (!mounted) return null;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+        actionsPadding: const EdgeInsets.all(20),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.paleGreen,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.person_pin_rounded, color: AppColors.primaryGreen, size: 22),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Data Peserta Tryout',
+                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Silakan lengkapi data Anda untuk pencatatan aktivasi token & monitoring admin:',
+                style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, height: 1.4),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameCtrl,
+                textCapitalization: TextCapitalization.words,
+                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600),
+                decoration: InputDecoration(
+                  labelText: 'Nama Lengkap',
+                  hintText: 'Ahmad Fauzan',
+                  prefixIcon: const Icon(Icons.person_rounded, size: 18, color: AppColors.primaryGreen),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: emailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600),
+                decoration: InputDecoration(
+                  labelText: 'Email Aktif',
+                  hintText: 'nama@email.com',
+                  prefixIcon: const Icon(Icons.alternate_email_rounded, size: 18, color: AppColors.primaryGreen),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: waCtrl,
+                keyboardType: TextInputType.phone,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600),
+                decoration: InputDecoration(
+                  labelText: 'Nomor WhatsApp Aktif',
+                  hintText: '081234567890',
+                  prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: AppColors.primaryGreen),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (nameCtrl.text.trim().isEmpty ||
+                  emailCtrl.text.trim().isEmpty ||
+                  waCtrl.text.trim().length < 8) {
+                return;
+              }
+              Navigator.of(ctx).pop(true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryGreen,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            ),
+            child: Text('Simpan & Lanjut', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final finalName = nameCtrl.text.trim();
+      final finalEmail = emailCtrl.text.trim().toLowerCase();
+      final finalWa = waCtrl.text.trim();
+      await prefs.setString('student_name', finalName);
+      await prefs.setString('student_email', finalEmail);
+      await prefs.setString('student_whatsapp', finalWa);
+      return {'name': finalName, 'email': finalEmail, 'whatsapp': finalWa};
+    }
+    return null;
+  }
+
   Widget _buildInputTokenCard() {
     return GestureDetector(
       onTap: () async {
@@ -1785,10 +1916,10 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                   SizedBox(height: context.rs(4)),
                   Text(
-                    'Masukkan 6 digit token dari pengawas',
+                    'Masukkan token ujian (6 digit) atau kode Event / Lynk.id',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
-                      fontSize: context.rs(13),
+                      fontSize: context.rs(12.5),
                       color: AppColors.textSecondary,
                     ),
                   ),
@@ -1797,9 +1928,9 @@ class _HomeScreenState extends State<HomeScreen>
                     controller: ctrl,
                     textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
-                      fontSize: context.rs(24),
+                      fontSize: context.rs(20),
                       fontWeight: FontWeight.bold,
-                      letterSpacing: 4,
+                      letterSpacing: 2,
                     ),
                     textCapitalization: TextCapitalization.characters,
                     inputFormatters: [
@@ -1814,10 +1945,11 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ],
                     decoration: InputDecoration(
-                      hintText: 'XXXXXX',
+                      hintText: '6 DIGIT / EVENT-XXXX',
                       hintStyle: GoogleFonts.poppins(
                         color: Colors.grey.shade400,
-                        letterSpacing: 4,
+                        fontSize: context.rs(13),
+                        letterSpacing: 1.5,
                       ),
                       filled: true,
                       fillColor: Colors.grey.shade50,
@@ -1999,10 +2131,21 @@ class _HomeScreenState extends State<HomeScreen>
             }
           } catch (_) {}
 
-          // 3. Fallback 2: Cek apakah token adalah tiket Lynk.id (via LicenseService dengan fallback dual-layer)
+          // 3. Fallback 2: Cek apakah token adalah tiket Lynk.id / Event (via LicenseService dengan fallback dual-layer)
+          popLoading();
+
+          final profile = await _promptUserProfileIfNeeded();
+          if (profile == null) return;
+
+          _showLoading('Mengaktifkan Token...');
+          loadingPopped = false;
+
           final actResult = await LicenseService.instance.activateToken(
             rawToken: token,
             expectedType: 'STUDENT_LIFETIME',
+            userName: profile['name'],
+            userEmail: profile['email'],
+            userWhatsapp: profile['whatsapp'],
           );
 
           popLoading();

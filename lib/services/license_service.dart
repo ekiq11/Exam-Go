@@ -244,6 +244,8 @@ class LicenseService {
     required String rawToken,
     required String expectedType,
     String? userEmail,
+    String? userName,
+    String? userWhatsapp,
   }) async {
     var token = rawToken.trim().toUpperCase().replaceAll(' ', '');
     if (token.isEmpty) {
@@ -340,15 +342,38 @@ class LicenseService {
           await docRef.update({
             'is_used': true,
             'device_id': currentDeviceId,
+            'user_name': userName ?? 'Peserta Event',
             'used_by_email': userEmail ?? 'event_buyer',
+            'user_whatsapp': userWhatsapp ?? '-',
             'activated_at': now,
           });
+
+          // Catat ke premium_activations untuk monitoring admin
+          await db.collection('premium_activations').doc(token).set({
+            'token': token,
+            'type': 'EVENT',
+            'user_name': userName ?? 'Peserta Event',
+            'user_email': userEmail ?? '-',
+            'user_whatsapp': userWhatsapp ?? '-',
+            'device_id': currentDeviceId,
+            'target_exam_id': targetExam ?? '-',
+            'activated_at': now,
+          }, SetOptions(merge: true));
         }
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('active_event_token', token);
         if (targetExam != null && targetExam.isNotEmpty) {
           await prefs.setString('active_event_id', targetExam);
+        }
+        if (userName != null && userName.isNotEmpty) {
+          await prefs.setString('student_name', userName);
+        }
+        if (userEmail != null && userEmail.isNotEmpty) {
+          await prefs.setString('student_email', userEmail);
+        }
+        if (userWhatsapp != null && userWhatsapp.isNotEmpty) {
+          await prefs.setString('student_whatsapp', userWhatsapp);
         }
 
         return ActivationResult.success(
@@ -448,7 +473,9 @@ class LicenseService {
       await docRef.update({
         'is_used': true,
         'device_id': currentDeviceId,
+        'user_name': userName ?? 'User Premium',
         'used_by_email': userEmail ?? 'buyer_email',
+        'user_whatsapp': userWhatsapp ?? '-',
         'activated_at': now,
       });
 
@@ -456,14 +483,41 @@ class LicenseService {
       await db.collection('devices').doc(currentDeviceId).set({
         deviceField: true,
         'last_token_activated': token,
+        'user_name': userName,
+        'user_email': userEmail,
+        'user_whatsapp': userWhatsapp,
         'activated_at': now,
       }, SetOptions(merge: true));
 
-      // Simpan status lokal
-      await _applyActivationLocally(expectedType);
-
       final targetExam = data['target_exam_id']?.toString() ??
           data['target_package_id']?.toString();
+
+      // Catat ke premium_activations untuk dashboard monitoring admin
+      await db.collection('premium_activations').doc(token).set({
+        'token': token,
+        'type': tokenType,
+        'user_name': userName ?? 'User Premium',
+        'user_email': userEmail ?? '-',
+        'user_whatsapp': userWhatsapp ?? '-',
+        'device_id': currentDeviceId,
+        'target_exam_id': targetExam,
+        'school': data['school'] ?? 'UMUM',
+        'activated_at': now,
+      }, SetOptions(merge: true));
+
+      final prefs = await SharedPreferences.getInstance();
+      if (userName != null && userName.isNotEmpty) {
+        await prefs.setString('student_name', userName);
+      }
+      if (userEmail != null && userEmail.isNotEmpty) {
+        await prefs.setString('student_email', userEmail);
+      }
+      if (userWhatsapp != null && userWhatsapp.isNotEmpty) {
+        await prefs.setString('student_whatsapp', userWhatsapp);
+      }
+
+      // Simpan status lokal
+      await _applyActivationLocally(expectedType);
       final label = expectedType == 'TEACHER_PREMIUM'
           ? 'Lisensi Guru Premium Aktif!'
           : 'Akses Siswa Selamanya Aktif!';
@@ -475,6 +529,8 @@ class LicenseService {
           token: token,
           userType: expectedType,
           userEmail: userEmail,
+          userName: userName,
+          userWhatsapp: userWhatsapp,
         );
         if (gasResult != null) return gasResult;
       } catch (_) {}
@@ -488,6 +544,8 @@ class LicenseService {
     required String token,
     required String userType,
     String? userEmail,
+    String? userName,
+    String? userWhatsapp,
   }) async {
     final gasUrl = AppConfig.gasUrl;
     final apiKey = AppConfig.gasApiKey;
@@ -501,6 +559,8 @@ class LicenseService {
       'userType': userType,
       'deviceId': deviceId,
       'userEmail': userEmail ?? 'buyer_email',
+      'userName': userName ?? 'User',
+      'userWhatsapp': userWhatsapp ?? '-',
     });
 
     try {

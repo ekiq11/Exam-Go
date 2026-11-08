@@ -1317,6 +1317,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         answers: _answers,
       );
 
+      final prefs = await SharedPreferences.getInstance();
+      final studentEmail = prefs.getString('student_email') ?? '-';
+      final studentWa = prefs.getString('student_whatsapp') ?? '-';
+
       final docRef = FirebaseFirestore.instance
           .collection('jawaban_tryout')
           .doc('${widget.studentNis}_${widget.token}');
@@ -1325,6 +1329,8 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         'token': widget.token,
         'nama_peserta': widget.studentName,
         'nis': widget.studentNis,
+        'email': studentEmail,
+        'no_wa': studentWa,
         'kategori': category,
         'jumlah_benar': evalResult.totalBenar,
         'jumlah_salah': evalResult.totalSalah,
