@@ -708,8 +708,30 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     }
   }
 
+  // ─── Klasifikasi Aturan Resmi Ujian Nasional (SNBT, TKA, SKD/BKN) ───
+  bool get _isSnbt {
+    final kat = (_package?.kategori ?? '').trim().toUpperCase();
+    return kat == ExamCategory.snbt || kat == 'SNBT' || kat.contains('SNBT') || kat.contains('UTBK');
+  }
+
+  bool get _isSkd {
+    final kat = (_package?.kategori ?? '').trim().toUpperCase();
+    return kat == ExamCategory.skd || kat == 'SKD';
+  }
+
+  bool get _isTka {
+    final kat = (_package?.kategori ?? '').trim().toUpperCase();
+    return kat.startsWith('TKA') || kat.contains('TKA');
+  }
+
   // ─── Manajemen Timer Per-Subtest & Global ──────────────────────
   bool get _isPerSubtest {
+    // Sesuai aturan CAT BKN: SKD selalu satu kesatuan waktu global 100 menit (bebas lintas subtes)
+    if (_isSkd) return false;
+
+    // SNBT dan TKA menggunakan alokasi waktu terpisah per-subtest
+    if (_isSnbt || _isTka) return true;
+
     final jw = (_package?.jenisWaktu ?? '').trim().toLowerCase().replaceAll('-', '_').replaceAll(' ', '_');
     if (jw == 'per_subtest') return true;
     if (jw == 'per_paket') return false;
@@ -927,7 +949,16 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                                 color: const Color(0xFF0F172A),
                               ),
                             ),
-                            if (_isPerSubtest && _subtests.isNotEmpty)
+                            if (_isSkd)
+                              Text(
+                                'Simulasi CAT BKN: Bebas Akses Seluruh Soal',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11.5,
+                                  color: const Color(0xFF2563EB),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              )
+                            else if (_isPerSubtest && _subtests.isNotEmpty)
                               Text(
                                 'Subtest ${_currentSubtestIndex + 1}/${_subtests.length}: ${_subtests[_currentSubtestIndex].judul}',
                                 style: GoogleFonts.poppins(
@@ -1100,7 +1131,36 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                             ],
                           ),
                         ),
-                        if (hasNextSubtest) ...[
+                        if (_isSnbt && hasNextSubtest) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFFBEB),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: const Color(0xFFFDE68A)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.lock_clock_rounded,
+                                  size: 14,
+                                  color: Color(0xFFD97706),
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  'Blocking Time',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF92400E),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ] else if (!_isSnbt && hasNextSubtest) ...[
                           OutlinedButton.icon(
                             onPressed: () {
                               Navigator.pop(ctx);
@@ -1120,9 +1180,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                               ),
                             ),
                             style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Color(0xFFFDE68A)),
+                              side: const BorderSide(color: Color(0xFFFDE68A), width: 1.2),
                               backgroundColor: const Color(0xFFFFFBEB),
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+                              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -1137,7 +1197,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                           },
                           icon: const Icon(
                             Icons.send_rounded,
-                            size: 15,
+                            size: 14,
                             color: Colors.white,
                           ),
                           label: Text(
@@ -1150,6 +1210,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryGreen,
+                            foregroundColor: Colors.white,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                             shape: RoundedRectangleBorder(
@@ -1701,10 +1762,18 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     final isRagu = _raguRagu.contains(currentQ.soalId);
     final isWarningTimer = _remainingSeconds < 300; // < 5 menit
 
-    final currentSubtestTitle =
-        _isPerSubtest && _currentSubtestIndex < _subtests.length
-        ? _subtests[_currentSubtestIndex].judul
-        : (_package?.namaPaket ?? 'Ujian');
+    final String currentSubtestTitle;
+    if (_isPerSubtest && _currentSubtestIndex < _subtests.length) {
+      currentSubtestTitle = _subtests[_currentSubtestIndex].judul;
+    } else if (_isSkd && _subtests.isNotEmpty) {
+      final matchingSt = _subtests.firstWhere(
+        (st) => st.subtestId == currentQ.subtestId,
+        orElse: () => _subtests.first,
+      );
+      currentSubtestTitle = 'SKD — ${matchingSt.judul}';
+    } else {
+      currentSubtestTitle = _package?.namaPaket ?? 'Ujian';
+    }
 
     return PopScope(
       canPop: false,
@@ -2118,6 +2187,19 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       Icons.arrow_back_ios_new_rounded,
                       size: 16,
                     ),
+                    style: IconButton.styleFrom(
+                      foregroundColor: const Color(0xFF334155),
+                      disabledForegroundColor: const Color(0xFFCBD5E1),
+                      side: BorderSide(
+                        color: _currentIndex > 0
+                            ? const Color(0xFFCBD5E1)
+                            : const Color(0xFFE2E8F0),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.all(12),
+                    ),
                   ),
                   const SizedBox(width: 8),
 
@@ -2171,27 +2253,16 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                   ),
                   const SizedBox(width: 8),
 
-                  // Tombol Berikutnya / Selesai Subtest / Kumpulkan
+                  // Tombol Berikutnya / Lanjut Subtest (TKA) / Blocking Time (SNBT) / Kumpulkan
                   if (_currentIndex < activeQuestions.length - 1)
-                    ElevatedButton.icon(
+                    ElevatedButton(
                       onPressed: () {
                         setState(() => _currentIndex++);
                         _saveSessionToLocalCache();
                       },
-                      icon: const Text(
-                        'Berikutnya',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      label: const Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: 16,
-                        color: Colors.white,
-                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryGreen,
+                        foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -2200,52 +2271,148 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                           horizontal: 16,
                           vertical: 12,
                         ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Berikutnya',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                        ],
                       ),
                     )
                   else if (_isPerSubtest &&
                       _currentSubtestIndex < _subtests.length - 1)
-                    ElevatedButton(
-                      onPressed: _confirmFinishSubtestDialog,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFD97706),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    if (_isSnbt)
+                      InkWell(
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.lock_clock_rounded,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Sistem Blocking Time SNBT: Subtes otomatis berpindah saat waktu habis (00:00). Silakan manfaatkan waktu untuk periksa kembali jawaban.',
+                                      style: GoogleFonts.poppins(fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              backgroundColor: const Color(0xFFD97706),
+                              duration: const Duration(seconds: 4),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 11,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFFFDE68A),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.lock_clock_rounded,
+                                size: 16,
+                                color: Color(0xFFB45309),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Blocking Time',
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF92400E),
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      child: Text(
-                        'Lanjut Subtest',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold,
+                      )
+                    else
+                      ElevatedButton.icon(
+                        onPressed: _confirmFinishSubtestDialog,
+                        icon: const Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 16,
                           color: Colors.white,
-                          fontSize: 13,
                         ),
-                      ),
-                    )
+                        label: Text(
+                          'Lanjut Subtest',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFD97706),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                        ),
+                      )
                   else
-                    ElevatedButton(
+                    ElevatedButton.icon(
                       onPressed: _confirmSubmitDialog,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryGreen,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 12,
-                        ),
+                      icon: const Icon(
+                        Icons.send_rounded,
+                        size: 15,
+                        color: Colors.white,
                       ),
-                      child: Text(
+                      label: Text(
                         'Kumpulkan',
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                           fontSize: 13,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryGreen,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
                       ),
                     ),
@@ -2422,6 +2589,18 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   }
 
   void _confirmFinishSubtestDialog() {
+    if (_isSnbt) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Sistem Blocking Time SNBT: Subtes hanya berpindah otomatis saat waktu habis (00:00).',
+            style: GoogleFonts.poppins(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFFD97706),
+        ),
+      );
+      return;
+    }
     final subtest = _subtests[_currentSubtestIndex];
     final activeQ = _getActiveQuestions();
     int answered = 0;
