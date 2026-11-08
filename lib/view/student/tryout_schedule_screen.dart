@@ -8,6 +8,9 @@ import 'package:examgo/services/tryout_schedule_service.dart';
 import 'package:examgo/utils/indo_date_formatter.dart';
 import 'package:examgo/view/student/event_dashboard_screen.dart';
 import 'package:examgo/view/student/tryout_discussion_screen.dart';
+import 'package:examgo/view/student/student_exam_session_screen.dart';
+import 'package:examgo/view/pre_exam_checklist.dart';
+import 'package:examgo/view/widgets/premium_token_dialog.dart';
 import 'package:examgo/view/student/widgets/tryout_card_widget.dart';
 import 'package:examgo/view/student/widgets/tryout_detail_sheet.dart';
 
@@ -429,7 +432,10 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                                     ),
                                   );
                                 } else {
-                                  TryoutDetailSheet.show(context, item);
+                                  final shouldStart = await TryoutDetailSheet.show(context, item);
+                                  if (shouldStart == true && context.mounted) {
+                                    _startTryout(item);
+                                  }
                                 }
                               },
                             );
@@ -439,6 +445,46 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
         ),
       ],
     );
+  }
+
+  Future<void> _startTryout(TryoutSchedule schedule) async {
+    // 1. Cek kuota ujian siswa
+    final canTake = await LicenseService.instance.canStudentTakeExam();
+    if (!canTake) {
+      if (mounted) {
+        PremiumTokenDialog.show(context, userType: 'STUDENT_LIFETIME');
+      }
+      return;
+    }
+
+    if (!mounted) return;
+
+    // 2. Tampilkan Pre-Exam Checklist (Cek baterai, identitas siswa, aturan)
+    final identity = await PreExamChecklistDialog.show(context, schedule.namaPaket);
+    if (identity == null || !mounted) return;
+
+    final name = identity['name'] ?? 'Siswa';
+    final nis = identity['nis'] ?? '-';
+
+    // 3. Catat pemakaian 1 kuota ujian
+    await LicenseService.instance.recordExamAttempt();
+
+    if (!mounted) return;
+
+    // 4. Masuk ke Sesi Ujian Siswa
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => StudentExamSessionScreen(
+          token: schedule.paketId,
+          studentName: name,
+          studentNis: nis,
+          initialSchedule: schedule,
+        ),
+      ),
+    );
+
+    if (mounted) _loadData();
   }
 
   Widget _buildHistoryTab() {
@@ -660,22 +706,21 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
                     if (item.allowRetake) ...[
                       const SizedBox(width: 10),
                       OutlinedButton.icon(
-                        onPressed: () {
+                        onPressed: () async {
                           // Temukan schedule yang cocok untuk dikerjakan ulang
                           final match = _allSchedules.where((s) => s.paketId == item.token).firstOrNull;
-                          if (match != null) {
-                            TryoutDetailSheet.show(context, match);
-                          } else {
-                            // Fallback jika paket tidak di jadwal umum
-                            final synthSchedule = TryoutSchedule(
-                              paketId: item.token,
-                              namaPaket: item.namaPaket,
-                              jenisTest: item.kategori,
-                              tanggal: '',
-                              isLifetime: true,
-                              allowRetake: true,
-                            );
-                            TryoutDetailSheet.show(context, synthSchedule);
+                          final targetSched = match ??
+                              TryoutSchedule(
+                                paketId: item.token,
+                                namaPaket: item.namaPaket,
+                                jenisTest: item.kategori,
+                                tanggal: '',
+                                isLifetime: true,
+                                allowRetake: true,
+                              );
+                          final shouldStart = await TryoutDetailSheet.show(context, targetSched);
+                          if (shouldStart == true && context.mounted) {
+                            _startTryout(targetSched);
                           }
                         },
                         icon: const Icon(Icons.refresh_rounded, size: 16),

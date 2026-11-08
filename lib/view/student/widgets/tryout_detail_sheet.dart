@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/models/tryout_schedule_model.dart';
-import 'package:examgo/services/license_service.dart';
-import 'package:examgo/view/pre_exam_checklist.dart';
-import 'package:examgo/view/student/student_exam_session_screen.dart';
-import 'package:examgo/view/widgets/premium_token_dialog.dart';
 
 /// Bottom Sheet untuk detail paket tryout dan konfirmasi sebelum ujian (Diadaptasi dari myOLCv2)
 class TryoutDetailSheet extends StatelessWidget {
@@ -13,51 +9,12 @@ class TryoutDetailSheet extends StatelessWidget {
 
   const TryoutDetailSheet({super.key, required this.schedule});
 
-  static void show(BuildContext context, TryoutSchedule schedule) {
-    showModalBottomSheet(
+  static Future<bool?> show(BuildContext context, TryoutSchedule schedule) {
+    return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => TryoutDetailSheet(schedule: schedule),
-    );
-  }
-
-  Future<void> _handleStart(BuildContext context) async {
-    Navigator.of(context).pop(); // Tutup bottom sheet
-
-    // Cek kuota ujian siswa
-    final canTake = await LicenseService.instance.canStudentTakeExam();
-    if (!canTake) {
-      if (context.mounted) {
-        PremiumTokenDialog.show(context, userType: 'STUDENT_LIFETIME');
-      }
-      return;
-    }
-
-    if (!context.mounted) return;
-
-    // Tampilkan Pre-Exam Checklist (Cek baterai, integritas perangkat, identitas siswa)
-    final identity = await PreExamChecklistDialog.show(context, schedule.namaPaket);
-    if (identity == null || !context.mounted) return;
-
-    final name = identity['name'] ?? 'Siswa';
-    final nis = identity['nis'] ?? '-';
-
-    // Catat pemakaian 1 kuota ujian
-    await LicenseService.instance.recordExamAttempt();
-
-    if (!context.mounted) return;
-    final nav = Navigator.of(context);
-    nav.pop(); // Tutup detail sheet terlebih dahulu agar layar ujian bersih dan tidak tertumpuk modal
-    await nav.push(
-      MaterialPageRoute(
-        builder: (_) => StudentExamSessionScreen(
-          token: schedule.paketId,
-          studentName: name,
-          studentNis: nis,
-          initialSchedule: schedule,
-        ),
-      ),
     );
   }
 
@@ -275,7 +232,7 @@ class TryoutDetailSheet extends StatelessWidget {
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
-              onPressed: () => _handleStart(context),
+              onPressed: () => Navigator.of(context).pop(true),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryGreen,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

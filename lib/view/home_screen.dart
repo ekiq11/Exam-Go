@@ -537,17 +537,24 @@ class _HomeScreenState extends State<HomeScreen>
 
     if (isNative && token.isNotEmpty) {
       try {
-        final pkgDoc = await FirebaseFirestore.instance
+        final tokenUpper = token.trim().toUpperCase();
+        var pkgDoc = await FirebaseFirestore.instance
             .collection('paket_tryout')
-            .doc(token)
+            .doc(tokenUpper)
             .get();
+        if (!pkgDoc.exists && tokenUpper != token.trim()) {
+          pkgDoc = await FirebaseFirestore.instance
+              .collection('paket_tryout')
+              .doc(token.trim())
+              .get();
+        }
         if (pkgDoc.exists) {
           if (!mounted) return;
           await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => StudentExamSessionScreen(
-                token: token,
+                token: tokenUpper,
                 studentName: name,
                 studentNis: nis,
                 isEvent: isEventExam,
