@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/models/tryout_schedule_model.dart';
+import 'package:examgo/services/exam_cache_service.dart';
 import 'package:examgo/services/license_service.dart';
 import 'package:examgo/services/student_tryout_history_service.dart';
 import 'package:examgo/services/tryout_schedule_service.dart';
@@ -26,8 +27,10 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
+  bool _isSyncing = false;
   List<TryoutSchedule> _allSchedules = [];
   List<StudentTryoutHistoryItem> _historyList = [];
+  Set<String> _cachedPaketIds = {};
   String _selectedCategory = 'Semua';
 
   final List<String> _categories = [
@@ -59,20 +62,43 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    await Future.wait([_loadSchedules(), _loadHistory()]);
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _loadSchedules() async {
-    final list = await TryoutScheduleService.instance.getActiveSchedules();
+    // 1. TAHAP INSTAN: Muat cache lokal (< 20ms) agar pengguna langsung melihat daftar paket
+    final cached = await TryoutScheduleService.instance.getCachedSchedules();
+    final cachedIds = await ExamCacheService.instance.getCachedPackageIds();
     if (mounted) {
       setState(() {
-        _allSchedules = list;
+        if (cached.isNotEmpty) {
+          _allSchedules = cached;
+          _isLoading = false;
+        }
+        _cachedPaketIds = cachedIds.toSet();
+        _isSyncing = true;
       });
     }
+
+    // 2. TAHAP SINKRONISASI: Ambil data real-time langsung dari Firestore
+    try {
+      final fresh = await TryoutScheduleService.instance.getActiveSchedules(forceRefresh: true);
+      final freshCachedIds = await ExamCacheService.instance.getCachedPackageIds();
+      if (mounted) {
+        setState(() {
+          _allSchedules = fresh;
+          _cachedPaketIds = freshCachedIds.toSet();
+          _isLoading = false;
+          _isSyncing = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isSyncing = false;
+        });
+      }
+    }
+
+    // 3. Muat Riwayat & Nilai Siswa
+    await _loadHistory();
   }
 
   Future<void> _loadHistory() async {
@@ -462,51 +488,155 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
         // Main List
         Expanded(
           child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.primaryGreen,
-                  ),
-                )
-              : RefreshIndicator(
-                  color: AppColors.primaryGreen,
-                  onRefresh: _loadData,
-                  child: _filteredSchedules.isEmpty
-                      ? _buildEmptyCatalogState()
-                      : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-                          itemCount: _filteredSchedules.length,
-                          itemBuilder: (context, index) {
-                            final item = _filteredSchedules[index];
-                            return TryoutCardWidget(
-                              schedule: item,
-                              onTap: () async {
-                                if (item.jenisTest == 'EVENT') {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => EventDashboardScreen(
-                                        eventId: item.paketId,
-                                        initialSchedule: item,
-                                      ),
-                                    ),
-                                  );
-                                } else {
-                                  final shouldStart =
-                                      await TryoutDetailSheet.show(
-                                        context,
-                                        item,
-                                      );
-                                  if (shouldStart == true && context.mounted) {
-                                    _startTryout(item);
-                                  }
-                                }
-                              },
-                            );
-                          },
+              ? _buildCatalogLoadingState()
+              : Column(
+                  children: [
+                    // Indikator Sinkronisasi Firestore Real-Time
+                    if (_isSyncing)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE8F5E9),
+                          border: Border(
+                            bottom: BorderSide(color: Color(0xFFC8E6C9), width: 1),
+                          ),
                         ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(
+                              width: 13,
+                              height: 13,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: AppColors.primaryGreen,
+                              ),
+                            ),
+                            const SizedBox(width: 9),
+                            Text(
+                              'Menyinkronkan paket tryout dari Cloud Firestore...',
+                              style: GoogleFonts.poppins(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF1B5E20),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    Expanded(
+                      child: RefreshIndicator(
+                        color: AppColors.primaryGreen,
+                        onRefresh: _loadData,
+                        child: _filteredSchedules.isEmpty
+                            ? _buildEmptyCatalogState()
+                            : ListView.builder(
+                                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                                itemCount: _filteredSchedules.length,
+                                itemBuilder: (context, index) {
+                                  final item = _filteredSchedules[index];
+                                  final isCached = _cachedPaketIds.contains(item.paketId.toUpperCase()) ||
+                                      _cachedPaketIds.contains(item.paketId);
+                                  return TryoutCardWidget(
+                                    schedule: item,
+                                    isCached: isCached,
+                                    onTap: () async {
+                                      if (item.jenisTest == 'EVENT') {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => EventDashboardScreen(
+                                              eventId: item.paketId,
+                                              initialSchedule: item,
+                                            ),
+                                          ),
+                                        );
+                                      } else {
+                                        final shouldStart =
+                                            await TryoutDetailSheet.show(
+                                              context,
+                                              item,
+                                              isCached: isCached,
+                                            );
+                                        if (shouldStart == true && context.mounted) {
+                                          _startTryout(item);
+                                        }
+                                      }
+                                    },
+                                  );
+                                },
+                              ),
+                      ),
+                    ),
+                  ],
                 ),
         ),
       ],
+    );
+  }
+
+  Widget _buildCatalogLoadingState() {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 28),
+        padding: const EdgeInsets.all(28),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.primaryGreen.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: SizedBox(
+                  width: 26,
+                  height: 26,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.8,
+                    color: AppColors.primaryGreen,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              'Menghubungkan ke Cloud Firestore',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Memuat katalog paket tryout dan jadwal resmi...',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: const Color(0xFF64748B),
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -532,12 +662,20 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
     final name = identity['name'] ?? 'Siswa';
     final nis = identity['nis'] ?? '-';
 
-    // 3. Catat pemakaian 1 kuota ujian
+    // 3. Cek apakah paket soal sudah tersimpan di penyimpanan lokal HP
+    final isAlreadyCached = await ExamCacheService.instance.isExamCached(schedule.paketId);
+    if (!isAlreadyCached && mounted) {
+      // Tampilkan dialog proses unduh dan simpan lokal berindikator profesional
+      final success = await _showDownloadPreparationDialog(schedule);
+      if (!success || !mounted) return;
+    }
+
+    // 4. Catat pemakaian 1 kuota ujian
     await LicenseService.instance.recordExamAttempt();
 
     if (!mounted) return;
 
-    // 4. Masuk ke Sesi Ujian Siswa
+    // 5. Masuk ke Sesi Ujian Siswa (Instan karena data telah siap di HP)
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -551,6 +689,18 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
     );
 
     if (mounted) _loadData();
+  }
+
+  /// Dialog unduh & simpan offline dengan indikator persentase & langkah transparan
+  Future<bool> _showDownloadPreparationDialog(TryoutSchedule schedule) async {
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogCtx) {
+            return _ExamDownloadProgressDialog(schedule: schedule);
+          },
+        ) ??
+        false;
   }
 
   Widget _buildHistoryTab() {
@@ -1371,6 +1521,231 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Dialog proses unduh & penyimpanan lokal soal tryout berindikator profesional
+class _ExamDownloadProgressDialog extends StatefulWidget {
+  final TryoutSchedule schedule;
+
+  const _ExamDownloadProgressDialog({required this.schedule});
+
+  @override
+  State<_ExamDownloadProgressDialog> createState() => _ExamDownloadProgressDialogState();
+}
+
+class _ExamDownloadProgressDialogState extends State<_ExamDownloadProgressDialog> {
+  double _progress = 0.15;
+  String _statusMessage = 'Menghubungkan ke Cloud Firestore...';
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _startDownload();
+  }
+
+  Future<void> _startDownload() async {
+    setState(() {
+      _errorMessage = null;
+      _progress = 0.15;
+      _statusMessage = 'Menghubungkan ke Cloud Firestore...';
+    });
+
+    try {
+      await ExamCacheService.instance.downloadAndCacheExam(
+        paketId: widget.schedule.paketId,
+        initialSchedule: widget.schedule,
+        onProgress: (msg, pct) {
+          if (mounted) {
+            setState(() {
+              _statusMessage = msg;
+              _progress = pct;
+            });
+          }
+        },
+      );
+
+      if (mounted) {
+        setState(() {
+          _progress = 1.0;
+          _statusMessage = 'Soal siap dikerjakan!';
+        });
+        await Future.delayed(const Duration(milliseconds: 350));
+        if (mounted) {
+          Navigator.of(context).pop(true);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      contentPadding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header Icon
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: _errorMessage != null
+                  ? const Color(0xFFFEE2E2)
+                  : AppColors.primaryGreen.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              _errorMessage != null
+                  ? Icons.error_outline_rounded
+                  : Icons.cloud_download_rounded,
+              color: _errorMessage != null ? Colors.red.shade600 : AppColors.primaryGreen,
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          Text(
+            _errorMessage != null ? 'Gagal Menyiapkan Soal' : 'Menyiapkan Lembar Ujian',
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 4),
+
+          Text(
+            widget.schedule.namaPaket,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primaryGreen,
+            ),
+          ),
+          const SizedBox(height: 18),
+
+          if (_errorMessage != null) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF2F2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFFECACA)),
+              ),
+              child: Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: const Color(0xFF991B1B),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey.shade700)),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _startDownload,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryGreen,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text('Coba Lagi', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            // Progress Bar & Percentage
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: _progress,
+                minHeight: 8,
+                backgroundColor: const Color(0xFFE2E8F0),
+                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    _statusMessage,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      fontSize: 11.5,
+                      color: const Color(0xFF475569),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${(_progress * 100).toInt()}%',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryGreen,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.speed_rounded, size: 14, color: Color(0xFF16A34A)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Soal otomatis disimpan ke HP agar hemat kuota & anti-lag.',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

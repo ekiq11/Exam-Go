@@ -8,11 +8,13 @@ import 'package:examgo/utils/indo_date_formatter.dart';
 class TryoutCardWidget extends StatelessWidget {
   final TryoutSchedule schedule;
   final VoidCallback onTap;
+  final bool isCached;
 
   const TryoutCardWidget({
     super.key,
     required this.schedule,
     required this.onTap,
+    this.isCached = false,
   });
 
   @override
@@ -140,6 +142,32 @@ class TryoutCardWidget extends StatelessWidget {
                               ),
                             ),
                           ),
+
+                          // Badge Status Offline Cache HP
+                          if (isCached)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6.5, vertical: 2.5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: const Color(0xFF86EFAC)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.offline_pin_rounded, size: 11, color: Color(0xFF15803D)),
+                                  const SizedBox(width: 3.5),
+                                  Text(
+                                    'Tersimpan Offline',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF15803D),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
 
                           // Badge Bisa Diulang (Jika diizinkan)
                           if (schedule.allowRetake)

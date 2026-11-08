@@ -6,14 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constant/app_colors.dart';
-import '../../constant/app_config.dart';
 import '../../constant/security_service.dart';
 import '../../models/exam_question_model.dart';
 import '../../models/tryout_schedule_model.dart';
+import '../../services/exam_cache_service.dart';
 import '../../services/monitoring_service.dart';
 import '../../services/national_exam_evaluator.dart';
 import '../../services/student_tryout_history_service.dart';
@@ -46,6 +45,8 @@ class StudentExamSessionScreen extends StatefulWidget {
 class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     with WidgetsBindingObserver {
   bool _isLoading = true;
+  String _loadingStatusMessage = 'Menyiapkan Lembar Ujian...';
+  double _loadingProgressPercent = 0.2;
   String? _errorMessage;
 
   ExamPackage? _package;
@@ -302,11 +303,12 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _loadingStatusMessage = 'Memeriksa penyimpanan lokal HP...';
+      _loadingProgressPercent = 0.2;
     });
 
     try {
       final tokenUpper = widget.token.trim().toUpperCase();
-      final tokenRaw = widget.token.trim();
 
       // Inisialisasi awal metadata paket jika dioper dari halaman jadwal / home
       if (widget.initialSchedule != null) {
@@ -321,7 +323,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
       }
 
       // ── TAHAP 0: Cache-First (Instant Load < 50ms jika sudah tersimpan di perangkat) ──
-      final cached = await _loadExamFromOfflineCache(tokenUpper);
+      final cached = await ExamCacheService.instance.loadExam(tokenUpper);
       if (cached != null && cached.questions.isNotEmpty) {
         _package ??= cached.package;
         _subtests = cached.subtests;
@@ -347,181 +349,33 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         return;
       }
 
-      List<ExamSubtest> loadedSubtests = [];
-      List<ExamQuestion> loadedQuestions = [];
-
-      // ── TAHAP 1: Fast Parallel Query Firestore (< 3.5s timeout) ──
-      try {
-        final db = FirebaseFirestore.instance;
-        final targetIds = [tokenUpper, if (tokenRaw != tokenUpper) tokenRaw];
-
-        final results = await Future.wait([
-          // 0: Dokumen paket_tryout
-          _package != null
-              ? Future.value(null)
-              : db.collection('paket_tryout').doc(tokenUpper).get().timeout(const Duration(milliseconds: 3500)),
-          // 1: Subtest (whereIn menangani uppercase & raw sekaligus)
-          db.collection('subtest').where('paket_id', whereIn: targetIds).get().timeout(const Duration(milliseconds: 3500)),
-          // 2: Butir Soal by paket_id
-          db.collection('tryout_soal').where('paket_id', whereIn: targetIds).get().timeout(const Duration(milliseconds: 3500)),
-        ]);
-
-        final pkgDocSnap = results[0] as DocumentSnapshot<Map<String, dynamic>>?;
-        final stSnap = results[1] as QuerySnapshot<Map<String, dynamic>>?;
-        final qSnap = results[2] as QuerySnapshot<Map<String, dynamic>>?;
-
-        if (_package == null && pkgDocSnap != null && pkgDocSnap.exists && pkgDocSnap.data() != null) {
-          _package = ExamPackage.fromFirestore(pkgDocSnap.data()!, pkgDocSnap.id);
-        }
-
-        final stDocs = <QueryDocumentSnapshot<Map<String, dynamic>>>[];
-        if (stSnap != null && stSnap.docs.isNotEmpty) {
-          stDocs.addAll(stSnap.docs);
-        }
-
-        final qDocs = <QueryDocumentSnapshot<Map<String, dynamic>>>[];
-        final seenQIds = <String>{};
-        if (qSnap != null && qSnap.docs.isNotEmpty) {
-          for (final d in qSnap.docs) {
-            if (seenQIds.add(d.id)) qDocs.add(d);
-          }
-        }
-
-        loadedSubtests = stDocs.map((d) => ExamSubtest.fromFirestore(d.data(), d.id)).toList();
-        loadedSubtests.sort((a, b) {
-          if (a.orderIndex != 0 || b.orderIndex != 0) {
-            final cmp = a.orderIndex.compareTo(b.orderIndex);
-            if (cmp != 0) return cmp;
-          }
-          return a.subtestId.compareTo(b.subtestId);
-        });
-
-        // Jika soal by paket_id kosong tapi subtest ada, query tryout_soal by subtest_id secara paralel
-        if (qDocs.isEmpty && loadedSubtests.isNotEmpty) {
-          final subtestIds = loadedSubtests.map((s) => s.subtestId).where((id) => id.isNotEmpty).toList();
-          final List<Future<QuerySnapshot<Map<String, dynamic>>>> chunkFutures = [];
-          for (var i = 0; i < subtestIds.length; i += 10) {
-            final chunk = subtestIds.sublist(i, (i + 10 > subtestIds.length) ? subtestIds.length : i + 10);
-            chunkFutures.add(
-              db.collection('tryout_soal').where('subtest_id', whereIn: chunk).get().timeout(const Duration(milliseconds: 3500)),
-            );
-          }
-          final chunkSnapshots = await Future.wait(chunkFutures);
-          for (final sSnap in chunkSnapshots) {
-            for (final d in sSnap.docs) {
-              if (seenQIds.add(d.id)) qDocs.add(d);
-            }
-          }
-        }
-
-        loadedQuestions = qDocs.map((d) => ExamQuestion.fromFirestore(d.data(), d.id)).toList();
-        debugPrint('[StudentExam] Sukses muat dari Firestore: ${loadedQuestions.length} butir soal, ${loadedSubtests.length} subtest');
-      } catch (fsErr) {
-        debugPrint('[StudentExam] Firestore query failed / timeout: $fsErr');
-      }
-
-      // ── TAHAP 2: Fast Fallback ke Backend GAS jika Firestore kosong (< 7s timeout) ──
-      if (loadedQuestions.isEmpty) {
-        debugPrint('[StudentExam] Firestore soal kosong untuk paket $tokenUpper, menghubungi backend GAS...');
-        var gasData = await _fetchQuestionsFromGas(tokenUpper);
-        if (gasData == null && tokenRaw != tokenUpper) {
-          gasData = await _fetchQuestionsFromGas(tokenRaw);
-        }
-        if (gasData != null) {
-          if (_package == null && gasData['paket'] != null) {
-            final pMap = gasData['paket'] as Map<String, dynamic>;
-            _package = ExamPackage(
-              paketId: pMap['paket_id']?.toString() ?? tokenUpper,
-              namaPaket: pMap['nama_paket']?.toString() ?? 'Tryout $tokenUpper',
-              kategori: pMap['jenis_test']?.toString() ?? ExamCategory.umum,
-              jenisWaktu: pMap['jenis_waktu']?.toString() ?? 'per_subtest',
-              durasiMenit: (pMap['durasi_menit'] as num?)?.toInt() ?? 90,
-            );
-          }
-
-          if (gasData['subtests'] is List) {
-            final stList = gasData['subtests'] as List;
-            loadedSubtests = stList.map((item) {
-              final m = item as Map<String, dynamic>;
-              return ExamSubtest(
-                subtestId: m['subtest_id']?.toString() ?? 'ST_${DateTime.now().millisecondsSinceEpoch}',
-                paketId: m['paket_id']?.toString() ?? tokenUpper,
-                judul: m['judul_subtest']?.toString() ?? m['judul']?.toString() ?? 'Subtest',
-                durasiMenit: (m['durasi_menit'] as num?)?.toInt() ?? 30,
-              );
-            }).toList();
-            loadedSubtests.sort((a, b) => a.subtestId.compareTo(b.subtestId));
-          }
-
-          if (gasData['questions'] is List) {
-            final qList = gasData['questions'] as List;
-            int counter = 1;
-            loadedQuestions = qList.map((item) {
-              final m = item as Map<String, dynamic>;
-              final qId = m['soal_id']?.toString() ?? '${tokenUpper}_Q$counter';
-              final nSoal = (m['nomor_soal'] as num?)?.toInt() ?? counter++;
-              return ExamQuestion(
-                soalId: qId,
-                subtestId: m['subtest_id']?.toString() ?? '',
-                nomorSoal: nSoal,
-                pertanyaan: m['pertanyaan']?.toString() ?? '',
-                opsiA: m['opsi_a']?.toString() ?? m['a']?.toString() ?? '',
-                opsiB: m['opsi_b']?.toString() ?? m['b']?.toString() ?? '',
-                opsiC: m['opsi_c']?.toString() ?? m['c']?.toString() ?? '',
-                opsiD: m['opsi_d']?.toString() ?? m['d']?.toString() ?? '',
-                opsiE: m['opsi_e']?.toString() ?? m['e']?.toString() ?? '',
-                gamA: m['gam_a']?.toString() ?? '',
-                gamB: m['gam_b']?.toString() ?? '',
-                gamC: m['gam_c']?.toString() ?? '',
-                gamD: m['gam_d']?.toString() ?? '',
-                gamE: m['gam_e']?.toString() ?? '',
-                kunci: (m['kunci']?.toString() ?? m['kunci_jawaban']?.toString() ?? 'A').toUpperCase(),
-                pembahasan: m['pembahasan']?.toString() ?? '',
-                gambar: m['gambar']?.toString() ?? m['gambar_soal']?.toString() ?? '',
-                tabel: m['tabel']?.toString() ?? m['baris_tabel']?.toString() ?? '',
-              );
-            }).toList();
-            loadedQuestions.sort((a, b) => a.nomorSoal.compareTo(b.nomorSoal));
-          }
-        }
-      }
-
-      // ── Validasi Hasil Akhir ──
-      if (loadedQuestions.isEmpty) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Soal ujian untuk paket "$tokenUpper" belum tersedia atau sedang disiapkan oleh Admin.';
-        });
-        return;
-      }
-
-      // Pastikan objek _package selalu terisi
-      _package ??= ExamPackage(
+      // ── TAHAP 1: Unduh dari Firestore / GAS & Simpan ke Penyimpanan Lokal HP ──
+      final downloaded = await ExamCacheService.instance.downloadAndCacheExam(
         paketId: tokenUpper,
-        namaPaket: widget.initialSchedule?.namaPaket ?? 'Tryout $tokenUpper',
-        kategori: widget.initialSchedule?.jenisTest ?? ExamCategory.umum,
-        jenisWaktu: widget.initialSchedule?.jenisWaktu ?? 'per_subtest',
-        durasiMenit: widget.initialSchedule?.durasiMenit ?? 90,
+        initialSchedule: widget.initialSchedule,
+        onProgress: (msg, pct) {
+          if (mounted) {
+            setState(() {
+              _loadingStatusMessage = msg;
+              _loadingProgressPercent = pct;
+            });
+          }
+        },
       );
 
-      _subtests = loadedSubtests;
+      _package = downloaded.package ?? _package;
+      _subtests = downloaded.subtests;
       _allQuestions.clear();
-      _allQuestions.addAll(loadedQuestions);
+      _allQuestions.addAll(downloaded.questions);
+
       _hydrateSubtestsWithQuestions();
-
-      // Pulihkan jawaban & status dari cache lokal siswa
       await _restoreLocalCache();
-
-      // Inisialisasi Timer
       await _initTimer();
 
-      // LANGSUNG TAMPILKAN UI UJIAN!
       if (mounted) {
         setState(() => _isLoading = false);
       }
 
-      // Background Non-blocking (Penyimpanan Cache Offline & Monitoring Siswa)
-      unawaited(_saveExamToOfflineCache(tokenUpper, _package, _subtests, _allQuestions));
       unawaited(MonitoringService.instance.updateStudentStatus(
         examId: widget.token,
         nis: widget.studentNis,
@@ -533,7 +387,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Terjadi kesalahan saat memuat soal ujian: $e';
+          _errorMessage = e.toString().replaceFirst('Exception: ', '');
         });
       }
     }
@@ -580,93 +434,6 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
       ];
     }
     _allQuestions.sort((a, b) => a.nomorSoal.compareTo(b.nomorSoal));
-  }
-
-  Future<Map<String, dynamic>?> _fetchQuestionsFromGas(String paketId) async {
-    final gasUrl = AppConfig.gasUrl;
-    final apiKey = AppConfig.gasApiKey;
-    if (gasUrl.isEmpty || apiKey.isEmpty) return null;
-
-    try {
-      var resp = await http.post(
-        Uri.parse(gasUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'apiKey': apiKey,
-          'action': 'getSoalTryout',
-          'paketId': paketId,
-        }),
-      ).timeout(const Duration(seconds: 7));
-
-      // Ikuti redirect 302 jika diarahkan oleh Google Apps Script
-      if (resp.statusCode >= 300 && resp.statusCode < 400 && resp.headers.containsKey('location')) {
-        final redirectUrl = resp.headers['location']!;
-        resp = await http.get(Uri.parse(redirectUrl)).timeout(const Duration(seconds: 7));
-      }
-
-      if (resp.statusCode == 200) {
-        final json = jsonDecode(resp.body) as Map<String, dynamic>;
-        if (json['status'] == 'success') {
-          return json;
-        }
-      }
-    } catch (e) {
-      debugPrint('[StudentExam] Error fetching questions from GAS: $e');
-    }
-    return null;
-  }
-
-  Future<void> _saveExamToOfflineCache(
-    String paketId,
-    ExamPackage? pkg,
-    List<ExamSubtest> subtests,
-    List<ExamQuestion> questions,
-  ) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      if (pkg != null) {
-        await prefs.setString('exam_pkg_cache_$paketId', jsonEncode(pkg.toFirestore()));
-      }
-      if (subtests.isNotEmpty) {
-        final stList = subtests.map((s) => s.toFirestore()).toList();
-        await prefs.setString('exam_st_cache_$paketId', jsonEncode(stList));
-      }
-      final qList = questions.map((q) => q.toFirestore()).toList();
-      await prefs.setString('exam_questions_cache_$paketId', jsonEncode(qList));
-    } catch (_) {}
-  }
-
-  Future<({ExamPackage? package, List<ExamSubtest> subtests, List<ExamQuestion> questions})?>
-      _loadExamFromOfflineCache(String paketId) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final qStr = prefs.getString('exam_questions_cache_$paketId');
-      if (qStr == null || qStr.isEmpty) return null;
-
-      final qDecoded = jsonDecode(qStr) as List;
-      final questions = qDecoded
-          .map((item) => ExamQuestion.fromFirestore(item as Map<String, dynamic>, item['soal_id']?.toString() ?? ''))
-          .toList();
-      if (questions.isEmpty) return null;
-
-      ExamPackage? package;
-      final pkgStr = prefs.getString('exam_pkg_cache_$paketId');
-      if (pkgStr != null && pkgStr.isNotEmpty) {
-        package = ExamPackage.fromFirestore(jsonDecode(pkgStr) as Map<String, dynamic>, paketId);
-      }
-
-      final List<ExamSubtest> subtests = [];
-      final stStr = prefs.getString('exam_st_cache_$paketId');
-      if (stStr != null && stStr.isNotEmpty) {
-        final stDecoded = jsonDecode(stStr) as List;
-        subtests.addAll(
-          stDecoded.map((item) => ExamSubtest.fromFirestore(item as Map<String, dynamic>, item['subtest_id']?.toString() ?? '')),
-        );
-      }
-
-      return (package: package, subtests: subtests, questions: questions);
-    } catch (_) {}
-    return null;
   }
 
   // ─── Cache Lokal Otomatis (Auto-Save Jawaban) ──────────────────
@@ -1782,13 +1549,41 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Menyinkronkan butir soal, tata tertib & alokasi waktu...',
+                  _loadingStatusMessage,
                   style: GoogleFonts.poppins(
                     fontSize: 12.5,
                     color: const Color(0xFF64748B),
                     height: 1.4,
                   ),
                   textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 18),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: _loadingProgressPercent,
+                    minHeight: 6,
+                    backgroundColor: const Color(0xFFE2E8F0),
+                    valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Penyimpanan Lokal HP',
+                      style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF94A3B8)),
+                    ),
+                    Text(
+                      '${(_loadingProgressPercent * 100).toInt()}%',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryGreen,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

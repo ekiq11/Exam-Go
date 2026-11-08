@@ -30,13 +30,18 @@ class TryoutScheduleService {
     _firestore = mock;
   }
 
-  /// Memuat daftar paket tryout aktif (Firestore + fallback GAS + fallback Local Cache)
+  /// Memuat jadwal dari cache lokal secara instan (< 20ms)
+  Future<List<TryoutSchedule>> getCachedSchedules() async {
+    return _loadFromCache();
+  }
+
+  /// Memuat daftar paket tryout aktif langsung dari Firestore dengan fallback GAS & Local Cache
   Future<List<TryoutSchedule>> getActiveSchedules({bool forceRefresh = false}) async {
-    // 1. Coba baca dari Firestore langsung (Realtime & Akurat)
+    // 1. Coba baca dari Firestore langsung (Realtime & Akurat dengan timeout 4.5 detik)
     final db = _db;
     if (db != null) {
       try {
-        final snap = await db.collection('paket_tryout').get();
+        final snap = await db.collection('paket_tryout').get().timeout(const Duration(milliseconds: 4500));
         if (snap.docs.isNotEmpty) {
           final list = snap.docs.map((doc) => TryoutSchedule.fromMap(doc.id, doc.data())).toList();
           final activeList = list.where((t) => t.isActive).toList();
@@ -47,7 +52,7 @@ class TryoutScheduleService {
       } catch (_) {}
     }
 
-    // 2. Coba fallback via Google Apps Script backend jika Firestore SDK terblokir
+    // 2. Coba fallback via Google Apps Script backend jika Firestore SDK terblokir (timeout 5 detik)
     try {
       final gasList = await _fetchFromGas();
       if (gasList != null && gasList.isNotEmpty) {

@@ -6,15 +6,27 @@ import 'package:examgo/models/tryout_schedule_model.dart';
 /// Bottom Sheet untuk detail paket tryout dan konfirmasi sebelum ujian (Diadaptasi dari myOLCv2)
 class TryoutDetailSheet extends StatelessWidget {
   final TryoutSchedule schedule;
+  final bool isCached;
 
-  const TryoutDetailSheet({super.key, required this.schedule});
+  const TryoutDetailSheet({
+    super.key,
+    required this.schedule,
+    this.isCached = false,
+  });
 
-  static Future<bool?> show(BuildContext context, TryoutSchedule schedule) {
+  static Future<bool?> show(
+    BuildContext context,
+    TryoutSchedule schedule, {
+    bool isCached = false,
+  }) {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => TryoutDetailSheet(schedule: schedule),
+      builder: (_) => TryoutDetailSheet(
+        schedule: schedule,
+        isCached: isCached,
+      ),
     );
   }
 
@@ -203,6 +215,35 @@ class TryoutDetailSheet extends StatelessWidget {
             const SizedBox(height: 20),
           ],
 
+          // Offline Cache Status Banner
+          if (isCached) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDCFCE7),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF86EFAC)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.offline_pin_rounded, color: Color(0xFF15803D), size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Tersimpan Offline di HP: Soal & subtest akan langsung terbuka tanpa perlu memuat server.',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: const Color(0xFF14532D),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
           // Rules Reminder Box
           Container(
             padding: const EdgeInsets.all(12),
@@ -231,18 +272,25 @@ class TryoutDetailSheet extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             height: 50,
-            child: ElevatedButton(
+            child: ElevatedButton.icon(
+              icon: Icon(
+                isCached ? Icons.offline_pin_rounded : Icons.play_arrow_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
               onPressed: () => Navigator.of(context).pop(true),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryGreen,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 0,
               ),
-              child: Text(
-                isToday ? 'Mulai Ujian Sekarang' : 'Kerjakan Ujian (Akses Premium)',
+              label: Text(
+                isCached
+                    ? 'Buka Ujian Sekarang (Tersimpan di HP)'
+                    : (isToday ? 'Mulai Ujian Sekarang' : 'Kerjakan Ujian (Akses Premium)'),
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.bold,
-                  fontSize: 14.5,
+                  fontSize: 14,
                   color: Colors.white,
                 ),
               ),
