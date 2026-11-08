@@ -931,77 +931,94 @@
       setTimeout(renderAllMath, 800);
 
       // Load dynamic settings from Google Apps Script if available
+      function applyLandingSettings(s) {
+        if (!s) return;
+        
+        // 1. Texts
+        if (s.hero_badge) document.getElementById('hero-badge-text').innerText = s.hero_badge;
+        if (s.hero_title) document.getElementById('hero-title-text').innerText = s.hero_title;
+        if (s.hero_subtitle) document.getElementById('hero-subtitle-text').innerText = s.hero_subtitle;
+        if (s.featured_event_title) document.getElementById('featured-event-title').innerText = s.featured_event_title;
+        if (s.featured_event_desc) document.getElementById('featured-event-desc').innerText = s.featured_event_desc;
+        if (s.featured_event_date) document.getElementById('featured-event-date').innerText = s.featured_event_date;
+        if (s.promo_price_original) document.getElementById('promo-price-original').innerText = s.promo_price_original;
+        if (s.promo_price_discount) document.getElementById('promo-price-discount').innerText = s.promo_price_discount;
+        if (s.promo_tag) document.getElementById('promo-tag-text').innerText = s.promo_tag;
+        
+        // 2. Announcement banner
+        const annBar = document.getElementById('landing-announcement-bar');
+        if (annBar) {
+          if (s.is_announcement_active === false) {
+            annBar.style.display = 'none';
+          } else if (s.announcement_text) {
+            document.getElementById('announcement-text').innerText = s.announcement_text;
+          }
+        }
+
+        // 3. Featured Event section visibility
+        const evSection = document.getElementById('event-promo');
+        if (evSection && s.is_featured_event_active === false) {
+          evSection.style.display = 'none';
+        }
+
+        // 4. Update Lynk.id Links across all CTA buttons
+        if (s.lynkid_url) {
+          const lynkButtons = ['btn-nav-lynkid', 'btn-hero-lynkid', 'btn-promo-lynkid', 'btn-plan-starter', 'btn-plan-bundle', 'btn-final-lynkid', 'btn-mobile-lynkid'];
+          lynkButtons.forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) el.href = s.lynkid_url;
+          });
+        }
+
+        // 5. Update Play Store & App Store links
+        if (s.playstore_url) {
+          const ps = document.getElementById('btn-hero-playstore');
+          if (ps) ps.href = s.playstore_url;
+          const psStep = document.getElementById('btn-step-playstore');
+          if (psStep) psStep.href = s.playstore_url;
+        }
+        if (s.appstore_url) {
+          const as = document.getElementById('btn-hero-appstore');
+          if (as) as.href = s.appstore_url;
+          const asStep = document.getElementById('btn-step-appstore');
+          if (asStep) asStep.href = s.appstore_url;
+        }
+        
+        // Re-render math formulas if settings contained dynamic LaTeX
+        renderAllMath();
+
+        // 6. Update WhatsApp links
+        if (s.whatsapp_number) {
+          const waNum = s.whatsapp_number.replace(/[^0-9]/g, '');
+          const waMsg = encodeURIComponent(s.whatsapp_message || 'Halo Admin ExamGO, saya ingin membeli token tryout / konsultasi paket ujian.');
+          const waLink = 'https://wa.me/' + waNum + '?text=' + waMsg;
+          
+          const waEls = ['btn-plan-school', 'btn-final-wa', 'footer-wa-link', 'btn-mobile-wa'];
+          waEls.forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) el.href = waLink;
+          });
+        }
+      }
+
+      // Load dynamic settings: via google.script.run jika di dalam GAS, atau fetch jika di domain Cloudflare
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
-          .withSuccessHandler(function(s) {
-            if (!s) return;
-            
-            // 1. Texts
-            if (s.hero_badge) document.getElementById('hero-badge-text').innerText = s.hero_badge;
-            if (s.hero_title) document.getElementById('hero-title-text').innerText = s.hero_title;
-            if (s.hero_subtitle) document.getElementById('hero-subtitle-text').innerText = s.hero_subtitle;
-            if (s.featured_event_title) document.getElementById('featured-event-title').innerText = s.featured_event_title;
-            if (s.featured_event_desc) document.getElementById('featured-event-desc').innerText = s.featured_event_desc;
-            if (s.featured_event_date) document.getElementById('featured-event-date').innerText = s.featured_event_date;
-            if (s.promo_price_original) document.getElementById('promo-price-original').innerText = s.promo_price_original;
-            if (s.promo_price_discount) document.getElementById('promo-price-discount').innerText = s.promo_price_discount;
-            if (s.promo_tag) document.getElementById('promo-tag-text').innerText = s.promo_tag;
-            
-            // 2. Announcement banner
-            const annBar = document.getElementById('landing-announcement-bar');
-            if (annBar) {
-              if (s.is_announcement_active === false) {
-                annBar.style.display = 'none';
-              } else if (s.announcement_text) {
-                document.getElementById('announcement-text').innerText = s.announcement_text;
-              }
-            }
-
-            // 3. Featured Event section visibility
-            const evSection = document.getElementById('event-promo');
-            if (evSection && s.is_featured_event_active === false) {
-              evSection.style.display = 'none';
-            }
-
-            // 4. Update Lynk.id Links across all CTA buttons
-            if (s.lynkid_url) {
-              const lynkButtons = ['btn-nav-lynkid', 'btn-hero-lynkid', 'btn-promo-lynkid', 'btn-plan-starter', 'btn-plan-bundle', 'btn-final-lynkid', 'btn-mobile-lynkid'];
-              lynkButtons.forEach(function(id) {
-                const el = document.getElementById(id);
-                if (el) el.href = s.lynkid_url;
-              });
-            }
-
-            // 5. Update Play Store & App Store links
-            if (s.playstore_url) {
-              const ps = document.getElementById('btn-hero-playstore');
-              if (ps) ps.href = s.playstore_url;
-              const psStep = document.getElementById('btn-step-playstore');
-              if (psStep) psStep.href = s.playstore_url;
-            }
-            if (s.appstore_url) {
-              const as = document.getElementById('btn-hero-appstore');
-              if (as) as.href = s.appstore_url;
-              const asStep = document.getElementById('btn-step-appstore');
-              if (asStep) asStep.href = s.appstore_url;
-            }
-            // Re-render math formulas if settings contained dynamic LaTeX
-            renderAllMath();
-
-            // 6. Update WhatsApp links
-            if (s.whatsapp_number) {
-              const waNum = s.whatsapp_number.replace(/[^0-9]/g, '');
-              const waMsg = encodeURIComponent(s.whatsapp_message || 'Halo Admin ExamGO...');
-              const waLink = 'https://wa.me/' + waNum + '?text=' + waMsg;
-              
-              const waEls = ['btn-plan-school', 'btn-final-wa', 'footer-wa-link', 'btn-mobile-wa'];
-              waEls.forEach(function(id) {
-                const el = document.getElementById(id);
-                if (el) el.href = waLink;
-              });
-            }
-          })
+          .withSuccessHandler(applyLandingSettings)
           .getLandingPageSettings();
+      } else {
+        fetch('https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'getLandingPageSettings' })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(json) {
+          if (json && json.settings) applyLandingSettings(json.settings);
+        })
+        .catch(function() {
+          // Tetap tampil sempurna menggunakan template bawaan jika offline
+        });
       }
 
       // Initialize live purchase toasts after 2.5s
