@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 /// Kategori Tryout / Ujian
 class ExamCategory {
   static const String snbt = 'SNBT';
@@ -185,16 +187,42 @@ class ExamQuestion {
   }
 
   factory ExamQuestion.fromFirestore(Map<String, dynamic> j, String id) {
+    String a = j['opsi_a']?.toString() ?? j['a']?.toString() ?? '';
+    String b = j['opsi_b']?.toString() ?? j['b']?.toString() ?? '';
+    String c = j['opsi_c']?.toString() ?? j['c']?.toString() ?? '';
+    String d = j['opsi_d']?.toString() ?? j['d']?.toString() ?? '';
+    String e = j['opsi_e']?.toString() ?? j['e']?.toString() ?? '';
+
+    // Dukung juga format opsi_jawaban / opsi_jawaban_parsed jika ada
+    if (a.isEmpty && (j['opsi_jawaban'] != null || j['opsi_jawaban_parsed'] != null)) {
+      try {
+        final rawOpsi = j['opsi_jawaban_parsed'] ?? j['opsi_jawaban'];
+        Map<String, dynamic>? map;
+        if (rawOpsi is Map) {
+          map = Map<String, dynamic>.from(rawOpsi);
+        } else if (rawOpsi is String && rawOpsi.trim().startsWith('{')) {
+          map = jsonDecode(rawOpsi.trim()) as Map<String, dynamic>;
+        }
+        if (map != null) {
+          a = map['A']?.toString() ?? map['a']?.toString() ?? a;
+          b = map['B']?.toString() ?? map['b']?.toString() ?? b;
+          c = map['C']?.toString() ?? map['c']?.toString() ?? c;
+          d = map['D']?.toString() ?? map['d']?.toString() ?? d;
+          e = map['E']?.toString() ?? map['e']?.toString() ?? e;
+        }
+      } catch (_) {}
+    }
+
     return ExamQuestion(
       soalId: j['soal_id']?.toString() ?? id,
       subtestId: j['subtest_id']?.toString() ?? '',
       nomorSoal: (j['nomor_soal'] as num?)?.toInt() ?? 1,
-      pertanyaan: j['pertanyaan']?.toString() ?? '',
-      opsiA: j['opsi_a']?.toString() ?? j['a']?.toString() ?? '',
-      opsiB: j['opsi_b']?.toString() ?? j['b']?.toString() ?? '',
-      opsiC: j['opsi_c']?.toString() ?? j['c']?.toString() ?? '',
-      opsiD: j['opsi_d']?.toString() ?? j['d']?.toString() ?? '',
-      opsiE: j['opsi_e']?.toString() ?? j['e']?.toString() ?? '',
+      pertanyaan: j['pertanyaan']?.toString() ?? j['soal']?.toString() ?? '',
+      opsiA: a,
+      opsiB: b,
+      opsiC: c,
+      opsiD: d,
+      opsiE: e,
       gamA: j['gam_a']?.toString() ?? '',
       gamB: j['gam_b']?.toString() ?? '',
       gamC: j['gam_c']?.toString() ?? '',

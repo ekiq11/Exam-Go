@@ -44,8 +44,12 @@ class TryoutSchedule {
       }
     }
 
+    final effectiveId = (data['paket_id'] != null && data['paket_id'].toString().trim().isNotEmpty)
+        ? data['paket_id'].toString().trim()
+        : id;
+
     return TryoutSchedule(
-      paketId: id,
+      paketId: effectiveId,
       namaPaket: data['nama_paket']?.toString() ?? data['nama_ujian']?.toString() ?? 'Tryout Nasional',
       jenisTest: (data['jenis_test']?.toString() ?? 'UMUM').toUpperCase(),
       jenisWaktu: data['jenis_waktu']?.toString() ?? 'per_subtest',

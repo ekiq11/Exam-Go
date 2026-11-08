@@ -352,6 +352,17 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
           stDocs.addAll(stSnap2.docs);
         }
 
+        // Coba prefix document ID untuk subtest jika belum ada
+        if (stDocs.isEmpty) {
+          final stPrefix = await db
+              .collection('subtest')
+              .where(FieldPath.documentId, isGreaterThanOrEqualTo: '$tokenUpper-')
+              .where(FieldPath.documentId, isLessThan: '$tokenUpper-\uf8ff')
+              .get()
+              .timeout(const Duration(seconds: 8));
+          stDocs.addAll(stPrefix.docs);
+        }
+
         loadedSubtests = stDocs.map((d) => ExamSubtest.fromFirestore(d.data(), d.id)).toList();
         loadedSubtests.sort((a, b) => a.subtestId.compareTo(b.subtestId));
 
@@ -384,6 +395,31 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
           }
         }
 
+        // (c) Query berdasarkan prefix Document ID (FieldPath.documentId seperti di myOLCv2)
+        if (qDocs.isEmpty) {
+          final docPrefixUpper = await db
+              .collection('tryout_soal')
+              .where(FieldPath.documentId, isGreaterThanOrEqualTo: '$tokenUpper-')
+              .where(FieldPath.documentId, isLessThan: '$tokenUpper-\uf8ff')
+              .get()
+              .timeout(const Duration(seconds: 10));
+          for (final d in docPrefixUpper.docs) {
+            if (seenQIds.add(d.id)) qDocs.add(d);
+          }
+
+          if (qDocs.isEmpty && tokenRaw != tokenUpper) {
+            final docPrefixRaw = await db
+                .collection('tryout_soal')
+                .where(FieldPath.documentId, isGreaterThanOrEqualTo: '$tokenRaw-')
+                .where(FieldPath.documentId, isLessThan: '$tokenRaw-\uf8ff')
+                .get()
+                .timeout(const Duration(seconds: 10));
+            for (final d in docPrefixRaw.docs) {
+              if (seenQIds.add(d.id)) qDocs.add(d);
+            }
+          }
+        }
+
         loadedQuestions = qDocs.map((d) => ExamQuestion.fromFirestore(d.data(), d.id)).toList();
         loadedQuestions.sort((a, b) => a.nomorSoal.compareTo(b.nomorSoal));
       } catch (fsErr) {
@@ -393,7 +429,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
       // ── TAHAP 2: Fallback ke Backend Google Apps Script jika Firestore kosong ──
       if (loadedQuestions.isEmpty) {
         debugPrint('[StudentExam] Firestore soal kosong untuk paket $tokenUpper, menghubungi backend GAS...');
-        final gasData = await _fetchQuestionsFromGas(tokenUpper);
+        var gasData = await _fetchQuestionsFromGas(tokenUpper);
+        if (gasData == null && tokenRaw != tokenUpper) {
+          gasData = await _fetchQuestionsFromGas(tokenRaw);
+        }
         if (gasData != null) {
           if (_package == null && gasData['paket'] != null) {
             final pMap = gasData['paket'] as Map<String, dynamic>;

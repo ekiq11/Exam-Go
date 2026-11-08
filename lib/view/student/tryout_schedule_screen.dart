@@ -193,37 +193,112 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen> with Single
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text(
-          'Paket Tryout & Riwayat',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.white),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Paket Tryout & Riwayat',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                fontSize: 16.5,
+                color: Colors.white,
+                letterSpacing: 0.2,
+              ),
+            ),
+            Text(
+              'Simulasi Ujian & Pembahasan Mandiri',
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                color: Colors.white.withValues(alpha: 0.85),
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
         ),
         backgroundColor: AppColors.primaryGreen,
         elevation: 0,
         centerTitle: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.confirmation_number_outlined, color: Colors.white),
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: const Icon(Icons.confirmation_number_outlined, color: Colors.white, size: 18),
+            ),
             tooltip: 'Masuk dengan Token Event',
             onPressed: _showEventTokenDialog,
           ),
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-            tooltip: 'Segarkan',
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: const Icon(Icons.refresh_rounded, color: Colors.white, size: 18),
+            ),
+            tooltip: 'Segarkan Data',
             onPressed: _loadData,
           ),
+          const SizedBox(width: 4),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          indicatorWeight: 3,
-          labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13),
-          unselectedLabelStyle: GoogleFonts.poppins(fontSize: 13),
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white.withValues(alpha: 0.7),
-          tabs: const [
-            Tab(text: 'Daftar Tryout'),
-            Tab(text: 'Riwayat & Pembahasan'),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(54),
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            padding: const EdgeInsets.all(3.5),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicator: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(9),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12),
+              unselectedLabelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 12),
+              labelColor: AppColors.primaryGreen,
+              unselectedLabelColor: Colors.white,
+              tabs: const [
+                Tab(
+                  height: 36,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.layers_rounded, size: 16),
+                      SizedBox(width: 7),
+                      Text('Daftar Tryout'),
+                    ],
+                  ),
+                ),
+                Tab(
+                  height: 36,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.history_edu_rounded, size: 16),
+                      SizedBox(width: 7),
+                      Text('Riwayat & Nilai'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(

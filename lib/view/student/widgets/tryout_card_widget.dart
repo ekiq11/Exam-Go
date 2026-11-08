@@ -188,48 +188,62 @@ class TryoutCardWidget extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
 
-                      // Baris Jam Pelaksanaan & Durasi Ujian
-                      Row(
+                      // Baris Jam Pelaksanaan & Durasi Ujian (Menggunakan Wrap agar BEBAS OVERFLEX)
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           // Jam Pelaksanaan
-                          if (!isLifetime && schedule.tanggal.isNotEmpty) ...[
-                            Icon(Icons.access_time_rounded, size: 13, color: Colors.grey.shade500),
-                            const SizedBox(width: 5),
-                            Text(
-                              timeStr,
-                              style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                color: const Color(0xFF64748B),
-                                fontWeight: FontWeight.w500,
-                              ),
+                          if (!isLifetime && schedule.tanggal.isNotEmpty)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.access_time_rounded, size: 13, color: Colors.grey.shade500),
+                                const SizedBox(width: 4),
+                                Text(
+                                  timeStr,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    color: const Color(0xFF64748B),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 10),
-                          ],
 
                           // Durasi Pengerjaan
-                          Icon(Icons.timer_outlined, size: 13, color: Colors.grey.shade500),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${schedule.durasiMenit} Menit',
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              color: const Color(0xFF64748B),
-                            ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.timer_outlined, size: 13, color: Colors.grey.shade500),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${schedule.durasiMenit} Menit',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
                           ),
 
                           // Jumlah Butir Soal (Jika tersedia)
-                          if (schedule.totalSoal > 0) ...[
-                            const SizedBox(width: 10),
-                            Icon(Icons.format_list_numbered_rounded, size: 13, color: Colors.grey.shade500),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${schedule.totalSoal} Soal',
-                              style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                color: const Color(0xFF64748B),
-                              ),
+                          if (schedule.totalSoal > 0)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.format_list_numbered_rounded, size: 13, color: Colors.grey.shade500),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${schedule.totalSoal} Soal',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    color: const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
                         ],
                       ),
                     ],

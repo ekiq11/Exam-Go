@@ -276,7 +276,7 @@ class TryoutDetailSheet extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () => _handleStart(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isToday ? AppColors.primaryGreen : const Color(0xFF0284C7),
+                backgroundColor: AppColors.primaryGreen,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 0,
               ),
