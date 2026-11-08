@@ -898,6 +898,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         return StatefulBuilder(
           builder: (context, setSheetState) {
             final activeQuestions = _getActiveQuestions();
+            final answeredCount = activeQuestions.where((q) => _answers.containsKey(q.soalId)).length;
+            final totalCount = activeQuestions.length;
+            final hasNextSubtest = _isPerSubtest && _currentSubtestIndex < _subtests.length - 1;
 
             return SafeArea(
               child: Container(
@@ -1066,6 +1069,95 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                           );
                         },
                       ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                    const SizedBox(height: 12),
+
+                    // Baris Aksi Bawah: Rekap & Tombol Kirim Ujian
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Progres Pengerjaan',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10.5,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                              Text(
+                                '$answeredCount / $totalCount Terjawab',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (hasNextSubtest) ...[
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(ctx);
+                              _confirmFinishSubtestDialog();
+                            },
+                            icon: const Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 15,
+                              color: Color(0xFFD97706),
+                            ),
+                            label: Text(
+                              'Lanjut Subtest',
+                              style: GoogleFonts.poppins(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFFD97706),
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFFFDE68A)),
+                              backgroundColor: const Color(0xFFFFFBEB),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            _confirmSubmitDialog();
+                          },
+                          icon: const Icon(
+                            Icons.send_rounded,
+                            size: 15,
+                            color: Colors.white,
+                          ),
+                          label: Text(
+                            'Kirim Ujian',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryGreen,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
