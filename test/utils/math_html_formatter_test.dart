@@ -82,5 +82,21 @@ void main() {
 
       expect(latex, equals(input));
     });
+
+    test('MathHtmlFormatter mengenali LaTeX dalam kurung biasa misal (\\frac{5}{11})', () {
+      const input = r'Satuan Tugas menyatakan pada Sabtu (\frac{5}{11}), penambahan kasus.';
+      final output = MathHtmlFormatter.format(input);
+
+      expect(output, contains('class="math-tex inline"'));
+      expect(output, contains(Uri.encodeComponent(r'\frac{5}{11}')));
+    });
+
+    test('MathHtmlFormatter mengubah \\pm lepas menjadi simbol ±', () {
+      const input = r'Menghasilkan \pm 2.971 kilometer.';
+      final output = MathHtmlFormatter.format(input);
+
+      expect(output, contains('± 2.971'));
+      expect(output, isNot(contains(r'\pm')));
+    });
   });
 }

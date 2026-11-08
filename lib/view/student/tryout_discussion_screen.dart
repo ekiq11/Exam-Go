@@ -360,6 +360,13 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
               ),
               const SizedBox(height: 12),
 
+              // Stimulus Teks Bacaan jika ada (di atas pertanyaan)
+              if (q.tabel.isNotEmpty &&
+                  ExamQuestionTableWidget.isReadingPassage(q.tabel)) ...[
+                ExamQuestionTableWidget(tabelStr: q.tabel),
+                const SizedBox(height: 8),
+              ],
+
               // Pertanyaan Teks
               HtmlWidget(
                 MathHtmlFormatter.format(q.pertanyaan),
@@ -367,8 +374,9 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                 textStyle: GoogleFonts.poppins(fontSize: 13.5, color: const Color(0xFF0F172A), height: 1.5),
               ),
 
-              // Tabel / Teks Bacaan jika ada
-              if (q.tabel.isNotEmpty) ...[
+              // Tabel Data Numerik jika ada (di bawah pertanyaan)
+              if (q.tabel.isNotEmpty &&
+                  !ExamQuestionTableWidget.isReadingPassage(q.tabel)) ...[
                 const SizedBox(height: 12),
                 ExamQuestionTableWidget(tabelStr: q.tabel),
               ],

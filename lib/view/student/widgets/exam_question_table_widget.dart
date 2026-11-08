@@ -6,7 +6,7 @@ import 'package:examgo/utils/math_widget_factory.dart';
 
 /// Widget cerdas untuk merender konten 'tabel' dari data soal.
 /// Secara otomatis mendeteksi apakah data berupa:
-/// 1. Teks Bacaan / Wacana / Informasi / Paragraf -> dirender vertikal sebagai paragraf elegan (bukan tabel melebar)
+/// 1. Teks Bacaan / Wacana / Informasi / Paragraf -> dirender vertikal mengalir alami (bukan tabel melebar)
 /// 2. Tabel Data Numerik / Statistik sebenarnya -> dirender sebagai tabel rapi, responsif, & scrollable
 class ExamQuestionTableWidget extends StatelessWidget {
   final String tabelStr;
@@ -17,6 +17,54 @@ class ExamQuestionTableWidget extends StatelessWidget {
     required this.tabelStr,
     this.fontSizeScale = 1.0,
   });
+
+  /// Deteksi apakah string tabel sebenarnya merupakan teks stimulus / bacaan
+  static bool isReadingPassage(String tabelStr) {
+    if (tabelStr.trim().isEmpty) return false;
+    try {
+      final rawRows = tabelStr.contains('===') ? tabelStr.split('===') : tabelStr.split(',/');
+      final delim = tabelStr.contains('===') ? '|||' : '-';
+      final List<List<String>> parsedRows = [];
+
+      for (final r in rawRows) {
+        if (r.trim().isEmpty) continue;
+        final cells = r.split(delim);
+        if (cells.isNotEmpty && int.tryParse(cells[0].trim()) != null) {
+          cells.removeAt(0);
+        }
+        final trimmed = cells.map((c) => c.trim()).where((c) => c.isNotEmpty).toList();
+        if (trimmed.isNotEmpty) parsedRows.add(trimmed);
+      }
+
+      if (parsedRows.isEmpty) return false;
+
+      const passageKeywords = [
+        'bacaan',
+        'teks',
+        'informasi',
+        'pernyataan',
+        'paragraf',
+        'paragraph',
+        'passage',
+        'wacana',
+        'cerita',
+        'kutipan',
+        'deskripsi',
+        'narasi',
+        'artikel',
+        'studi kasus',
+      ];
+
+      final maxCols = parsedRows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
+      final hasLongText = parsedRows.any((r) => r.any((c) => c.length > 70));
+      final headerMatches = parsedRows[0].any((c) =>
+          passageKeywords.any((k) => c.toLowerCase().contains(k)));
+
+      return headerMatches || (hasLongText && maxCols <= 2);
+    } catch (_) {
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,32 +88,7 @@ class ExamQuestionTableWidget extends StatelessWidget {
 
       if (parsedRows.isEmpty) return const SizedBox.shrink();
 
-      // Deteksi apakah data adalah teks bacaan atau tabel data angka
-      const passageKeywords = [
-        'bacaan',
-        'teks',
-        'informasi',
-        'pernyataan',
-        'paragraf',
-        'paragraph',
-        'passage',
-        'wacana',
-        'cerita',
-        'kutipan',
-        'deskripsi',
-        'narasi',
-        'artikel',
-        'studi kasus',
-      ];
-
-      final maxCols = parsedRows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
-      final hasLongText = parsedRows.any((r) => r.any((c) => c.length > 70));
-      final headerMatches = parsedRows[0].any((c) =>
-          passageKeywords.any((k) => c.toLowerCase().contains(k)));
-
-      final isPassage = headerMatches || (hasLongText && maxCols <= 2);
-
-      if (isPassage) {
+      if (isReadingPassage(tabelStr)) {
         return _buildPassageCard(parsedRows);
       } else {
         return _buildDataTable(parsedRows);
@@ -75,9 +98,8 @@ class ExamQuestionTableWidget extends StatelessWidget {
     }
   }
 
-  /// Merender teks bacaan dalam bentuk kartu editorial vertikal (paragraf ke bawah)
+  /// Merender teks bacaan mengalir alami ke bawah dengan aksen editorial elegan
   Widget _buildPassageCard(List<List<String>> parsedRows) {
-    String title = 'BACAAN / INFORMASI SOAL';
     List<List<String>> bodyRows = parsedRows;
 
     // Cek apakah baris pertama adalah judul/label bacaan
@@ -95,13 +117,11 @@ class ExamQuestionTableWidget extends StatelessWidget {
     ];
 
     if (parsedRows.isNotEmpty) {
-      final firstRowJoined = parsedRows[0].join(' ').toLowerCase();
       final isHeaderRow = parsedRows.length > 1 &&
           (parsedRows[0].any((c) => passageKeywords.any((k) => c.toLowerCase().contains(k))) ||
               parsedRows[0].first.length <= 40);
 
-      if (isHeaderRow && firstRowJoined.isNotEmpty) {
-        title = parsedRows[0].join(' • ');
+      if (isHeaderRow) {
         bodyRows = parsedRows.sublist(1);
       }
     }
@@ -118,15 +138,10 @@ class ExamQuestionTableWidget extends StatelessWidget {
         final isShortTitle = text.length <= 35 &&
             (text == text.toUpperCase() || !text.contains('.'));
 
-        if (isShortTitle && i == 0 && title == 'BACAAN / INFORMASI SOAL') {
-          title = text;
-          continue;
-        }
-
         if (isShortTitle) {
           paragraphWidgets.add(
             Padding(
-              padding: const EdgeInsets.only(top: 4, bottom: 6),
+              padding: const EdgeInsets.only(top: 2, bottom: 6),
               child: Text(
                 text,
                 style: GoogleFonts.poppins(
@@ -140,7 +155,7 @@ class ExamQuestionTableWidget extends StatelessWidget {
         } else {
           paragraphWidgets.add(
             Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: 10),
               child: HtmlWidget(
                 MathHtmlFormatter.format(text),
                 textStyle: GoogleFonts.poppins(
@@ -154,20 +169,20 @@ class ExamQuestionTableWidget extends StatelessWidget {
           );
         }
       } else {
-        // Format multi-kolom (misal: ["Paragraph 1", "Over this decade..."])
+        // Multi-kolom (misal: ["Paragraph 1", "Over this decade..."])
         final label = row[0];
         final content = row.sublist(1).join(' ');
 
         paragraphWidgets.add(
           Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.only(bottom: 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (label.isNotEmpty)
                   Container(
-                    margin: const EdgeInsets.only(bottom: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    margin: const EdgeInsets.only(bottom: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                     decoration: BoxDecoration(
                       color: const Color(0xFFECFDF5),
                       borderRadius: BorderRadius.circular(4),
@@ -199,72 +214,19 @@ class ExamQuestionTableWidget extends StatelessWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10),
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 2),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(8),
+        border: const Border(
+          left: BorderSide(color: AppColors.primaryGreen, width: 3.5),
+        ),
       ),
-      clipBehavior: Clip.antiAlias,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Header Teks Bacaan
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF1F5F9),
-              border: Border(
-                bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Icon(
-                    Icons.menu_book_rounded,
-                    size: 15,
-                    color: AppColors.primaryGreen,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title.toUpperCase(),
-                    style: GoogleFonts.poppins(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.4,
-                      color: const Color(0xFF334155),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Isi Paragraf
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 2),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: paragraphWidgets,
-            ),
-          ),
-        ],
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: paragraphWidgets,
       ),
     );
   }

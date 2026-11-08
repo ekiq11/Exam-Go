@@ -73,6 +73,35 @@ class MathHtmlFormatter {
     // Normalisasi line break
     html = html.replaceAll('\r\n', '\n');
 
+    // 1. Tangani ekspresi kurung biasa yang memuat perintah LaTeX tanpa $ atau \(:
+    // Contoh: (\frac{5}{11}) -> \(\frac{5}{11}\)
+    html = html.replaceAllMapped(
+      RegExp(r'\(([^)]*\\[a-zA-Z]+[^)]*)\)'),
+      (match) => '\\(${match.group(1)!}\\)',
+    );
+
+    // 2. Tangani bare \frac{...}{...} yang belum dibungkus $ atau \(
+    html = html.replaceAllMapped(
+      RegExp(r'(?<!\$|\\\(|\\\[)(\\frac\{[^{}]*\}\{[^{}]*\})(?!\$|\\\)|\\])'),
+      (match) => '\\(${match.group(1)!}\\)',
+    );
+
+    // 3. Tangani bare \sqrt{...} yang belum dibungkus $ atau \(
+    html = html.replaceAllMapped(
+      RegExp(r'(?<!\$|\\\(|\\\[)(\\sqrt\{[^{}]*\})(?!\$|\\\)|\\])'),
+      (match) => '\\(${match.group(1)!}\\)',
+    );
+
+    // 4. Konversi simbol matematika tunggal yang lepas di luar rumus ke simbol Unicode ramah-baca
+    html = html.replaceAll(RegExp(r'(?<!\$)\\(pm|plusminus)(?!\w)(?!\$)'), '±');
+    html = html.replaceAll(RegExp(r'(?<!\$)\\times(?!\w)(?!\$)'), '×');
+    html = html.replaceAll(RegExp(r'(?<!\$)\\div(?!\w)(?!\$)'), '÷');
+    html = html.replaceAll(RegExp(r'(?<!\$)\\le(q)?(?!\w)(?!\$)'), '≤');
+    html = html.replaceAll(RegExp(r'(?<!\$)\\ge(q)?(?!\w)(?!\$)'), '≥');
+    html = html.replaceAll(RegExp(r'(?<!\$)\\ne(q)?(?!\w)(?!\$)'), '≠');
+    html = html.replaceAll(RegExp(r'(?<!\$)\\approx(?!\w)(?!\$)'), '≈');
+    html = html.replaceAll(RegExp(r'(?<!\$)\\infty(?!\w)(?!\$)'), '∞');
+
     // Bold (**text**) & Italic (*text*)
     html = html.replaceAllMapped(
       RegExp(r'\*\*(?!\s)(.*?)(?<!\s)\*\*', dotAll: true),

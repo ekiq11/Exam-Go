@@ -1853,7 +1853,18 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                           ),
                           const SizedBox(height: 14),
 
-                          // Teks Pertanyaan Render LaTeX & HTML
+                          // 1. Stimulus Teks Bacaan (jika soal memiliki bacaan/wacana)
+                          // Ditempatkan DI ATAS pertanyaan agar alur membaca siswa alami
+                          if (currentQ.tabel.isNotEmpty &&
+                              ExamQuestionTableWidget.isReadingPassage(currentQ.tabel)) ...[
+                            ExamQuestionTableWidget(
+                              tabelStr: currentQ.tabel,
+                              fontSizeScale: _fontSizeScale,
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+
+                          // 2. Teks Pertanyaan Render LaTeX & HTML
                           HtmlWidget(
                             MathHtmlFormatter.format(currentQ.pertanyaan),
                             textStyle: GoogleFonts.poppins(
@@ -1866,10 +1877,14 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                             ),
                           ),
 
-                          // Tabel Soal jika ada
-                          if (currentQ.tabel.isNotEmpty) ...[
+                          // 3. Tabel Data Statistik/Numerik (jika berupa tabel data angka)
+                          if (currentQ.tabel.isNotEmpty &&
+                              !ExamQuestionTableWidget.isReadingPassage(currentQ.tabel)) ...[
                             const SizedBox(height: 12),
-                            _buildQuestionTable(currentQ.tabel),
+                            ExamQuestionTableWidget(
+                              tabelStr: currentQ.tabel,
+                              fontSizeScale: _fontSizeScale,
+                            ),
                           ],
 
                           // Gambar Soal jika ada
