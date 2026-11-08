@@ -558,6 +558,7 @@ class _HomeScreenState extends State<HomeScreen>
                 studentName: name,
                 studentNis: nis,
                 isEvent: isEventExam,
+                initialSchedule: TryoutSchedule.fromMap(pkgDoc.id, pkgDoc.data() ?? {}),
               ),
             ),
           );
