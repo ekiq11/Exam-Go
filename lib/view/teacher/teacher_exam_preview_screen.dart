@@ -13,6 +13,7 @@ import '../../services/license_service.dart';
 import '../../services/monitoring_service.dart';
 import '../../services/qr_payload.dart';
 import '../../utils/math_widget_factory.dart';
+import '../student/widgets/exam_question_table_widget.dart';
 import '../widgets/premium_token_dialog.dart';
 import 'teacher_exam_published_dialog.dart';
 
@@ -898,60 +899,7 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
   }
 
   Widget _buildQuestionTable(String tabelStr) {
-    if (tabelStr.isEmpty) return const SizedBox.shrink();
-    try {
-      final rowsArr = tabelStr.contains('===')
-          ? tabelStr.split('===')
-          : tabelStr.split(',/');
-      final delim = tabelStr.contains('===') ? '|||' : '-';
-      final tableRows = <TableRow>[];
-
-      for (int k = 0; k < rowsArr.length; k++) {
-        final parts = rowsArr[k].split(delim);
-        if (parts.isNotEmpty) parts.removeAt(0);
-        if (parts.isEmpty) continue;
-        final isHeader = k == 0;
-
-        tableRows.add(TableRow(
-          decoration: BoxDecoration(
-            color: isHeader
-                ? const Color(0xFFF5F5F5)
-                : (k.isEven ? const Color(0xFFFAFAFA) : Colors.white),
-          ),
-          children: parts.map((cell) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-              child: HtmlWidget(
-                MathHtmlFormatter.format(cell.trim()),
-                textStyle: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: isHeader ? FontWeight.w600 : FontWeight.normal,
-                  color: const Color(0xFF212121),
-                ),
-                factoryBuilder: () => MathWidgetFactory(fontSize: 12),
-              ),
-            );
-          }).toList(),
-        ));
-      }
-
-      if (tableRows.isEmpty) return const SizedBox.shrink();
-
-      return Container(
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Table(
-          border: TableBorder.all(color: Colors.grey.shade200, width: 1),
-          children: tableRows,
-        ),
-      );
-    } catch (_) {
-      return const SizedBox.shrink();
-    }
+    return ExamQuestionTableWidget(tabelStr: tabelStr);
   }
 }
 

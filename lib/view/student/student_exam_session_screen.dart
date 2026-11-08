@@ -19,6 +19,7 @@ import '../../services/national_exam_evaluator.dart';
 import '../../services/student_tryout_history_service.dart';
 import '../../utils/math_widget_factory.dart';
 import 'tryout_discussion_screen.dart';
+import 'widgets/exam_question_table_widget.dart';
 
 class StudentExamSessionScreen extends StatefulWidget {
   final String token;
@@ -2254,69 +2255,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   }
 
   Widget _buildQuestionTable(String tabelStr) {
-    if (tabelStr.isEmpty) return const SizedBox.shrink();
-    try {
-      final rowsArr = tabelStr.contains('===')
-          ? tabelStr.split('===')
-          : tabelStr.split(',/');
-      final delim = tabelStr.contains('===') ? '|||' : '-';
-      final tableRows = <TableRow>[];
-
-      for (int k = 0; k < rowsArr.length; k++) {
-        final parts = rowsArr[k].split(delim);
-        if (parts.isNotEmpty) parts.removeAt(0);
-        if (parts.isEmpty) continue;
-        final isHeader = k == 0;
-
-        tableRows.add(TableRow(
-          decoration: BoxDecoration(
-            color: isHeader
-                ? const Color(0xFFF1F5F9)
-                : (k.isEven ? const Color(0xFFFAFAFA) : Colors.white),
-          ),
-          children: parts.map((cell) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              child: HtmlWidget(
-                MathHtmlFormatter.format(cell.trim()),
-                textStyle: GoogleFonts.poppins(
-                  fontSize: 12.5 * _fontSizeScale,
-                  fontWeight: isHeader ? FontWeight.w600 : FontWeight.normal,
-                  color: const Color(0xFF1E293B),
-                ),
-                factoryBuilder: () =>
-                    MathWidgetFactory(fontSize: 12.5 * _fontSizeScale),
-              ),
-            );
-          }).toList(),
-        ));
-      }
-
-      if (tableRows.isEmpty) return const SizedBox.shrink();
-
-      return Container(
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFCBD5E1)),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 320),
-            child: Table(
-              border: TableBorder.all(color: const Color(0xFFE2E8F0), width: 1),
-              defaultColumnWidth: const IntrinsicColumnWidth(),
-              children: tableRows,
-            ),
-          ),
-        ),
-      );
-    } catch (_) {
-      return const SizedBox.shrink();
-    }
+    return ExamQuestionTableWidget(
+      tabelStr: tabelStr,
+      fontSizeScale: _fontSizeScale,
+    );
   }
 
   Widget _buildBlockedScreen() {

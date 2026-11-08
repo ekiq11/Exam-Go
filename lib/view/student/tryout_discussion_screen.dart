@@ -3,6 +3,7 @@ import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/exam_question_model.dart';
 import '../../utils/math_widget_factory.dart';
+import 'widgets/exam_question_table_widget.dart';
 
 /// Layar pembahasan dan kunci jawaban tryout lengkap dengan rendering LaTeX
 class TryoutDiscussionScreen extends StatefulWidget {
@@ -365,6 +366,12 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                 factoryBuilder: () => MathWidgetFactory(fontSize: 14),
                 textStyle: GoogleFonts.poppins(fontSize: 13.5, color: const Color(0xFF0F172A), height: 1.5),
               ),
+
+              // Tabel / Teks Bacaan jika ada
+              if (q.tabel.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                ExamQuestionTableWidget(tabelStr: q.tabel),
+              ],
 
               if (q.gambar.isNotEmpty) ...[
                 const SizedBox(height: 10),
