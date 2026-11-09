@@ -21,13 +21,7 @@ void main() {
 
   group('OnboardingScreen Widget Tests', () {
     testWidgets('Renders first slide with badge, title, and feature bullets', (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.5;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
+      await tester.binding.setSurfaceSize(const Size(400, 850));
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -43,13 +37,7 @@ void main() {
     });
 
     testWidgets('Tapping Selanjutnya advances through slides to Mulai Sekarang', (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.5;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
+      await tester.binding.setSurfaceSize(const Size(400, 850));
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -84,13 +72,7 @@ void main() {
     });
 
     testWidgets('Tapping Lewati marks onboarding done and navigates to home', (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.5;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
+      await tester.binding.setSurfaceSize(const Size(400, 850));
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
@@ -103,3 +85,4 @@ void main() {
     });
   });
 }
+

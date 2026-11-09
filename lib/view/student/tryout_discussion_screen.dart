@@ -183,10 +183,13 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
           ),
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Pembahasan & Kunci',
                 style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               Text(
                 widget.title,
@@ -271,30 +274,37 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.school_rounded, size: 13, color: Colors.white),
-                      const SizedBox(width: 5),
-                      Text(
-                        'TRYOUT ${widget.kategori.toUpperCase()}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 0.5,
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.school_rounded, size: 13, color: Colors.white),
+                        const SizedBox(width: 5),
+                        Flexible(
+                          child: Text(
+                            'TRYOUT ${widget.kategori.toUpperCase()}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
                   decoration: BoxDecoration(
@@ -310,6 +320,8 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                   ),
                   child: Text(
                     statusText.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.poppins(
                       fontSize: 9.5,
                       fontWeight: FontWeight.w800,
@@ -332,6 +344,7 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       'SKOR HASIL',
@@ -349,7 +362,7 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                         Text(
                           '$effectiveScore',
                           style: GoogleFonts.poppins(
-                            fontSize: 32,
+                            fontSize: 30,
                             fontWeight: FontWeight.w900,
                             color: Colors.white,
                             height: 1.1,
@@ -359,7 +372,7 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                         Text(
                           'PTS',
                           style: GoogleFonts.poppins(
-                            fontSize: 11,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFF86EFAC),
                           ),
@@ -373,13 +386,14 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                   onTap: _showRadarSheet,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
                     ),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
@@ -394,12 +408,12 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.radar_rounded, size: 14, color: Color(0xFFFDE047)),
+                            const Icon(Icons.radar_rounded, size: 13, color: Color(0xFFFDE047)),
                             const SizedBox(width: 3),
                             Text(
                               'Lihat',
                               style: GoogleFonts.poppins(
-                                fontSize: 13,
+                                fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
@@ -410,19 +424,20 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
                   ),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        'Akurasi Jawaban',
+                        'Akurasi',
                         style: GoogleFonts.poppins(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w500,
@@ -433,12 +448,12 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.bolt_rounded, size: 14, color: Color(0xFFFDE047)),
+                          const Icon(Icons.bolt_rounded, size: 13, color: Color(0xFFFDE047)),
                           const SizedBox(width: 2),
                           Text(
                             '$accuracy%',
                             style: GoogleFonts.poppins(
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
@@ -482,35 +497,42 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
   Widget _buildMiniStatBox(String label, String value, IconData icon, Color color, Color bg) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 2),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(9),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 11, color: color),
-                const SizedBox(width: 3),
-                Text(
-                  value,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: color,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 11, color: color),
+                  const SizedBox(width: 2.5),
+                  Text(
+                    value,
+                    style: GoogleFonts.poppins(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w800,
+                      color: color,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 1),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 9.5,
-                fontWeight: FontWeight.w600,
-                color: color.withValues(alpha: 0.85),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                  color: color.withValues(alpha: 0.85),
+                ),
               ),
             ),
           ],

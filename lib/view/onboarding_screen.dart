@@ -439,8 +439,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         ).animate(slide),
         child: Container(
           padding: EdgeInsets.symmetric(
-            horizontal: context.rs(10),
-            vertical: context.rs(5),
+            horizontal: context.rs(12),
+            vertical: context.rs(6),
           ),
           decoration: BoxDecoration(
             color: isDark
@@ -459,7 +459,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             children: [
               Icon(
                 page.badgeIcon,
-                size: context.rs(13),
+                size: context.rs(14),
                 color: isDark ? Colors.white : AppColors.primaryGreen,
               ),
               SizedBox(width: context.rs(6)),
@@ -471,7 +471,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   style: GoogleFonts.poppins(
                     fontSize: context.rs(11),
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 0.4,
+                    letterSpacing: 0.5,
                     color: isDark ? Colors.white : AppColors.primaryGreen,
                   ),
                 ),
@@ -663,10 +663,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               ),
       ),
       padding: EdgeInsets.fromLTRB(
-        context.horizontalPadding,
+        context.rs(20),
         context.rs(16),
-        context.horizontalPadding,
-        MediaQuery.of(context).padding.bottom + context.rs(20),
+        context.rs(20),
+        MediaQuery.of(context).padding.bottom + context.rs(16),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -702,10 +702,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               child: InkWell(
                 onTap: _nextPage,
                 borderRadius: BorderRadius.circular(18),
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
                   padding: EdgeInsets.symmetric(
-                    horizontal: isLast ? context.rs(20) : context.rs(16),
-                    vertical: context.rs(12),
+                    horizontal: isLast ? context.rs(18) : context.rs(14),
+                    vertical: context.rs(11),
                   ),
                   decoration: BoxDecoration(
                     color: isDark ? Colors.white : AppColors.primaryGreen,
@@ -715,44 +716,42 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         color: isDark
                             ? Colors.black.withValues(alpha: 0.22)
                             : AppColors.primaryGreen.withValues(alpha: 0.38),
-                        blurRadius: 16,
-                        offset: const Offset(0, 5),
+                        blurRadius: 18,
+                        offset: const Offset(0, 6),
                       ),
                     ],
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (isLast) ...[
-                        Icon(
-                          Icons.rocket_launch_rounded,
-                          color: isDark ? AppColors.primaryGreen : Colors.white,
-                          size: context.rs(17),
-                        ),
-                        SizedBox(width: context.rs(6)),
-                      ],
-                      Flexible(
-                        child: Text(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isLast) ...[
+                          Icon(
+                            Icons.rocket_launch_rounded,
+                            color: isDark ? AppColors.primaryGreen : Colors.white,
+                            size: context.rs(18),
+                          ),
+                          SizedBox(width: context.rs(7)),
+                        ],
+                        Text(
                           isLast ? 'Mulai Sekarang' : 'Selanjutnya',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.poppins(
                             color: isDark ? AppColors.primaryGreen : Colors.white,
                             fontSize: context.rs(13),
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                      ),
-                      if (!isLast) ...[
-                        SizedBox(width: context.rs(6)),
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          color: isDark ? AppColors.primaryGreen : Colors.white,
-                          size: context.rs(15),
-                        ),
+                        if (!isLast) ...[
+                          SizedBox(width: context.rs(7)),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            color: isDark ? AppColors.primaryGreen : Colors.white,
+                            size: context.rs(16),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),

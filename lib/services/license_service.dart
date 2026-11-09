@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'popup_ad_service.dart';
 import 'student_tryout_history_service.dart';
 
 /// Hasil validasi dan aktivasi kode lisensi
@@ -607,10 +608,24 @@ class LicenseService {
   // ─── BUKA LINK LYNK.ID ───────────────────────────────────────────
 
   /// Buka halaman pembelian Lynk.id di browser
+  /// Otomatis memprioritaskan tautan dinamis dari Firestore / WebGAS jika sudah diatur
   Future<bool> openLynkIdPage({required String userType}) async {
-    final urlString = userType == 'TEACHER_PREMIUM'
+    String urlString = userType == 'TEACHER_PREMIUM'
         ? AppConfig.lynkIdTeacherUrl
         : AppConfig.lynkIdStudentUrl;
+
+    try {
+      final config = await PopupAdService.instance.getAdsConfig();
+      if (userType == 'TEACHER_PREMIUM' &&
+          config.teacher.ctaUrl.isNotEmpty &&
+          config.teacher.ctaUrl != 'https://lynk.id') {
+        urlString = config.teacher.ctaUrl;
+      } else if (userType != 'TEACHER_PREMIUM' &&
+          config.student.ctaUrl.isNotEmpty &&
+          config.student.ctaUrl != 'https://lynk.id') {
+        urlString = config.student.ctaUrl;
+      }
+    } catch (_) {}
 
     final uri = Uri.parse(urlString);
     try {
