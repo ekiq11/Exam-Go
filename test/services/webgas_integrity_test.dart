@@ -331,7 +331,22 @@ void main() {
       expect(adminContent, contains('id="modal-lynk-transactions"'));
       expect(adminContent, contains('openLynkTransactionsModal()'));
       expect(adminContent, contains('renderLynkTransactions('));
-      expect(adminContent, contains('action=webhook_lynk'));
+      expect(adminContent, contains('https://examgo.id/webhook'));
+    });
+
+    test('cloudflare_worker.js routes to examgo.id without myolc.my.id and proxies webhook', () {
+      final workerFile = File('lib/gas_fcm/cloudflare_worker.js');
+      expect(workerFile.existsSync(), isTrue);
+      final workerContent = workerFile.readAsStringSync();
+
+      // Ensure old unwanted DNS is completely eliminated
+      expect(workerContent, isNot(contains('myolc.my.id')));
+
+      // Ensure routes
+      expect(workerContent, contains('GAS_ADMIN_URL = "https://script.google.com/macros/s/'));
+      expect(workerContent, contains('GAS_WEBHOOK_URL = "https://script.google.com/macros/s/'));
+      expect(workerContent, contains('/webhook'));
+      expect(workerContent, contains('redirect: "follow"'));
     });
   });
 }

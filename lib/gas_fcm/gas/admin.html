@@ -150,7 +150,7 @@
           </div>
 
           <!-- Secondary Action: Open Landing Page -->
-          <a href="https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec" target="_blank" onclick="openLandingPage(event)" class="btn-open-landing-page hidden 2xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold border border-slate-800 hover:border-slate-700 transition-all shadow-xs flex-shrink-0">
+          <a href="https://examgo.id" target="_blank" onclick="openLandingPage(event)" class="btn-open-landing-page hidden 2xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold border border-slate-800 hover:border-slate-700 transition-all shadow-xs flex-shrink-0">
             <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
             <span>Landing Page</span>
             <span class="text-slate-500 text-[10px]">&nearr;</span>
@@ -908,15 +908,20 @@
 
         <div class="mt-5 space-y-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">URL Webhook ExamGO untuk Lynk.id</label>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">URL Webhook Resmi ExamGO (Lynk.id)</label>
+              <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">Bebas Error HTTP 302</span>
+            </div>
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <input type="text" id="lynk-webhook-url-input" readonly value="https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec?action=webhook_lynk" class="flex-1 px-3.5 py-3 bg-white border border-emerald-300 rounded-xl text-xs font-mono font-bold text-slate-800 select-all shadow-inner focus:outline-none">
+              <input type="text" id="lynk-webhook-url-input" readonly value="https://examgo.id/webhook" class="flex-1 px-3.5 py-3 bg-white border border-emerald-300 rounded-xl text-xs font-mono font-bold text-slate-800 select-all shadow-inner focus:outline-none">
               <button onclick="copyLynkWebhookUrl()" type="button" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                 <span>Salin URL Webhook</span>
               </button>
             </div>
-            <p class="text-[11px] text-slate-500 mt-1.5">Tempelkan URL ini di dasbor Lynk.id: <b>Settings &rarr; Integrations &rarr; Webhook &rarr; URL Webhook &rarr; Save URL &rarr; Test URL</b>.</p>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] text-slate-500 mt-2">
+              <span>✅ Gunakan <b>https://examgo.id/webhook</b> di Lynk.id (Settings &rarr; Integrations &rarr; Webhook) agar merespons <b>HTTP 200 OK</b> langsung tanpa redirect 302.</span>
+            </div>
           </div>
 
           <!-- Feature Cards / Keunggulan Integrasi -->
@@ -1223,7 +1228,7 @@
             </p>
           </div>
           <div class="flex flex-wrap items-center gap-3 self-start md:self-auto">
-            <a href="https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec" target="_blank" onclick="openLandingPage(event)" class="btn-open-landing-page inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-900 text-xs font-bold transition-all shadow-md">
+            <a href="https://examgo.id" target="_blank" onclick="openLandingPage(event)" class="btn-open-landing-page inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-900 text-xs font-bold transition-all shadow-md">
               <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
               <span>Buka Landing Page</span>
             </a>
@@ -7219,18 +7224,8 @@
     }
 
     function getActualLandingUrl() {
-      // 1. Ambil URL outer window dari document.referrer (URL resmi Web App)
-      try {
-        if (document.referrer && document.referrer.includes('/exec')) {
-          const u = new URL(document.referrer);
-          u.searchParams.delete('page');
-          u.searchParams.delete('admin');
-          return u.toString();
-        }
-      } catch(e) {}
-
-      // 2. Fallback ke URL deployment Web App resmi
-      return 'https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec';
+      // 1. Domain Landing Page Resmi ExamGO
+      return 'https://examgo.id';
     }
 
     function openLandingPage(e) {
