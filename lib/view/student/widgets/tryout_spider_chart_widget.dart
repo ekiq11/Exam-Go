@@ -13,7 +13,8 @@ class TryoutSubScore {
   final int totalBenar;
   final Color color;
   final int? rawScore; // Nilai / skor riil subtest (misal TWK 110, PU 750)
-  final int? maxRawScore; // Nilai maksimum riil subtest (misal TWK 150, PU 1000)
+  final int?
+  maxRawScore; // Nilai maksimum riil subtest (misal TWK 150, PU 1000)
 
   const TryoutSubScore({
     required this.name,
@@ -29,7 +30,9 @@ class TryoutSubScore {
   /// Daftar nama subtest standar berdasarkan kategori paket tryout
   static List<String> getStandardSubtestNames(String kategori) {
     final cat = kategori.trim().toUpperCase();
-    if (cat.contains('SKD') || cat.contains('KEDINASAN') || cat.contains('CPNS')) {
+    if (cat.contains('SKD') ||
+        cat.contains('KEDINASAN') ||
+        cat.contains('CPNS')) {
       return ['TWK', 'TIU', 'TKP'];
     }
     if (cat.contains('SNBT') || cat.contains('UTBK')) {
@@ -56,7 +59,10 @@ class TryoutSubScore {
       if (inner.isNotEmpty && inner.length <= 6) return inner;
     }
 
-    final matchSt = RegExp(r'^(?:ST|SUBTEST|SUB)[_-]?(\d+)$', caseSensitive: false).firstMatch(k);
+    final matchSt = RegExp(
+      r'^(?:ST|SUBTEST|SUB)[_-]?(\d+)$',
+      caseSensitive: false,
+    ).firstMatch(k);
     if (matchSt != null) {
       final idx = int.tryParse(matchSt.group(1) ?? '') ?? (index + 1);
       final std = getStandardSubtestNames(kategori);
@@ -67,7 +73,10 @@ class TryoutSubScore {
 
     final lower = k.toLowerCase();
     if (lower.contains('wawasan kebangsaan') || lower == 'twk') return 'TWK';
-    if (lower.contains('intelegensia') || lower.contains('intelegensi') || lower == 'tiu') return 'TIU';
+    if (lower.contains('intelegensia') ||
+        lower.contains('intelegensi') ||
+        lower == 'tiu')
+      return 'TIU';
     if (lower.contains('karakteristik pribadi') || lower == 'tkp') return 'TKP';
     if (lower.contains('penalaran umum') || lower == 'pu') return 'PU';
     if (lower.contains('pengetahuan kuantitatif') || lower == 'pk') return 'PK';
@@ -100,7 +109,11 @@ class TryoutSubScore {
 
       final m = Map<String, dynamic>.from(val);
       final judul = (m['judul'] ?? m['nama'] ?? entry.key).toString();
-      final name = resolveSubtestName(judul.isNotEmpty ? judul : entry.key, i, kategori);
+      final name = resolveSubtestName(
+        judul.isNotEmpty ? judul : entry.key,
+        i,
+        kategori,
+      );
 
       final rawSkor = (m['skor'] as num?)?.toInt() ?? 0;
       final maxSkor = (m['max_skor'] as num?)?.toInt() ?? 0;
@@ -261,7 +274,9 @@ class TryoutSubScore {
   }
 
   /// Factory untuk menghitung radar kumulatif dari seluruh riwayat tryout siswa
-  static List<TryoutSubScore> fromCumulativeHistory(List<StudentTryoutHistoryItem> list) {
+  static List<TryoutSubScore> fromCumulativeHistory(
+    List<StudentTryoutHistoryItem> list,
+  ) {
     if (list.isEmpty) return [];
 
     final Map<String, _SubtestAccumulator> accum = {};
@@ -286,7 +301,8 @@ class TryoutSubScore {
         int idx = 0;
         final Map<String, List<ExamQuestion>> qGroup = {};
         for (final q in item.questions) {
-          final k = (q.subtestId.isNotEmpty ? q.subtestId : item.kategori).trim();
+          final k = (q.subtestId.isNotEmpty ? q.subtestId : item.kategori)
+              .trim();
           qGroup.putIfAbsent(k, () => []).add(q);
         }
         qGroup.forEach((k, qList) {
@@ -294,8 +310,11 @@ class TryoutSubScore {
           final acc = accum.putIfAbsent(name, () => _SubtestAccumulator());
           for (final q in qList) {
             acc.totalSum++;
-            final studentAns = (item.jawaban[q.soalId] ?? '').trim().toUpperCase();
-            if (studentAns.isNotEmpty && studentAns == q.kunci.trim().toUpperCase()) {
+            final studentAns = (item.jawaban[q.soalId] ?? '')
+                .trim()
+                .toUpperCase();
+            if (studentAns.isNotEmpty &&
+                studentAns == q.kunci.trim().toUpperCase()) {
               acc.benarSum++;
             }
           }
@@ -388,7 +407,9 @@ class TryoutSubScore {
     final akurasi = (item.totalBenar + item.totalSalah) > 0
         ? (item.totalBenar / (item.totalBenar + item.totalSalah)) * 100.0
         : 0.0;
-    final kelengkapan = total > 0 ? ((total - item.totalKosong) / total) * 100.0 : 0.0;
+    final kelengkapan = total > 0
+        ? ((total - item.totalKosong) / total) * 100.0
+        : 0.0;
 
     return [
       TryoutSubScore(
@@ -415,7 +436,11 @@ class TryoutSubScore {
       if (item.kategori.isNotEmpty)
         TryoutSubScore(
           name: item.kategori,
-          score: (item.finalScore.toDouble() / (item.maxScore > 0 ? item.maxScore : 100.0) * 100.0).clamp(0.0, 100.0),
+          score:
+              (item.finalScore.toDouble() /
+                      (item.maxScore > 0 ? item.maxScore : 100.0) *
+                      100.0)
+                  .clamp(0.0, 100.0),
           color: const Color(0xFFF59E0B), // Amber
           totalSoal: total,
           totalBenar: item.totalBenar,
@@ -423,11 +448,15 @@ class TryoutSubScore {
     ];
   }
 
-  static List<TryoutSubScore> _generateFallbackScores(StudentTryoutHistoryItem item) {
+  static List<TryoutSubScore> _generateFallbackScores(
+    StudentTryoutHistoryItem item,
+  ) {
     return _generateAdaptiveScores(item, {});
   }
 
-  static List<TryoutSubScore> _generateCumulativeFallback(List<StudentTryoutHistoryItem> list) {
+  static List<TryoutSubScore> _generateCumulativeFallback(
+    List<StudentTryoutHistoryItem> list,
+  ) {
     int totalSoal = 0;
     int totalBenar = 0;
     int totalSalah = 0;
@@ -441,8 +470,12 @@ class TryoutSubScore {
     }
 
     final pctBenar = totalSoal > 0 ? (totalBenar / totalSoal) * 100.0 : 0.0;
-    final pctAkurasi = (totalBenar + totalSalah) > 0 ? (totalBenar / (totalBenar + totalSalah)) * 100.0 : 0.0;
-    final pctTuntas = totalSoal > 0 ? ((totalSoal - totalKosong) / totalSoal) * 100.0 : 0.0;
+    final pctAkurasi = (totalBenar + totalSalah) > 0
+        ? (totalBenar / (totalBenar + totalSalah)) * 100.0
+        : 0.0;
+    final pctTuntas = totalSoal > 0
+        ? ((totalSoal - totalKosong) / totalSoal) * 100.0
+        : 0.0;
     final lulusCount = list.where((e) => e.isPassed).length;
     final pctLulus = list.isNotEmpty ? (lulusCount / list.length) * 100.0 : 0.0;
 
@@ -508,14 +541,15 @@ class TryoutSpiderChartWidget extends StatefulWidget {
   const TryoutSpiderChartWidget({
     super.key,
     required this.subScores,
-    this.title = 'Grafik Radar Kemampuan Subtest',
+    this.title = 'Grafik Kemampuan',
     this.subtitle,
     this.height = 280,
     this.showLegend = true,
   });
 
   @override
-  State<TryoutSpiderChartWidget> createState() => _TryoutSpiderChartWidgetState();
+  State<TryoutSpiderChartWidget> createState() =>
+      _TryoutSpiderChartWidgetState();
 }
 
 class _TryoutSpiderChartWidgetState extends State<TryoutSpiderChartWidget>
@@ -530,10 +564,7 @@ class _TryoutSpiderChartWidgetState extends State<TryoutSpiderChartWidget>
       vsync: this,
       duration: const Duration(milliseconds: 950),
     );
-    _anim = CurvedAnimation(
-      parent: _animCtrl,
-      curve: Curves.easeOutCubic,
-    );
+    _anim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic);
     _animCtrl.forward();
   }
 
@@ -557,7 +588,8 @@ class _TryoutSpiderChartWidgetState extends State<TryoutSpiderChartWidget>
       return const SizedBox.shrink();
     }
 
-    final avgScore = widget.subScores.fold<double>(0.0, (acc, e) => acc + e.score) /
+    final avgScore =
+        widget.subScores.fold<double>(0.0, (acc, e) => acc + e.score) /
         widget.subScores.length;
 
     return Container(
@@ -591,7 +623,9 @@ class _TryoutSpiderChartWidgetState extends State<TryoutSpiderChartWidget>
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                            color: const Color(
+                              0xFF10B981,
+                            ).withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(
@@ -630,7 +664,10 @@ class _TryoutSpiderChartWidgetState extends State<TryoutSpiderChartWidget>
               ),
               // Skor Rata-rata Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFF059669), Color(0xFF10B981)],
@@ -647,7 +684,11 @@ class _TryoutSpiderChartWidgetState extends State<TryoutSpiderChartWidget>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.speed_rounded, size: 12, color: Colors.white),
+                    const Icon(
+                      Icons.speed_rounded,
+                      size: 12,
+                      color: Colors.white,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${avgScore.round()}% Rata2',
@@ -686,52 +727,64 @@ class _TryoutSpiderChartWidgetState extends State<TryoutSpiderChartWidget>
             const SizedBox(height: 14),
             const Divider(color: Color(0xFFF1F5F9), height: 1),
             const SizedBox(height: 12),
-            // Legend Item Grid/Wrap
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: widget.subScores.map((s) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: s.color.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: s.color.withValues(alpha: 0.3)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: s.color,
-                          shape: BoxShape.circle,
-                        ),
+            // Legend Item Grid/Wrap (Posisi Presisi di Tengah-Tengah)
+            SizedBox(
+              width: double.infinity,
+              child: Center(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: widget.subScores.map((s) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        s.name,
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF334155),
-                        ),
+                      decoration: BoxDecoration(
+                        color: s.color.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: s.color.withValues(alpha: 0.3)),
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        s.rawScore != null ? '${s.rawScore} (${s.score.round()}%)' : '${s.score.round()}%',
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: s.color,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: s.color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            s.name,
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF334155),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            s.rawScore != null
+                                ? '${s.rawScore} (${s.score.round()}%)'
+                                : '${s.score.round()}%',
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: s.color,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
+                ),
+              ),
             ),
           ],
         ],
@@ -745,10 +798,7 @@ class _SpiderChartPainter extends CustomPainter {
   final List<TryoutSubScore> subScores;
   final double progress;
 
-  const _SpiderChartPainter({
-    required this.subScores,
-    required this.progress,
-  });
+  const _SpiderChartPainter({required this.subScores, required this.progress});
 
   static const int _gridLevels = 5; // 20%, 40%, 60%, 80%, 100%
 
@@ -773,7 +823,10 @@ class _SpiderChartPainter extends CustomPainter {
       final s = subScores[i];
       final frac = (s.score.clamp(0.0, s.maxValue) / s.maxValue) * progress;
       final a = _angle(i, n);
-      return Offset(cx + radius * frac * math.cos(a), cy + radius * frac * math.sin(a));
+      return Offset(
+        cx + radius * frac * math.cos(a),
+        cy + radius * frac * math.sin(a),
+      );
     });
 
     // ── 1. Cincin Poligon Jaring-Jaring (Grid Rings) ──
