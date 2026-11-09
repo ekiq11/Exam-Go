@@ -70,25 +70,27 @@ class GFormExamParser {
 
     final html = response.body;
 
-    // Deteksi jika Google Form dibatasi khusus akun organisasi tertentu (Restricted Domain / Memerlukan Login)
-    if (html.contains('ServiceLogin') ||
-        html.contains('accounts.google.com') ||
-        html.contains('Anda memerlukan izin') ||
-        html.contains('You need permission') ||
-        html.contains('form-restricted')) {
-      return GFormParseResult(
-        isValid: false,
-        errors: [
-          'Google Form ini dibatasi aksesnya (Restricted Domain / Memerlukan Login Google).',
-          'Solusi: Buka Google Form Anda di browser > Setelan (Settings) > Respons > Nonaktifkan opsi "Batasi untuk pengguna di [Organisasi]" agar link publik dapat diimpor ke ExamGO.',
-        ],
-      );
-    }
-
     // Cari blok script FB_PUBLIC_LOAD_DATA_
     final regex = RegExp(r'var\s+FB_PUBLIC_LOAD_DATA_\s*=\s*(.+?);\s*<\/script>', dotAll: true);
     final match = regex.firstMatch(html);
     if (match == null) {
+      // Deteksi jika Google Form dibatasi khusus akun organisasi tertentu (Restricted Domain / Memerlukan Login)
+      final isRestricted = html.contains('ServiceLogin') ||
+          html.contains('accounts.google.com/ServiceLogin') ||
+          html.contains('accounts.google.com/signin') ||
+          html.contains('action="https://accounts.google.com') ||
+          html.contains('Anda memerlukan izin') ||
+          html.contains('You need permission') ||
+          html.contains('form-restricted');
+      if (isRestricted) {
+        return GFormParseResult(
+          isValid: false,
+          errors: [
+            'Google Form ini dibatasi aksesnya (Restricted Domain / Memerlukan Login Google).',
+            'Solusi: Buka Google Form Anda di browser > Setelan (Settings) > Respons > Nonaktifkan opsi "Batasi untuk pengguna di [Organisasi]" agar link publik dapat diimpor ke ExamGO.',
+          ],
+        );
+      }
       return GFormParseResult(
         isValid: false,
         errors: [
@@ -116,9 +118,36 @@ class GFormExamParser {
     }
 
     final formInfo = jsonData[1] as List;
-    final formTitle = formInfo.isNotEmpty && formInfo[0] != null
-        ? formInfo[0].toString()
-        : 'Ujian Google Form';
+    String formTitle = '';
+    if (formInfo.length > 8 && formInfo[8] != null && formInfo[8].toString().trim().isNotEmpty) {
+      formTitle = formInfo[8].toString().trim();
+    } else if (formInfo.isNotEmpty && formInfo[0] != null && formInfo[0].toString().trim().isNotEmpty) {
+      formTitle = formInfo[0].toString().trim();
+    }
+    if (formTitle.isEmpty) {
+      final titleMatch = RegExp(r'<title>(.*?)<\/title>', caseSensitive: false).firstMatch(html);
+      if (titleMatch != null) {
+        formTitle = titleMatch.group(1)?.replaceAll(RegExp(r'\s*-\s*Google\s*(Formulir|Forms)', caseSensitive: false), '').trim() ?? '';
+      }
+    }
+    if (formTitle.isEmpty) {
+      formTitle = 'Ujian Google Form';
+    }
+
+    // Ekstrak peta gambar blob jika ada (s-blob-v1-IMAGE-...)
+    final blobMap = <String, String>{};
+    final blobRegex = RegExp(r's-blob-v1-IMAGE-([A-Za-z0-9_-]+)');
+    for (final m in blobRegex.allMatches(html)) {
+      final blobId = m.group(0)!;
+      if (!blobMap.containsKey(blobId)) {
+        final idx = m.start;
+        final snippet = html.substring(idx, (idx + 1500).clamp(0, html.length));
+        final imgMatch = RegExp(r'<img[^>]+src=["' "'" r'](https:\/\/(?:docs\.google\.com\/forms-images-rt|lh[0-9]*\.googleusercontent\.com)[^"' "'" r'\s>]+)["' "'" r']').firstMatch(snippet);
+        if (imgMatch != null) {
+          blobMap[blobId] = imgMatch.group(1)!;
+        }
+      }
+    }
 
     final itemsList = formInfo.length > 1 && formInfo[1] is List ? formInfo[1] as List : [];
     if (itemsList.isEmpty) {
@@ -166,13 +195,16 @@ class GFormExamParser {
       }
       fullPertanyaan = _normalizeMathInText(fullPertanyaan);
 
-      // Deteksi gambar di pertanyaan (item[6] atau item[8])
+      // Deteksi gambar di pertanyaan (bisa di item[6], item[8], item[9], dsb.)
       String imgUrl = '';
-      if (item.length > 6 && item[6] is List && (item[6] as List).isNotEmpty) {
-        imgUrl = _extractImageUrl(item[6]);
-      }
-      if (imgUrl.isEmpty && item.length > 8 && item[8] is List && (item[8] as List).isNotEmpty) {
-        imgUrl = _extractImageUrl(item[8]);
+      for (int idx = 5; idx < item.length; idx++) {
+        if (item[idx] != null) {
+          final found = _extractImageUrl(item[idx], blobMap);
+          if (found.isNotEmpty) {
+            imgUrl = found;
+            break;
+          }
+        }
       }
 
       // ─── DUKUNGAN KISI PILIHAN GANDA / MULTIPLE CHOICE GRID (itemType == 7) ───
@@ -280,7 +312,7 @@ class GFormExamParser {
         final optData = optItems[i];
         if (optData is List && optData.isNotEmpty) {
           final optText = _normalizeMathInText(optData[0]?.toString() ?? '');
-          final optImg = _extractImageUrl(optData);
+          final optImg = _extractImageUrl(optData, blobMap);
 
           switch (i) {
             case 0:
@@ -377,24 +409,27 @@ class GFormExamParser {
   }
 
   /// Ekstrak URL gambar baik dari link langsung, array metadata Google Form, maupun Google Drive
-  static String _extractImageUrl(dynamic obj) {
+  static String _extractImageUrl(dynamic obj, [Map<String, String>? blobMap]) {
     if (obj == null) return '';
     if (obj is String) {
       final s = obj.trim();
       if (s.startsWith('http://') || s.startsWith('https://')) {
         return MathHtmlFormatter.convertDriveUrl(s);
       }
+      if (blobMap != null && blobMap.containsKey(s)) {
+        return blobMap[s]!;
+      }
       return '';
     }
     if (obj is List) {
       for (final el in obj) {
-        final res = _extractImageUrl(el);
+        final res = _extractImageUrl(el, blobMap);
         if (res.isNotEmpty) return res;
       }
     }
     if (obj is Map) {
       for (final val in obj.values) {
-        final res = _extractImageUrl(val);
+        final res = _extractImageUrl(val, blobMap);
         if (res.isNotEmpty) return res;
       }
     }
