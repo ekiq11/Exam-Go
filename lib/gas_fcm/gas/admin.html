@@ -2329,49 +2329,90 @@
     </div>
   </div>
 
-  <!-- MODAL HISTORI TRANSAKSI LYNK.ID WEBHOOK -->
-  <div id="modal-lynk-transactions" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-950/70 backdrop-blur-sm transition-opacity opacity-0 p-3 sm:p-6">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col border border-slate-200 overflow-hidden transform transition-transform scale-95" id="modal-lynk-transactions-box">
+  <!-- MODAL HISTORI TRANSAKSI LYNK.ID WEBHOOK (FULL WIDE & REDESIGNED) -->
+  <div id="modal-lynk-transactions" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-950/70 backdrop-blur-sm transition-opacity opacity-0 p-2 sm:p-4 md:p-6">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-[97vw] 2xl:max-w-[1580px] max-h-[95vh] flex flex-col border border-slate-200 overflow-hidden transform transition-transform scale-95" id="modal-lynk-transactions-box">
       <!-- Modal Header -->
-      <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
+      <div class="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-50/80">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shadow-2xs font-bold text-lg">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-md font-bold text-lg shrink-0">
             🔗
           </div>
           <div>
-            <h3 class="text-base font-bold text-slate-900">Histori Transaksi Webhook Lynk.id</h3>
-            <p class="text-xs text-slate-500">Daftar transaksi order otomatis yang masuk dari Lynk.id beserta token yang diberikan.</p>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base sm:text-lg font-bold text-slate-900">Histori Transaksi Webhook Lynk.id</h3>
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Realtime Sync
+              </span>
+            </div>
+            <p class="text-xs text-slate-500">Monitoring transaksi order masuk, alokasi token lisensi otomatis & status pengiriman pembeli.</p>
           </div>
         </div>
-        <div class="flex items-center gap-2">
-          <button onclick="openLynkTransactionsModal()" title="Segarkan Data" type="button" class="px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs">
+        <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+          <div class="relative flex-1 sm:flex-initial">
+            <input type="text" id="lynk-search-input" oninput="filterLynkTransactions()" placeholder="Cari nama, email, order, token..." class="pl-9 pr-3.5 py-1.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full sm:w-64 shadow-2xs">
+            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </div>
+          <button onclick="openLynkTransactionsModal()" title="Segarkan Data" type="button" class="px-3.5 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs shrink-0">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
             <span>Segarkan</span>
           </button>
-          <button onclick="closeLynkTransactionsModal()" type="button" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
+          <button onclick="closeLynkTransactionsModal()" type="button" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer shrink-0">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
         </div>
       </div>
 
+      <!-- Quick KPI Strip -->
+      <div class="px-6 py-2.5 bg-white border-b border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
+          <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">📦</div>
+          <div>
+            <div class="text-[10px] text-slate-400 font-semibold uppercase">Total Order</div>
+            <div id="lynk-stat-total" class="font-bold text-slate-800 text-sm">0</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
+          <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">✉️</div>
+          <div>
+            <div class="text-[10px] text-slate-400 font-semibold uppercase">Email Terkirim</div>
+            <div id="lynk-stat-emailed" class="font-bold text-emerald-700 text-sm">0</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
+          <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs">⏳</div>
+          <div>
+            <div class="text-[10px] text-slate-400 font-semibold uppercase">Pending Follow-up</div>
+            <div id="lynk-stat-pending" class="font-bold text-amber-700 text-sm">0</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 border border-slate-100">
+          <div class="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">💰</div>
+          <div>
+            <div class="text-[10px] text-slate-400 font-semibold uppercase">Total Nilai Transaksi</div>
+            <div id="lynk-stat-revenue" class="font-bold text-purple-700 text-sm">Rp 0</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Table Body -->
-      <div class="p-6 overflow-y-auto flex-1">
-        <div class="overflow-x-auto border border-slate-200 rounded-2xl">
-          <table class="w-full text-left border-collapse text-xs">
-            <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
+      <div class="p-4 sm:p-6 overflow-y-auto flex-1 bg-slate-50/40">
+        <div class="overflow-x-auto border border-slate-200/90 rounded-2xl bg-white shadow-2xs">
+          <table class="w-full text-left border-collapse text-xs min-w-[1100px]">
+            <thead class="bg-slate-50/90 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
               <tr>
-                <th class="px-4 py-3">Order ID (Ref)</th>
-                <th class="px-4 py-3">Data Pembeli</th>
-                <th class="px-4 py-3">Produk</th>
-                <th class="px-4 py-3 text-center">Token Diberikan</th>
-                <th class="px-4 py-3 text-center">Status</th>
-                <th class="px-4 py-3 text-right">Waktu</th>
-                <th class="px-4 py-3 text-center">Aksi Cepat</th>
+                <th class="px-4 py-3.5 w-[160px]">Order Ref (ID)</th>
+                <th class="px-4 py-3.5 w-[250px]">Data Pembeli</th>
+                <th class="px-4 py-3.5 min-w-[240px]">Produk & Pembayaran</th>
+                <th class="px-4 py-3.5 w-[220px] text-center">Token Lisensi Diberikan</th>
+                <th class="px-4 py-3.5 w-[140px] text-center">Status Delivery</th>
+                <th class="px-4 py-3.5 w-[160px] text-center">Waktu Order</th>
+                <th class="px-4 py-3.5 w-[180px] text-center">Aksi Cepat</th>
               </tr>
             </thead>
             <tbody id="lynk-transactions-tbody" class="divide-y divide-slate-100 bg-white">
               <tr>
-                <td colspan="6" class="p-6 text-center text-slate-400 text-xs">Memuat data transaksi...</td>
+                <td colspan="7" class="p-8 text-center text-slate-400 text-xs">Memuat data transaksi Lynk.id...</td>
               </tr>
             </tbody>
           </table>
@@ -2379,13 +2420,16 @@
       </div>
 
       <!-- Footer -->
-      <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/80 flex items-center justify-between">
-        <span class="text-xs text-slate-500">Data tersinkronisasi otomatis dengan Google Sheets <b>lynk_transactions</b></span>
-        <button onclick="closeLynkTransactionsModal()" type="button" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
+      <div class="px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div id="lynk-footer-info" class="text-xs text-slate-500 font-medium">
+          Menampilkan 0 transaksi &bull; Data tersinkronisasi otomatis dengan Google Sheets <b>lynk_transactions</b>
+        </div>
+        <button onclick="closeLynkTransactionsModal()" type="button" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 active:scale-95 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs">
           Tutup
         </button>
       </div>
     </div>
+  </div>
   </div>
 
   <div id="toast" class="fixed bottom-5 right-5 transform transition-all duration-300 translate-y-20 opacity-0 text-white px-6 py-4 rounded-xl shadow-xl z-[60] flex items-center min-w-[300px]">
@@ -6715,13 +6759,44 @@
       });
     }
 
+    let currentLynkTransactions = [];
+
+    function copyTextToClipboard(text, successMsg) {
+      if (!text) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast(successMsg || 'Berhasil disalin!', 'success');
+        }).catch(() => {
+          _fallbackCopyText(text, successMsg);
+        });
+      } else {
+        _fallbackCopyText(text, successMsg);
+      }
+    }
+
+    function _fallbackCopyText(text, successMsg) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(successMsg || 'Berhasil disalin!', 'success');
+      } catch (e) {
+        showToast('Gagal menyalin.', 'error');
+      }
+      document.body.removeChild(ta);
+    }
+
     function openLynkTransactionsModal() {
       const creds = getCredentials();
       if (!creds) return;
       _showModal('modal-lynk-transactions', 'modal-lynk-transactions-box');
       const tbody = document.getElementById('lynk-transactions-tbody');
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400 text-xs">Memuat data transaksi Lynk.id...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 text-xs">Memuat data transaksi Lynk.id...</td></tr>';
       }
 
       const u = creds.username || creds.user;
@@ -6734,7 +6809,9 @@
             return;
           }
           if (res && res.transactions && res.transactions.length > 0) {
-            renderLynkTransactions(res.transactions);
+            currentLynkTransactions = res.transactions;
+            updateLynkKPI(res.transactions);
+            filterLynkTransactions();
           } else {
             // Fallback ke REST API jika google.script.run kosong
             fetchTransactionsViaRest(u, p);
@@ -6752,14 +6829,67 @@
         .then(r => r.json())
         .then(res => {
           if (res && res.transactions) {
-            renderLynkTransactions(res.transactions);
+            currentLynkTransactions = res.transactions;
+            updateLynkKPI(res.transactions);
+            filterLynkTransactions();
           } else {
-            renderLynkTransactions([]);
+            currentLynkTransactions = [];
+            updateLynkKPI([]);
+            filterLynkTransactions();
           }
         })
         .catch(() => {
-          renderLynkTransactions([]);
+          currentLynkTransactions = [];
+          updateLynkKPI([]);
+          filterLynkTransactions();
         });
+    }
+
+    function updateLynkKPI(list) {
+      const total = list.length;
+      let emailed = 0;
+      let pending = 0;
+      let revenue = 0;
+
+      list.forEach(t => {
+        if ((t.status || '').indexOf('EMAILED') !== -1) {
+          emailed++;
+        } else {
+          pending++;
+        }
+        revenue += Number(t.grandTotal || 0);
+      });
+
+      const elTotal = document.getElementById('lynk-stat-total');
+      const elEmailed = document.getElementById('lynk-stat-emailed');
+      const elPending = document.getElementById('lynk-stat-pending');
+      const elRev = document.getElementById('lynk-stat-revenue');
+
+      if (elTotal) elTotal.textContent = total;
+      if (elEmailed) elEmailed.textContent = emailed;
+      if (elPending) elPending.textContent = pending;
+      if (elRev) elRev.textContent = revenue > 0 ? ('Rp ' + revenue.toLocaleString('id-ID')) : 'Rp 0 (Free/Test)';
+    }
+
+    function filterLynkTransactions() {
+      const input = document.getElementById('lynk-search-input');
+      const q = (input ? input.value : '').toLowerCase().trim();
+
+      if (!q) {
+        renderLynkTransactions(currentLynkTransactions);
+        return;
+      }
+
+      const filtered = currentLynkTransactions.filter(t => {
+        return (t.orderId || '').toLowerCase().includes(q) ||
+               (t.customerName || '').toLowerCase().includes(q) ||
+               (t.customerEmail || '').toLowerCase().includes(q) ||
+               (t.customerPhone || '').toLowerCase().includes(q) ||
+               (t.token || '').toLowerCase().includes(q) ||
+               (t.productTitle || '').toLowerCase().includes(q);
+      });
+
+      renderLynkTransactions(filtered);
     }
 
     function closeLynkTransactionsModal() {
@@ -6768,18 +6898,54 @@
 
     function renderLynkTransactions(list) {
       const tbody = document.getElementById('lynk-transactions-tbody');
+      const footerInfo = document.getElementById('lynk-footer-info');
       if (!tbody) return;
+
+      if (footerInfo) {
+        footerInfo.innerHTML = 'Menampilkan <b>' + list.length + '</b> dari <b>' + currentLynkTransactions.length + '</b> transaksi &bull; Tersinkronisasi otomatis dengan Google Sheets <b>lynk_transactions</b>';
+      }
+
       if (!list || list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 text-xs">Belum ada transaksi Lynk.id yang tercatat melalui Webhook.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="p-12 text-center text-slate-400 text-xs">' +
+          '<div class="flex flex-col items-center justify-center gap-2">' +
+            '<span class="text-3xl">📭</span>' +
+            '<span class="font-semibold text-slate-600">Belum ada transaksi yang sesuai</span>' +
+            '<span class="text-slate-400 text-[11px]">Transaksi yang masuk melalui Webhook Lynk.id akan otomatis muncul di sini.</span>' +
+          '</div>' +
+        '</td></tr>';
         return;
       }
 
       let html = '';
       list.forEach((t) => {
-        const dt = t.timestamp ? new Date(t.timestamp).toLocaleString('id-ID') : '-';
+        let dateStr = '-';
+        let timeStr = '';
+        if (t.timestamp) {
+          const d = new Date(t.timestamp);
+          dateStr = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+          timeStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+        }
+
         const isEmailed = (t.status || '').indexOf('EMAILED') !== -1;
         const cleanPhone = String(t.customerPhone || '').replace(/[^0-9]/g, '');
         const phoneWithCountry = cleanPhone.startsWith('0') ? ('62' + cleanPhone.slice(1)) : (cleanPhone.startsWith('62') ? cleanPhone : ('62' + cleanPhone));
+        
+        const shortOrderId = (t.orderId && t.orderId.length > 14) 
+          ? (t.orderId.substring(0, 8) + '…' + t.orderId.slice(-4)) 
+          : (t.orderId || '-');
+
+        const initials = (t.customerName || 'U')
+          .split(' ')
+          .map(w => w[0])
+          .filter(Boolean)
+          .slice(0, 2)
+          .join('')
+          .toUpperCase() || 'U';
+
+        const priceTag = (t.grandTotal && t.grandTotal > 0) 
+          ? ('Rp ' + Number(t.grandTotal).toLocaleString('id-ID')) 
+          : 'Rp 0';
+
         const waMsg = encodeURIComponent(
           '*KONFIRMASI LISENSI RESMI EXAMGO*\n\n' +
           'Halo *' + (t.customerName || 'Sobat Belajar') + '*,\n' +
@@ -6794,26 +6960,72 @@
           '*Unduh Aplikasi Resmi:* https://play.google.com/store/apps/details?id=com.kemenag.examgo'
         );
 
-        html += '<tr class="hover:bg-slate-50/80 transition-colors">' +
-          '<td class="px-4 py-3 font-mono text-xs font-bold text-slate-700">' + escapeHtml(t.orderId || '-') + '</td>' +
-          '<td class="px-4 py-3">' +
-            '<div class="font-bold text-xs text-slate-900">' + escapeHtml(t.customerName || 'Pembeli') + '</div>' +
-            '<div class="text-[11px] text-slate-400">' + escapeHtml(t.customerEmail || '-') + ' &bull; ' + escapeHtml(t.customerPhone || '-') + '</div>' +
+        html += '<tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100">' +
+          // 1. Order ID
+          '<td class="px-4 py-3.5 align-middle">' +
+            '<div class="flex items-center gap-1.5">' +
+              '<span class="font-mono text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-200/80 px-2 py-1 rounded-lg select-all" title="' + escapeHtml(t.orderId || '') + '">' + 
+                escapeHtml(shortOrderId) + 
+              '</span>' +
+              '<button type="button" onclick="copyTextToClipboard(\'' + escapeHtml(t.orderId || '') + '\', \'Order ID disalin!\')" class="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-md transition-colors cursor-pointer" title="Salin Order ID Lengkap">' +
+                '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>' +
+              '</button>' +
+            '</div>' +
           '</td>' +
-          '<td class="px-4 py-3 text-xs text-slate-700">' + escapeHtml(t.productTitle || 'Token ExamGO') + '</td>' +
-          '<td class="px-4 py-3 text-center font-bold text-xs font-mono text-emerald-800">' +
-            '<span class="px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 select-all">' + escapeHtml(t.token || '-') + '</span>' +
+
+          // 2. Data Pembeli
+          '<td class="px-4 py-3.5 align-middle">' +
+            '<div class="flex items-center gap-2.5">' +
+              '<div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs flex items-center justify-center shrink-0 uppercase shadow-2xs">' +
+                escapeHtml(initials) +
+              '</div>' +
+              '<div class="min-w-0 flex-1">' +
+                '<div class="font-bold text-xs text-slate-900 truncate" title="' + escapeHtml(t.customerName || '') + '">' + escapeHtml(t.customerName || 'Pembeli Lynk.id') + '</div>' +
+                '<div class="text-[11px] text-slate-500 truncate" title="' + escapeHtml(t.customerEmail || '') + '">' + escapeHtml(t.customerEmail || '-') + '</div>' +
+                '<div class="text-[10.5px] font-mono text-slate-400">' + escapeHtml(t.customerPhone || '-') + '</div>' +
+              '</div>' +
+            '</div>' +
           '</td>' +
-          '<td class="px-4 py-3 text-center">' +
+
+          // 3. Produk & Pembayaran
+          '<td class="px-4 py-3.5 align-middle">' +
+            '<div class="font-semibold text-xs text-slate-800 line-clamp-1" title="' + escapeHtml(t.productTitle || '') + '">' + 
+              escapeHtml(t.productTitle || 'Token ExamGO') + 
+            '</div>' +
+            '<div class="flex items-center gap-1.5 mt-1">' +
+              '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200/80">' + Number(t.quantity || 1) + 'x Item</span>' +
+              '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">' + escapeHtml(priceTag) + '</span>' +
+            '</div>' +
+          '</td>' +
+
+          // 4. Token Lisensi Diberikan
+          '<td class="px-4 py-3.5 text-center align-middle">' +
+            '<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50/90 border border-emerald-300 text-emerald-950 font-mono font-extrabold tracking-wider text-xs shadow-2xs whitespace-nowrap">' +
+              '<span class="select-all">' + escapeHtml(t.token || '-') + '</span>' +
+              '<button type="button" onclick="copyTextToClipboard(\'' + escapeHtml(t.token || '') + '\', \'Kode Token disalin!\')" class="p-1 text-emerald-700 hover:text-emerald-950 hover:bg-emerald-200/60 rounded-md transition-colors cursor-pointer" title="Salin Kode Token">' +
+                '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>' +
+              '</button>' +
+            '</div>' +
+          '</td>' +
+
+          // 5. Status Delivery
+          '<td class="px-4 py-3.5 text-center align-middle">' +
             (isEmailed
-              ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Email Terkirim</span>'
-              : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Pending Email</span>') +
+              ? '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs whitespace-nowrap"><svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg> Email Terkirim</span>'
+              : '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-bold bg-amber-100 text-amber-800 border border-amber-200 shadow-2xs whitespace-nowrap"><svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Pending Email</span>') +
           '</td>' +
-          '<td class="px-4 py-3 text-right text-[11px] text-slate-500 font-mono whitespace-nowrap">' + dt + '</td>' +
-          '<td class="px-4 py-3 text-center whitespace-nowrap">' +
-            '<div class="inline-flex items-center gap-1.5">' +
-              (cleanPhone ? '<a href="https://wa.me/' + phoneWithCountry + '?text=' + waMsg + '" target="_blank" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10.5px] font-bold shadow-2xs transition-all inline-flex items-center gap-1 cursor-pointer">📱 WA</a>' : '') +
-              '<button onclick="resendTokenEmailAction(\'' + escapeHtml(t.orderId) + '\')" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[10.5px] font-bold shadow-2xs transition-all inline-flex items-center gap-1 cursor-pointer">✉️ Email</button>' +
+
+          // 6. Waktu Order
+          '<td class="px-4 py-3.5 text-center align-middle">' +
+            '<div class="text-[11px] font-mono text-slate-700 whitespace-nowrap font-medium">' + dateStr + '</div>' +
+            '<div class="text-[10px] text-slate-400 font-mono mt-0.5">' + timeStr + '</div>' +
+          '</td>' +
+
+          // 7. Aksi Cepat
+          '<td class="px-4 py-3.5 text-center align-middle whitespace-nowrap">' +
+            '<div class="inline-flex items-center justify-center gap-2">' +
+              (cleanPhone ? '<a href="https://wa.me/' + phoneWithCountry + '?text=' + waMsg + '" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold shadow-2xs transition-all inline-flex items-center gap-1.5 cursor-pointer"><span>📱</span><span>Chat WA</span></a>' : '') +
+              '<button type="button" onclick="resendTokenEmailAction(\'' + escapeHtml(t.orderId) + '\')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-xl text-xs font-bold shadow-2xs transition-all inline-flex items-center gap-1.5 cursor-pointer"><span>✉️</span><span>Kirim Email</span></button>' +
             '</div>' +
           '</td>' +
         '</tr>';
