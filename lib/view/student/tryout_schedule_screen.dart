@@ -714,447 +714,146 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
           }
 
           final item = _historyList[index - 1];
-          final dt = item.submittedAt;
-          final dateStr = IndoDateFormatter.formatHariTanggal(
-            dt.toIso8601String(),
-            shortMonth: true,
-          );
-          final tz = IndoDateFormatter.detectTimeZone(null);
-          final timeStr =
-              '$dateStr • ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} $tz';
-          final isPassed = item.isPassed;
-          final totalSoal = item.totalSoal > 0
-              ? item.totalSoal
-              : (item.totalBenar + item.totalSalah + item.totalKosong);
-          final accuracy = totalSoal > 0
-              ? ((item.totalBenar / totalSoal) * 100).round()
-              : 0;
+          return _buildHistoryCard(item);
+        },
+      ),
+    );
+  }
 
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: isPassed
-                    ? const Color(0xFFA5D6A7).withValues(alpha: 0.8)
-                    : const Color(0xFFE0E0E0),
-                width: isPassed ? 1.4 : 1.0,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 14,
-                  offset: const Offset(0, 4),
+  /// Card Riwayat & Hasil Ujian Siswa (Redesain Proposional & Modern)
+  Widget _buildHistoryCard(StudentTryoutHistoryItem item) {
+    final dt = item.submittedAt;
+    final dateStr = IndoDateFormatter.formatHariTanggal(
+      dt.toIso8601String(),
+      shortMonth: true,
+    );
+    final tz = IndoDateFormatter.detectTimeZone(null);
+    final timeStr =
+        '$dateStr • ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} $tz';
+    final isPassed = item.isPassed;
+    final totalSoal = item.totalSoal > 0
+        ? item.totalSoal
+        : (item.totalBenar + item.totalSalah + item.totalKosong);
+    final accuracy = totalSoal > 0
+        ? ((item.totalBenar / totalSoal) * 100).round()
+        : 0;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isPassed
+              ? const Color(0xFFA5D6A7).withValues(alpha: 0.9)
+              : const Color(0xFFE2E8F0),
+          width: isPassed ? 1.5 : 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── 1. Top Bar: Kategori & Waktu ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildCategoryPill(item.kategori),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.schedule_rounded,
+                      size: 13,
+                      color: Color(0xFF64748B),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      timeStr,
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: const Color(0xFF64748B),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
+          ),
+
+          // ── 2. Nama Paket & Status Lulus ──
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Baris Atas: Kategori Badge & Tanggal Ujian
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildCategoryPill(item.kategori),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.schedule_rounded,
-                          size: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          timeStr,
-                          style: GoogleFonts.poppins(
-                            fontSize: 10.5,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                Text(
+                  item.namaPaket,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: const Color(0xFF0F172A),
+                    height: 1.35,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 12),
-
-                // Bagian Utama: Nama Paket & Hero Skor
+                const SizedBox(height: 6),
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.namaPaket,
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: AppColors.textPrimary,
-                              height: 1.3,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 6),
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 4,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2.5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isPassed
-                                      ? AppColors.paleGreen
-                                      : const Color(0xFFFFEBEE),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      isPassed
-                                          ? Icons.check_circle_rounded
-                                          : Icons.cancel_rounded,
-                                      size: 11,
-                                      color: isPassed
-                                          ? AppColors.primaryGreen
-                                          : AppColors.error,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      item.statusKelulusan,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: isPassed
-                                            ? AppColors.primaryGreen
-                                            : AppColors.error,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (item.predikat.isNotEmpty)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 2.5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.grey100,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    'Predikat: ${item.predikat}',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.grey700,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    // Skor Hero Pill (Harmonisasi Brand ExamGo)
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: isPassed
-                            ? AppColors.paleGreen
-                            : const Color(0xFFFFEBEE),
-                        borderRadius: BorderRadius.circular(14),
+                        color: isPassed ? AppColors.paleGreen : const Color(0xFFFFEBEE),
+                        borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: isPassed
-                              ? const Color(0xFFA5D6A7)
-                              : const Color(0xFFFFCDD2),
+                          color: isPassed ? const Color(0xFFA5D6A7) : const Color(0xFFFFCDD2),
+                          width: 0.8,
                         ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          Icon(
+                            isPassed ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                            size: 12,
+                            color: isPassed ? AppColors.primaryGreen : AppColors.error,
+                          ),
+                          const SizedBox(width: 4),
                           Text(
-                            'SKOR',
+                            item.statusKelulusan,
                             style: GoogleFonts.poppins(
-                              fontSize: 9,
+                              fontSize: 10.5,
                               fontWeight: FontWeight.w700,
-                              letterSpacing: 0.5,
-                              color: isPassed
-                                  ? AppColors.primaryGreen
-                                  : AppColors.error,
-                            ),
-                          ),
-                          Text(
-                            '${item.finalScore}',
-                            style: GoogleFonts.poppins(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              color: isPassed
-                                  ? AppColors.primaryGreen
-                                  : AppColors.error,
-                              height: 1.05,
-                            ),
-                          ),
-                          Text(
-                            '/ ${item.maxScore}',
-                            style: GoogleFonts.poppins(
-                              fontSize: 10,
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
+                              color: isPassed ? AppColors.primaryGreen : AppColors.error,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Visual Segmented Accuracy Bar
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: SizedBox(
-                    height: 5,
-                    child: Row(
-                      children: [
-                        if (item.totalBenar > 0)
-                          Expanded(
-                            flex: item.totalBenar,
-                            child: Container(color: AppColors.primaryGreen),
-                          ),
-                        if (item.totalSalah > 0)
-                          Expanded(
-                            flex: item.totalSalah,
-                            child: Container(color: AppColors.error),
-                          ),
-                        if (item.totalKosong > 0)
-                          Expanded(
-                            flex: item.totalKosong,
-                            child: Container(color: AppColors.grey300),
-                          ),
-                        if (totalSoal == 0)
-                          Expanded(child: Container(color: AppColors.grey100)),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Rincian Metrik Statistik Modern (Harmonisasi Brand ExamGo)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.backgroundLight,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.grey300),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildCardStatItem(
-                        Icons.check_circle_rounded,
-                        '${item.totalBenar} Benar',
-                        AppColors.primaryGreen,
-                      ),
-                      _buildCardStatItem(
-                        Icons.cancel_rounded,
-                        '${item.totalSalah} Salah',
-                        AppColors.error,
-                      ),
-                      _buildCardStatItem(
-                        Icons.remove_circle_outline_rounded,
-                        '${item.totalKosong} Kosong',
-                        AppColors.textSecondary,
-                      ),
-                      _buildCardStatItem(
-                        Icons.percent_rounded,
-                        '$accuracy% Akurasi',
-                        AppColors.primaryGreen,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-
-                // Tombol Aksi: Redesain Proposional & Harmonis dengan Brand ExamGo
-                Row(
-                  children: [
-                    Expanded(
-                      flex: item.allowRetake ? 3 : 1,
-                      child: SizedBox(
-                        height: 44,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF1B5E20),
-                                AppColors.primaryGreen,
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primaryGreen.withValues(
-                                  alpha: 0.28,
-                                ),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: ElevatedButton.icon(
-                            onPressed: () async {
-                              var questions = item.questions;
-                              if (questions.isEmpty) {
-                                showDialog(
-                                  context: context,
-                                  barrierDismissible: false,
-                                  builder: (_) => const Center(
-                                    child: CircularProgressIndicator(color: AppColors.primaryGreen),
-                                  ),
-                                );
-                                try {
-                                  final cached = await ExamCacheService.instance.loadExam(item.token);
-                                  if (cached != null && cached.questions.isNotEmpty) {
-                                    questions = cached.questions;
-                                  } else {
-                                    final downloaded = await ExamCacheService.instance.downloadAndCacheExam(
-                                      paketId: item.token,
-                                    );
-                                    if (downloaded.questions.isNotEmpty) {
-                                      questions = downloaded.questions;
-                                    }
-                                  }
-                                } catch (_) {}
-                                if (context.mounted) Navigator.pop(context);
-                              }
-
-                              if (!context.mounted) return;
-                              if (questions.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Butir soal pembahasan belum tersedia offline atau di server.'),
-                                  ),
-                                );
-                                return;
-                              }
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => TryoutDiscussionScreen(
-                                    title: item.namaPaket,
-                                    kategori: item.kategori,
-                                    questions: questions,
-                                    studentAnswers: item.jawaban,
-                                    score: item.finalScore,
-                                    statusKelulusan: item.statusKelulusan,
-                                    returnToDashboardOnExit: false,
-                                  ),
-                                ),
-                              );
-                            },
-                            icon: const Icon(
-                              Icons.auto_stories_rounded,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                            label: Text(
-                              'Pembahasan',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                                color: Colors.white,
-                                //letterSpacing: 0.2,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
+                    if (item.predikat.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
                         ),
-                      ),
-                    ),
-                    if (item.allowRetake) ...[
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 2,
-                        child: SizedBox(
-                          height: 44,
-                          child: OutlinedButton.icon(
-                            onPressed: () async {
-                              final match = _allSchedules
-                                  .where((s) => s.paketId == item.token)
-                                  .firstOrNull;
-                              final targetSched =
-                                  match ??
-                                  TryoutSchedule(
-                                    paketId: item.token,
-                                    namaPaket: item.namaPaket,
-                                    jenisTest: item.kategori,
-                                    tanggal: '',
-                                    isLifetime: true,
-                                    allowRetake: true,
-                                  );
-                              final shouldStart = await TryoutDetailSheet.show(
-                                context,
-                                targetSched,
-                              );
-                              if (shouldStart == true && context.mounted) {
-                                _startTryout(targetSched);
-                              }
-                            },
-                            icon: const Icon(
-                              Icons.replay_rounded,
-                              size: 16,
-                              color: AppColors.primaryGreen,
-                            ),
-                            label: Text(
-                              'Ulangi',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                                color: AppColors.primaryGreen,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor: AppColors.paleGreen.withValues(
-                                alpha: 0.6,
-                              ),
-                              side: const BorderSide(
-                                color: AppColors.primaryGreen,
-                                width: 1.2,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                              ),
-                            ),
+                        child: Text(
+                          'Predikat: ${item.predikat}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF475569),
                           ),
                         ),
                       ),
@@ -1163,9 +862,442 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                 ),
               ],
             ),
-          );
-        },
+          ),
+
+          const SizedBox(height: 12),
+
+          // ── 3. Dedicated Proportional Score Container (Hero Section) ──
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isPassed
+                      ? [
+                          const Color(0xFFF0FDF4),
+                          const Color(0xFFDCFCE7),
+                        ]
+                      : [
+                          const Color(0xFFFFF1F2),
+                          const Color(0xFFFFE4E6),
+                        ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isPassed ? const Color(0xFFBBF7D0) : const Color(0xFFFECDD3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Sisi Kiri: Nilai Akhir
+                  Expanded(
+                    flex: 6,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.military_tech_rounded,
+                              size: 14,
+                              color: isPassed ? const Color(0xFF16A34A) : const Color(0xFFE11D48),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'SKOR AKHIR',
+                              style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.6,
+                                color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              '${item.finalScore}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w900,
+                                color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
+                                height: 1.1,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '/ ${item.maxScore}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Garis Pemisah Vertikal
+                  Container(
+                    width: 1,
+                    height: 38,
+                    color: isPassed
+                        ? const Color(0xFF86EFAC).withValues(alpha: 0.6)
+                        : const Color(0xFFFDA4AF).withValues(alpha: 0.6),
+                  ),
+
+                  // Sisi Kanan: Akurasi & Total Benar
+                  Expanded(
+                    flex: 5,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.pie_chart_rounded,
+                                size: 13,
+                                color: isPassed ? const Color(0xFF16A34A) : const Color(0xFFE11D48),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'AKURASI',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.6,
+                                  color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                '$accuracy%',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
+                                  height: 1.1,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'tepat',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // ── 4. Segmented Accuracy Progress Bar ──
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                height: 6,
+                child: Row(
+                  children: [
+                    if (item.totalBenar > 0)
+                      Expanded(
+                        flex: item.totalBenar,
+                        child: Container(color: const Color(0xFF16A34A)),
+                      ),
+                    if (item.totalSalah > 0)
+                      Expanded(
+                        flex: item.totalSalah,
+                        child: Container(color: const Color(0xFFE11D48)),
+                      ),
+                    if (item.totalKosong > 0)
+                      Expanded(
+                        flex: item.totalKosong,
+                        child: Container(color: const Color(0xFFCBD5E1)),
+                      ),
+                    if (totalSoal == 0)
+                      Expanded(child: Container(color: const Color(0xFFE2E8F0))),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          // ── 5. Rincian Metrik Statistik Modern ──
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildMetricTile(
+                      label: 'Benar',
+                      value: '${item.totalBenar}',
+                      color: const Color(0xFF16A34A),
+                      icon: Icons.check_circle_rounded,
+                    ),
+                  ),
+                  Container(width: 1, height: 24, color: const Color(0xFFE2E8F0)),
+                  Expanded(
+                    child: _buildMetricTile(
+                      label: 'Salah',
+                      value: '${item.totalSalah}',
+                      color: const Color(0xFFE11D48),
+                      icon: Icons.cancel_rounded,
+                    ),
+                  ),
+                  Container(width: 1, height: 24, color: const Color(0xFFE2E8F0)),
+                  Expanded(
+                    child: _buildMetricTile(
+                      label: 'Kosong',
+                      value: '${item.totalKosong}',
+                      color: const Color(0xFF64748B),
+                      icon: Icons.remove_circle_outline_rounded,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // ── 6. Tombol Aksi (Pembahasan & Ulangi) ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: item.allowRetake ? 3 : 1,
+                  child: SizedBox(
+                    height: 44,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFF1B5E20),
+                            AppColors.primaryGreen,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryGreen.withValues(alpha: 0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: () => _openDiscussion(item),
+                        icon: const Icon(
+                          Icons.auto_stories_rounded,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        label: Text(
+                          'Pembahasan & Analisis',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                if (item.allowRetake) ...[
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: SizedBox(
+                      height: 44,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _retakeTryout(item),
+                        icon: const Icon(
+                          Icons.replay_rounded,
+                          size: 16,
+                          color: AppColors.primaryGreen,
+                        ),
+                        label: Text(
+                          'Ulangi',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: AppColors.primaryGreen,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: AppColors.paleGreen.withValues(alpha: 0.6),
+                          side: const BorderSide(
+                            color: AppColors.primaryGreen,
+                            width: 1.2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Future<void> _openDiscussion(StudentTryoutHistoryItem item) async {
+    var questions = item.questions;
+    if (questions.isEmpty) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(
+          child: CircularProgressIndicator(color: AppColors.primaryGreen),
+        ),
+      );
+      try {
+        final cached = await ExamCacheService.instance.loadExam(item.token);
+        if (cached != null && cached.questions.isNotEmpty) {
+          questions = cached.questions;
+        } else {
+          final downloaded = await ExamCacheService.instance.downloadAndCacheExam(
+            paketId: item.token,
+          );
+          if (downloaded.questions.isNotEmpty) {
+            questions = downloaded.questions;
+          }
+        }
+      } catch (_) {}
+      if (mounted) Navigator.pop(context);
+    }
+
+    if (!mounted) return;
+    if (questions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Butir soal pembahasan belum tersedia offline atau di server.'),
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TryoutDiscussionScreen(
+          title: item.namaPaket,
+          kategori: item.kategori,
+          questions: questions,
+          studentAnswers: item.jawaban,
+          score: item.finalScore,
+          statusKelulusan: item.statusKelulusan,
+          returnToDashboardOnExit: false,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _retakeTryout(StudentTryoutHistoryItem item) async {
+    final match = _allSchedules
+        .where((s) => s.paketId == item.token)
+        .firstOrNull;
+    final targetSched = match ??
+        TryoutSchedule(
+          paketId: item.token,
+          namaPaket: item.namaPaket,
+          jenisTest: item.kategori,
+          tanggal: '',
+          isLifetime: true,
+          allowRetake: true,
+        );
+    final shouldStart = await TryoutDetailSheet.show(
+      context,
+      targetSched,
+    );
+    if (shouldStart == true && mounted) {
+      _startTryout(targetSched);
+    }
+  }
+
+  Widget _buildMetricTile({
+    required String label,
+    required String value,
+    required Color color,
+    required IconData icon,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 5),
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+        const SizedBox(width: 3),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF64748B),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1180,14 +1312,14 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF1B5E20), AppColors.primaryGreen],
+          colors: [Color(0xFF007F37), Color(0xFF1B5E20)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryGreen.withValues(alpha: 0.25),
+            color: const Color(0xFF007F37).withValues(alpha: 0.25),
             blurRadius: 16,
             offset: const Offset(0, 5),
           ),
@@ -1370,24 +1502,6 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
           letterSpacing: 0.3,
         ),
       ),
-    );
-  }
-
-  Widget _buildCardStatItem(IconData icon, String label, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 12, color: color),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 10.5,
-            fontWeight: FontWeight.w600,
-            color: color,
-          ),
-        ),
-      ],
     );
   }
 
