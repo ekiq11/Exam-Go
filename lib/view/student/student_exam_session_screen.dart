@@ -1966,6 +1966,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                               borderRadius: BorderRadius.circular(12),
                               child: CachedNetworkImage(
                                 imageUrl: driveImg,
+                                httpHeaders: MathHtmlFormatter.networkImageHeaders,
                                 width: double.infinity,
                                 fit: BoxFit.contain,
                                 placeholder: (context, url) => Container(
@@ -2437,11 +2438,12 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     if (text.isNotEmpty) const SizedBox(height: 6),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        MathHtmlFormatter.convertDriveUrl(img),
+                      child: CachedNetworkImage(
+                        imageUrl: MathHtmlFormatter.convertDriveUrl(img),
+                        httpHeaders: MathHtmlFormatter.networkImageHeaders,
                         height: 110,
                         fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
+                        errorWidget: (context, error, stackTrace) =>
                             const SizedBox.shrink(),
                       ),
                     ),

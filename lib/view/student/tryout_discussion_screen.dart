@@ -715,7 +715,8 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: Image.network(
-                    q.gambar,
+                    MathHtmlFormatter.convertDriveUrl(q.gambar),
+                    headers: MathHtmlFormatter.networkImageHeaders,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                   ),

@@ -768,6 +768,7 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
               borderRadius: BorderRadius.circular(10),
               child: CachedNetworkImage(
                 imageUrl: driveImg,
+                httpHeaders: MathHtmlFormatter.networkImageHeaders,
                 placeholder: (context, url) => Container(
                   height: 120,
                   color: Colors.grey.shade100,
@@ -887,11 +888,12 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
                   if (text.isNotEmpty) const SizedBox(height: 6),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      MathHtmlFormatter.convertDriveUrl(img),
+                    child: CachedNetworkImage(
+                      imageUrl: MathHtmlFormatter.convertDriveUrl(img),
+                      httpHeaders: MathHtmlFormatter.networkImageHeaders,
                       height: 100,
                       fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) =>
+                      errorWidget: (context, url, error) =>
                           const SizedBox.shrink(),
                     ),
                   ),
