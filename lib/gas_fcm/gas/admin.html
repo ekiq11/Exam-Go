@@ -2343,9 +2343,15 @@
             <p class="text-xs text-slate-500">Daftar transaksi order otomatis yang masuk dari Lynk.id beserta token yang diberikan.</p>
           </div>
         </div>
-        <button onclick="closeLynkTransactionsModal()" type="button" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="openLynkTransactionsModal()" title="Segarkan Data" type="button" class="px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            <span>Segarkan</span>
+          </button>
+          <button onclick="closeLynkTransactionsModal()" type="button" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
       </div>
 
       <!-- Table Body -->
@@ -6715,8 +6721,11 @@
       _showModal('modal-lynk-transactions', 'modal-lynk-transactions-box');
       const tbody = document.getElementById('lynk-transactions-tbody');
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400 text-xs">Memuat data transaksi Lynk.id...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400 text-xs">Memuat data transaksi Lynk.id...</td></tr>';
       }
+
+      const u = creds.username || creds.user;
+      const p = creds.password || creds.pass;
 
       google.script.run
         .withSuccessHandler(function(res) {
@@ -6724,12 +6733,33 @@
             showToast('Gagal memuat transaksi: ' + res.error, 'error');
             return;
           }
-          renderLynkTransactions((res && res.transactions) ? res.transactions : []);
+          if (res && res.transactions && res.transactions.length > 0) {
+            renderLynkTransactions(res.transactions);
+          } else {
+            // Fallback ke REST API jika google.script.run kosong
+            fetchTransactionsViaRest(u, p);
+          }
         })
         .withFailureHandler(function(err) {
-          showToast('Error server: ' + err.message, 'error');
+          console.warn('google.script.run failed, trying REST fallback...', err);
+          fetchTransactionsViaRest(u, p);
         })
-        .getLynkTransactions(creds.username || creds.user, creds.password || creds.pass);
+        .getLynkTransactions(u, p);
+    }
+
+    function fetchTransactionsViaRest(u, p) {
+      fetch('?action=get_lynk_transactions&user=' + encodeURIComponent(u) + '&pass=' + encodeURIComponent(p))
+        .then(r => r.json())
+        .then(res => {
+          if (res && res.transactions) {
+            renderLynkTransactions(res.transactions);
+          } else {
+            renderLynkTransactions([]);
+          }
+        })
+        .catch(() => {
+          renderLynkTransactions([]);
+        });
     }
 
     function closeLynkTransactionsModal() {
@@ -6740,7 +6770,7 @@
       const tbody = document.getElementById('lynk-transactions-tbody');
       if (!tbody) return;
       if (!list || list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400 text-xs">Belum ada transaksi Lynk.id yang tercatat melalui Webhook.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-400 text-xs">Belum ada transaksi Lynk.id yang tercatat melalui Webhook.</td></tr>';
         return;
       }
 
