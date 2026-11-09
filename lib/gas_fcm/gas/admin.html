@@ -5798,6 +5798,11 @@
       google.script.run
         .withSuccessHandler(function(res) {
           if (res && res.error) {
+            if (res.error === 'unauthorized') {
+              showToast('Sesi login telah berakhir. Silakan login kembali.', 'error');
+              logout();
+              return;
+            }
             showToast(res.error, 'error');
             tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-red-500">' + res.error + '</td></tr>';
             return;
