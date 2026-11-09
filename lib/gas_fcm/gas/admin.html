@@ -6518,17 +6518,20 @@
       const steps = type === 'TEACHER_PREMIUM'
         ? '1. Buka aplikasi ExamGO > Masuk "Mode Guru" di bawah.\n2. Buat PIN Guru 6 angka.\n3. Ketuk kartu "Lisensi & Status Akun".\n4. Masukkan kode: *' + token + '*\n5. Tekan "Aktivasi Sekarang". Akun Guru Premium aktif selamanya!'
         : (type === 'EVENT'
-          ? '1. Buka aplikasi ExamGO.\n2. Di beranda, masukkan kode pada kartu "🎯 Masuk Event" / "Token Ujian": *' + token + '*\n3. Anda langsung terdaftar ke sesi ujian!'
+          ? '1. Buka aplikasi ExamGO.\n2. Di beranda, masukkan kode pada kartu "🎯 Masuk Event" atau "Token Ujian": *' + token + '*\n3. Anda langsung terdaftar ke sesi ujian!'
           : '1. Buka aplikasi ExamGO.\n2. Di beranda, ketuk kartu "Lisensi & Status Akun".\n3. Masukkan kode: *' + token + '*\n4. Tekan "Aktivasi Sekarang". Akun Siswa Premium aktif selamanya!');
 
-      let msg = `*LISENSI RESMI EXAMGO*\n`;
-      msg += `👤 *Status:* ${roleText}\n`;
-      msg += `🔑 *Kode Lisensi:* *${token}*\n\n`;
-      msg += `*Tautan Unduh Aplikasi Resmi:*\n`;
-      msg += '• Play Store: https://play.google.com/store/apps/details?id=com.kemenag.examgo\n';
-      msg += '• App Store: https://apps.apple.com/id/app/examgo/id6759708435\n\n';
-      msg += `*Cara Aktivasi:*\n${steps}\n\n`;
-      msg += `_Catatan: 1 Kode berlaku permanen untuk 1 perangkat._`;
+      const playStore = 'https:\/\/play.google.com\/store\/apps\/details?id=com.kemenag.examgo';
+      const appStore = 'https:\/\/apps.apple.com\/id\/app\/examgo\/id6759708435';
+
+      let msg = '*LISENSI RESMI EXAMGO*\n';
+      msg += '👤 *Status:* ' + roleText + '\n';
+      msg += '🔑 *Kode Lisensi:* *' + token + '*\n\n';
+      msg += '*Tautan Unduh Aplikasi Resmi:*\n';
+      msg += '• Play Store: ' + playStore + '\n';
+      msg += '• App Store: ' + appStore + '\n\n';
+      msg += '*Cara Aktivasi:*\n' + steps + '\n\n';
+      msg += '_Catatan: 1 Kode berlaku permanen untuk 1 perangkat._';
 
       navigator.clipboard.writeText(msg).then(() => {
         showToast('Format pesan WA untuk token ' + token + ' berhasil disalin!', 'success');
@@ -6961,13 +6964,16 @@
         const code = (document.getElementById('master-code').value || '').trim().toUpperCase();
         const quota = document.getElementById('master-quota').value;
 
-        let msg = `*PENGUMUMAN LISENSI RESMI EXAMGO PREMIUM*\n`;
-        msg += `🏫 *Sekolah:* ${school}\n`;
-        msg += `🔑 *Kode Master Voucher:* *${code}*\n`;
-        msg += `👥 *Kuota Akses:* ${quota} Siswa\n\n`;
-        msg += `*Tautan Unduh Aplikasi Resmi:*\n`;
-        msg += '• Google Play Store: https://play.google.com/store/apps/details?id=com.kemenag.examgo\n';
-        msg += '• Apple App Store (iOS): https://apps.apple.com/id/app/examgo/id6759708435\n\n';
+        const playStore = 'https:\/\/play.google.com\/store\/apps\/details?id=com.kemenag.examgo';
+        const appStore = 'https:\/\/apps.apple.com\/id\/app\/examgo\/id6759708435';
+
+        let msg = '*PENGUMUMAN LISENSI RESMI EXAMGO PREMIUM*\n';
+        msg += '🏫 *Sekolah:* ' + school + '\n';
+        msg += '🔑 *Kode Master Voucher:* *' + code + '*\n';
+        msg += '👥 *Kuota Akses:* ' + quota + ' Siswa\n\n';
+        msg += '*Tautan Unduh Aplikasi Resmi:*\n';
+        msg += '• Google Play Store: ' + playStore + '\n';
+        msg += '• Apple App Store (iOS): ' + appStore + '\n\n';
         msg += `*Cara Aktivasi Siswa:*\n`;
         msg += `1. Buka aplikasi *ExamGO* di ponsel Anda.\n`;
         msg += `2. Di beranda utama, ketuk kartu *Lisensi & Status Akun*.\n`;
@@ -7004,13 +7010,16 @@
           ? '1. Unduh & buka aplikasi ExamGO di ponsel Anda.\n2. Di beranda utama, masukkan kode tiket pada kolom "Token Ujian / Event" atau tombol "🎯 Masuk Event".\n3. Anda langsung terdaftar ke ruang ujian dan siap mengerjakan saat jadwal dimulai!'
           : '1. Unduh & buka aplikasi ExamGO di ponsel Anda.\n2. Di beranda utama, ketuk kartu "Lisensi & Status Akun".\n3. Masukkan salah satu Kode Lisensi di bawah ini.\n4. Tekan tombol "Aktivasi Sekarang". Akun Siswa Premium Aktif Selamanya!');
 
-      let msg = `*KONFIRMASI LISENSI RESMI EXAMGO (LYNK.ID)*\n`;
-      msg += `👤 *Peruntukan:* ${roleText}\n`;
-      msg += `🏷️ *Channel:* ${school}\n`;
-      msg += `🔢 *Jumlah Lisensi:* ${tokens.length} Kode\n\n`;
-      msg += `*Tautan Unduh Aplikasi Resmi:*\n`;
-      msg += '• Google Play Store: https://play.google.com/store/apps/details?id=com.kemenag.examgo\n';
-      msg += '• Apple App Store (iOS): https://apps.apple.com/id/app/examgo/id6759708435\n\n';
+      const playStore = 'https:\/\/play.google.com\/store\/apps\/details?id=com.kemenag.examgo';
+      const appStore = 'https:\/\/apps.apple.com\/id\/app\/examgo\/id6759708435';
+
+      let msg = '*KONFIRMASI LISENSI RESMI EXAMGO (LYNK.ID)*\n';
+      msg += '👤 *Peruntukan:* ' + roleText + '\n';
+      msg += '🏷️ *Channel:* ' + school + '\n';
+      msg += '🔢 *Jumlah Lisensi:* ' + tokens.length + ' Kode\n\n';
+      msg += '*Tautan Unduh Aplikasi Resmi:*\n';
+      msg += '• Google Play Store: ' + playStore + '\n';
+      msg += '• Apple App Store (iOS): ' + appStore + '\n\n';
       msg += `*Langkah-Langkah Aktivasi:*\n${steps}\n\n`;
       msg += `*Daftar Kode Lisensi (1 Kode untuk 1 Perangkat):*\n`;
       tokens.forEach((tok, idx) => {
@@ -7812,25 +7821,34 @@
         return;
       }
 
+      function getVal(id) {
+        const el = document.getElementById(id);
+        return el && el.value ? el.value.trim() : '';
+      }
+      function getChecked(id, defaultVal) {
+        const el = document.getElementById(id);
+        return el ? el.checked : (defaultVal !== undefined ? defaultVal : false);
+      }
+
       const settings = {
-        hero_badge: document.getElementById('set-hero-badge')?.value?.trim() || '',
-        hero_title: document.getElementById('set-hero-title')?.value?.trim() || '',
-        hero_subtitle: document.getElementById('set-hero-subtitle')?.value?.trim() || '',
-        is_featured_event_active: document.getElementById('set-event-active')?.checked ?? true,
-        featured_event_title: document.getElementById('set-event-title')?.value?.trim() || '',
-        featured_event_date: document.getElementById('set-event-date')?.value?.trim() || '',
-        featured_event_desc: document.getElementById('set-event-desc')?.value?.trim() || '',
-        promo_price_original: document.getElementById('set-promo-original')?.value?.trim() || '',
-        promo_price_discount: document.getElementById('set-promo-discount')?.value?.trim() || '',
-        promo_tag: document.getElementById('set-promo-tag')?.value?.trim() || '',
-        lynkid_url: document.getElementById('set-lynkid-url')?.value?.trim() || '',
-        playstore_url: document.getElementById('set-playstore-url')?.value?.trim() || '',
-        appstore_url: document.getElementById('set-appstore-url')?.value?.trim() || '',
-        download_apk_url: document.getElementById('set-apk-url')?.value?.trim() || '',
-        whatsapp_number: document.getElementById('set-wa-number')?.value?.trim() || '',
-        whatsapp_message: document.getElementById('set-wa-msg')?.value?.trim() || '',
-        is_announcement_active: document.getElementById('set-announcement-active')?.checked ?? true,
-        announcement_text: document.getElementById('set-announcement-text')?.value?.trim() || ''
+        hero_badge: getVal('set-hero-badge'),
+        hero_title: getVal('set-hero-title'),
+        hero_subtitle: getVal('set-hero-subtitle'),
+        is_featured_event_active: getChecked('set-event-active', true),
+        featured_event_title: getVal('set-event-title'),
+        featured_event_date: getVal('set-event-date'),
+        featured_event_desc: getVal('set-event-desc'),
+        promo_price_original: getVal('set-promo-original'),
+        promo_price_discount: getVal('set-promo-discount'),
+        promo_tag: getVal('set-promo-tag'),
+        lynkid_url: getVal('set-lynkid-url'),
+        playstore_url: getVal('set-playstore-url'),
+        appstore_url: getVal('set-appstore-url'),
+        download_apk_url: getVal('set-apk-url'),
+        whatsapp_number: getVal('set-wa-number'),
+        whatsapp_message: getVal('set-wa-msg'),
+        is_announcement_active: getChecked('set-announcement-active', true),
+        announcement_text: getVal('set-announcement-text')
       };
 
       const btn = document.getElementById('btn-save-landing-settings');
@@ -8016,11 +8034,15 @@
       }
 
       function getAdData(type) {
+        const activeEl = document.getElementById('set-ad-' + type + '-active');
+        const imgEl = document.getElementById('set-ad-' + type + '-image');
+        const ctaEl = document.getElementById('set-ad-' + type + '-cta');
+        const titleEl = document.getElementById('set-ad-' + type + '-title');
         return {
-          isActive: document.getElementById('set-ad-' + type + '-active')?.checked ?? false,
-          imageUrl: document.getElementById('set-ad-' + type + '-image')?.value?.trim() || '',
-          ctaUrl: document.getElementById('set-ad-' + type + '-cta')?.value?.trim() || '',
-          title: document.getElementById('set-ad-' + type + '-title')?.value?.trim() || ''
+          isActive: activeEl ? activeEl.checked : false,
+          imageUrl: imgEl && imgEl.value ? imgEl.value.trim() : '',
+          ctaUrl: ctaEl && ctaEl.value ? ctaEl.value.trim() : '',
+          title: titleEl && titleEl.value ? titleEl.value.trim() : ''
         };
       }
 
