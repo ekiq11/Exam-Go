@@ -882,6 +882,72 @@
         </div>
       </div>
 
+      <!-- WEBHOOK LYNK.ID INTEGRATION CARD -->
+      <div class="bg-gradient-to-br from-white via-slate-50 to-emerald-50/30 rounded-3xl p-6 sm:p-7 border border-emerald-100 shadow-sm mb-8 relative overflow-hidden">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                🔗 Webhook Otomatis 24/7
+              </span>
+              <h3 class="text-lg font-bold text-slate-900">Integrasi Webhook Penjualan Lynk.id</h3>
+            </div>
+            <p class="text-xs text-slate-500">Kirim 1 token unik berbeda ke setiap pembeli otomatis begitu pembayaran sukses di Lynk.id (Dilengkapi proteksi anti-duplikasi & auto-email).</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="openLynkTransactionsModal()" type="button" class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+              <span>Riwayat Transaksi Lynk</span>
+            </button>
+            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Endpoint Aktif
+            </span>
+          </div>
+        </div>
+
+        <div class="mt-5 space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">URL Webhook ExamGO untuk Lynk.id</label>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <input type="text" id="lynk-webhook-url-input" readonly value="https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec?action=webhook_lynk" class="flex-1 px-3.5 py-3 bg-white border border-emerald-300 rounded-xl text-xs font-mono font-bold text-slate-800 select-all shadow-inner focus:outline-none">
+              <button onclick="copyLynkWebhookUrl()" type="button" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                <span>Salin URL Webhook</span>
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1.5">Tempelkan URL ini di dasbor Lynk.id: <b>Settings &rarr; Integrations &rarr; Webhook &rarr; URL Webhook &rarr; Save URL &rarr; Test URL</b>.</p>
+          </div>
+
+          <!-- Feature Cards / Keunggulan Integrasi -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-2xs">
+              <div class="flex items-center gap-2 text-xs font-bold text-slate-800 mb-1">
+                <span>🛡️</span>
+                <span>Anti-Duplikasi (Idempotent)</span>
+              </div>
+              <p class="text-[11px] text-slate-500 leading-relaxed">Sistem memvalidasi Order ID. Jika Lynk.id mengirim webhook ulang (retry), pembeli tidak akan menerima token ganda.</p>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-2xs">
+              <div class="flex items-center gap-2 text-xs font-bold text-slate-800 mb-1">
+                <span>⚡</span>
+                <span>Zero-Stockout Protection</span>
+              </div>
+              <p class="text-[11px] text-slate-500 leading-relaxed">Mengambil 1 kode dari stok tersedia. Jika stok habis di tengah malam, sistem otomatis meng-generate token baru seketika.</p>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-100 shadow-2xs">
+              <div class="flex items-center gap-2 text-xs font-bold text-slate-800 mb-1">
+                <span>✉️</span>
+                <span>Kirim Email Otomatis</span>
+              </div>
+              <p class="text-[11px] text-slate-500 leading-relaxed">Pembeli langsung menerima email resmi berisi Kode Lisensi & panduan langkah demi langkah cara aktivasi di aplikasi.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Generator Section -->
       <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-100 shadow-sm mb-8">
         <!-- Header with Segmented Switch -->
@@ -2254,6 +2320,58 @@
         <div id="event-results-page-controls" class="flex items-center gap-1">
           <!-- Page numbers rendered via JS -->
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL HISTORI TRANSAKSI LYNK.ID WEBHOOK -->
+  <div id="modal-lynk-transactions" class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-950/70 backdrop-blur-sm transition-opacity opacity-0 p-3 sm:p-6">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col border border-slate-200 overflow-hidden transform transition-transform scale-95" id="modal-lynk-transactions-box">
+      <!-- Modal Header -->
+      <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shadow-2xs font-bold text-lg">
+            🔗
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Histori Transaksi Webhook Lynk.id</h3>
+            <p class="text-xs text-slate-500">Daftar transaksi order otomatis yang masuk dari Lynk.id beserta token yang diberikan.</p>
+          </div>
+        </div>
+        <button onclick="closeLynkTransactionsModal()" type="button" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Table Body -->
+      <div class="p-6 overflow-y-auto flex-1">
+        <div class="overflow-x-auto border border-slate-200 rounded-2xl">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
+              <tr>
+                <th class="px-4 py-3">Order ID (Ref)</th>
+                <th class="px-4 py-3">Data Pembeli</th>
+                <th class="px-4 py-3">Produk</th>
+                <th class="px-4 py-3 text-center">Token Diberikan</th>
+                <th class="px-4 py-3 text-center">Status</th>
+                <th class="px-4 py-3 text-right">Waktu</th>
+              </tr>
+            </thead>
+            <tbody id="lynk-transactions-tbody" class="divide-y divide-slate-100 bg-white">
+              <tr>
+                <td colspan="6" class="p-6 text-center text-slate-400 text-xs">Memuat data transaksi...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/80 flex items-center justify-between">
+        <span class="text-xs text-slate-500">Data tersinkronisasi otomatis dengan Google Sheets <b>lynk_transactions</b></span>
+        <button onclick="closeLynkTransactionsModal()" type="button" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all cursor-pointer">
+          Tutup
+        </button>
       </div>
     </div>
   </div>
@@ -6566,6 +6684,78 @@
       }).catch(() => {
         showToast('Gagal menyalin otomatis.', 'error');
       });
+    }
+
+    function copyLynkWebhookUrl() {
+      const input = document.getElementById('lynk-webhook-url-input');
+      if (!input) return;
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => {
+        showToast('URL Webhook Lynk.id berhasil disalin!', 'success');
+      }).catch(() => {
+        document.execCommand('copy');
+        showToast('URL Webhook disalin!', 'success');
+      });
+    }
+
+    function openLynkTransactionsModal() {
+      const creds = getCredentials();
+      if (!creds) return;
+      _showModal('modal-lynk-transactions', 'modal-lynk-transactions-box');
+      const tbody = document.getElementById('lynk-transactions-tbody');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400 text-xs">Memuat data transaksi Lynk.id...</td></tr>';
+      }
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.error) {
+            showToast('Gagal memuat transaksi: ' + res.error, 'error');
+            return;
+          }
+          renderLynkTransactions((res && res.transactions) ? res.transactions : []);
+        })
+        .withFailureHandler(function(err) {
+          showToast('Error server: ' + err.message, 'error');
+        })
+        .getLynkTransactions(creds.username || creds.user, creds.password || creds.pass);
+    }
+
+    function closeLynkTransactionsModal() {
+      _hideModal('modal-lynk-transactions', 'modal-lynk-transactions-box');
+    }
+
+    function renderLynkTransactions(list) {
+      const tbody = document.getElementById('lynk-transactions-tbody');
+      if (!tbody) return;
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400 text-xs">Belum ada transaksi Lynk.id yang tercatat melalui Webhook.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      list.forEach((t) => {
+        const dt = t.timestamp ? new Date(t.timestamp).toLocaleString('id-ID') : '-';
+        const isEmailed = (t.status || '').indexOf('EMAILED') !== -1;
+        html += '<tr class="hover:bg-slate-50/80 transition-colors">' +
+          '<td class="px-4 py-3 font-mono text-xs font-bold text-slate-700">' + escapeHtml(t.orderId || '-') + '</td>' +
+          '<td class="px-4 py-3">' +
+            '<div class="font-bold text-xs text-slate-900">' + escapeHtml(t.customerName || 'Pembeli') + '</div>' +
+            '<div class="text-[11px] text-slate-400">' + escapeHtml(t.customerEmail || '-') + ' &bull; ' + escapeHtml(t.customerPhone || '-') + '</div>' +
+          '</td>' +
+          '<td class="px-4 py-3 text-xs text-slate-700">' + escapeHtml(t.productTitle || 'Token ExamGO') + '</td>' +
+          '<td class="px-4 py-3 text-center font-bold text-xs font-mono text-emerald-800">' +
+            '<span class="px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 select-all">' + escapeHtml(t.token || '-') + '</span>' +
+          '</td>' +
+          '<td class="px-4 py-3 text-center">' +
+            (isEmailed
+              ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Email Terkirim</span>'
+              : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">Sukses</span>') +
+          '</td>' +
+          '<td class="px-4 py-3 text-right text-[11px] text-slate-500 font-mono">' + dt + '</td>' +
+        '</tr>';
+      });
+      tbody.innerHTML = html;
     }
 
     function openExamDetails(examId, title) {

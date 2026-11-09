@@ -12,10 +12,7 @@ class PreExamChecklistDialog extends StatefulWidget {
   final String examTitle;
   const PreExamChecklistDialog({super.key, required this.examTitle});
 
-  static Future<Map<String, String>?> show(
-    BuildContext context,
-    String title,
-  ) {
+  static Future<Map<String, String>?> show(BuildContext context, String title) {
     return showDialog<Map<String, String>?>(
       context: context,
       barrierDismissible: false,
@@ -30,7 +27,7 @@ class PreExamChecklistDialog extends StatefulWidget {
 class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
   final _nameCtrl = TextEditingController();
   final _nisCtrl = TextEditingController();
-  
+
   bool _isLoading = true;
   String? _securityError;
   int _batteryLevel = 100;
@@ -176,7 +173,11 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                       color: AppColors.paleGreen,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.shield_outlined, color: AppColors.primaryGreen, size: 24),
+                    child: const Icon(
+                      Icons.shield_outlined,
+                      color: AppColors.primaryGreen,
+                      size: 24,
+                    ),
                   ),
                   SizedBox(width: context.rs(12)),
                   Expanded(
@@ -205,11 +206,13 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                 ],
               ),
               SizedBox(height: context.rs(16)),
-              
+
               if (_isLoading)
                 const Padding(
                   padding: EdgeInsets.all(32),
-                  child: CircularProgressIndicator(color: AppColors.primaryGreen),
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryGreen,
+                  ),
                 )
               else if (_securityError != null)
                 _buildSecurityError()
@@ -275,12 +278,17 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
           padding: EdgeInsets.all(context.rs(12)),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [AppColors.primaryGreen.withValues(alpha: 0.05), AppColors.paleGreen],
+              colors: [
+                AppColors.primaryGreen.withValues(alpha: 0.05),
+                AppColors.paleGreen,
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.1)),
+            border: Border.all(
+              color: AppColors.primaryGreen.withValues(alpha: 0.1),
+            ),
           ),
           child: Row(
             children: [
@@ -290,10 +298,18 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 4, offset: const Offset(0, 2)),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
                   ],
                 ),
-                child: const Icon(Icons.school_rounded, color: AppColors.primaryGreen, size: 16),
+                child: const Icon(
+                  Icons.school_rounded,
+                  color: AppColors.primaryGreen,
+                  size: 16,
+                ),
               ),
               SizedBox(width: context.rs(10)),
               Expanded(
@@ -302,7 +318,11 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                   children: [
                     Text(
                       'Sesi Ujian / Tryout',
-                      style: GoogleFonts.poppins(fontSize: context.rs(11), color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                      style: GoogleFonts.poppins(
+                        fontSize: context.rs(11),
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     Text(
                       widget.examTitle,
@@ -335,7 +355,11 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
             ),
             child: Row(
               children: [
-                Icon(Icons.battery_alert_rounded, color: Colors.orange.shade800, size: 20),
+                Icon(
+                  Icons.battery_alert_rounded,
+                  color: Colors.orange.shade800,
+                  size: 20,
+                ),
                 SizedBox(width: context.rs(8)),
                 Expanded(
                   child: Text(
@@ -353,17 +377,25 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.battery_charging_full_rounded, color: Colors.green, size: 16),
+              const Icon(
+                Icons.battery_charging_full_rounded,
+                color: Colors.green,
+                size: 16,
+              ),
               SizedBox(width: context.rs(6)),
               Text(
                 'Status Baterai: $_batteryLevel%',
-                style: GoogleFonts.poppins(fontSize: context.rs(12), color: Colors.grey.shade700, fontWeight: FontWeight.w500),
+                style: GoogleFonts.poppins(
+                  fontSize: context.rs(12),
+                  color: Colors.grey.shade700,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
-        
+
         SizedBox(height: context.rs(14)),
-        
+
         // Identitas Peserta
         Text(
           'IDENTITAS PESERTA',
@@ -377,7 +409,10 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
         SizedBox(height: context.rs(8)),
         TextField(
           controller: _nameCtrl,
-          style: GoogleFonts.poppins(fontSize: context.rs(13), fontWeight: FontWeight.w600),
+          style: GoogleFonts.poppins(
+            fontSize: context.rs(13),
+            fontWeight: FontWeight.w600,
+          ),
           decoration: InputDecoration(
             labelText: 'Nama Lengkap',
             labelStyle: GoogleFonts.poppins(fontSize: context.rs(12)),
@@ -385,11 +420,30 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
             isDense: true,
             filled: true,
             fillColor: Colors.grey.shade50,
-            contentPadding: EdgeInsets.symmetric(horizontal: context.rs(14), vertical: context.rs(10)),
-            prefixIcon: const Icon(Icons.person_outline_rounded, color: Colors.grey, size: 20),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2)),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: context.rs(14),
+              vertical: context.rs(10),
+            ),
+            prefixIcon: const Icon(
+              Icons.person_outline_rounded,
+              color: Colors.grey,
+              size: 20,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade200),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade200),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: AppColors.primaryGreen,
+                width: 2,
+              ),
+            ),
           ),
           textCapitalization: TextCapitalization.words,
         ),
@@ -397,7 +451,10 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
         TextField(
           controller: _nisCtrl,
           keyboardType: TextInputType.number,
-          style: GoogleFonts.poppins(fontSize: context.rs(13), fontWeight: FontWeight.w600),
+          style: GoogleFonts.poppins(
+            fontSize: context.rs(13),
+            fontWeight: FontWeight.w600,
+          ),
           decoration: InputDecoration(
             labelText: 'NIS / Nomor Peserta',
             labelStyle: GoogleFonts.poppins(fontSize: context.rs(12)),
@@ -405,11 +462,30 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
             isDense: true,
             filled: true,
             fillColor: Colors.grey.shade50,
-            contentPadding: EdgeInsets.symmetric(horizontal: context.rs(14), vertical: context.rs(10)),
-            prefixIcon: const Icon(Icons.badge_outlined, color: Colors.grey, size: 20),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2)),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: context.rs(14),
+              vertical: context.rs(10),
+            ),
+            prefixIcon: const Icon(
+              Icons.badge_outlined,
+              color: Colors.grey,
+              size: 20,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade200),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade200),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: AppColors.primaryGreen,
+                width: 2,
+              ),
+            ),
           ),
         ),
 
@@ -427,9 +503,18 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                 onPressed: () => Navigator.of(context).pop(null),
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: context.rs(12)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey.shade600, fontWeight: FontWeight.w600, fontSize: context.rs(12))),
+                child: Text(
+                  'Batal',
+                  style: GoogleFonts.poppins(
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w600,
+                    fontSize: context.rs(12),
+                  ),
+                ),
               ),
             ),
             SizedBox(width: context.rs(10)),
@@ -446,7 +531,9 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                   boxShadow: _agreedToRules
                       ? [
                           BoxShadow(
-                            color: AppColors.primaryGreen.withValues(alpha: 0.35),
+                            color: AppColors.primaryGreen.withValues(
+                              alpha: 0.35,
+                            ),
                             blurRadius: 10,
                             offset: const Offset(0, 3),
                           ),
@@ -459,11 +546,17 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
                     padding: EdgeInsets.symmetric(vertical: context.rs(12)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: Text(
                     'Saya Paham & Mulai',
-                    style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: context.rs(13)),
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: context.rs(13),
+                    ),
                   ),
                 ),
               ),
@@ -494,7 +587,11 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                   color: const Color(0xFFD97706),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.gpp_maybe_rounded, color: Colors.white, size: 16),
+                child: const Icon(
+                  Icons.gpp_maybe_rounded,
+                  color: Colors.white,
+                  size: 16,
+                ),
               ),
               SizedBox(width: context.rs(8)),
               Expanded(
@@ -529,25 +626,29 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
           _buildRuleRow(
             letter: 'a',
             title: 'Dilarang Berpindah Aplikasi / Split Screen',
-            desc: 'Menekan tombol Home, Recent Apps, notifikasi, floating apps, atau split-screen langsung terdeteksi sebagai pelanggaran.',
+            desc:
+                'Menekan tombol Home, Recent Apps, notifikasi, floating apps, atau split-screen langsung terdeteksi sebagai pelanggaran.',
           ),
           SizedBox(height: context.rs(6)),
           _buildRuleRow(
             letter: 'b',
             title: 'Larangan Screenshot & Rekam Layar',
-            desc: 'Fitur tangkapan layar dan rekam layar diblokir otomatis oleh sistem keamanan OS perangkat.',
+            desc:
+                'Fitur tangkapan layar dan rekam layar diblokir otomatis oleh sistem keamanan OS perangkat.',
           ),
           SizedBox(height: context.rs(6)),
           _buildRuleRow(
             letter: 'c',
             title: 'Pelaporan Pelanggaran Real-Time',
-            desc: 'Setiap percobaan keluar atau kecurangan otomatis tercatat dan dilaporkan langsung ke dashboard pengawas/guru.',
+            desc:
+                'Setiap percobaan keluar atau kecurangan otomatis tercatat dan dilaporkan langsung ke dashboard pengawas/guru.',
           ),
           SizedBox(height: context.rs(6)),
           _buildRuleRow(
             letter: 'd',
             title: 'Batas Toleransi Maksimal 3 Kali',
-            desc: 'Pelanggaran ke-3 membuat ujian TERKUNCI PERMANEN (BLOCKED) dan hasil ujian dianggap gugur.',
+            desc:
+                'Pelanggaran ke-3 membuat ujian TERKUNCI PERMANEN (BLOCKED) dan hasil ujian dianggap gugur.',
             isCritical: true,
           ),
         ],
@@ -569,7 +670,9 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
           height: context.rs(18),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isCritical ? const Color(0xFFDC2626) : const Color(0xFFD97706),
+            color: isCritical
+                ? const Color(0xFFDC2626)
+                : const Color(0xFFD97706),
             borderRadius: BorderRadius.circular(5),
           ),
           child: Text(
@@ -591,7 +694,9 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                 style: GoogleFonts.poppins(
                   fontSize: context.rs(11),
                   fontWeight: FontWeight.w700,
-                  color: isCritical ? const Color(0xFF991B1B) : const Color(0xFF451A03),
+                  color: isCritical
+                      ? const Color(0xFF991B1B)
+                      : const Color(0xFF451A03),
                 ),
               ),
               Text(
@@ -612,7 +717,9 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
   Widget _buildAgreementCheckbox() {
     return Container(
       decoration: BoxDecoration(
-        color: _agreedToRules ? AppColors.paleGreen.withValues(alpha: 0.5) : Colors.grey.shade50,
+        color: _agreedToRules
+            ? AppColors.paleGreen.withValues(alpha: 0.5)
+            : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: _agreedToRules ? AppColors.primaryGreen : Colors.grey.shade300,
@@ -634,9 +741,14 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
           ),
           controlAffinity: ListTileControlAffinity.leading,
           dense: true,
-          contentPadding: EdgeInsets.symmetric(horizontal: context.rs(6), vertical: 0),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: context.rs(6),
+            vertical: 0,
+          ),
           activeColor: AppColors.primaryGreen,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       ),
     );

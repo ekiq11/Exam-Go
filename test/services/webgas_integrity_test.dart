@@ -309,5 +309,29 @@ void main() {
       expect(kodeContent, contains('playstore_url'));
       expect(kodeContent, contains('appstore_url'));
     });
+
+    test('Lynk.id Webhook integration endpoints and UI are properly wired', () {
+      final kodeContent = kodeJsFile.readAsStringSync();
+      final adminContent = adminHtmlFile.readAsStringSync();
+
+      // Kode.js webhook router & handlers
+      expect(kodeContent, contains('function handleLynkIdWebhook('));
+      expect(kodeContent, contains('action === \'webhook_lynk\''));
+      expect(kodeContent, contains('function _findAssignedLynkToken('));
+      expect(kodeContent, contains('function _claimOrCreateLynkToken('));
+      expect(kodeContent, contains('function _sendBuyerTokenEmail('));
+      expect(kodeContent, contains('function _recordLynkTransaction('));
+      expect(kodeContent, contains('function getLynkTransactions('));
+      expect(kodeContent, contains('MailApp.sendEmail'));
+      expect(kodeContent, contains('lynk_transactions'));
+
+      // admin.html Webhook UI elements
+      expect(adminContent, contains('id="lynk-webhook-url-input"'));
+      expect(adminContent, contains('copyLynkWebhookUrl()'));
+      expect(adminContent, contains('id="modal-lynk-transactions"'));
+      expect(adminContent, contains('openLynkTransactionsModal()'));
+      expect(adminContent, contains('renderLynkTransactions('));
+      expect(adminContent, contains('action=webhook_lynk'));
+    });
   });
 }
