@@ -2360,6 +2360,7 @@
                 <th class="px-4 py-3 text-center">Token Diberikan</th>
                 <th class="px-4 py-3 text-center">Status</th>
                 <th class="px-4 py-3 text-right">Waktu</th>
+                <th class="px-4 py-3 text-center">Aksi Cepat</th>
               </tr>
             </thead>
             <tbody id="lynk-transactions-tbody" class="divide-y divide-slate-100 bg-white">
@@ -6747,6 +6748,22 @@
       list.forEach((t) => {
         const dt = t.timestamp ? new Date(t.timestamp).toLocaleString('id-ID') : '-';
         const isEmailed = (t.status || '').indexOf('EMAILED') !== -1;
+        const cleanPhone = String(t.customerPhone || '').replace(/[^0-9]/g, '');
+        const phoneWithCountry = cleanPhone.startsWith('0') ? ('62' + cleanPhone.slice(1)) : (cleanPhone.startsWith('62') ? cleanPhone : ('62' + cleanPhone));
+        const waMsg = encodeURIComponent(
+          '*KONFIRMASI LISENSI RESMI EXAMGO*\n\n' +
+          'Halo *' + (t.customerName || 'Sobat Belajar') + '*,\n' +
+          'Terima kasih telah melakukan pembelian di Lynk.id.\n\n' +
+          '🔑 *Kode Lisensi Anda:* *' + t.token + '*\n' +
+          '📦 *Produk:* ' + (t.productTitle || 'Token ExamGO') + '\n' +
+          '🆔 *Order Ref:* ' + t.orderId + '\n\n' +
+          '*Langkah Aktivasi di Aplikasi ExamGO:*\n' +
+          '1. Buka aplikasi ExamGO di ponsel Android/iOS\n' +
+          '2. Buka menu Lisensi & Status Akun\n' +
+          '3. Masukkan Kode Lisensi di atas & klik Aktivasi Sekarang\n\n' +
+          '*Unduh Aplikasi Resmi:* https://play.google.com/store/apps/details?id=com.kemenag.examgo'
+        );
+
         html += '<tr class="hover:bg-slate-50/80 transition-colors">' +
           '<td class="px-4 py-3 font-mono text-xs font-bold text-slate-700">' + escapeHtml(t.orderId || '-') + '</td>' +
           '<td class="px-4 py-3">' +
@@ -6760,12 +6777,37 @@
           '<td class="px-4 py-3 text-center">' +
             (isEmailed
               ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Email Terkirim</span>'
-              : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">Sukses</span>') +
+              : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Pending Email</span>') +
           '</td>' +
-          '<td class="px-4 py-3 text-right text-[11px] text-slate-500 font-mono">' + dt + '</td>' +
+          '<td class="px-4 py-3 text-right text-[11px] text-slate-500 font-mono whitespace-nowrap">' + dt + '</td>' +
+          '<td class="px-4 py-3 text-center whitespace-nowrap">' +
+            '<div class="inline-flex items-center gap-1.5">' +
+              (cleanPhone ? '<a href="https://wa.me/' + phoneWithCountry + '?text=' + waMsg + '" target="_blank" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10.5px] font-bold shadow-2xs transition-all inline-flex items-center gap-1 cursor-pointer">📱 WA</a>' : '') +
+              '<button onclick="resendTokenEmailAction(\'' + escapeHtml(t.orderId) + '\')" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[10.5px] font-bold shadow-2xs transition-all inline-flex items-center gap-1 cursor-pointer">✉️ Email</button>' +
+            '</div>' +
+          '</td>' +
         '</tr>';
       });
       tbody.innerHTML = html;
+    }
+
+    function resendTokenEmailAction(orderId) {
+      const creds = getCredentials();
+      if (!creds) return;
+      showToast('Mengirim email lisensi...', 'info');
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.error) {
+            showToast('Gagal kirim email: ' + res.error, 'error');
+            return;
+          }
+          showToast(res.message || 'Email token berhasil dikirim ke pembeli!', 'success');
+          openLynkTransactionsModal();
+        })
+        .withFailureHandler(function(err) {
+          showToast('Error server: ' + err.message, 'error');
+        })
+        .resendBuyerTokenEmail(creds.username || creds.user, creds.password || creds.pass, orderId);
     }
 
     function openExamDetails(examId, title) {
