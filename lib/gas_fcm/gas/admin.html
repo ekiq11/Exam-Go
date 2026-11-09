@@ -2419,14 +2419,31 @@
         </div>
       </div>
 
-      <!-- Footer -->
-      <div class="px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div id="lynk-footer-info" class="text-xs text-slate-500 font-medium">
-          Menampilkan 0 transaksi &bull; Data tersinkronisasi otomatis dengan Google Sheets <b>lynk_transactions</b>
+      <!-- Footer with Pagination -->
+      <div class="px-6 py-3.5 border-t border-slate-200/80 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <div id="lynk-footer-info" class="text-xs text-slate-600 font-medium">
+            Menampilkan 0 transaksi
+          </div>
+          <div class="flex items-center gap-1.5 text-xs text-slate-500 border-l border-slate-200 pl-3">
+            <span>Tampilkan:</span>
+            <select id="lynk-page-size" onchange="onChangeLynkPageSize()" class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none cursor-pointer focus:ring-1 focus:ring-emerald-500 shadow-2xs">
+              <option value="5">5 baris</option>
+              <option value="10" selected>10 baris</option>
+              <option value="25">25 baris</option>
+              <option value="50">50 baris</option>
+            </select>
+          </div>
         </div>
-        <button onclick="closeLynkTransactionsModal()" type="button" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 active:scale-95 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs">
-          Tutup
-        </button>
+
+        <div class="flex items-center gap-3">
+          <div id="lynk-page-controls" class="flex items-center gap-1">
+            <!-- Rendered via JS -->
+          </div>
+          <button onclick="closeLynkTransactionsModal()" type="button" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 active:scale-95 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs">
+            Tutup
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -6760,6 +6777,22 @@
     }
 
     let currentLynkTransactions = [];
+    let lynkCurrentPage = 1;
+    let lynkPageSize = 10;
+
+    function onChangeLynkPageSize() {
+      const select = document.getElementById('lynk-page-size');
+      if (select) {
+        lynkPageSize = parseInt(select.value, 10) || 10;
+      }
+      lynkCurrentPage = 1;
+      filterLynkTransactions();
+    }
+
+    function goToLynkPage(page) {
+      lynkCurrentPage = page;
+      filterLynkTransactions();
+    }
 
     function copyTextToClipboard(text, successMsg) {
       if (!text) return;
@@ -6875,34 +6908,90 @@
       const input = document.getElementById('lynk-search-input');
       const q = (input ? input.value : '').toLowerCase().trim();
 
-      if (!q) {
-        renderLynkTransactions(currentLynkTransactions);
+      let filtered = currentLynkTransactions;
+      if (q) {
+        filtered = currentLynkTransactions.filter(t => {
+          return (t.orderId || '').toLowerCase().includes(q) ||
+                 (t.customerName || '').toLowerCase().includes(q) ||
+                 (t.customerEmail || '').toLowerCase().includes(q) ||
+                 (t.customerPhone || '').toLowerCase().includes(q) ||
+                 (t.token || '').toLowerCase().includes(q) ||
+                 (t.productTitle || '').toLowerCase().includes(q);
+        });
+      }
+
+      const totalItems = filtered.length;
+      const totalPages = Math.ceil(totalItems / lynkPageSize) || 1;
+      if (lynkCurrentPage > totalPages) lynkCurrentPage = totalPages;
+      if (lynkCurrentPage < 1) lynkCurrentPage = 1;
+
+      const startIndex = (lynkCurrentPage - 1) * lynkPageSize;
+      const endIndex = Math.min(startIndex + lynkPageSize, totalItems);
+      const paginatedList = filtered.slice(startIndex, endIndex);
+
+      renderLynkTransactions(paginatedList, totalItems, startIndex, endIndex, totalPages);
+      renderLynkPaginationControls(totalPages, lynkCurrentPage);
+    }
+
+    function renderLynkPaginationControls(totalPages, currentPage) {
+      const controls = document.getElementById('lynk-page-controls');
+      if (!controls) return;
+
+      if (totalPages <= 1) {
+        controls.innerHTML = '';
         return;
       }
 
-      const filtered = currentLynkTransactions.filter(t => {
-        return (t.orderId || '').toLowerCase().includes(q) ||
-               (t.customerName || '').toLowerCase().includes(q) ||
-               (t.customerEmail || '').toLowerCase().includes(q) ||
-               (t.customerPhone || '').toLowerCase().includes(q) ||
-               (t.token || '').toLowerCase().includes(q) ||
-               (t.productTitle || '').toLowerCase().includes(q);
-      });
+      let html = '';
 
-      renderLynkTransactions(filtered);
+      // Tombol Sebelumnya
+      const prevDisabled = currentPage <= 1;
+      html += '<button type="button" onclick="goToLynkPage(' + (currentPage - 1) + ')" ' + (prevDisabled ? 'disabled' : '') + ' class="px-2.5 py-1 text-xs font-semibold rounded-lg border ' + (prevDisabled ? 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-200 cursor-pointer shadow-2xs transition-colors') + '" title="Halaman Sebelumnya">◀</button>';
+
+      // Smart window pagination
+      let startP = Math.max(1, currentPage - 2);
+      let endP = Math.min(totalPages, currentPage + 2);
+
+      if (startP > 1) {
+        html += '<button type="button" onclick="goToLynkPage(1)" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer shadow-2xs">1</button>';
+        if (startP > 2) html += '<span class="px-1 text-slate-400 text-xs font-bold">…</span>';
+      }
+
+      for (let p = startP; p <= endP; p++) {
+        if (p === currentPage) {
+          html += '<span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-600 text-white shadow-2xs">' + p + '</span>';
+        } else {
+          html += '<button type="button" onclick="goToLynkPage(' + p + ')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer shadow-2xs transition-colors">' + p + '</button>';
+        }
+      }
+
+      if (endP < totalPages) {
+        if (endP < totalPages - 1) html += '<span class="px-1 text-slate-400 text-xs font-bold">…</span>';
+        html += '<button type="button" onclick="goToLynkPage(' + totalPages + ')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 cursor-pointer shadow-2xs">' + totalPages + '</button>';
+      }
+
+      // Tombol Berikutnya
+      const nextDisabled = currentPage >= totalPages;
+      html += '<button type="button" onclick="goToLynkPage(' + (currentPage + 1) + ')" ' + (nextDisabled ? 'disabled' : '') + ' class="px-2.5 py-1 text-xs font-semibold rounded-lg border ' + (nextDisabled ? 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-200 cursor-pointer shadow-2xs transition-colors') + '" title="Halaman Berikutnya">▶</button>';
+
+      controls.innerHTML = html;
     }
 
     function closeLynkTransactionsModal() {
       _hideModal('modal-lynk-transactions', 'modal-lynk-transactions-box');
     }
 
-    function renderLynkTransactions(list) {
+    function renderLynkTransactions(list, totalItems, startIndex, endIndex, totalPages) {
       const tbody = document.getElementById('lynk-transactions-tbody');
       const footerInfo = document.getElementById('lynk-footer-info');
       if (!tbody) return;
 
+      const total = (typeof totalItems === 'number') ? totalItems : (list ? list.length : 0);
+      const fromItem = total > 0 ? ((typeof startIndex === 'number' ? startIndex : 0) + 1) : 0;
+      const toItem = (typeof endIndex === 'number') ? endIndex : total;
+
       if (footerInfo) {
-        footerInfo.innerHTML = 'Menampilkan <b>' + list.length + '</b> dari <b>' + currentLynkTransactions.length + '</b> transaksi &bull; Tersinkronisasi otomatis dengan Google Sheets <b>lynk_transactions</b>';
+        footerInfo.innerHTML = 'Menampilkan <b>' + fromItem + ' - ' + toItem + '</b> dari <b>' + total + '</b> transaksi &bull; Data tersinkronisasi otomatis dengan Google Sheets <b>lynk_transactions</b>';
       }
 
       if (!list || list.length === 0) {
