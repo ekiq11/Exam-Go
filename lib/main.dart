@@ -11,6 +11,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:examgo/services/tryout_reminder_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -217,12 +218,22 @@ void main() async {
       .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(_examChannel);
+  await TryoutReminderService.instance.init();
 
   // ── FCM: Foreground message handler ────────────────────────────
   // FCM tidak menampilkan heads-up notification saat app di foreground.
   // Kita tampilkan manual via flutter_local_notifications.
   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-    await _showLocalNotification(message);
+    final type = (message.data['type'] ?? message.data['action'] ?? '').toString();
+    if (type.contains('tryout') || type.contains('reminder')) {
+      await TryoutReminderService.instance.handleFcmReminder(
+        message.data,
+        message.notification?.title,
+        message.notification?.body,
+      );
+    } else {
+      await _showLocalNotification(message);
+    }
   });
 
   // ── FCM: Tap notifikasi saat app di background (tidak terminated) ─

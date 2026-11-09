@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/models/tryout_schedule_model.dart';
+import 'package:examgo/services/student_tryout_history_service.dart';
 import 'package:examgo/utils/indo_date_formatter.dart';
 
 /// Kartu tampilan paket tryout profesional & bebas overflex (Diadaptasi dari myOLCv2 & ExamGO Design System)
@@ -9,12 +10,18 @@ class TryoutCardWidget extends StatelessWidget {
   final TryoutSchedule schedule;
   final VoidCallback onTap;
   final bool isCached;
+  final bool isAttempted;
+  final StudentTryoutHistoryItem? historyItem;
+  final bool isNew;
 
   const TryoutCardWidget({
     super.key,
     required this.schedule,
     required this.onTap,
     this.isCached = false,
+    this.isAttempted = false,
+    this.historyItem,
+    this.isNew = false,
   });
 
   @override
@@ -108,6 +115,69 @@ class TryoutCardWidget extends StatelessWidget {
                         spacing: 6,
                         runSpacing: 4,
                         children: [
+                          // 1. Badge Tryout Baru / Fresh
+                          if (isNew && !isAttempted)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7.5, vertical: 2.5),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFF59E0B), Color(0xFFEA580C)],
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFEA580C).withValues(alpha: 0.28),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 1.5),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.bolt_rounded, size: 11, color: Colors.white),
+                                  const SizedBox(width: 2.5),
+                                  Text(
+                                    'BARU',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          // 2. Badge Sudah Pernah Dikerjakan
+                          if (isAttempted)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: const Color(0xFF86EFAC)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.check_circle_rounded, size: 11, color: Color(0xFF15803D)),
+                                  const SizedBox(width: 3.5),
+                                  Text(
+                                    historyItem != null
+                                        ? 'Sudah Dikerjakan (Skor: ${historyItem!.finalScore})'
+                                        : 'Sudah Dikerjakan',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF15803D),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
                           // Status Badge
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),

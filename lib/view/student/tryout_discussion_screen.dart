@@ -6,6 +6,7 @@ import '../../models/exam_question_model.dart';
 import '../../utils/math_widget_factory.dart';
 import 'tryout_schedule_screen.dart';
 import 'widgets/exam_question_table_widget.dart';
+import 'widgets/tryout_spider_chart_widget.dart';
 
 /// Layar pembahasan dan kunci jawaban tryout lengkap dengan rendering LaTeX
 class TryoutDiscussionScreen extends StatefulWidget {
@@ -103,6 +104,61 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
     );
   }
 
+  void _showRadarSheet() {
+    final subScores = TryoutSubScore.fromQuestions(
+      questions: widget.questions,
+      studentAnswers: widget.studentAnswers,
+      kategori: widget.kategori,
+      score: widget.score,
+    );
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFCBD5E1),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            TryoutSpiderChartWidget(
+              subScores: subScores,
+              title: 'Radar Kemampuan Subtest',
+              subtitle: widget.title,
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGreen,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: Text('Tutup', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final filtered = _filteredQuestions;
@@ -142,6 +198,14 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
           ),
           backgroundColor: AppColors.primaryGreen,
           elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.radar_rounded, color: Colors.white),
+              tooltip: 'Grafik Radar Kemampuan',
+              onPressed: _showRadarSheet,
+            ),
+            const SizedBox(width: 4),
+          ],
         ),
         body: Column(
           children: [
@@ -305,6 +369,48 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                   ],
                 ),
                 const Spacer(),
+                InkWell(
+                  onTap: _showRadarSheet,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Radar',
+                          style: GoogleFonts.poppins(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.85),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.radar_rounded, size: 14, color: Color(0xFFFDE047)),
+                            const SizedBox(width: 3),
+                            Text(
+                              'Lihat',
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   decoration: BoxDecoration(

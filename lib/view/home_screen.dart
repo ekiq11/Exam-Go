@@ -1,5 +1,6 @@
 import 'package:examgo/firebas_analytics/analytic_service.dart';
 import 'package:examgo/models/tryout_schedule_model.dart';
+import 'package:examgo/services/tryout_reminder_service.dart';
 import 'package:examgo/view/student/event_dashboard_screen.dart';
 import 'package:examgo/view/widgets/premium_token_dialog.dart';
 import 'package:examgo/view/student/tryout_schedule_screen.dart';
@@ -99,6 +100,7 @@ class _HomeScreenState extends State<HomeScreen>
       _checkForceUpdate().then((_) {
         _checkCrashRecovery().then((_) {
           _checkPopupAd();
+          TryoutReminderService.instance.checkAndSendLocalReminder();
         });
       });
     });
@@ -819,20 +821,32 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
+  Future<Map<String, dynamic>> _getTryoutCardStatus() async {
+    final isPremium = await LicenseService.instance.isStudentPremium();
+    int newCount = 0;
+    if (isPremium) {
+      newCount = await TryoutReminderService.instance.getNewUnattemptedCount();
+    }
+    return {'isPremium': isPremium, 'newCount': newCount};
+  }
+
   Widget _buildTryoutCard() {
-    return FutureBuilder<bool>(
-      future: LicenseService.instance.isStudentPremium(),
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _getTryoutCardStatus(),
       builder: (context, snapshot) {
-        final isPremium = snapshot.data ?? false;
+        final data = snapshot.data ?? {'isPremium': false, 'newCount': 0};
+        final isPremium = data['isPremium'] as bool;
+        final newCount = data['newCount'] as int;
 
         return InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: () {
+          onTap: () async {
             if (isPremium) {
-              Navigator.push(
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const TryoutScheduleScreen()),
               );
+              if (mounted) setState(() {});
             } else {
               _showStudentLicenseDialog();
             }
@@ -927,6 +941,49 @@ class _HomeScreenState extends State<HomeScreen>
                               ),
                             ),
                           ),
+                          if (newCount > 0) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6.5,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFEF4444), Color(0xFFF97316)],
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFEF4444)
+                                        .withValues(alpha: 0.35),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 1.5),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.bolt_rounded,
+                                    size: 10.5,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    newCount == 1 ? '1 BARU' : '$newCount BARU',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                      letterSpacing: 0.4,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                       SizedBox(height: context.rs(3)),

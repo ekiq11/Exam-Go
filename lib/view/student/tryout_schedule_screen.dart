@@ -17,6 +17,8 @@ import 'package:examgo/view/pre_exam_checklist.dart';
 import 'package:examgo/view/widgets/premium_token_dialog.dart';
 import 'package:examgo/view/student/widgets/tryout_card_widget.dart';
 import 'package:examgo/view/student/widgets/tryout_detail_sheet.dart';
+import 'package:examgo/view/student/widgets/tryout_spider_chart_widget.dart';
+import 'package:examgo/services/tryout_reminder_service.dart';
 
 /// Halaman Katalog Paket & Jadwal Tryout Nasional serta Riwayat & Pembahasan
 class TryoutScheduleScreen extends StatefulWidget {
@@ -36,6 +38,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
   List<TryoutSchedule> _allSchedules = [];
   List<StudentTryoutHistoryItem> _historyList = [];
   Set<String> _cachedPaketIds = {};
+  Set<String> _seenTryoutIds = {};
   String _selectedCategory = 'Semua';
 
   final List<String> _categories = [
@@ -91,6 +94,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
     // 1. TAHAP INSTAN: Muat cache lokal (< 20ms) agar pengguna langsung melihat daftar paket
     final cached = await TryoutScheduleService.instance.getCachedSchedules();
     final cachedIds = await ExamCacheService.instance.getCachedPackageIds();
+    final seenIds = await TryoutReminderService.instance.getSeenTryoutIds();
     if (mounted) {
       setState(() {
         if (cached.isNotEmpty) {
@@ -98,6 +102,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
           _isLoading = false;
         }
         _cachedPaketIds = cachedIds.toSet();
+        _seenTryoutIds = seenIds;
         _isSyncing = true;
       });
     }
@@ -125,6 +130,13 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
 
     // 3. Muat Riwayat & Nilai Siswa
     await _loadHistory();
+
+    // 4. Tandai paket yang ada sebagai sudah dilihat siswa
+    if (_allSchedules.isNotEmpty) {
+      TryoutReminderService.instance.markTryoutsAsSeen(
+        _allSchedules.map((e) => e.paketId).toList(),
+      );
+    }
   }
 
   Future<void> _loadHistory() async {
@@ -134,6 +146,75 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
         _historyList = list;
       });
     }
+  }
+
+  StudentTryoutHistoryItem? _findHistoryForSchedule(TryoutSchedule schedule) {
+    final sPaketId = schedule.paketId.trim().toUpperCase();
+    final sNama = schedule.namaPaket.trim().toLowerCase();
+    for (final h in _historyList) {
+      if (h.token.trim().toUpperCase() == sPaketId ||
+          h.namaPaket.trim().toLowerCase() == sNama) {
+        return h;
+      }
+    }
+    return null;
+  }
+
+  bool _isFreshSchedule(TryoutSchedule s) {
+    if (s.tanggal.isEmpty) return false;
+    final dt = DateTime.tryParse(s.tanggal);
+    if (dt == null) return false;
+    final diff = DateTime.now().difference(dt).inDays;
+    return diff >= -1 && diff <= 7;
+  }
+
+  void _showSingleSessionRadarSheet(StudentTryoutHistoryItem item) {
+    final subScores = TryoutSubScore.fromHistoryItem(item);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFCBD5E1),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            TryoutSpiderChartWidget(
+              subScores: subScores,
+              title: 'Radar Kemampuan Subtest',
+              subtitle: item.namaPaket,
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGreen,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: Text('Tutup', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   List<TryoutSchedule> get _filteredSchedules {
@@ -450,9 +531,16 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                                   final item = _filteredSchedules[index];
                                   final isCached = _cachedPaketIds.contains(item.paketId.toUpperCase()) ||
                                       _cachedPaketIds.contains(item.paketId);
+                                  final history = _findHistoryForSchedule(item);
+                                  final isAttempted = history != null;
+                                  final isNew = !isAttempted &&
+                                      (!_seenTryoutIds.contains(item.paketId) || _isFreshSchedule(item));
                                   return TryoutCardWidget(
                                     schedule: item,
                                     isCached: isCached,
+                                    isAttempted: isAttempted,
+                                    historyItem: history,
+                                    isNew: isNew,
                                     onTap: () async {
                                       if (item.jenisTest == 'EVENT') {
                                         Navigator.push(
@@ -734,7 +822,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
       onRefresh: _loadHistory,
       child: ListView.builder(
         padding: const EdgeInsets.only(bottom: 32),
-        itemCount: _historyList.length + 1, // +1 untuk header stats
+        itemCount: _historyList.length + 2, // +1 untuk header stats, +1 untuk Spider Chart kumulatif
         itemBuilder: (context, index) {
           if (index == 0) {
             return _buildHistoryHeaderStats(
@@ -744,8 +832,18 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
               totalLulus: totalLulus,
             );
           }
+          if (index == 1) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+              child: TryoutSpiderChartWidget(
+                title: 'Radar Kompetensi Siswa',
+                subtitle: 'Pemetaan penguasaan materi dari seluruh riwayat tryout',
+                subScores: TryoutSubScore.fromCumulativeHistory(_historyList),
+              ),
+            );
+          }
 
-          final item = _historyList[index - 1];
+          final item = _historyList[index - 2];
           return _buildHistoryCard(item);
         },
       ),
@@ -1191,8 +1289,30 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                     ),
                   ),
                 ),
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: () => _showSingleSessionRadarSheet(item),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    height: 44,
+                    width: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFCBD5E1)),
+                    ),
+                    child: const Tooltip(
+                      message: 'Radar Kemampuan',
+                      child: Icon(
+                        Icons.radar_rounded,
+                        color: AppColors.primaryGreen,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
                 if (item.allowRetake) ...[
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   Expanded(
                     flex: 2,
                     child: SizedBox(
