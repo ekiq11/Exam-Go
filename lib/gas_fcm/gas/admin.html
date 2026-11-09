@@ -1472,6 +1472,12 @@
                   <svg class="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                   <span class="text-xs font-medium">Gambar Rasio 1:1 Belum Diatur</span>
                 </div>
+                <!-- Indikator Loading Proses Upload -->
+                <div id="loading-ad-student" class="absolute inset-0 bg-slate-900/85 backdrop-blur-sm hidden flex-col items-center justify-center p-4 text-white z-20 rounded-2xl transition-all">
+                  <div class="w-11 h-11 border-4 border-white/20 border-t-emerald-400 rounded-full animate-spin mb-3"></div>
+                  <p class="text-xs font-bold text-center text-white">Mengunggah ke Drive...</p>
+                  <p class="text-[10px] text-emerald-200 text-center mt-1">Harap tunggu beberapa detik</p>
+                </div>
               </div>
             </div>
 
@@ -1481,11 +1487,12 @@
               <div class="flex gap-2">
                 <input type="text" id="set-ad-student-image" oninput="updateAdPreview('student')" class="flex-1 px-3.5 py-2.5 bg-gray-50 hover:bg-white focus:bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none text-xs font-mono transition-all" placeholder="https://... / link gambar">
                 <input type="file" id="upload-ad-file-student" accept="image/*" class="hidden" onchange="handleAdFileSelected('student', event)">
-                <button type="button" onclick="triggerAdImageUpload('student')" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm whitespace-nowrap" title="Unggah File dari Komputer">
+                <button type="button" id="btn-upload-ad-student" onclick="triggerAdImageUpload('student')" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm whitespace-nowrap" title="Unggah File dari Komputer">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                   <span>Upload</span>
                 </button>
               </div>
+              <div id="status-ad-student" class="hidden"></div>
             </div>
 
             <!-- Input CTA URL -->
@@ -1529,6 +1536,12 @@
                   <svg class="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                   <span class="text-xs font-medium">Gambar Rasio 1:1 Belum Diatur</span>
                 </div>
+                <!-- Indikator Loading Proses Upload -->
+                <div id="loading-ad-teacher" class="absolute inset-0 bg-slate-900/85 backdrop-blur-sm hidden flex-col items-center justify-center p-4 text-white z-20 rounded-2xl transition-all">
+                  <div class="w-11 h-11 border-4 border-white/20 border-t-teal-400 rounded-full animate-spin mb-3"></div>
+                  <p class="text-xs font-bold text-center text-white">Mengunggah ke Drive...</p>
+                  <p class="text-[10px] text-teal-200 text-center mt-1">Harap tunggu beberapa detik</p>
+                </div>
               </div>
             </div>
 
@@ -1538,11 +1551,12 @@
               <div class="flex gap-2">
                 <input type="text" id="set-ad-teacher-image" oninput="updateAdPreview('teacher')" class="flex-1 px-3.5 py-2.5 bg-gray-50 hover:bg-white focus:bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none text-xs font-mono transition-all" placeholder="https://... / link gambar">
                 <input type="file" id="upload-ad-file-teacher" accept="image/*" class="hidden" onchange="handleAdFileSelected('teacher', event)">
-                <button type="button" onclick="triggerAdImageUpload('teacher')" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm whitespace-nowrap" title="Unggah File dari Komputer">
+                <button type="button" id="btn-upload-ad-teacher" onclick="triggerAdImageUpload('teacher')" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm whitespace-nowrap" title="Unggah File dari Komputer">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                   <span>Upload</span>
                 </button>
               </div>
+              <div id="status-ad-teacher" class="hidden"></div>
             </div>
 
             <!-- Input CTA URL -->
@@ -1586,6 +1600,12 @@
                   <svg class="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                   <span class="text-xs font-medium">Gambar Rasio 1:1 Belum Diatur</span>
                 </div>
+                <!-- Indikator Loading Proses Upload -->
+                <div id="loading-ad-event" class="absolute inset-0 bg-slate-900/85 backdrop-blur-sm hidden flex-col items-center justify-center p-4 text-white z-20 rounded-2xl transition-all">
+                  <div class="w-11 h-11 border-4 border-white/20 border-t-purple-400 rounded-full animate-spin mb-3"></div>
+                  <p class="text-xs font-bold text-center text-white">Mengunggah ke Drive...</p>
+                  <p class="text-[10px] text-purple-200 text-center mt-1">Harap tunggu beberapa detik</p>
+                </div>
               </div>
             </div>
 
@@ -1595,11 +1615,12 @@
               <div class="flex gap-2">
                 <input type="text" id="set-ad-event-image" oninput="updateAdPreview('event')" class="flex-1 px-3.5 py-2.5 bg-gray-50 hover:bg-white focus:bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-xs font-mono transition-all" placeholder="https://... / link gambar">
                 <input type="file" id="upload-ad-file-event" accept="image/*" class="hidden" onchange="handleAdFileSelected('event', event)">
-                <button type="button" onclick="triggerAdImageUpload('event')" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm whitespace-nowrap" title="Unggah File dari Komputer">
+                <button type="button" id="btn-upload-ad-event" onclick="triggerAdImageUpload('event')" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm whitespace-nowrap" title="Unggah File dari Komputer">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                   <span>Upload</span>
                 </button>
               </div>
+              <div id="status-ad-event" class="hidden"></div>
             </div>
 
             <!-- Input CTA URL -->
@@ -2770,11 +2791,15 @@
     function showToast(msg, type = 'success') {
       const toast = document.getElementById('toast');
       const icon = document.getElementById('toast-icon');
+      if (!toast || !icon) return;
       document.getElementById('toast-msg').innerText = msg;
       
       if (type === 'success') {
         toast.className = "fixed bottom-5 right-5 transform transition-all duration-300 bg-examgo-primary text-white px-6 py-4 rounded-xl shadow-xl z-[60] flex items-center min-w-[300px]";
         icon.innerHTML = '<div class="bg-white/20 p-1 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>';
+      } else if (type === 'info') {
+        toast.className = "fixed bottom-5 right-5 transform transition-all duration-300 bg-sky-600 text-white px-6 py-4 rounded-xl shadow-xl z-[60] flex items-center min-w-[300px]";
+        icon.innerHTML = '<div class="bg-white/20 p-1 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>';
       } else {
         toast.className = "fixed bottom-5 right-5 transform transition-all duration-300 bg-red-600 text-white px-6 py-4 rounded-xl shadow-xl z-[60] flex items-center min-w-[300px]";
         icon.innerHTML = '<div class="bg-white/20 p-1 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></div>';
@@ -7912,6 +7937,50 @@
     // ─────────────────────────────────────────────────────────
     // Popup Ads Engine Controllers (1:1 Ratio)
     // ─────────────────────────────────────────────────────────
+    function getAdTypeName(type) {
+      if (type === 'student') return 'Siswa Free';
+      if (type === 'teacher') return 'Mode Guru';
+      if (type === 'event') return 'Event Akbar';
+      return type;
+    }
+
+    function setAdUploadLoading(type, isLoading) {
+      const loadingEl = document.getElementById('loading-ad-' + type);
+      const btn = document.getElementById('btn-upload-ad-' + type);
+      if (loadingEl) {
+        if (isLoading) {
+          loadingEl.classList.remove('hidden');
+          loadingEl.classList.add('flex');
+        } else {
+          loadingEl.classList.add('hidden');
+          loadingEl.classList.remove('flex');
+        }
+      }
+      if (btn) {
+        btn.disabled = isLoading;
+        if (isLoading) {
+          btn.dataset.prevHtml = btn.innerHTML;
+          btn.innerHTML = '<div class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div><span>Mengunggah...</span>';
+          btn.classList.add('opacity-75', 'cursor-not-allowed');
+        } else {
+          btn.innerHTML = btn.dataset.prevHtml || '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg><span>Upload</span>';
+          btn.classList.remove('opacity-75', 'cursor-not-allowed');
+        }
+      }
+    }
+
+    function showAdUploadStatus(type, isSuccess, message) {
+      const statusEl = document.getElementById('status-ad-' + type);
+      if (!statusEl) return;
+      if (isSuccess) {
+        statusEl.className = 'flex items-center gap-2 p-2.5 mt-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-medium animate-fadeIn';
+        statusEl.innerHTML = '<svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span class="flex-1">' + message + '</span>';
+      } else {
+        statusEl.className = 'flex items-center gap-2 p-2.5 mt-2 rounded-xl bg-red-50 text-red-800 border border-red-200 text-xs font-medium animate-fadeIn';
+        statusEl.innerHTML = '<svg class="w-4 h-4 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span class="flex-1">' + message + '</span>';
+      }
+    }
+
     function updateAdPreview(type) {
       const urlInput = document.getElementById('set-ad-' + type + '-image');
       const previewImg = document.getElementById('preview-ad-' + type);
@@ -7919,9 +7988,14 @@
       if (!urlInput || !previewImg || !placeholder) return;
 
       let url = urlInput.value.trim();
-      // Auto convert Google Drive view links to direct image links
+      // Auto convert Google Drive links to direct view links
       if (url.includes('drive.google.com/file/d/')) {
         const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          url = 'https://drive.google.com/uc?export=view&id=' + match[1];
+        }
+      } else if (url.includes('drive.google.com/open?id=')) {
+        const match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
         if (match && match[1]) {
           url = 'https://drive.google.com/uc?export=view&id=' + match[1];
         }
@@ -7932,6 +8006,18 @@
         previewImg.classList.remove('hidden');
         placeholder.classList.add('hidden');
         previewImg.onerror = function() {
+          // If uc?export=view fails due to cross-origin cookie restrictions, fallback to thumbnail endpoint
+          if (url.includes('drive.google.com/uc?export=view&id=')) {
+            const fileId = url.split('id=')[1];
+            if (fileId) {
+              previewImg.onerror = function() {
+                previewImg.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+              };
+              previewImg.src = 'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1000';
+              return;
+            }
+          }
           previewImg.classList.add('hidden');
           placeholder.classList.remove('hidden');
         };
@@ -7944,48 +8030,78 @@
 
     function triggerAdImageUpload(type) {
       const fileInput = document.getElementById('upload-ad-file-' + type);
-      if (fileInput) fileInput.click();
+      if (fileInput) {
+        fileInput.value = ''; // Selalu kosongkan agar pemilihan file yang sama tetap memicu event onchange
+        fileInput.click();
+      }
     }
 
     function handleAdFileSelected(type, event) {
+      const typeName = getAdTypeName(type);
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const statusEl = document.getElementById('status-ad-' + type);
+      if (statusEl) statusEl.className = 'hidden';
+
       const creds = getCredentials();
       if (!creds) {
+        showAdUploadStatus(type, false, 'Sesi telah berakhir, silakan login ulang ke panel admin.');
         showToast('Sesi telah berakhir, silakan login ulang', 'error');
         return;
       }
-      const file = event.target.files && event.target.files[0];
-      if (!file) return;
+
       if (!file.type.startsWith('image/')) {
+        showAdUploadStatus(type, false, 'File harus berupa gambar (JPG, PNG, atau WebP).');
         showToast('File harus berupa gambar (JPG, PNG, atau WebP)', 'error');
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+        showAdUploadStatus(type, false, 'Ukuran gambar ' + sizeMb + 'MB melebihi batas maksimal 5MB.');
         showToast('Ukuran gambar maksimal 5MB', 'error');
         return;
       }
 
-      showToast('Mengunggah gambar ke Google Drive...', 'info');
+      setAdUploadLoading(type, true);
+      showToast('Mengunggah gambar iklan ' + typeName + ' ke Google Drive...', 'info');
+
       const reader = new FileReader();
+      reader.onerror = function() {
+        setAdUploadLoading(type, false);
+        const errMsg = 'Gagal membaca file gambar dari perangkat Anda.';
+        showAdUploadStatus(type, false, errMsg);
+        showToast(errMsg, 'error');
+      };
+
       reader.onload = function(e) {
         const base64Data = e.target.result.split(',')[1];
         google.script.run
           .withSuccessHandler(function(res) {
+            setAdUploadLoading(type, false);
             if (res && res.url) {
               const urlInput = document.getElementById('set-ad-' + type + '-image');
               if (urlInput) {
                 urlInput.value = res.url;
                 updateAdPreview(type);
               }
-              showToast('Gambar ' + type + ' berhasil diunggah & live!', 'success');
-            } else if (res && res.error) {
-              showToast('Gagal unggah: ' + res.error, 'error');
+              const successMsg = 'Foto iklan ' + typeName + ' berhasil diunggah ke Google Drive & siap diterapkan!';
+              showAdUploadStatus(type, true, successMsg);
+              showToast('✅ Berhasil! ' + successMsg, 'success');
+            } else {
+              const errMsg = (res && res.error) ? res.error : 'Terjadi kesalahan sistem saat menyimpan ke Google Drive.';
+              showAdUploadStatus(type, false, errMsg);
+              showToast('❌ Gagal unggah: ' + errMsg, 'error');
             }
           })
           .withFailureHandler(function(err) {
-            showToast('Gagal unggah gambar: ' + (err.message || err), 'error');
+            setAdUploadLoading(type, false);
+            const errMsg = err.message || err.toString() || 'Koneksi ke Google Apps Script terputus.';
+            showAdUploadStatus(type, false, errMsg);
+            showToast('❌ Gagal unggah gambar: ' + errMsg, 'error');
           })
           .uploadAdImageToDrive({
-            filename: 'ad_' + type + '_' + Date.now() + '_' + file.name,
+            filename: 'ad_' + type + '_' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_'),
             mimeType: file.type,
             base64: base64Data
           }, creds.username || creds.user, creds.password || creds.pass);
