@@ -29,11 +29,11 @@ void main() {
     addTearDown(() => tester.view.resetPhysicalSize());
 
     await tester.pumpWidget(buildTestWidget());
-    // Biarkan async dart:io OS call (NetworkInterface) selesai di real clock
+    // Biarkan async dart:io OS call (NetworkInterface & SecurityService) selesai di real clock
     await tester.runAsync(() async {
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 1500));
     });
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     // Verifikasi judul dialog & sesi
     expect(find.text('Persiapan & Regulasi Ujian'), findsOneWidget);

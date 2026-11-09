@@ -1269,7 +1269,7 @@ class _HomeScreenState extends State<HomeScreen>
       expandedHeight: expandedHeight,
       collapsedHeight: kToolbarHeight,
       pinned: true,
-      stretch: true,
+      stretch: false,
       backgroundColor: const Color(0xFF1B5E20),
       elevation: 0,
       automaticallyImplyLeading: false,

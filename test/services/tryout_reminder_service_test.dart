@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:examgo/models/tryout_schedule_model.dart';
-import 'package:examgo/services/license_service.dart';
-import 'package:examgo/services/student_tryout_history_service.dart';
 import 'package:examgo/services/tryout_reminder_service.dart';
 
 void main() {
@@ -95,27 +93,7 @@ void main() {
         );
         expect(count, 2);
 
-        // Tandai 1 sudah dikerjakan di history
-        final historyItem = StudentTryoutHistoryItem(
-          token: 'SNBT-01',
-          namaPaket: 'SNBT Baru 2026',
-          kategori: 'SNBT',
-          submittedAt: DateTime.now(),
-          finalScore: 800,
-          maxScore: 1000,
-          totalBenar: 16,
-          totalSalah: 4,
-          totalKosong: 0,
-          totalSoal: 20,
-          isPassed: true,
-          statusKelulusan: 'LULUS',
-          predikat: 'A',
-          allowRetake: true,
-          jawaban: {},
-          questions: [],
-        );
-        final rawList = [historyItem].map((e) => e.toJson()).toList();
-        // Simpan ke SharedPreferences
+        // Tandai 1 sudah dikerjakan di history SharedPreferences
         await prefs.setStringList('student_tryout_history_list', [
           '{"token":"SNBT-01","nama_paket":"SNBT Baru 2026","kategori":"SNBT","final_score":800,"max_score":1000,"total_benar":16,"total_salah":4,"total_kosong":0,"total_soal":20,"is_passed":true,"status_kelulusan":"LULUS","predikat":"A","allow_retake":true,"jawaban":{},"questions":[]}',
         ]);

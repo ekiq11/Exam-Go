@@ -75,8 +75,9 @@ class TryoutSubScore {
     if (lower.contains('wawasan kebangsaan') || lower == 'twk') return 'TWK';
     if (lower.contains('intelegensia') ||
         lower.contains('intelegensi') ||
-        lower == 'tiu')
+        lower == 'tiu') {
       return 'TIU';
+    }
     if (lower.contains('karakteristik pribadi') || lower == 'tkp') return 'TKP';
     if (lower.contains('penalaran umum') || lower == 'pu') return 'PU';
     if (lower.contains('pengetahuan kuantitatif') || lower == 'pk') return 'PK';
@@ -445,69 +446,6 @@ class TryoutSubScore {
           totalSoal: total,
           totalBenar: item.totalBenar,
         ),
-    ];
-  }
-
-  static List<TryoutSubScore> _generateFallbackScores(
-    StudentTryoutHistoryItem item,
-  ) {
-    return _generateAdaptiveScores(item, {});
-  }
-
-  static List<TryoutSubScore> _generateCumulativeFallback(
-    List<StudentTryoutHistoryItem> list,
-  ) {
-    int totalSoal = 0;
-    int totalBenar = 0;
-    int totalSalah = 0;
-    int totalKosong = 0;
-
-    for (final it in list) {
-      totalSoal += it.totalSoal > 0 ? it.totalSoal : 1;
-      totalBenar += it.totalBenar;
-      totalSalah += it.totalSalah;
-      totalKosong += it.totalKosong;
-    }
-
-    final pctBenar = totalSoal > 0 ? (totalBenar / totalSoal) * 100.0 : 0.0;
-    final pctAkurasi = (totalBenar + totalSalah) > 0
-        ? (totalBenar / (totalBenar + totalSalah)) * 100.0
-        : 0.0;
-    final pctTuntas = totalSoal > 0
-        ? ((totalSoal - totalKosong) / totalSoal) * 100.0
-        : 0.0;
-    final lulusCount = list.where((e) => e.isPassed).length;
-    final pctLulus = list.isNotEmpty ? (lulusCount / list.length) * 100.0 : 0.0;
-
-    return [
-      TryoutSubScore(
-        name: 'Ketepatan',
-        score: pctBenar.clamp(0.0, 100.0),
-        color: const Color(0xFF10B981),
-        totalSoal: totalSoal,
-        totalBenar: totalBenar,
-      ),
-      TryoutSubScore(
-        name: 'Akurasi',
-        score: pctAkurasi.clamp(0.0, 100.0),
-        color: const Color(0xFF3B82F6),
-        totalSoal: totalBenar + totalSalah,
-        totalBenar: totalBenar,
-      ),
-      TryoutSubScore(
-        name: 'Ketuntasan',
-        score: pctTuntas.clamp(0.0, 100.0),
-        color: const Color(0xFF8B5CF6),
-        totalSoal: totalSoal,
-        totalBenar: totalSoal - totalKosong,
-      ),
-      TryoutSubScore(
-        name: 'Kelulusan',
-        score: pctLulus.clamp(0.0, 100.0),
-        color: const Color(0xFFF59E0B),
-        totalSoal: list.length,
-        totalBenar: lulusCount,
-      ),
     ];
   }
 
@@ -961,7 +899,7 @@ class _SpiderChartPainter extends CustomPainter {
             ),
             TextSpan(
               text: subScores[i].rawScore != null
-                  ? '${subScores[i].rawScore} (${scoreVal}%)'
+                  ? '${subScores[i].rawScore} ($scoreVal%)'
                   : '$scoreVal%',
               style: GoogleFonts.poppins(
                 color: labelCol,

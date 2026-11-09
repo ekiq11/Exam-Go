@@ -152,7 +152,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
     _syncMissingSubtestScores(list);
   }
 
-  Future<void> _syncMissingSubtestScores(List<StudentTryoutHistoryItem> list) async {
+  Future<void> _syncMissingSubtestScores(
+    List<StudentTryoutHistoryItem> list,
+  ) async {
     bool hasUpdates = false;
     final updatedList = List<StudentTryoutHistoryItem>.from(list);
     for (int i = 0; i < updatedList.length; i++) {
@@ -243,7 +245,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
             ),
             TryoutSpiderChartWidget(
               subScores: subScores,
-              title: 'Radar Kemampuan Subtest',
+              title: 'Grafik Kemampuan',
               subtitle: activeItem.namaPaket,
             ),
             const SizedBox(height: 12),
