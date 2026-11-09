@@ -223,6 +223,131 @@ void main() {
       expect(scores[1].score, 0.0);   // q2 salah
       expect(scores[2].score, 100.0); // q3 benar
     });
+
+    test('fromHistoryItem parses real subtestScores from Firestore correctly', () {
+      final item = StudentTryoutHistoryItem(
+        token: 'SKD-PREMIUM-01',
+        namaPaket: 'Tryout SKD CPNS Kedinasan',
+        kategori: 'SKD',
+        submittedAt: DateTime.now(),
+        finalScore: 430,
+        maxScore: 550,
+        totalBenar: 85,
+        totalSalah: 15,
+        totalKosong: 0,
+        totalSoal: 100,
+        isPassed: true,
+        statusKelulusan: 'LULUS',
+        predikat: 'Sangat Memuaskan',
+        allowRetake: true,
+        jawaban: {},
+        questions: [],
+        subtestScores: {
+          'ST1': {
+            'subtest_id': 'ST1',
+            'judul': 'Tes Wawasan Kebangsaan (TWK)',
+            'skor': 110,
+            'max_skor': 150,
+            'benar': 22,
+            'total': 30,
+          },
+          'ST2': {
+            'subtest_id': 'ST2',
+            'judul': 'Tes Intelegensia Umum (TIU)',
+            'skor': 130,
+            'max_skor': 175,
+            'benar': 26,
+            'total': 35,
+          },
+          'ST3': {
+            'subtest_id': 'ST3',
+            'judul': 'Tes Karakteristik Pribadi (TKP)',
+            'skor': 190,
+            'max_skor': 225,
+            'benar': 37,
+            'total': 45,
+          },
+        },
+      );
+
+      final scores = TryoutSubScore.fromHistoryItem(item);
+      expect(scores.length, 3);
+
+      final twk = scores.firstWhere((s) => s.name == 'TWK');
+      expect(twk.rawScore, 110);
+      expect(twk.maxRawScore, 150);
+      expect(twk.totalBenar, 22);
+      expect(twk.totalSoal, 30);
+      expect(twk.score, closeTo((110 / 150) * 100, 0.1));
+
+      final tiu = scores.firstWhere((s) => s.name == 'TIU');
+      expect(tiu.rawScore, 130);
+      expect(tiu.maxRawScore, 175);
+      expect(tiu.score, closeTo((130 / 175) * 100, 0.1));
+
+      final tkp = scores.firstWhere((s) => s.name == 'TKP');
+      expect(tkp.rawScore, 190);
+      expect(tkp.maxRawScore, 225);
+      expect(tkp.score, closeTo((190 / 225) * 100, 0.1));
+    });
+
+    test('fromCumulativeHistory aggregates subtestScores across multiple sessions', () {
+      final session1 = StudentTryoutHistoryItem(
+        token: 'SKD-01',
+        namaPaket: 'Tryout SKD 1',
+        kategori: 'SKD',
+        submittedAt: DateTime.now(),
+        finalScore: 400,
+        maxScore: 550,
+        totalBenar: 80,
+        totalSalah: 20,
+        totalKosong: 0,
+        totalSoal: 100,
+        isPassed: true,
+        statusKelulusan: 'LULUS',
+        predikat: 'Baik',
+        allowRetake: true,
+        jawaban: {},
+        questions: const [],
+        subtestScores: {
+          'ST1': {'judul': 'TWK', 'skor': 100, 'max_skor': 150, 'benar': 20, 'total': 30},
+          'ST2': {'judul': 'TIU', 'skor': 120, 'max_skor': 175, 'benar': 24, 'total': 35},
+          'ST3': {'judul': 'TKP', 'skor': 180, 'max_skor': 225, 'benar': 36, 'total': 45},
+        },
+      );
+
+      final session2 = StudentTryoutHistoryItem(
+        token: 'SKD-02',
+        namaPaket: 'Tryout SKD 2',
+        kategori: 'SKD',
+        submittedAt: DateTime.now(),
+        finalScore: 430,
+        maxScore: 550,
+        totalBenar: 85,
+        totalSalah: 15,
+        totalKosong: 0,
+        totalSoal: 100,
+        isPassed: true,
+        statusKelulusan: 'LULUS',
+        predikat: 'Sangat Baik',
+        allowRetake: true,
+        jawaban: {},
+        questions: const [],
+        subtestScores: {
+          'ST1': {'judul': 'TWK', 'skor': 120, 'max_skor': 150, 'benar': 24, 'total': 30},
+          'ST2': {'judul': 'TIU', 'skor': 140, 'max_skor': 175, 'benar': 28, 'total': 35},
+          'ST3': {'judul': 'TKP', 'skor': 190, 'max_skor': 225, 'benar': 38, 'total': 45},
+        },
+      );
+
+      final cumScores = TryoutSubScore.fromCumulativeHistory([session1, session2]);
+      expect(cumScores.length, 3);
+
+      final twk = cumScores.firstWhere((s) => s.name == 'TWK');
+      expect(twk.rawScore, 220); // 100 + 120
+      expect(twk.maxRawScore, 300); // 150 + 150
+      expect(twk.score, closeTo((220 / 300) * 100, 0.1));
+    });
   });
 
   group('TryoutSpiderChartWidget Tests', () {

@@ -7,11 +7,13 @@ import '../../../services/student_tryout_history_service.dart';
 /// Model item skor per subtest untuk grafik radar / spider chart
 class TryoutSubScore {
   final String name;
-  final double score; // 0..100
+  final double score; // 0..100 (persentase visualisasi)
   final double maxValue;
   final int totalSoal;
   final int totalBenar;
   final Color color;
+  final int? rawScore; // Nilai / skor riil subtest (misal TWK 110, PU 750)
+  final int? maxRawScore; // Nilai maksimum riil subtest (misal TWK 150, PU 1000)
 
   const TryoutSubScore({
     required this.name,
@@ -20,56 +22,162 @@ class TryoutSubScore {
     this.totalSoal = 0,
     this.totalBenar = 0,
     required this.color,
+    this.rawScore,
+    this.maxRawScore,
   });
 
-  /// Factory untuk menghitung subscore dari 1 sesi riwayat ujian
-  static List<TryoutSubScore> fromHistoryItem(StudentTryoutHistoryItem item) {
-    if (item.questions.isEmpty) {
-      return _generateFallbackScores(item);
+  /// Daftar nama subtest standar berdasarkan kategori paket tryout
+  static List<String> getStandardSubtestNames(String kategori) {
+    final cat = kategori.trim().toUpperCase();
+    if (cat.contains('SKD') || cat.contains('KEDINASAN') || cat.contains('CPNS')) {
+      return ['TWK', 'TIU', 'TKP'];
+    }
+    if (cat.contains('SNBT') || cat.contains('UTBK')) {
+      return ['PU', 'PK', 'PBM', 'LBI', 'LBE', 'PM', 'PPU'];
+    }
+    if (cat.contains('SMA') || cat.contains('TKA')) {
+      return ['Matematika', 'B. Indonesia', 'B. Inggris', 'Sains/Soshum'];
+    }
+    if (cat.contains('SMP') || cat.contains('MTS')) {
+      return ['Matematika', 'IPA', 'B. Indonesia', 'B. Inggris'];
+    }
+    if (cat.contains('SD') || cat.contains('MI')) {
+      return ['Matematika', 'B. Indonesia', 'IPAS'];
+    }
+    return ['Subtest 1', 'Subtest 2', 'Subtest 3'];
+  }
+
+  /// Memetakan key teknis (ST1, ST2) atau judul panjang ke nama singkat subtest
+  static String resolveSubtestName(String rawKey, int index, String kategori) {
+    final k = rawKey.trim();
+    final matchParen = RegExp(r'\(([^)]+)\)').firstMatch(k);
+    if (matchParen != null && matchParen.group(1) != null) {
+      final inner = matchParen.group(1)!.trim();
+      if (inner.isNotEmpty && inner.length <= 6) return inner;
     }
 
-    // Kelompokkan soal berdasarkan subtestId atau jenis materi
-    final Map<String, List<ExamQuestion>> grouped = {};
-    for (final q in item.questions) {
-      final key = (q.subtestId.isNotEmpty ? q.subtestId : 'Umum').trim();
-      grouped.putIfAbsent(key, () => []).add(q);
+    final matchSt = RegExp(r'^(?:ST|SUBTEST|SUB)[_-]?(\d+)$', caseSensitive: false).firstMatch(k);
+    if (matchSt != null) {
+      final idx = int.tryParse(matchSt.group(1) ?? '') ?? (index + 1);
+      final std = getStandardSubtestNames(kategori);
+      if (idx >= 1 && idx <= std.length) {
+        return std[idx - 1];
+      }
     }
 
-    // Jika subtest < 3, pecah atau lengkapi agar grafik spider memiliki minimal 3 sumbu
-    if (grouped.length < 3) {
-      return _generateAdaptiveScores(item, grouped);
-    }
+    final lower = k.toLowerCase();
+    if (lower.contains('wawasan kebangsaan') || lower == 'twk') return 'TWK';
+    if (lower.contains('intelegensia') || lower.contains('intelegensi') || lower == 'tiu') return 'TIU';
+    if (lower.contains('karakteristik pribadi') || lower == 'tkp') return 'TKP';
+    if (lower.contains('penalaran umum') || lower == 'pu') return 'PU';
+    if (lower.contains('pengetahuan kuantitatif') || lower == 'pk') return 'PK';
+    if (lower.contains('pemahaman bacaan') || lower == 'pbm') return 'PBM';
+    if (lower.contains('pemahaman umum') || lower == 'ppu') return 'PPU';
+    if (lower.contains('penalaran matematika') || lower == 'pm') return 'PM';
+    if (lower.contains('bahasa indonesia') || lower == 'lbi') return 'LBI';
+    if (lower.contains('bahasa inggris') || lower == 'lbe') return 'LBE';
 
+    return _formatSubtestLabel(k);
+  }
+
+  /// Parsing data `subtest_scores` riil dari Firestore / evaluasi ujian
+  static List<TryoutSubScore> _parseSubtestScoresMap(
+    Map<String, dynamic> map,
+    String kategori,
+  ) {
+    if (map.isEmpty) return [];
     final colors = _palette;
     int colIdx = 0;
     final List<TryoutSubScore> result = [];
 
-    grouped.forEach((subtestName, questions) {
-      int benar = 0;
-      for (final q in questions) {
-        final studentAns = (item.jawaban[q.soalId] ?? '').trim().toUpperCase();
-        final keyAns = q.kunci.trim().toUpperCase();
-        if (studentAns.isNotEmpty && studentAns == keyAns) {
-          benar++;
-        }
+    final sortedEntries = map.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+
+    for (int i = 0; i < sortedEntries.length; i++) {
+      final entry = sortedEntries[i];
+      final val = entry.value;
+      if (val is! Map) continue;
+
+      final m = Map<String, dynamic>.from(val);
+      final judul = (m['judul'] ?? m['nama'] ?? entry.key).toString();
+      final name = resolveSubtestName(judul.isNotEmpty ? judul : entry.key, i, kategori);
+
+      final rawSkor = (m['skor'] as num?)?.toInt() ?? 0;
+      final maxSkor = (m['max_skor'] as num?)?.toInt() ?? 0;
+      final benar = (m['benar'] as num?)?.toInt() ?? 0;
+      final total = (m['total'] as num?)?.toInt() ?? 0;
+
+      double pct = 0.0;
+      if (maxSkor > 0) {
+        pct = (rawSkor / maxSkor) * 100.0;
+      } else if (total > 0) {
+        pct = (benar / total) * 100.0;
       }
-      final total = questions.length;
-      final pct = total > 0 ? ((benar / total) * 100.0) : 0.0;
 
       result.add(
         TryoutSubScore(
-          name: _formatSubtestLabel(subtestName),
+          name: name,
           score: pct.clamp(0.0, 100.0),
           maxValue: 100.0,
-          totalSoal: total,
+          rawScore: rawSkor,
+          maxRawScore: maxSkor > 0 ? maxSkor : (total > 0 ? total : 100),
           totalBenar: benar,
+          totalSoal: total,
           color: colors[colIdx % colors.length],
         ),
       );
       colIdx++;
-    });
+    }
+
+    if (result.length < 3 && result.isNotEmpty) {
+      final existingNames = result.map((r) => r.name.toUpperCase()).toSet();
+      final std = getStandardSubtestNames(kategori);
+      for (final sName in std) {
+        if (!existingNames.contains(sName.toUpperCase())) {
+          result.add(
+            TryoutSubScore(
+              name: sName,
+              score: 0.0,
+              maxValue: 100.0,
+              rawScore: 0,
+              maxRawScore: 100,
+              totalBenar: 0,
+              totalSoal: 0,
+              color: colors[colIdx % colors.length],
+            ),
+          );
+          colIdx++;
+          if (result.length >= 3) break;
+        }
+      }
+    }
 
     return result;
+  }
+
+  /// Factory untuk menghitung subscore dari 1 sesi riwayat ujian
+  static List<TryoutSubScore> fromHistoryItem(StudentTryoutHistoryItem item) {
+    // 1. Prioritaskan nilai per subtest riil dari Firestore
+    if (item.subtestScores != null && item.subtestScores!.isNotEmpty) {
+      final parsed = _parseSubtestScoresMap(item.subtestScores!, item.kategori);
+      if (parsed.isNotEmpty) return parsed;
+    }
+
+    // 2. Evaluasi berdasarkan butir soal yang tersimpan
+    if (item.questions.isNotEmpty) {
+      final parsed = fromQuestions(
+        questions: item.questions,
+        studentAnswers: item.jawaban,
+        kategori: item.kategori,
+        score: item.finalScore,
+        maxScore: item.maxScore,
+        subtestScores: item.subtestScores,
+      );
+      if (parsed.isNotEmpty) return parsed;
+    }
+
+    // 3. Fallback adaptif subtest standar per kategori
+    return _generateAdaptiveScores(item, {});
   }
 
   /// Factory untuk menghitung subscore langsung dari daftar soal dan jawaban siswa
@@ -79,7 +187,13 @@ class TryoutSubScore {
     String kategori = 'Umum',
     int? score,
     int? maxScore,
+    Map<String, dynamic>? subtestScores,
   }) {
+    if (subtestScores != null && subtestScores.isNotEmpty) {
+      final parsed = _parseSubtestScoresMap(subtestScores, kategori);
+      if (parsed.isNotEmpty) return parsed;
+    }
+
     if (questions.isEmpty) return [];
 
     final Map<String, List<ExamQuestion>> grouped = {};
@@ -88,71 +202,11 @@ class TryoutSubScore {
       grouped.putIfAbsent(key, () => []).add(q);
     }
 
-    int totalBenar = 0;
-    int totalSalah = 0;
-    int totalKosong = 0;
-
-    for (final q in questions) {
-      final userAns = (studentAnswers[q.soalId] ?? '').trim().toUpperCase();
-      final keyAns = q.kunci.trim().toUpperCase();
-      if (userAns.isEmpty) {
-        totalKosong++;
-      } else if (userAns == keyAns) {
-        totalBenar++;
-      } else {
-        totalSalah++;
-      }
-    }
-
-    if (grouped.length < 3) {
-      final total = questions.length;
-      final benarPct = total > 0 ? (totalBenar / total) * 100.0 : 0.0;
-      final akurasi = (totalBenar + totalSalah) > 0
-          ? (totalBenar / (totalBenar + totalSalah)) * 100.0
-          : 0.0;
-      final kelengkapan = total > 0 ? ((total - totalKosong) / total) * 100.0 : 0.0;
-      final effectiveScore = (score != null && maxScore != null && maxScore > 0)
-          ? ((score.toDouble() / maxScore) * 100.0).clamp(0.0, 100.0)
-          : benarPct;
-
-      return [
-        TryoutSubScore(
-          name: 'Ketepatan',
-          score: benarPct.clamp(0.0, 100.0),
-          color: const Color(0xFF10B981),
-          totalSoal: total,
-          totalBenar: totalBenar,
-        ),
-        TryoutSubScore(
-          name: 'Akurasi',
-          score: akurasi.clamp(0.0, 100.0),
-          color: const Color(0xFF3B82F6),
-          totalSoal: totalBenar + totalSalah,
-          totalBenar: totalBenar,
-        ),
-        TryoutSubScore(
-          name: 'Ketuntasan',
-          score: kelengkapan.clamp(0.0, 100.0),
-          color: const Color(0xFF8B5CF6),
-          totalSoal: total,
-          totalBenar: total - totalKosong,
-        ),
-        if (kategori.isNotEmpty)
-          TryoutSubScore(
-            name: kategori,
-            score: effectiveScore.clamp(0.0, 100.0),
-            color: const Color(0xFFF59E0B),
-            totalSoal: total,
-            totalBenar: totalBenar,
-          ),
-      ];
-    }
-
     final colors = _palette;
     int colIdx = 0;
     final List<TryoutSubScore> result = [];
 
-    grouped.forEach((subtestName, qList) {
+    grouped.forEach((subtestKey, qList) {
       int benar = 0;
       for (final q in qList) {
         final userAns = (studentAnswers[q.soalId] ?? '').trim().toUpperCase();
@@ -163,12 +217,15 @@ class TryoutSubScore {
       }
       final total = qList.length;
       final pct = total > 0 ? ((benar / total) * 100.0) : 0.0;
+      final resolvedName = resolveSubtestName(subtestKey, colIdx, kategori);
 
       result.add(
         TryoutSubScore(
-          name: _formatSubtestLabel(subtestName),
+          name: resolvedName,
           score: pct.clamp(0.0, 100.0),
           maxValue: 100.0,
+          rawScore: benar,
+          maxRawScore: total,
           totalSoal: total,
           totalBenar: benar,
           color: colors[colIdx % colors.length],
@@ -177,6 +234,29 @@ class TryoutSubScore {
       colIdx++;
     });
 
+    if (result.length < 3) {
+      final existingNames = result.map((r) => r.name.toUpperCase()).toSet();
+      final std = getStandardSubtestNames(kategori);
+      for (final sName in std) {
+        if (!existingNames.contains(sName.toUpperCase())) {
+          result.add(
+            TryoutSubScore(
+              name: sName,
+              score: 0.0,
+              maxValue: 100.0,
+              rawScore: 0,
+              maxRawScore: 100,
+              totalBenar: 0,
+              totalSoal: 0,
+              color: colors[colIdx % colors.length],
+            ),
+          );
+          colIdx++;
+          if (result.length >= 3) break;
+        }
+      }
+    }
+
     return result;
   }
 
@@ -184,50 +264,104 @@ class TryoutSubScore {
   static List<TryoutSubScore> fromCumulativeHistory(List<StudentTryoutHistoryItem> list) {
     if (list.isEmpty) return [];
 
-    final Map<String, _AggScore> agg = {};
-    for (final item in list) {
-      if (item.questions.isNotEmpty) {
-        for (final q in item.questions) {
-          final key = (q.subtestId.isNotEmpty ? q.subtestId : item.kategori).trim();
-          agg.putIfAbsent(key, () => _AggScore());
-          agg[key]!.total++;
-          final studentAns = (item.jawaban[q.soalId] ?? '').trim().toUpperCase();
-          if (studentAns.isNotEmpty && studentAns == q.kunci.trim().toUpperCase()) {
-            agg[key]!.benar++;
-          }
-        }
-      } else {
-        // Fallback berdasarkan kategori paket jika butir soal tidak tersimpan
-        final key = item.kategori.trim();
-        agg.putIfAbsent(key, () => _AggScore());
-        agg[key]!.total += item.totalSoal > 0 ? item.totalSoal : 10;
-        agg[key]!.benar += item.totalBenar;
-      }
-    }
+    final Map<String, _SubtestAccumulator> accum = {};
 
-    if (agg.length < 3) {
-      // Buat default metrik jika kategori sedikit
-      return _generateCumulativeFallback(list);
+    for (final item in list) {
+      if (item.subtestScores != null && item.subtestScores!.isNotEmpty) {
+        int idx = 0;
+        item.subtestScores!.forEach((k, v) {
+          if (v is Map) {
+            final m = Map<String, dynamic>.from(v);
+            final title = (m['judul'] ?? m['nama'] ?? k).toString();
+            final name = resolveSubtestName(title, idx, item.kategori);
+            final acc = accum.putIfAbsent(name, () => _SubtestAccumulator());
+            acc.skorSum += (m['skor'] as num?)?.toInt() ?? 0;
+            acc.maxSkorSum += (m['max_skor'] as num?)?.toInt() ?? 0;
+            acc.benarSum += (m['benar'] as num?)?.toInt() ?? 0;
+            acc.totalSum += (m['total'] as num?)?.toInt() ?? 0;
+            idx++;
+          }
+        });
+      } else if (item.questions.isNotEmpty) {
+        int idx = 0;
+        final Map<String, List<ExamQuestion>> qGroup = {};
+        for (final q in item.questions) {
+          final k = (q.subtestId.isNotEmpty ? q.subtestId : item.kategori).trim();
+          qGroup.putIfAbsent(k, () => []).add(q);
+        }
+        qGroup.forEach((k, qList) {
+          final name = resolveSubtestName(k, idx, item.kategori);
+          final acc = accum.putIfAbsent(name, () => _SubtestAccumulator());
+          for (final q in qList) {
+            acc.totalSum++;
+            final studentAns = (item.jawaban[q.soalId] ?? '').trim().toUpperCase();
+            if (studentAns.isNotEmpty && studentAns == q.kunci.trim().toUpperCase()) {
+              acc.benarSum++;
+            }
+          }
+          acc.skorSum = acc.benarSum;
+          acc.maxSkorSum = acc.totalSum;
+          idx++;
+        });
+      } else {
+        final std = getStandardSubtestNames(item.kategori);
+        for (final sName in std) {
+          final acc = accum.putIfAbsent(sName, () => _SubtestAccumulator());
+          final subTotal = (item.totalSoal / std.length).ceil();
+          final subBenar = (item.totalBenar / std.length).round();
+          acc.totalSum += subTotal > 0 ? subTotal : 5;
+          acc.benarSum += subBenar;
+          acc.skorSum = acc.benarSum;
+          acc.maxSkorSum = acc.totalSum;
+        }
+      }
     }
 
     final colors = _palette;
     int colIdx = 0;
     final List<TryoutSubScore> result = [];
 
-    agg.forEach((key, val) {
-      final pct = val.total > 0 ? ((val.benar / val.total) * 100.0) : 0.0;
+    accum.forEach((name, acc) {
+      double pct = 0.0;
+      if (acc.maxSkorSum > 0) {
+        pct = (acc.skorSum / acc.maxSkorSum) * 100.0;
+      } else if (acc.totalSum > 0) {
+        pct = (acc.benarSum / acc.totalSum) * 100.0;
+      }
       result.add(
         TryoutSubScore(
-          name: _formatSubtestLabel(key),
+          name: name,
           score: pct.clamp(0.0, 100.0),
           maxValue: 100.0,
-          totalSoal: val.total,
-          totalBenar: val.benar,
+          rawScore: acc.skorSum > 0 ? acc.skorSum : acc.benarSum,
+          maxRawScore: acc.maxSkorSum > 0 ? acc.maxSkorSum : acc.totalSum,
+          totalSoal: acc.totalSum,
+          totalBenar: acc.benarSum,
           color: colors[colIdx % colors.length],
         ),
       );
       colIdx++;
     });
+
+    if (result.length < 3) {
+      final std = getStandardSubtestNames(list.first.kategori);
+      for (final sName in std) {
+        if (!accum.containsKey(sName)) {
+          result.add(
+            TryoutSubScore(
+              name: sName,
+              score: 0.0,
+              maxValue: 100.0,
+              rawScore: 0,
+              maxRawScore: 100,
+              color: colors[colIdx % colors.length],
+            ),
+          );
+          colIdx++;
+          if (result.length >= 3) break;
+        }
+      }
+    }
 
     return result;
   }
@@ -356,9 +490,11 @@ class TryoutSubScore {
   ];
 }
 
-class _AggScore {
-  int total = 0;
-  int benar = 0;
+class _SubtestAccumulator {
+  int totalSum = 0;
+  int benarSum = 0;
+  int skorSum = 0;
+  int maxSkorSum = 0;
 }
 
 /// Widget Spider / Radar Chart Interaktif dengan Desain Fresh & Modern
@@ -585,7 +721,7 @@ class _TryoutSpiderChartWidgetState extends State<TryoutSpiderChartWidget>
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${s.score.round()}%',
+                        s.rawScore != null ? '${s.rawScore} (${s.score.round()}%)' : '${s.score.round()}%',
                         style: GoogleFonts.poppins(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
@@ -771,10 +907,12 @@ class _SpiderChartPainter extends CustomPainter {
               ),
             ),
             TextSpan(
-              text: '$scoreVal%',
+              text: subScores[i].rawScore != null
+                  ? '${subScores[i].rawScore} (${scoreVal}%)'
+                  : '$scoreVal%',
               style: GoogleFonts.poppins(
                 color: labelCol,
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: FontWeight.w800,
               ),
             ),

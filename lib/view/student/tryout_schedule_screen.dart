@@ -109,8 +109,11 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
 
     // 2. TAHAP SINKRONISASI: Ambil data real-time langsung dari Firestore
     try {
-      final fresh = await TryoutScheduleService.instance.getActiveSchedules(forceRefresh: true);
-      final freshCachedIds = await ExamCacheService.instance.getCachedPackageIds();
+      final fresh = await TryoutScheduleService.instance.getActiveSchedules(
+        forceRefresh: true,
+      );
+      final freshCachedIds = await ExamCacheService.instance
+          .getCachedPackageIds();
       if (mounted) {
         setState(() {
           _allSchedules = fresh;
@@ -146,6 +149,31 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
         _historyList = list;
       });
     }
+    _syncMissingSubtestScores(list);
+  }
+
+  Future<void> _syncMissingSubtestScores(List<StudentTryoutHistoryItem> list) async {
+    bool hasUpdates = false;
+    final updatedList = List<StudentTryoutHistoryItem>.from(list);
+    for (int i = 0; i < updatedList.length; i++) {
+      final it = updatedList[i];
+      if (it.subtestScores == null || it.subtestScores!.isEmpty) {
+        final scores = await StudentTryoutHistoryService.instance
+            .fetchSubtestScoresFromFirestore(it.token);
+        if (scores != null && scores.isNotEmpty) {
+          updatedList[i] = it.copyWith(subtestScores: scores);
+          hasUpdates = true;
+        }
+      }
+    }
+    if (hasUpdates) {
+      await StudentTryoutHistoryService.instance.updateHistoryList(updatedList);
+      if (mounted) {
+        setState(() {
+          _historyList = updatedList;
+        });
+      }
+    }
   }
 
   StudentTryoutHistoryItem? _findHistoryForSchedule(TryoutSchedule schedule) {
@@ -168,8 +196,29 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
     return diff >= -1 && diff <= 7;
   }
 
-  void _showSingleSessionRadarSheet(StudentTryoutHistoryItem item) {
-    final subScores = TryoutSubScore.fromHistoryItem(item);
+  void _showSingleSessionRadarSheet(StudentTryoutHistoryItem item) async {
+    StudentTryoutHistoryItem activeItem = item;
+    if (activeItem.subtestScores == null || activeItem.subtestScores!.isEmpty) {
+      final fetched = await StudentTryoutHistoryService.instance
+          .fetchSubtestScoresFromFirestore(activeItem.token);
+      if (fetched != null && fetched.isNotEmpty) {
+        activeItem = activeItem.copyWith(subtestScores: fetched);
+        final idx = _historyList.indexWhere((h) => h.token == item.token);
+        if (idx != -1) {
+          final copy = List<StudentTryoutHistoryItem>.from(_historyList);
+          copy[idx] = activeItem;
+          StudentTryoutHistoryService.instance.updateHistoryList(copy);
+          if (mounted) {
+            setState(() {
+              _historyList = copy;
+            });
+          }
+        }
+      }
+    }
+
+    if (!mounted) return;
+    final subScores = TryoutSubScore.fromHistoryItem(activeItem);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -195,7 +244,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
             TryoutSpiderChartWidget(
               subScores: subScores,
               title: 'Radar Kemampuan Subtest',
-              subtitle: item.namaPaket,
+              subtitle: activeItem.namaPaket,
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -205,10 +254,15 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGreen,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                child: Text('Tutup', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                child: Text(
+                  'Tutup',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -487,11 +541,17 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                     if (_isSyncing)
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: const BoxDecoration(
                           color: Color(0xFFE8F5E9),
                           border: Border(
-                            bottom: BorderSide(color: Color(0xFFC8E6C9), width: 1),
+                            bottom: BorderSide(
+                              color: Color(0xFFC8E6C9),
+                              width: 1,
+                            ),
                           ),
                         ),
                         child: Row(
@@ -525,16 +585,26 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                         child: _filteredSchedules.isEmpty
                             ? _buildEmptyCatalogState()
                             : ListView.builder(
-                                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  12,
+                                  16,
+                                  32,
+                                ),
                                 itemCount: _filteredSchedules.length,
                                 itemBuilder: (context, index) {
                                   final item = _filteredSchedules[index];
-                                  final isCached = _cachedPaketIds.contains(item.paketId.toUpperCase()) ||
+                                  final isCached =
+                                      _cachedPaketIds.contains(
+                                        item.paketId.toUpperCase(),
+                                      ) ||
                                       _cachedPaketIds.contains(item.paketId);
                                   final history = _findHistoryForSchedule(item);
                                   final isAttempted = history != null;
-                                  final isNew = !isAttempted &&
-                                      (!_seenTryoutIds.contains(item.paketId) || _isFreshSchedule(item));
+                                  final isNew =
+                                      !isAttempted &&
+                                      (!_seenTryoutIds.contains(item.paketId) ||
+                                          _isFreshSchedule(item));
                                   return TryoutCardWidget(
                                     schedule: item,
                                     isCached: isCached,
@@ -546,10 +616,11 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (_) => EventDashboardScreen(
-                                              eventId: item.paketId,
-                                              initialSchedule: item,
-                                            ),
+                                            builder: (_) =>
+                                                EventDashboardScreen(
+                                                  eventId: item.paketId,
+                                                  initialSchedule: item,
+                                                ),
                                           ),
                                         );
                                       } else {
@@ -559,7 +630,8 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                                               item,
                                               isCached: isCached,
                                             );
-                                        if (shouldStart == true && context.mounted) {
+                                        if (shouldStart == true &&
+                                            context.mounted) {
                                           _startTryout(item);
                                         }
                                       }
@@ -662,7 +734,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
     final nis = identity['nis'] ?? '-';
 
     // 3. Cek apakah paket soal sudah tersimpan di penyimpanan lokal HP
-    final isAlreadyCached = await ExamCacheService.instance.isExamCached(schedule.paketId);
+    final isAlreadyCached = await ExamCacheService.instance.isExamCached(
+      schedule.paketId,
+    );
     if (!isAlreadyCached && mounted) {
       // Tampilkan dialog proses unduh dan simpan lokal berindikator profesional
       final success = await _showDownloadPreparationDialog(schedule);
@@ -822,7 +896,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
       onRefresh: _loadHistory,
       child: ListView.builder(
         padding: const EdgeInsets.only(bottom: 32),
-        itemCount: _historyList.length + 2, // +1 untuk header stats, +1 untuk Spider Chart kumulatif
+        itemCount:
+            _historyList.length +
+            2, // +1 untuk header stats, +1 untuk Spider Chart kumulatif
         itemBuilder: (context, index) {
           if (index == 0) {
             return _buildHistoryHeaderStats(
@@ -837,7 +913,8 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
               child: TryoutSpiderChartWidget(
                 title: 'Radar Kompetensi Siswa',
-                subtitle: 'Pemetaan penguasaan materi dari seluruh riwayat tryout',
+                subtitle:
+                    'Pemetaan penguasaan materi dari seluruh riwayat tryout',
                 subScores: TryoutSubScore.fromCumulativeHistory(_historyList),
               ),
             );
@@ -942,12 +1019,19 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                   runSpacing: 4,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
-                        color: isPassed ? AppColors.paleGreen : const Color(0xFFFFEBEE),
+                        color: isPassed
+                            ? AppColors.paleGreen
+                            : const Color(0xFFFFEBEE),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: isPassed ? const Color(0xFFA5D6A7) : const Color(0xFFFFCDD2),
+                          color: isPassed
+                              ? const Color(0xFFA5D6A7)
+                              : const Color(0xFFFFCDD2),
                           width: 0.8,
                         ),
                       ),
@@ -955,9 +1039,13 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            isPassed ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                            isPassed
+                                ? Icons.check_circle_rounded
+                                : Icons.cancel_rounded,
                             size: 12,
-                            color: isPassed ? AppColors.primaryGreen : AppColors.error,
+                            color: isPassed
+                                ? AppColors.primaryGreen
+                                : AppColors.error,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -965,7 +1053,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                             style: GoogleFonts.poppins(
                               fontSize: 10.5,
                               fontWeight: FontWeight.w700,
-                              color: isPassed ? AppColors.primaryGreen : AppColors.error,
+                              color: isPassed
+                                  ? AppColors.primaryGreen
+                                  : AppColors.error,
                             ),
                           ),
                         ],
@@ -973,11 +1063,17 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                     ),
                     if (item.predikat.isNotEmpty)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
+                          border: Border.all(
+                            color: const Color(0xFFE2E8F0),
+                            width: 0.8,
+                          ),
                         ),
                         child: Text(
                           'Predikat: ${item.predikat}',
@@ -1004,20 +1100,16 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: isPassed
-                      ? [
-                          const Color(0xFFF0FDF4),
-                          const Color(0xFFDCFCE7),
-                        ]
-                      : [
-                          const Color(0xFFFFF1F2),
-                          const Color(0xFFFFE4E6),
-                        ],
+                      ? [const Color(0xFFF0FDF4), const Color(0xFFDCFCE7)]
+                      : [const Color(0xFFFFF1F2), const Color(0xFFFFE4E6)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isPassed ? const Color(0xFFBBF7D0) : const Color(0xFFFECDD3),
+                  color: isPassed
+                      ? const Color(0xFFBBF7D0)
+                      : const Color(0xFFFECDD3),
                 ),
               ),
               child: Row(
@@ -1033,7 +1125,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                             Icon(
                               Icons.military_tech_rounded,
                               size: 14,
-                              color: isPassed ? const Color(0xFF16A34A) : const Color(0xFFE11D48),
+                              color: isPassed
+                                  ? const Color(0xFF16A34A)
+                                  : const Color(0xFFE11D48),
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -1042,7 +1136,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.6,
-                                color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
+                                color: isPassed
+                                    ? const Color(0xFF15803D)
+                                    : const Color(0xFFBE123C),
                               ),
                             ),
                           ],
@@ -1060,7 +1156,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                                 style: GoogleFonts.poppins(
                                   fontSize: 26,
                                   fontWeight: FontWeight.w700,
-                                  color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
+                                  color: isPassed
+                                      ? const Color(0xFF15803D)
+                                      : const Color(0xFFBE123C),
                                   height: 1.1,
                                 ),
                               ),
@@ -1102,7 +1200,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                               Icon(
                                 Icons.pie_chart_rounded,
                                 size: 13,
-                                color: isPassed ? const Color(0xFF16A34A) : const Color(0xFFE11D48),
+                                color: isPassed
+                                    ? const Color(0xFF16A34A)
+                                    : const Color(0xFFE11D48),
                               ),
                               const SizedBox(width: 4),
                               Text(
@@ -1111,7 +1211,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 0.6,
-                                  color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
+                                  color: isPassed
+                                      ? const Color(0xFF15803D)
+                                      : const Color(0xFFBE123C),
                                 ),
                               ),
                             ],
@@ -1129,7 +1231,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                                   style: GoogleFonts.poppins(
                                     fontSize: 22,
                                     fontWeight: FontWeight.w700,
-                                    color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
+                                    color: isPassed
+                                        ? const Color(0xFF15803D)
+                                        : const Color(0xFFBE123C),
                                     height: 1.1,
                                   ),
                                 ),
@@ -1181,7 +1285,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                         child: Container(color: const Color(0xFFCBD5E1)),
                       ),
                     if (totalSoal == 0)
-                      Expanded(child: Container(color: const Color(0xFFE2E8F0))),
+                      Expanded(
+                        child: Container(color: const Color(0xFFE2E8F0)),
+                      ),
                   ],
                 ),
               ),
@@ -1210,7 +1316,11 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                       icon: Icons.check_circle_rounded,
                     ),
                   ),
-                  Container(width: 1, height: 24, color: const Color(0xFFE2E8F0)),
+                  Container(
+                    width: 1,
+                    height: 24,
+                    color: const Color(0xFFE2E8F0),
+                  ),
                   Expanded(
                     child: _buildMetricTile(
                       label: 'Salah',
@@ -1219,7 +1329,11 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                       icon: Icons.cancel_rounded,
                     ),
                   ),
-                  Container(width: 1, height: 24, color: const Color(0xFFE2E8F0)),
+                  Container(
+                    width: 1,
+                    height: 24,
+                    color: const Color(0xFFE2E8F0),
+                  ),
                   Expanded(
                     child: _buildMetricTile(
                       label: 'Kosong',
@@ -1247,17 +1361,16 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFF1B5E20),
-                            AppColors.primaryGreen,
-                          ],
+                          colors: [Color(0xFF1B5E20), AppColors.primaryGreen],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primaryGreen.withValues(alpha: 0.25),
+                            color: AppColors.primaryGreen.withValues(
+                              alpha: 0.25,
+                            ),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -1271,7 +1384,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                           color: Colors.white,
                         ),
                         label: Text(
-                          'Pembahasan & Analisis',
+                          'Bahas',
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
@@ -1333,7 +1446,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          backgroundColor: AppColors.paleGreen.withValues(alpha: 0.6),
+                          backgroundColor: AppColors.paleGreen.withValues(
+                            alpha: 0.6,
+                          ),
                           side: const BorderSide(
                             color: AppColors.primaryGreen,
                             width: 1.2,
@@ -1370,9 +1485,8 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
         if (cached != null && cached.questions.isNotEmpty) {
           questions = cached.questions;
         } else {
-          final downloaded = await ExamCacheService.instance.downloadAndCacheExam(
-            paketId: item.token,
-          );
+          final downloaded = await ExamCacheService.instance
+              .downloadAndCacheExam(paketId: item.token);
           if (downloaded.questions.isNotEmpty) {
             questions = downloaded.questions;
           }
@@ -1385,7 +1499,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
     if (questions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Butir soal pembahasan belum tersedia offline atau di server.'),
+          content: Text(
+            'Butir soal pembahasan belum tersedia offline atau di server.',
+          ),
         ),
       );
       return;
@@ -1411,7 +1527,8 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
     final match = _allSchedules
         .where((s) => s.paketId == item.token)
         .firstOrNull;
-    final targetSched = match ??
+    final targetSched =
+        match ??
         TryoutSchedule(
           paketId: item.token,
           namaPaket: item.namaPaket,
@@ -1420,10 +1537,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
           isLifetime: true,
           allowRetake: true,
         );
-    final shouldStart = await TryoutDetailSheet.show(
-      context,
-      targetSched,
-    );
+    final shouldStart = await TryoutDetailSheet.show(context, targetSched);
     if (shouldStart == true && mounted) {
       _startTryout(targetSched);
     }
@@ -1720,10 +1834,12 @@ class _ExamDownloadProgressDialog extends StatefulWidget {
   const _ExamDownloadProgressDialog({required this.schedule});
 
   @override
-  State<_ExamDownloadProgressDialog> createState() => _ExamDownloadProgressDialogState();
+  State<_ExamDownloadProgressDialog> createState() =>
+      _ExamDownloadProgressDialogState();
 }
 
-class _ExamDownloadProgressDialogState extends State<_ExamDownloadProgressDialog> {
+class _ExamDownloadProgressDialogState
+    extends State<_ExamDownloadProgressDialog> {
   double _progress = 0.15;
   String _statusMessage = 'Menghubungkan ke Cloud Firestore...';
   String? _errorMessage;
@@ -1796,14 +1912,18 @@ class _ExamDownloadProgressDialogState extends State<_ExamDownloadProgressDialog
               _errorMessage != null
                   ? Icons.error_outline_rounded
                   : Icons.cloud_download_rounded,
-              color: _errorMessage != null ? Colors.red.shade600 : AppColors.primaryGreen,
+              color: _errorMessage != null
+                  ? Colors.red.shade600
+                  : AppColors.primaryGreen,
               size: 28,
             ),
           ),
           const SizedBox(height: 16),
 
           Text(
-            _errorMessage != null ? 'Gagal Menyiapkan Soal' : 'Menyiapkan Lembar Ujian',
+            _errorMessage != null
+                ? 'Gagal Menyiapkan Soal'
+                : 'Menyiapkan Lembar Ujian',
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -1849,9 +1969,14 @@ class _ExamDownloadProgressDialogState extends State<_ExamDownloadProgressDialog
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(false),
                     style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey.shade700)),
+                    child: Text(
+                      'Batal',
+                      style: GoogleFonts.poppins(color: Colors.grey.shade700),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -1860,9 +1985,17 @@ class _ExamDownloadProgressDialogState extends State<_ExamDownloadProgressDialog
                     onPressed: _startDownload,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryGreen,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: Text('Coba Lagi', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+                    child: Text(
+                      'Coba Lagi',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -1875,7 +2008,9 @@ class _ExamDownloadProgressDialogState extends State<_ExamDownloadProgressDialog
                 value: _progress,
                 minHeight: 8,
                 backgroundColor: const Color(0xFFE2E8F0),
-                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppColors.primaryGreen,
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -1917,7 +2052,11 @@ class _ExamDownloadProgressDialogState extends State<_ExamDownloadProgressDialog
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.speed_rounded, size: 14, color: Color(0xFF16A34A)),
+                  const Icon(
+                    Icons.speed_rounded,
+                    size: 14,
+                    color: Color(0xFF16A34A),
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -2003,12 +2142,17 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
     }
 
     if (name.isEmpty) {
-      setState(() => _errorMessage = 'Silakan isi Nama Lengkap untuk data presensi');
+      setState(
+        () => _errorMessage = 'Silakan isi Nama Lengkap untuk data presensi',
+      );
       return;
     }
 
     if (wa.length < 9) {
-      setState(() => _errorMessage = 'Silakan masukkan No. WhatsApp aktif (min. 9 digit)');
+      setState(
+        () => _errorMessage =
+            'Silakan masukkan No. WhatsApp aktif (min. 9 digit)',
+      );
       return;
     }
 
@@ -2042,7 +2186,8 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => EventDashboardScreen(eventId: target, eventToken: raw),
+            builder: (_) =>
+                EventDashboardScreen(eventId: target, eventToken: raw),
           ),
         );
       } else {
@@ -2088,7 +2233,10 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
                 // Header Gradient Banner
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 22,
+                    horizontal: 20,
+                  ),
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       colors: [Color(0xFF1B5E20), AppColors.primaryGreen],
@@ -2187,14 +2335,21 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
                             tooltip: 'Tempel dari Clipboard',
                             onPressed: _pasteFromClipboard,
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -2211,7 +2366,9 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
                       // Divider: Data Identitas
                       Row(
                         children: [
-                          const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                          const Expanded(
+                            child: Divider(color: Color(0xFFE2E8F0)),
+                          ),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: Text(
@@ -2224,7 +2381,9 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
                               ),
                             ),
                           ),
-                          const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+                          const Expanded(
+                            child: Divider(color: Color(0xFFE2E8F0)),
+                          ),
                         ],
                       ),
 
@@ -2243,25 +2402,45 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
                       TextField(
                         controller: _nameCtrl,
                         textCapitalization: TextCapitalization.words,
-                        style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF0F172A)),
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: const Color(0xFF0F172A),
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Misal: Muhammad Rizky',
-                          hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 12),
+                          hintStyle: GoogleFonts.poppins(
+                            color: const Color(0xFF94A3B8),
+                            fontSize: 12,
+                          ),
                           filled: true,
                           fillColor: const Color(0xFFF8FAFC),
-                          prefixIcon: const Icon(Icons.person_outline_rounded, size: 19, color: Color(0xFF64748B)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          prefixIcon: const Icon(
+                            Icons.person_outline_rounded,
+                            size: 19,
+                            color: Color(0xFF64748B),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2),
+                            borderSide: const BorderSide(
+                              color: AppColors.primaryGreen,
+                              width: 2,
+                            ),
                           ),
                         ),
                       ),
@@ -2281,26 +2460,48 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
                       TextField(
                         controller: _waCtrl,
                         keyboardType: TextInputType.phone,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                        style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF0F172A)),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: const Color(0xFF0F172A),
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Misal: 081234567890',
-                          hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 12),
+                          hintStyle: GoogleFonts.poppins(
+                            color: const Color(0xFF94A3B8),
+                            fontSize: 12,
+                          ),
                           filled: true,
                           fillColor: const Color(0xFFF8FAFC),
-                          prefixIcon: const Icon(Icons.phone_android_rounded, size: 19, color: Color(0xFF64748B)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          prefixIcon: const Icon(
+                            Icons.phone_android_rounded,
+                            size: 19,
+                            color: Color(0xFF64748B),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2),
+                            borderSide: const BorderSide(
+                              color: AppColors.primaryGreen,
+                              width: 2,
+                            ),
                           ),
                         ),
                       ),
@@ -2320,25 +2521,45 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
                       TextField(
                         controller: _emailCtrl,
                         keyboardType: TextInputType.emailAddress,
-                        style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF0F172A)),
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: const Color(0xFF0F172A),
+                        ),
                         decoration: InputDecoration(
                           hintText: 'nama@email.com',
-                          hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 12),
+                          hintStyle: GoogleFonts.poppins(
+                            color: const Color(0xFF94A3B8),
+                            fontSize: 12,
+                          ),
                           filled: true,
                           fillColor: const Color(0xFFF8FAFC),
-                          prefixIcon: const Icon(Icons.mail_outline_rounded, size: 19, color: Color(0xFF64748B)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          prefixIcon: const Icon(
+                            Icons.mail_outline_rounded,
+                            size: 19,
+                            color: Color(0xFF64748B),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2),
+                            borderSide: const BorderSide(
+                              color: AppColors.primaryGreen,
+                              width: 2,
+                            ),
                           ),
                         ),
                       ),
@@ -2346,7 +2567,10 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
                       if (_errorMessage != null) ...[
                         const SizedBox(height: 12),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFEE2E2),
                             borderRadius: BorderRadius.circular(10),
@@ -2354,7 +2578,11 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.error_outline_rounded, size: 16, color: Color(0xFFDC2626)),
+                              const Icon(
+                                Icons.error_outline_rounded,
+                                size: 16,
+                                color: Color(0xFFDC2626),
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -2380,10 +2608,16 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
                             child: SizedBox(
                               height: 48,
                               child: OutlinedButton(
-                                onPressed: _isLoading ? null : () => Navigator.pop(context),
+                                onPressed: _isLoading
+                                    ? null
+                                    : () => Navigator.pop(context),
                                 style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Color(0xFFCBD5E1)),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  side: const BorderSide(
+                                    color: Color(0xFFCBD5E1),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
                                 ),
                                 child: Text(
                                   'Batal',
@@ -2403,14 +2637,19 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
                               height: 48,
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFF1B5E20), AppColors.primaryGreen],
+                                  colors: [
+                                    Color(0xFF1B5E20),
+                                    AppColors.primaryGreen,
+                                  ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
                                 borderRadius: BorderRadius.circular(14),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.primaryGreen.withValues(alpha: 0.3),
+                                    color: AppColors.primaryGreen.withValues(
+                                      alpha: 0.3,
+                                    ),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -2421,7 +2660,9 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.transparent,
                                   shadowColor: Colors.transparent,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
                                 ),
                                 child: _isLoading
                                     ? const SizedBox(
@@ -2433,7 +2674,8 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
                                         ),
                                       )
                                     : Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           Text(
                                             'Buka Event',

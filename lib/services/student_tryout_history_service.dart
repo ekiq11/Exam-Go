@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/exam_question_model.dart';
 import 'national_exam_evaluator.dart';
@@ -21,6 +22,7 @@ class StudentTryoutHistoryItem {
   final bool allowRetake;
   final Map<String, String> jawaban;
   final List<ExamQuestion> questions;
+  final Map<String, dynamic>? subtestScores;
 
   const StudentTryoutHistoryItem({
     required this.token,
@@ -39,7 +41,48 @@ class StudentTryoutHistoryItem {
     required this.allowRetake,
     required this.jawaban,
     required this.questions,
+    this.subtestScores,
   });
+
+  StudentTryoutHistoryItem copyWith({
+    String? token,
+    String? namaPaket,
+    String? kategori,
+    DateTime? submittedAt,
+    int? finalScore,
+    int? maxScore,
+    int? totalBenar,
+    int? totalSalah,
+    int? totalKosong,
+    int? totalSoal,
+    bool? isPassed,
+    String? statusKelulusan,
+    String? predikat,
+    bool? allowRetake,
+    Map<String, String>? jawaban,
+    List<ExamQuestion>? questions,
+    Map<String, dynamic>? subtestScores,
+  }) {
+    return StudentTryoutHistoryItem(
+      token: token ?? this.token,
+      namaPaket: namaPaket ?? this.namaPaket,
+      kategori: kategori ?? this.kategori,
+      submittedAt: submittedAt ?? this.submittedAt,
+      finalScore: finalScore ?? this.finalScore,
+      maxScore: maxScore ?? this.maxScore,
+      totalBenar: totalBenar ?? this.totalBenar,
+      totalSalah: totalSalah ?? this.totalSalah,
+      totalKosong: totalKosong ?? this.totalKosong,
+      totalSoal: totalSoal ?? this.totalSoal,
+      isPassed: isPassed ?? this.isPassed,
+      statusKelulusan: statusKelulusan ?? this.statusKelulusan,
+      predikat: predikat ?? this.predikat,
+      allowRetake: allowRetake ?? this.allowRetake,
+      jawaban: jawaban ?? this.jawaban,
+      questions: questions ?? this.questions,
+      subtestScores: subtestScores ?? this.subtestScores,
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -59,6 +102,7 @@ class StudentTryoutHistoryItem {
       'allow_retake': allowRetake,
       'jawaban': jawaban,
       'questions': questions.map((q) => q.toFirestore()).toList(),
+      if (subtestScores != null) 'subtest_scores': subtestScores,
     };
   }
 
@@ -80,6 +124,11 @@ class StudentTryoutHistoryItem {
       });
     }
 
+    Map<String, dynamic>? subScores;
+    if (json['subtest_scores'] is Map) {
+      subScores = Map<String, dynamic>.from(json['subtest_scores'] as Map);
+    }
+
     return StudentTryoutHistoryItem(
       token: json['token']?.toString() ?? '',
       namaPaket: json['nama_paket']?.toString() ?? 'Tryout',
@@ -99,6 +148,7 @@ class StudentTryoutHistoryItem {
       allowRetake: json['allow_retake'] != false,
       jawaban: ansMap,
       questions: qList,
+      subtestScores: subScores,
     );
   }
 }
@@ -130,10 +180,14 @@ class StudentTryoutHistoryService {
     required Map<String, String> answers,
     required List<ExamQuestion> questions,
     bool allowRetake = true,
+    Map<String, dynamic>? subtestScores,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final current = await getHistory();
+
+      final effectiveSubtests = subtestScores ??
+          result.subtests.map((k, v) => MapEntry(k, v.toMap()));
 
       final newItem = StudentTryoutHistoryItem(
         token: token,
@@ -152,6 +206,7 @@ class StudentTryoutHistoryService {
         allowRetake: allowRetake,
         jawaban: answers,
         questions: questions,
+        subtestScores: effectiveSubtests,
       );
 
       // Simpan di paling atas (terbaru), hindari duplikasi ganda berlebih
@@ -166,6 +221,49 @@ class StudentTryoutHistoryService {
       final encoded = current.map((e) => jsonEncode(e.toJson())).toList();
       await prefs.setStringList(_kStorageKey, encoded);
     } catch (_) {}
+  }
+
+  /// Perbarui list history di penyimpanan lokal
+  Future<void> updateHistoryList(List<StudentTryoutHistoryItem> updated) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final encoded = updated.map((e) => jsonEncode(e.toJson())).toList();
+      await prefs.setStringList(_kStorageKey, encoded);
+    } catch (_) {}
+  }
+
+  /// Ambil data subtest_scores riwayat ujian langsung dari Firestore jika di cache lokal belum ada
+  Future<Map<String, dynamic>?> fetchSubtestScoresFromFirestore(String token, {String? nis}) async {
+    try {
+      final db = FirebaseFirestore.instance;
+      // 1. Coba cari dengan doc ID spesifik (${nis}_${token})
+      if (nis != null && nis.isNotEmpty) {
+        final doc = await db
+            .collection('jawaban_tryout')
+            .doc('${nis}_$token')
+            .get()
+            .timeout(const Duration(milliseconds: 3500));
+        if (doc.exists && doc.data()?['subtest_scores'] is Map) {
+          return Map<String, dynamic>.from(doc.data()!['subtest_scores'] as Map);
+        }
+      }
+
+      // 2. Query berdasarkan token paket ujian
+      final query = await db
+          .collection('jawaban_tryout')
+          .where('token', isEqualTo: token)
+          .limit(1)
+          .get()
+          .timeout(const Duration(milliseconds: 3500));
+
+      if (query.docs.isNotEmpty) {
+        final data = query.docs.first.data();
+        if (data['subtest_scores'] is Map) {
+          return Map<String, dynamic>.from(data['subtest_scores'] as Map);
+        }
+      }
+    } catch (_) {}
+    return null;
   }
 
   Future<StudentTryoutHistoryItem?> getLatestAttempt(String token) async {
