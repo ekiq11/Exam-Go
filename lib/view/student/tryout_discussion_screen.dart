@@ -16,6 +16,8 @@ class TryoutDiscussionScreen extends StatefulWidget {
   final int? score;
   final String? statusKelulusan;
   final bool returnToDashboardOnExit;
+  /// Jika true, tombol keluar kembali ke HomeScreen (bukan TryoutScheduleScreen).
+  final bool returnToHome;
 
   const TryoutDiscussionScreen({
     super.key,
@@ -26,6 +28,7 @@ class TryoutDiscussionScreen extends StatefulWidget {
     this.score,
     this.statusKelulusan,
     this.returnToDashboardOnExit = false,
+    this.returnToHome = false,
   });
 
   @override
@@ -77,7 +80,10 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
   }
 
   void _onExit() {
-    if (widget.returnToDashboardOnExit) {
+    if (widget.returnToHome) {
+      // Ujian dari token manual → kembali ke HomeScreen
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } else if (widget.returnToDashboardOnExit) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const TryoutScheduleScreen()),
         (route) => route.isFirst,

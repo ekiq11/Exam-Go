@@ -6,6 +6,8 @@ import 'package:examgo/view/student/tryout_schedule_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/app_remote_config.dart';
+import '../services/popup_ad_service.dart';
+import 'widgets/popup_ad_dialog.dart';
 import 'package:examgo/services/license_service.dart';
 import 'package:examgo/services/exam_session_service.dart';
 import 'package:examgo/services/monitoring_service.dart';
@@ -95,10 +97,39 @@ class _HomeScreenState extends State<HomeScreen>
     // Cek apakah ada sesi ujian yang tidak selesai (crash recovery)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkForceUpdate().then((_) {
-        _checkCrashRecovery();
+        _checkCrashRecovery().then((_) {
+          _checkPopupAd();
+        });
       });
     });
     // FIX BUG-07: Clock dikelola oleh _ClockWidget — tidak perlu timer di sini.
+  }
+
+  static bool _hasShownAppLaunchAd = false;
+
+  /// Cek dan tampilkan popup iklan Lynk.id (1:1) saat aplikasi dibuka
+  Future<void> _checkPopupAd() async {
+    if (_hasShownAppLaunchAd) return;
+    _hasShownAppLaunchAd = true;
+
+    try {
+      final isPremium = await LicenseService.instance.isStudentPremium();
+      final config = await PopupAdService.instance.getAdsConfig();
+
+      if (!mounted) return;
+
+      // 1. Iklan EVENT: Prioritas tertinggi, tampil untuk semua user (Free maupun Premium)
+      if (config.event.isValid) {
+        PopupAdDialog.show(context, ad: config.event, roleBadge: 'EVENT SPESIAL');
+        return;
+      }
+
+      // 2. Iklan SISWA: Tampil HANYA jika akun masih FREE
+      //    Jika sudah Premium, iklan siswa disembunyikan otomatis
+      if (!isPremium && config.student.isValid) {
+        PopupAdDialog.show(context, ad: config.student, roleBadge: 'PROMO SISWA');
+      }
+    } catch (_) {}
   }
 
   Future<void> _checkForceUpdate() async {
@@ -559,6 +590,7 @@ class _HomeScreenState extends State<HomeScreen>
                 studentNis: nis,
                 isEvent: isEventExam,
                 initialSchedule: TryoutSchedule.fromMap(pkgDoc.id, pkgDoc.data() ?? {}),
+                returnToHome: true,
               ),
             ),
           );

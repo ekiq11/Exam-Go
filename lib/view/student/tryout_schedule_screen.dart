@@ -29,6 +29,8 @@ class TryoutScheduleScreen extends StatefulWidget {
 class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _isCheckingAccess = true;
+  bool _isVerifiedPremium = false;
   bool _isLoading = true;
   bool _isSyncing = false;
   List<TryoutSchedule> _allSchedules = [];
@@ -52,8 +54,29 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) {
-        if (_tabController.index == 1) _loadHistory();
+        if (_tabController.index == 1 && _isVerifiedPremium) _loadHistory();
       }
+    });
+    // Guard ketat: pastikan HANYA siswa premium yang bisa mengakses & memuat data tryout
+    _checkPremiumAccess();
+  }
+
+  Future<void> _checkPremiumAccess() async {
+    final isPremium = await LicenseService.instance.isStudentPremium();
+    if (!mounted) return;
+    if (!isPremium) {
+      setState(() {
+        _isCheckingAccess = false;
+        _isVerifiedPremium = false;
+      });
+      // Tutup layar & tampilkan dialog lisensi
+      Navigator.of(context).pop();
+      PremiumTokenDialog.show(context, userType: 'STUDENT_LIFETIME');
+      return;
+    }
+    setState(() {
+      _isCheckingAccess = false;
+      _isVerifiedPremium = true;
     });
     _loadData();
   }
@@ -133,6 +156,15 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_isCheckingAccess || !_isVerifiedPremium) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF8FAFC),
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primaryGreen),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(

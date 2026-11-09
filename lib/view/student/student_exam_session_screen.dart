@@ -27,6 +27,9 @@ class StudentExamSessionScreen extends StatefulWidget {
   final String studentNis;
   final bool isEvent;
   final TryoutSchedule? initialSchedule;
+  /// Jika true, selesai ujian kembali ke HomeScreen bukan TryoutScheduleScreen.
+  /// Diset true saat ujian dimulai dari input token manual di HomeScreen.
+  final bool returnToHome;
 
   const StudentExamSessionScreen({
     super.key,
@@ -35,6 +38,7 @@ class StudentExamSessionScreen extends StatefulWidget {
     required this.studentNis,
     this.isEvent = false,
     this.initialSchedule,
+    this.returnToHome = false,
   });
 
   @override
@@ -1158,10 +1162,16 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
 
   void _navigateToDashboard() {
     if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const TryoutScheduleScreen()),
-      (route) => route.isFirst,
-    );
+    // Jika ujian dari token manual (home screen), kembali ke HomeScreen.
+    // Jika dari TryoutScheduleScreen (premium), kembali ke sana.
+    if (widget.returnToHome) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const TryoutScheduleScreen()),
+        (route) => route.isFirst,
+      );
+    }
   }
 
   void _showResultDialog(ExamEvaluationResult result) {
@@ -1407,7 +1417,8 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                           studentAnswers: _answers,
                           score: result.finalScore,
                           statusKelulusan: result.statusKelulusan,
-                          returnToDashboardOnExit: true,
+                          returnToDashboardOnExit: !widget.returnToHome,
+                          returnToHome: widget.returnToHome,
                         ),
                       ),
                     );
@@ -1440,9 +1451,13 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     Navigator.pop(ctx);
                     _navigateToDashboard();
                   },
-                  icon: const Icon(Icons.dashboard_rounded, size: 18, color: Color(0xFF1B5E20)),
+                  icon: Icon(
+                    widget.returnToHome ? Icons.home_rounded : Icons.dashboard_rounded,
+                    size: 18,
+                    color: const Color(0xFF1B5E20),
+                  ),
                   label: Text(
-                    'Kembali ke Dashboard Tryout',
+                    widget.returnToHome ? 'Kembali ke Beranda ExamGO' : 'Kembali ke Dashboard Tryout',
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,

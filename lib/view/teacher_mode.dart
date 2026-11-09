@@ -4,7 +4,9 @@ import 'package:crypto/crypto.dart';
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/constant/app_config.dart';
 import 'package:examgo/services/license_service.dart';
+import 'package:examgo/services/popup_ad_service.dart';
 import 'package:examgo/services/qr_generator.dart';
+import 'package:examgo/view/widgets/popup_ad_dialog.dart';
 import 'package:examgo/view/widgets/premium_token_dialog.dart';
 import 'package:examgo/view/teacher_monitoring_screen.dart';
 import 'package:examgo/view/teacher/teacher_exam_creator_screen.dart';
@@ -460,10 +462,28 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   bool _isLoadingLicense = true;
   int _activeExamCount = 0;
 
+  static bool _hasShownTeacherAd = false;
+
   @override
   void initState() {
     super.initState();
     _checkLicenseStatus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkTeacherPopupAd();
+    });
+  }
+
+  Future<void> _checkTeacherPopupAd() async {
+    if (_hasShownTeacherAd) return;
+    _hasShownTeacherAd = true;
+
+    try {
+      final config = await PopupAdService.instance.getAdsConfig();
+      if (!mounted) return;
+      if (config.teacher.isValid) {
+        PopupAdDialog.show(context, ad: config.teacher, roleBadge: 'KHUSUS GURU');
+      }
+    } catch (_) {}
   }
 
   Future<void> _checkLicenseStatus() async {
