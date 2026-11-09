@@ -63,6 +63,9 @@
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
+		<!-- Izinkan WKWebView memuat halaman CBT sekolah tanpa mematikan proteksi HTTPS untuk API aplikasi -->
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
 		<!--
 		    Jika ada server ujian internal yang masih HTTP, uncomment dan
 		    sesuaikan domain di bawah ini:
@@ -141,6 +144,16 @@
 				<string>com.googleusercontent.apps.app-1-607855529793-ios-3a3b85a80bbd256a0c1bc0</string>
 			</array>
 		</dict>
+	</array>
+
+	<!-- ══ Whitelist URL Schemes untuk WhatsApp, Web, Email, Tel ══ -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>http</string>
+		<string>whatsapp</string>
+		<string>mailto</string>
+		<string>tel</string>
 	</array>
 
 </dict>

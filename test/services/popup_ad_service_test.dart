@@ -44,6 +44,17 @@ void main() {
       expect(ad.isActive, isTrue);
       expect(ad.isValid, isTrue);
     });
+
+    test('fromMap auto-normalizes ctaUrl without scheme and Google Drive imageUrl', () {
+      final ad = PopupAdItem.fromMap({
+        'imageUrl': 'https://drive.google.com/file/d/1a2B3c4D5e/view?usp=sharing',
+        'ctaUrl': 'lynk.id/examgo/guru-premium',
+        'isActive': true,
+      });
+      expect(ad.ctaUrl, 'https://lynk.id/examgo/guru-premium');
+      expect(ad.imageUrl, 'https://drive.google.com/uc?export=view&id=1a2B3c4D5e');
+      expect(ad.isValid, isTrue);
+    });
   });
 
   group('PopupAdsConfig Segmentation Logic Tests', () {

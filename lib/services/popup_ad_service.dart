@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../constant/app_config.dart';
+import '../utils/math_widget_factory.dart';
 
 class PopupAdItem {
   final String imageUrl;
@@ -26,9 +27,24 @@ class PopupAdItem {
         isActive: false,
       );
     }
+
+    var imgUrl = data['imageUrl']?.toString().trim() ?? '';
+    if (imgUrl.isNotEmpty) {
+      imgUrl = MathHtmlFormatter.convertDriveUrl(imgUrl);
+      if (!imgUrl.startsWith('http://') && !imgUrl.startsWith('https://')) {
+        imgUrl = 'https://$imgUrl';
+      }
+    }
+
+    var cta = data['ctaUrl']?.toString().trim() ?? 'https://lynk.id';
+    if (cta.isEmpty) cta = 'https://lynk.id';
+    if (!cta.startsWith('http://') && !cta.startsWith('https://')) {
+      cta = 'https://$cta';
+    }
+
     return PopupAdItem(
-      imageUrl: data['imageUrl']?.toString().trim() ?? '',
-      ctaUrl: data['ctaUrl']?.toString().trim() ?? 'https://lynk.id',
+      imageUrl: imgUrl,
+      ctaUrl: cta,
       title: data['title']?.toString().trim() ?? '',
       isActive: data['isActive'] == true || data['isActive']?.toString().toLowerCase() == 'true',
     );

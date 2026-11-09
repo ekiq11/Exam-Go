@@ -27,6 +27,7 @@ class StudentExamSessionScreen extends StatefulWidget {
   final String studentNis;
   final bool isEvent;
   final TryoutSchedule? initialSchedule;
+
   /// Jika true, selesai ujian kembali ke HomeScreen bukan TryoutScheduleScreen.
   /// Diset true saat ujian dimulai dari input token manual di HomeScreen.
   final bool returnToHome;
@@ -64,8 +65,8 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   int _currentSubtestIndex = 0;
   ExamSubtest? get _currentSubtest =>
       (_subtests.isNotEmpty && _currentSubtestIndex < _subtests.length)
-          ? _subtests[_currentSubtestIndex]
-          : null;
+      ? _subtests[_currentSubtestIndex]
+      : null;
 
   // Jawaban siswa: soalId -> opsi ('A'..'E')
   final Map<String, String> _answers = {};
@@ -152,7 +153,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   }
 
   void _showViolationWarningDialog(int count) {
-    if (_isShowingWarningDialog || !mounted || _isBlocked || _isSubmitted) return;
+    if (_isShowingWarningDialog || !mounted || _isBlocked || _isSubmitted) {
+      return;
+    }
     _isShowingWarningDialog = true;
     HapticFeedback.heavyImpact();
 
@@ -172,7 +175,11 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                 color: const Color(0xFFFEF2F2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 24),
+              child: const Icon(
+                Icons.warning_amber_rounded,
+                color: Color(0xFFDC2626),
+                size: 24,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -233,11 +240,17 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFDC2626),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: Text(
                 'Saya Mengerti & Kembali Mengerjakan',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 13,
+                ),
               ),
             ),
           ),
@@ -344,13 +357,15 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         }
 
         // Monitoring background non-blocking
-        unawaited(MonitoringService.instance.updateStudentStatus(
-          examId: widget.token,
-          nis: widget.studentNis,
-          name: widget.studentName,
-          status: 'ONLINE',
-          violations: 0,
-        ));
+        unawaited(
+          MonitoringService.instance.updateStudentStatus(
+            examId: widget.token,
+            nis: widget.studentNis,
+            name: widget.studentName,
+            status: 'ONLINE',
+            violations: 0,
+          ),
+        );
         return;
       }
 
@@ -381,13 +396,15 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         setState(() => _isLoading = false);
       }
 
-      unawaited(MonitoringService.instance.updateStudentStatus(
-        examId: widget.token,
-        nis: widget.studentNis,
-        name: widget.studentName,
-        status: 'ONLINE',
-        violations: 0,
-      ));
+      unawaited(
+        MonitoringService.instance.updateStudentStatus(
+          examId: widget.token,
+          nis: widget.studentNis,
+          name: widget.studentName,
+          status: 'ONLINE',
+          violations: 0,
+        ),
+      );
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -405,7 +422,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         final stSoal = _allQuestions.where((q) {
           final qSt = q.subtestId.trim().toUpperCase();
           final sSt = st.subtestId.trim().toUpperCase();
-          return qSt == sSt || (qSt.isNotEmpty && sSt.isNotEmpty && (qSt.contains(sSt) || sSt.contains(qSt)));
+          return qSt == sSt ||
+              (qSt.isNotEmpty &&
+                  sSt.isNotEmpty &&
+                  (qSt.contains(sSt) || sSt.contains(qSt)));
         }).toList();
         stSoal.sort((a, b) => a.soalId.compareTo(b.soalId));
         for (final q in stSoal) {
@@ -414,7 +434,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         st.soalList = stSoal;
       }
 
-      final orphans = _allQuestions.where((q) => !_subtests.any((st) => st.soalList.contains(q))).toList();
+      final orphans = _allQuestions
+          .where((q) => !_subtests.any((st) => st.soalList.contains(q)))
+          .toList();
       if (orphans.isNotEmpty && _subtests.isNotEmpty) {
         orphans.sort((a, b) => a.soalId.compareTo(b.soalId));
         for (final q in orphans) {
@@ -503,7 +525,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   // ─── Klasifikasi Aturan Resmi Ujian Nasional (SNBT, TKA, SKD/BKN) ───
   bool get _isSnbt {
     final kat = (_package?.kategori ?? '').trim().toUpperCase();
-    return kat == ExamCategory.snbt || kat == 'SNBT' || kat.contains('SNBT') || kat.contains('UTBK');
+    return kat == ExamCategory.snbt ||
+        kat == 'SNBT' ||
+        kat.contains('SNBT') ||
+        kat.contains('UTBK');
   }
 
   bool get _isSkd {
@@ -524,7 +549,11 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     // SNBT dan TKA menggunakan alokasi waktu terpisah per-subtest
     if (_isSnbt || _isTka) return true;
 
-    final jw = (_package?.jenisWaktu ?? '').trim().toLowerCase().replaceAll('-', '_').replaceAll(' ', '_');
+    final jw = (_package?.jenisWaktu ?? '')
+        .trim()
+        .toLowerCase()
+        .replaceAll('-', '_')
+        .replaceAll(' ', '_');
     if (jw == 'per_subtest') return true;
     if (jw == 'per_paket') return false;
     return _subtests.length > 1;
@@ -712,9 +741,12 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         return StatefulBuilder(
           builder: (context, setSheetState) {
             final activeQuestions = _getActiveQuestions();
-            final answeredCount = activeQuestions.where((q) => _answers.containsKey(q.soalId)).length;
+            final answeredCount = activeQuestions
+                .where((q) => _answers.containsKey(q.soalId))
+                .length;
             final totalCount = activeQuestions.length;
-            final hasNextSubtest = _isPerSubtest && _currentSubtestIndex < _subtests.length - 1;
+            final hasNextSubtest =
+                _isPerSubtest && _currentSubtestIndex < _subtests.length - 1;
 
             return SafeArea(
               child: Container(
@@ -934,11 +966,16 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                             },
                             borderRadius: BorderRadius.circular(10),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFFBEB),
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: const Color(0xFFFDE68A)),
+                                border: Border.all(
+                                  color: const Color(0xFFFDE68A),
+                                ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -987,7 +1024,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                                 backgroundColor: const Color(0xFFD97706),
                                 foregroundColor: Colors.white,
                                 elevation: 0,
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -1017,7 +1057,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                               backgroundColor: AppColors.primaryGreen,
                               foregroundColor: Colors.white,
                               elevation: 0,
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 11,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -1113,7 +1156,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         'is_passed': evalResult.isPassed,
         'status_kelulusan': evalResult.statusKelulusan,
         'predikat': evalResult.predikat,
-        'subtest_scores': evalResult.subtests.map((k, v) => MapEntry(k, v.toMap())),
+        'subtest_scores': evalResult.subtests.map(
+          (k, v) => MapEntry(k, v.toMap()),
+        ),
         'jawaban': _answers,
         'violations': _violations,
         'is_blocked': _isBlocked,
@@ -1138,7 +1183,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         result: evalResult,
         answers: _answers,
         questions: _allQuestions,
-        allowRetake: _package?.allowRetake ?? (widget.initialSchedule?.allowRetake ?? true),
+        allowRetake:
+            _package?.allowRetake ??
+            (widget.initialSchedule?.allowRetake ?? true),
       );
 
       // Bersihkan cache sesi ujian lokal
@@ -1177,8 +1224,12 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   void _showResultDialog(ExamEvaluationResult result) {
     final isPassed = result.isPassed;
     final isSKD = result.category.toUpperCase().contains('SKD');
-    final isSNBT = result.category.toUpperCase().contains('SNBT') || result.category.toUpperCase().contains('UTBK');
-    final themeColor = isPassed ? const Color(0xFF16A34A) : const Color(0xFFE11D48);
+    final isSNBT =
+        result.category.toUpperCase().contains('SNBT') ||
+        result.category.toUpperCase().contains('UTBK');
+    final themeColor = isPassed
+        ? const Color(0xFF16A34A)
+        : const Color(0xFFE11D48);
 
     showDialog(
       context: context,
@@ -1202,7 +1253,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      isPassed ? Icons.emoji_events_rounded : Icons.info_rounded,
+                      isPassed
+                          ? Icons.emoji_events_rounded
+                          : Icons.info_rounded,
                       size: 24,
                       color: themeColor,
                     ),
@@ -1234,11 +1287,16 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: themeColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: themeColor.withValues(alpha: 0.25)),
+                      border: Border.all(
+                        color: themeColor.withValues(alpha: 0.25),
+                      ),
                     ),
                     child: Text(
                       result.predikat,
@@ -1256,12 +1314,19 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
               // Kartu Skor Utama & Mini Stat Ringkas (Horizontal Split)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 14,
+                ),
                 decoration: BoxDecoration(
-                  color: isPassed ? const Color(0xFFF0FDF4) : const Color(0xFFFFF1F2),
+                  color: isPassed
+                      ? const Color(0xFFF0FDF4)
+                      : const Color(0xFFFFF1F2),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: isPassed ? const Color(0xFFBBF7D0) : const Color(0xFFFECDD3),
+                    color: isPassed
+                        ? const Color(0xFFBBF7D0)
+                        : const Color(0xFFFECDD3),
                   ),
                 ),
                 child: Row(
@@ -1278,7 +1343,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                                 : (isSNBT ? 'RATA-RATA UTBK' : 'NILAI AKHIR'),
                             style: GoogleFonts.poppins(
                               fontSize: 9.5,
-                              color: isPassed ? const Color(0xFF166534) : const Color(0xFF9F1239),
+                              color: isPassed
+                                  ? const Color(0xFF166534)
+                                  : const Color(0xFF9F1239),
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.4,
                             ),
@@ -1293,7 +1360,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                                 style: GoogleFonts.poppins(
                                   fontSize: 28,
                                   fontWeight: FontWeight.w900,
-                                  color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
+                                  color: isPassed
+                                      ? const Color(0xFF15803D)
+                                      : const Color(0xFFBE123C),
                                   height: 1.0,
                                 ),
                               ),
@@ -1311,7 +1380,11 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                         ],
                       ),
                     ),
-                    Container(width: 1, height: 42, color: const Color(0xFFCBD5E1)),
+                    Container(
+                      width: 1,
+                      height: 42,
+                      color: const Color(0xFFCBD5E1),
+                    ),
                     const SizedBox(width: 12),
                     // Sisi Kanan: 4 Mini Stat ringkas
                     Expanded(
@@ -1319,10 +1392,26 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildMiniStat('Benar', '${result.totalBenar}', const Color(0xFF16A34A)),
-                          _buildMiniStat('Salah', '${result.totalSalah}', const Color(0xFFDC2626)),
-                          _buildMiniStat('Kosong', '${result.totalKosong}', const Color(0xFF64748B)),
-                          _buildMiniStat('Soal', '${result.totalSoal}', const Color(0xFF0F172A)),
+                          _buildMiniStat(
+                            'Benar',
+                            '${result.totalBenar}',
+                            const Color(0xFF16A34A),
+                          ),
+                          _buildMiniStat(
+                            'Salah',
+                            '${result.totalSalah}',
+                            const Color(0xFFDC2626),
+                          ),
+                          _buildMiniStat(
+                            'Kosong',
+                            '${result.totalKosong}',
+                            const Color(0xFF64748B),
+                          ),
+                          _buildMiniStat(
+                            'Soal',
+                            '${result.totalSoal}',
+                            const Color(0xFF0F172A),
+                          ),
                         ],
                       ),
                     ),
@@ -1353,9 +1442,13 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     thumbVisibility: result.subtests.length > 2,
                     child: ListView.separated(
                       shrinkWrap: true,
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       itemCount: result.subtests.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                      separatorBuilder: (_, _) =>
+                          const Divider(height: 1, color: Color(0xFFE2E8F0)),
                       itemBuilder: (context, i) {
                         final st = result.subtests.values.elementAt(i);
                         return Padding(
@@ -1387,7 +1480,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                                 style: GoogleFonts.poppins(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.bold,
-                                  color: st.isPassed ? const Color(0xFF15803D) : const Color(0xFFB91C1C),
+                                  color: st.isPassed
+                                      ? const Color(0xFF15803D)
+                                      : const Color(0xFFB91C1C),
                                 ),
                               ),
                             ],
@@ -1423,7 +1518,11 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       ),
                     );
                   },
-                  icon: const Icon(Icons.menu_book_rounded, size: 18, color: Colors.white),
+                  icon: const Icon(
+                    Icons.menu_book_rounded,
+                    size: 18,
+                    color: Colors.white,
+                  ),
                   label: Text(
                     'Lihat Pembahasan & Kunci',
                     style: GoogleFonts.poppins(
@@ -1452,12 +1551,16 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     _navigateToDashboard();
                   },
                   icon: Icon(
-                    widget.returnToHome ? Icons.home_rounded : Icons.dashboard_rounded,
+                    widget.returnToHome
+                        ? Icons.home_rounded
+                        : Icons.dashboard_rounded,
                     size: 18,
                     color: const Color(0xFF1B5E20),
                   ),
                   label: Text(
-                    widget.returnToHome ? 'Kembali ke Beranda ExamGO' : 'Kembali ke Dashboard Tryout',
+                    widget.returnToHome
+                        ? 'Kembali ke Beranda ExamGO'
+                        : 'Kembali ke Dashboard Tryout',
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
@@ -1467,7 +1570,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                   style: OutlinedButton.styleFrom(
                     backgroundColor: const Color(0xFFE8F5E9),
                     foregroundColor: const Color(0xFF1B5E20),
-                    side: const BorderSide(color: Color(0xFFA5D6A7), width: 1.2),
+                    side: const BorderSide(
+                      color: Color(0xFFA5D6A7),
+                      width: 1.2,
+                    ),
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -1543,7 +1649,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       end: Alignment.bottomRight,
                     ),
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFBBF7D0), width: 1.5),
+                    border: Border.all(
+                      color: const Color(0xFFBBF7D0),
+                      width: 1.5,
+                    ),
                   ),
                   child: const Center(
                     child: SizedBox(
@@ -1583,7 +1692,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     value: _loadingProgressPercent,
                     minHeight: 6,
                     backgroundColor: const Color(0xFFE2E8F0),
-                    valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      AppColors.primaryGreen,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -1592,7 +1703,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                   children: [
                     Text(
                       'Penyimpanan Lokal HP',
-                      style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF94A3B8)),
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.5,
+                        color: const Color(0xFF94A3B8),
+                      ),
                     ),
                     Text(
                       '${(_loadingProgressPercent * 100).toInt()}%',
@@ -1944,7 +2058,11 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                               subtestJudul: _currentSubtest?.judul,
                               fontSizeScale: _fontSizeScale,
                             ),
-                            const Divider(height: 20, thickness: 1, color: Color(0xFFF1F5F9)),
+                            const Divider(
+                              height: 20,
+                              thickness: 1,
+                              color: Color(0xFFF1F5F9),
+                            ),
                           ],
 
                           // 2. Teks Pertanyaan Render LaTeX & HTML
@@ -1981,7 +2099,8 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                               borderRadius: BorderRadius.circular(12),
                               child: CachedNetworkImage(
                                 imageUrl: driveImg,
-                                httpHeaders: MathHtmlFormatter.networkImageHeaders,
+                                httpHeaders:
+                                    MathHtmlFormatter.networkImageHeaders,
                                 width: double.infinity,
                                 fit: BoxFit.contain,
                                 placeholder: (context, url) => Container(
@@ -2104,16 +2223,22 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       width: 46,
                       height: 46,
                       decoration: BoxDecoration(
-                        color: _currentIndex > 0 ? Colors.white : const Color(0xFFF8FAFC),
+                        color: _currentIndex > 0
+                            ? Colors.white
+                            : const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: _currentIndex > 0 ? const Color(0xFFCBD5E1) : const Color(0xFFE2E8F0),
+                          color: _currentIndex > 0
+                              ? const Color(0xFFCBD5E1)
+                              : const Color(0xFFE2E8F0),
                         ),
                       ),
                       child: Icon(
                         Icons.arrow_back_ios_new_rounded,
                         size: 16,
-                        color: _currentIndex > 0 ? const Color(0xFF334155) : const Color(0xFF94A3B8),
+                        color: _currentIndex > 0
+                            ? const Color(0xFF334155)
+                            : const Color(0xFF94A3B8),
                       ),
                     ),
                   ),
@@ -2138,16 +2263,22 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                         height: 46,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: isRagu ? const Color(0xFFFEF3C7) : const Color(0xFFF8FAFC),
+                          color: isRagu
+                              ? const Color(0xFFFEF3C7)
+                              : const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: isRagu ? const Color(0xFFF59E0B) : const Color(0xFFCBD5E1),
+                            color: isRagu
+                                ? const Color(0xFFF59E0B)
+                                : const Color(0xFFCBD5E1),
                             width: isRagu ? 1.5 : 1.0,
                           ),
                           boxShadow: isRagu
                               ? [
                                   BoxShadow(
-                                    color: const Color(0xFFD97706).withValues(alpha: 0.15),
+                                    color: const Color(
+                                      0xFFD97706,
+                                    ).withValues(alpha: 0.15),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -2158,17 +2289,25 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              isRagu ? Icons.flag_rounded : Icons.outlined_flag_rounded,
+                              isRagu
+                                  ? Icons.flag_rounded
+                                  : Icons.outlined_flag_rounded,
                               size: 18,
-                              color: isRagu ? const Color(0xFFD97706) : const Color(0xFF64748B),
+                              color: isRagu
+                                  ? const Color(0xFFD97706)
+                                  : const Color(0xFF64748B),
                             ),
                             const SizedBox(width: 6),
                             Text(
                               'Ragu-Ragu',
                               style: GoogleFonts.poppins(
                                 fontSize: 12.5,
-                                fontWeight: isRagu ? FontWeight.bold : FontWeight.w600,
-                                color: isRagu ? const Color(0xFF92400E) : const Color(0xFF334155),
+                                fontWeight: isRagu
+                                    ? FontWeight.bold
+                                    : FontWeight.w600,
+                                color: isRagu
+                                    ? const Color(0xFF92400E)
+                                    : const Color(0xFF334155),
                               ),
                             ),
                           ],
@@ -2198,7 +2337,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                           borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF0F766E).withValues(alpha: 0.25),
+                              color: const Color(
+                                0xFF0F766E,
+                              ).withValues(alpha: 0.25),
                               blurRadius: 10,
                               offset: const Offset(0, 3),
                             ),
@@ -2225,7 +2366,8 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                         ),
                       ),
                     )
-                  else if (_isPerSubtest && _currentSubtestIndex < _subtests.length - 1)
+                  else if (_isPerSubtest &&
+                      _currentSubtestIndex < _subtests.length - 1)
                     if (_isSnbt)
                       InkWell(
                         onTap: _showBlockingTimeInfoDialog,
@@ -2240,10 +2382,15 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: const Color(0xFFFDE68A), width: 1.2),
+                            border: Border.all(
+                              color: const Color(0xFFFDE68A),
+                              width: 1.2,
+                            ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFD97706).withValues(alpha: 0.1),
+                                color: const Color(
+                                  0xFFD97706,
+                                ).withValues(alpha: 0.1),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -2286,7 +2433,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                             borderRadius: BorderRadius.circular(14),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFD97706).withValues(alpha: 0.25),
+                                color: const Color(
+                                  0xFFD97706,
+                                ).withValues(alpha: 0.25),
                                 blurRadius: 10,
                                 offset: const Offset(0, 3),
                               ),
@@ -2329,7 +2478,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                           borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF15803D).withValues(alpha: 0.25),
+                              color: const Color(
+                                0xFF15803D,
+                              ).withValues(alpha: 0.25),
                               blurRadius: 10,
                               offset: const Offset(0, 3),
                             ),
@@ -2440,7 +2591,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       MathHtmlFormatter.format(text),
                       textStyle: GoogleFonts.poppins(
                         fontSize: 13.5 * _fontSizeScale,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                         color: isSelected
                             ? const Color(0xFF15803D)
                             : const Color(0xFF0F172A),
@@ -2552,7 +2705,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     end: Alignment.bottomRight,
                   ),
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFFDE68A), width: 1.5),
+                  border: Border.all(
+                    color: const Color(0xFFFDE68A),
+                    width: 1.5,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFFD97706).withValues(alpha: 0.15),
@@ -2720,7 +2876,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     end: Alignment.bottomRight,
                   ),
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFFDE68A), width: 1.5),
+                  border: Border.all(
+                    color: const Color(0xFFFDE68A),
+                    width: 1.5,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFFD97706).withValues(alpha: 0.15),
@@ -2861,11 +3020,16 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                           ),
                           if (nextSubtest.durasiMenit > 0)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFFBEB),
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: const Color(0xFFFDE68A)),
+                                border: Border.all(
+                                  color: const Color(0xFFFDE68A),
+                                ),
                               ),
                               child: Text(
                                 '${nextSubtest.durasiMenit} Menit',
@@ -2891,14 +3055,21 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                         Expanded(
                           child: Row(
                             children: [
-                              const Icon(Icons.task_alt_rounded, size: 16, color: Color(0xFF16A34A)),
+                              const Icon(
+                                Icons.task_alt_rounded,
+                                size: 16,
+                                color: Color(0xFF16A34A),
+                              ),
                               const SizedBox(width: 6),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     'Terjawab',
-                                    style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF94A3B8)),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10.5,
+                                      color: const Color(0xFF94A3B8),
+                                    ),
                                   ),
                                   Text(
                                     '$answered / ${activeQ.length} Soal',
@@ -2913,15 +3084,23 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                             ],
                           ),
                         ),
-                        Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
+                        Container(
+                          width: 1,
+                          height: 28,
+                          color: const Color(0xFFE2E8F0),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Row(
                             children: [
                               Icon(
-                                unanswered > 0 ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
+                                unanswered > 0
+                                    ? Icons.error_outline_rounded
+                                    : Icons.check_circle_outline_rounded,
                                 size: 16,
-                                color: unanswered > 0 ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
+                                color: unanswered > 0
+                                    ? const Color(0xFFDC2626)
+                                    : const Color(0xFF16A34A),
                               ),
                               const SizedBox(width: 6),
                               Column(
@@ -2929,14 +3108,21 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                                 children: [
                                   Text(
                                     'Belum Dijawab',
-                                    style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF94A3B8)),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10.5,
+                                      color: const Color(0xFF94A3B8),
+                                    ),
                                   ),
                                   Text(
-                                    unanswered > 0 ? '$unanswered Soal' : 'Lengkap',
+                                    unanswered > 0
+                                        ? '$unanswered Soal'
+                                        : 'Lengkap',
                                     style: GoogleFonts.poppins(
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.w700,
-                                      color: unanswered > 0 ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
+                                      color: unanswered > 0
+                                          ? const Color(0xFFDC2626)
+                                          : const Color(0xFF16A34A),
                                     ),
                                   ),
                                 ],
@@ -2954,7 +3140,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
               // Peringatan Regulasi UTBK
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFFBEB),
                   borderRadius: BorderRadius.circular(12),
@@ -2993,7 +3182,11 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     Navigator.pop(ctx);
                     _handleSubtestTimeExpired();
                   },
-                  icon: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
+                  icon: const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                   label: Text(
                     'Lanjut ke Subtest Berikutnya',
                     style: GoogleFonts.poppins(
@@ -3005,7 +3198,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFD97706),
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -3018,7 +3213,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFFE2E8F0)),
                     backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                   child: Text(
                     'Periksa Kembali Jawaban',
@@ -3038,7 +3235,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   }
 
   void _confirmSubmitDialog() {
-    if (_isSnbt && _isPerSubtest && _currentSubtestIndex < _subtests.length - 1) {
+    if (_isSnbt &&
+        _isPerSubtest &&
+        _currentSubtestIndex < _subtests.length - 1) {
       _showBlockingTimeInfoDialog();
       return;
     }
@@ -3071,7 +3270,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     end: Alignment.bottomRight,
                   ),
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFBBF7D0), width: 1.5),
+                  border: Border.all(
+                    color: const Color(0xFFBBF7D0),
+                    width: 1.5,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.primaryGreen.withValues(alpha: 0.15),
@@ -3125,14 +3327,21 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                         Expanded(
                           child: Row(
                             children: [
-                              const Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF16A34A)),
+                              const Icon(
+                                Icons.check_circle_rounded,
+                                size: 16,
+                                color: Color(0xFF16A34A),
+                              ),
                               const SizedBox(width: 6),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     'Terjawab',
-                                    style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF94A3B8)),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10.5,
+                                      color: const Color(0xFF94A3B8),
+                                    ),
                                   ),
                                   Text(
                                     '$answeredCount / $total Soal',
@@ -3147,15 +3356,23 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                             ],
                           ),
                         ),
-                        Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
+                        Container(
+                          width: 1,
+                          height: 28,
+                          color: const Color(0xFFE2E8F0),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Row(
                             children: [
                               Icon(
-                                unanswered > 0 ? Icons.error_outline_rounded : Icons.task_alt_rounded,
+                                unanswered > 0
+                                    ? Icons.error_outline_rounded
+                                    : Icons.task_alt_rounded,
                                 size: 16,
-                                color: unanswered > 0 ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
+                                color: unanswered > 0
+                                    ? const Color(0xFFDC2626)
+                                    : const Color(0xFF16A34A),
                               ),
                               const SizedBox(width: 6),
                               Column(
@@ -3163,14 +3380,21 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                                 children: [
                                   Text(
                                     'Belum Dijawab',
-                                    style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF94A3B8)),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10.5,
+                                      color: const Color(0xFF94A3B8),
+                                    ),
                                   ),
                                   Text(
-                                    unanswered > 0 ? '$unanswered Soal' : '0 Soal',
+                                    unanswered > 0
+                                        ? '$unanswered Soal'
+                                        : '0 Soal',
                                     style: GoogleFonts.poppins(
                                       fontSize: 12.5,
                                       fontWeight: FontWeight.w700,
-                                      color: unanswered > 0 ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
+                                      color: unanswered > 0
+                                          ? const Color(0xFFDC2626)
+                                          : const Color(0xFF16A34A),
                                     ),
                                   ),
                                 ],
@@ -3187,11 +3411,18 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       ),
                       Row(
                         children: [
-                          const Icon(Icons.help_outline_rounded, size: 15, color: Color(0xFFD97706)),
+                          const Icon(
+                            Icons.help_outline_rounded,
+                            size: 15,
+                            color: Color(0xFFD97706),
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             'Ditandai Ragu-Ragu: ',
-                            style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B)),
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              color: const Color(0xFF64748B),
+                            ),
                           ),
                           Text(
                             '$raguCount butir soal',
@@ -3218,7 +3449,11 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     Navigator.pop(ctx);
                     _submitExam();
                   },
-                  icon: const Icon(Icons.check_rounded, color: Colors.white, size: 18),
+                  icon: const Icon(
+                    Icons.check_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                   label: Text(
                     'Kumpulkan Ujian Sekarang',
                     style: GoogleFonts.poppins(
@@ -3230,7 +3465,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryGreen,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -3243,7 +3480,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFFE2E8F0)),
                     backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                   child: Text(
                     'Periksa Kembali Jawaban',
@@ -3267,7 +3506,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     final total = _allQuestions.length;
     final remainingTimeStr = _formatDuration(_remainingSeconds);
     final isPerSub = _isPerSubtest && _currentSubtestIndex < _subtests.length;
-    final currentSubTitle = isPerSub ? _subtests[_currentSubtestIndex].judul : (_package?.namaPaket ?? 'Ujian');
+    final currentSubTitle = isPerSub
+        ? _subtests[_currentSubtestIndex].judul
+        : (_package?.namaPaket ?? 'Ujian');
 
     showDialog(
       context: context,
@@ -3292,7 +3533,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     end: Alignment.bottomRight,
                   ),
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFFECACA), width: 1.5),
+                  border: Border.all(
+                    color: const Color(0xFFFECACA),
+                    width: 1.5,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFFDC2626).withValues(alpha: 0.12),
@@ -3346,7 +3590,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryGreen.withValues(alpha: 0.1),
+                            color: AppColors.primaryGreen.withValues(
+                              alpha: 0.1,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
@@ -3379,14 +3625,21 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                         Expanded(
                           child: Row(
                             children: [
-                              const Icon(Icons.timer_outlined, size: 16, color: Color(0xFF64748B)),
+                              const Icon(
+                                Icons.timer_outlined,
+                                size: 16,
+                                color: Color(0xFF64748B),
+                              ),
                               const SizedBox(width: 6),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     'Sisa Waktu',
-                                    style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF94A3B8)),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10.5,
+                                      color: const Color(0xFF94A3B8),
+                                    ),
                                   ),
                                   Text(
                                     remainingTimeStr,
@@ -3401,19 +3654,30 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                             ],
                           ),
                         ),
-                        Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
+                        Container(
+                          width: 1,
+                          height: 28,
+                          color: const Color(0xFFE2E8F0),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Row(
                             children: [
-                              const Icon(Icons.check_circle_outline_rounded, size: 16, color: AppColors.primaryGreen),
+                              const Icon(
+                                Icons.check_circle_outline_rounded,
+                                size: 16,
+                                color: AppColors.primaryGreen,
+                              ),
                               const SizedBox(width: 6),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     'Terjawab',
-                                    style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF94A3B8)),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10.5,
+                                      color: const Color(0xFF94A3B8),
+                                    ),
                                   ),
                                   Text(
                                     '$answeredCount / $total Soal',
@@ -3438,7 +3702,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
               // Peringatan Regulasi Ujian
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFFBEB),
                   borderRadius: BorderRadius.circular(12),
@@ -3474,7 +3741,11 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                 height: 48,
                 child: ElevatedButton.icon(
                   onPressed: () => Navigator.pop(ctx),
-                  icon: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
+                  icon: const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                   label: Text(
                     'Tetap Lanjutkan Ujian',
                     style: GoogleFonts.poppins(
@@ -3486,7 +3757,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryGreen,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -3499,7 +3772,11 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     Navigator.pop(ctx);
                     _submitExam(autoSubmit: false);
                   },
-                  icon: const Icon(Icons.logout_rounded, color: Color(0xFFDC2626), size: 16),
+                  icon: const Icon(
+                    Icons.logout_rounded,
+                    color: Color(0xFFDC2626),
+                    size: 16,
+                  ),
                   label: Text(
                     'Kumpulkan & Keluar Sekarang',
                     style: GoogleFonts.poppins(
@@ -3511,7 +3788,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFFFECACA)),
                     backgroundColor: const Color(0xFFFEF2F2),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
