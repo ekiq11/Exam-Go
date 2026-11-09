@@ -807,7 +807,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 6),
-                Row(
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -839,8 +841,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                         ],
                       ),
                     ),
-                    if (item.predikat.isNotEmpty) ...[
-                      const SizedBox(width: 6),
+                    if (item.predikat.isNotEmpty)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
@@ -857,7 +858,6 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                           ),
                         ),
                       ),
-                    ],
                   ],
                 ),
               ],
@@ -918,29 +918,33 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                           ],
                         ),
                         const SizedBox(height: 2),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            Text(
-                              '${item.finalScore}',
-                              style: GoogleFonts.poppins(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w900,
-                                color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
-                                height: 1.1,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                '${item.finalScore}',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w700,
+                                  color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
+                                  height: 1.1,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '/ ${item.maxScore}',
-                              style: GoogleFonts.poppins(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF64748B),
+                              const SizedBox(width: 4),
+                              Text(
+                                '/ ${item.maxScore}',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF64748B),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -983,29 +987,33 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                             ],
                           ),
                           const SizedBox(height: 2),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                '$accuracy%',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
-                                  height: 1.1,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  '$accuracy%',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w700,
+                                    color: isPassed ? const Color(0xFF15803D) : const Color(0xFFBE123C),
+                                    height: 1.1,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'tepat',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF64748B),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'tepat',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF64748B),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -1284,7 +1292,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
           value,
           style: GoogleFonts.poppins(
             fontSize: 12,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: color,
           ),
         ),
@@ -1433,7 +1441,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                 value,
                 style: GoogleFonts.poppins(
                   fontSize: 18,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w700,
                   color: isGold ? const Color(0xFFFDE047) : Colors.white,
                   height: 1.1,
                 ),

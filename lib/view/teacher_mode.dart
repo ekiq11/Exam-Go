@@ -550,7 +550,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     'UNLIMITED',
                     style: GoogleFonts.poppins(
                       fontSize: 10,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.bold,
                       color: const Color(0xFFFDE047),
                     ),
                   ),

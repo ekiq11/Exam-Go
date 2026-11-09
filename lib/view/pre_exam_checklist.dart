@@ -505,7 +505,7 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                       'TATA TERTIB ANTI-KECURANGAN',
                       style: GoogleFonts.poppins(
                         fontSize: context.rs(11),
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.bold,
                         color: const Color(0xFF78350F),
                         letterSpacing: 0.6,
                       ),
@@ -576,7 +576,7 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
             letter,
             style: GoogleFonts.poppins(
               fontSize: context.rs(10),
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
