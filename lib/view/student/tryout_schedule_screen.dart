@@ -143,7 +143,11 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
   }
 
   Future<void> _loadHistory() async {
-    final list = await StudentTryoutHistoryService.instance.getHistory();
+    final isPrem = await LicenseService.instance.isStudentPremium();
+    var list = await StudentTryoutHistoryService.instance.getHistory();
+    if (isPrem && list.isEmpty) {
+      list = await StudentTryoutHistoryService.instance.restoreHistoryFromCloud();
+    }
     if (mounted) {
       setState(() {
         _historyList = list;

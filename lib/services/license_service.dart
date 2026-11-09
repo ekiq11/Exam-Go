@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'student_tryout_history_service.dart';
 
 /// Hasil validasi dan aktivasi kode lisensi
 class ActivationResult {
@@ -101,6 +102,12 @@ class LicenseService {
       final doc = await db.collection('devices').doc(deviceId).get();
       if (doc.exists && (doc.data()?['is_student_premium'] == true)) {
         await prefs.setBool(_kStudentPremiumKey, true);
+        final lastToken = doc.data()?['last_token_activated']?.toString();
+        if (lastToken != null && lastToken.isNotEmpty) {
+          await prefs.setString('last_token_activated', lastToken);
+        }
+        // Pulihkan otomatis riwayat & jawaban soal siswa jika di lokal kosong
+        StudentTryoutHistoryService.instance.restoreHistoryFromCloud(licenseToken: lastToken);
         return true;
       }
     } catch (_) {}
@@ -592,6 +599,8 @@ class LicenseService {
       await prefs.setBool(_kTeacherPremiumKey, true);
     } else {
       await prefs.setBool(_kStudentPremiumKey, true);
+      // Pulihkan otomatis seluruh riwayat & jawaban soal siswa dari Cloud
+      StudentTryoutHistoryService.instance.restoreHistoryFromCloud();
     }
   }
 

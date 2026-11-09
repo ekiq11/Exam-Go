@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/exam_question_model.dart';
+import 'license_service.dart';
 import 'national_exam_evaluator.dart';
 
 /// Model riwayat pengerjaan tryout siswa
@@ -160,15 +162,172 @@ class StudentTryoutHistoryService {
 
   static const String _kStorageKey = 'student_tryout_history_list';
 
+  FirebaseFirestore? _firestore;
+
+  FirebaseFirestore? get _db {
+    if (_firestore != null) return _firestore;
+    try {
+      _firestore = FirebaseFirestore.instance;
+      return _firestore;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @visibleForTesting
+  void setMockFirestore(FirebaseFirestore? mock) {
+    _firestore = mock;
+  }
+
+  bool _isRestoring = false;
+
   Future<List<StudentTryoutHistoryItem>> getHistory() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final list = prefs.getStringList(_kStorageKey) ?? [];
-      return list
-          .map((e) => StudentTryoutHistoryItem.fromJson(jsonDecode(e) as Map<String, dynamic>))
-          .toList();
+      if (list.isNotEmpty) {
+        return list
+            .map((e) => StudentTryoutHistoryItem.fromJson(jsonDecode(e) as Map<String, dynamic>))
+            .toList();
+      }
+
+      // Jika data lokal kosong (misal baru install ulang), coba pulihkan dari cloud jika user premium
+      _syncCloudHistoryInBackground();
+      return [];
     } catch (_) {
       return [];
+    }
+  }
+
+  /// Sinkronisasi background otomatis saat data lokal kosong
+  void _syncCloudHistoryInBackground() {
+    if (_isRestoring) return;
+    _isRestoring = true;
+    Future.microtask(() async {
+      try {
+        final isPrem = await LicenseService.instance.isStudentPremium();
+        if (isPrem) {
+          await restoreHistoryFromCloud();
+        }
+      } catch (_) {
+      } finally {
+        _isRestoring = false;
+      }
+    });
+  }
+
+  /// Cadangkan riwayat ujian & jawaban siswa ke cloud Firestore jika pengguna adalah Premium
+  Future<bool> backupAttemptToCloud(StudentTryoutHistoryItem item) async {
+    final db = _db;
+    if (db == null) return false;
+
+    try {
+      final isPremium = await LicenseService.instance.isStudentPremium();
+      final prefs = await SharedPreferences.getInstance();
+      final activeToken = prefs.getString('last_token_activated') ??
+          prefs.getString('active_event_token');
+      final deviceId = await LicenseService.instance.getDeviceId();
+
+      // Hanya cadangkan ke cloud jika pengguna Premium atau memiliki token lisensi aktif
+      if (!isPremium && (activeToken == null || activeToken.isEmpty)) {
+        return false;
+      }
+
+      final userKey = (activeToken != null && activeToken.isNotEmpty)
+          ? activeToken.replaceAll('/', '_')
+          : deviceId;
+
+      final docId = '${userKey}_${item.token}';
+      final docRef = db.collection('student_tryout_history').doc(docId);
+
+      final payload = {
+        'user_key': userKey,
+        'license_token': activeToken ?? '',
+        'device_id': deviceId,
+        'token': item.token,
+        'nama_paket': item.namaPaket,
+        'kategori': item.kategori,
+        'final_score': item.finalScore,
+        'max_score': item.maxScore,
+        'total_soal': item.totalSoal,
+        'submitted_at': item.submittedAt.toIso8601String(),
+        'updated_at': FieldValue.serverTimestamp(),
+        'history_data': item.toJson(),
+      };
+
+      await docRef.set(payload, SetOptions(merge: true));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Pulihkan seluruh riwayat ujian dan butir jawaban yang pernah dikerjakan dari Firestore
+  /// Digunakan saat aplikasi baru di-install ulang atau token diaktifkan kembali
+  Future<List<StudentTryoutHistoryItem>> restoreHistoryFromCloud({
+    String? licenseToken,
+  }) async {
+    final db = _db;
+    if (db == null) return await getHistory();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = licenseToken ??
+          prefs.getString('last_token_activated') ??
+          prefs.getString('active_event_token');
+      final deviceId = await LicenseService.instance.getDeviceId();
+
+      final keysToQuery = <String>{};
+      if (token != null && token.isNotEmpty) {
+        keysToQuery.add(token.replaceAll('/', '_'));
+      }
+      keysToQuery.add(deviceId);
+
+      final restoredMap = <String, StudentTryoutHistoryItem>{};
+
+      for (final key in keysToQuery) {
+        try {
+          final snap = await db
+              .collection('student_tryout_history')
+              .where('user_key', isEqualTo: key)
+              .get()
+              .timeout(const Duration(milliseconds: 4000));
+
+          for (final doc in snap.docs) {
+            final data = doc.data();
+            final rawHistory = data['history_data'];
+            if (rawHistory is Map<String, dynamic>) {
+              final item = StudentTryoutHistoryItem.fromJson(rawHistory);
+              if (!restoredMap.containsKey(item.token) ||
+                  item.submittedAt.isAfter(restoredMap[item.token]!.submittedAt)) {
+                restoredMap[item.token] = item;
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
+      if (restoredMap.isEmpty) {
+        return await getHistory();
+      }
+
+      // Gabungkan dengan data lokal yang sudah ada
+      final local = await getHistory();
+      for (final item in local) {
+        if (!restoredMap.containsKey(item.token) ||
+            item.submittedAt.isAfter(restoredMap[item.token]!.submittedAt)) {
+          restoredMap[item.token] = item;
+        }
+      }
+
+      final mergedList = restoredMap.values.toList()
+        ..sort((a, b) => b.submittedAt.compareTo(a.submittedAt));
+
+      // Simpan pemulihan ke SharedPreferences lokal
+      await updateHistoryList(mergedList);
+      return mergedList;
+    } catch (_) {
+      return await getHistory();
     }
   }
 
@@ -220,6 +379,9 @@ class StudentTryoutHistoryService {
 
       final encoded = current.map((e) => jsonEncode(e.toJson())).toList();
       await prefs.setStringList(_kStorageKey, encoded);
+
+      // Cadangkan otomatis ke cloud untuk pengguna Premium
+      await backupAttemptToCloud(newItem);
     } catch (_) {}
   }
 

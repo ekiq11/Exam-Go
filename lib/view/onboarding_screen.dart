@@ -18,6 +18,8 @@ Future<void> markOnboardingDone() async {
 }
 
 class _OnboardPage {
+  final String badgeText;
+  final IconData badgeIcon;
   final String title;
   final String subtitle;
   final String description;
@@ -26,6 +28,8 @@ class _OnboardPage {
   final List<String> bulletPoints;
 
   const _OnboardPage({
+    required this.badgeText,
+    required this.badgeIcon,
     required this.title,
     required this.subtitle,
     required this.description,
@@ -38,54 +42,62 @@ class _OnboardPage {
 const _pages = [
   _OnboardPage(
     isDark: true,
+    badgeIcon: Icons.verified_rounded,
+    badgeText: 'SIMULASI CAT BKN & SNBT',
     icon: Icons.school_rounded,
-    title: 'Selamat Datang di',
+    title: 'Raih Skor Tertinggi di',
     subtitle: 'ExamGO',
     description:
-        'Aplikasi ujian digital yang aman, terenkripsi, dan dirancang khusus untuk mencegah segala bentuk kecurangan selama ujian berlangsung.',
+        'Platform simulasi ujian digital terlengkap berstandar nasional untuk persiapan UTBK-SNBT, SKD CPNS, dan Kedinasan dengan format penilaian IRT resmi.',
     bulletPoints: [
-      'Ujian online anti-contek',
-      'QR Code terenkripsi',
-      'Crash Recovery otomatis',
+      'Format Resmi CAT BKN & UTBK-SNBT',
+      'Timer Real-Time & Navigasi Subtest Otomatis',
+      'Dukungan Rumus KaTeX & Tabel Kompleks',
     ],
   ),
   _OnboardPage(
     isDark: false,
-    icon: Icons.lock_rounded,
+    badgeIcon: Icons.security_rounded,
+    badgeText: 'INTEGRITAS ANTI-CURANG',
+    icon: Icons.lock_person_rounded,
     title: 'Keamanan Ujian',
-    subtitle: 'Terkunci Penuh',
+    subtitle: 'Terkunci Aman',
     description:
-        'Sistem akan memblokir aktivitas layar di luar ujian. Keluar dari aplikasi, mematikan layar, atau menekan navigasi akan dihitung sebagai pelanggaran.',
+        'Ujian berlangsung dalam lingkungan terproteksi penuh. Sistem mendeteksi perpindahan aplikasi, screenshot, dan split-screen secara otomatis.',
     bulletPoints: [
-      'Tidak bisa minimize aplikasi',
-      'Blokir Screenshot & Copy-Paste',
-      'Menutup notifikasi otomatis',
+      'Kiosk Mode & Blokir Keluar Layar',
+      'Anti-Screenshot & Layar Terkunci',
+      'Auto-Save Detik per Detik & Crash Recovery',
     ],
   ),
   _OnboardPage(
     isDark: true,
-    icon: Icons.monitor_heart_rounded,
-    title: 'Pemantauan Guru',
-    subtitle: 'Real-Time (Baru!)',
+    badgeIcon: Icons.insights_rounded,
+    badgeText: 'ANALITIK SPIDER CHART',
+    icon: Icons.radar_rounded,
+    title: 'Pantau Kemampuan',
+    subtitle: 'Grafik Radar',
     description:
-        'Status siswa (sedang mengerjakan, keluar aplikasi, hingga level baterai) akan terpantau secara Live oleh Guru melalui Dashboard.',
+        'Evaluasi komprehensif keunggulan dan target belajar Anda lewat visualisasi spider chart per subtest, status passing grade, dan pembahasan mendalam.',
     bulletPoints: [
-      'Deteksi pelanggaran Real-Time',
-      'Indikator baterai siswa',
-      'Otoritas guru memblokir ujian',
+      'Grafik Spider Radar per Subtest',
+      'Kunci & Pembahasan Mendalam Tiap Soal',
+      'Cetak Rapor & Sertifikat Hasil Ujian',
     ],
   ),
   _OnboardPage(
     isDark: false,
-    icon: Icons.admin_panel_settings_rounded,
-    title: 'Akses Khusus',
-    subtitle: 'Mode Guru',
+    badgeIcon: Icons.cloud_sync_rounded,
+    badgeText: 'CLOUD SYNC & RESTORE',
+    icon: Icons.cloud_done_rounded,
+    title: 'Jawaban & Riwayat',
+    subtitle: 'Aman di Cloud',
     description:
-        'Guru dapat membuat sesi QR ujian baru melalui mode khusus. Ketuk logo topi toga 7x pada beranda untuk menyetel PIN Anda.',
+        'Khusus siswa Premium, seluruh riwayat tryout, skor, dan pembahasan tersimpan aman di Cloud. Tetap utuh saat aplikasi di-install ulang atau ganti perangkat.',
     bulletPoints: [
-      'Menu Tersembunyi (Tap 7x)',
-      'Akses menggunakan PIN rahasia',
-      'Riwayat ujian tersimpan',
+      'Backup Jawaban Otomatis ke Cloud Firestore',
+      'Restore Riwayat saat Ganti HP / Reinstall',
+      'Akses Tryout & Pembahasan Selamanya',
     ],
   ),
 ];
@@ -112,14 +124,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       _pages.length,
       (_) => AnimationController(
         vsync: this,
-        duration: const Duration(milliseconds: 600),
+        duration: const Duration(milliseconds: 550),
       ),
     );
     _slideControllers = List.generate(
       _pages.length,
       (_) => AnimationController(
         vsync: this,
-        duration: const Duration(milliseconds: 700),
+        duration: const Duration(milliseconds: 650),
       ),
     );
     _animatePage(0);
@@ -128,8 +140,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   void dispose() {
     _pageController.dispose();
-    for (final c in _fadeControllers) { c.dispose(); }
-    for (final c in _slideControllers) { c.dispose(); }
+    for (final c in _fadeControllers) {
+      c.dispose();
+    }
+    for (final c in _slideControllers) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -145,9 +161,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   void _nextPage() {
+    HapticFeedback.lightImpact();
     if (_currentPage < _pages.length - 1) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 450),
         curve: Curves.easeInOutCubic,
       );
     } else {
@@ -155,7 +172,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     }
   }
 
-  void _skip() => _finish();
+  void _skip() {
+    HapticFeedback.lightImpact();
+    _finish();
+  }
 
   Future<void> _finish() async {
     await markOnboardingDone();
@@ -167,17 +187,16 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Widget build(BuildContext context) {
     final isDark = _pages[_currentPage].isDark;
 
-    // Status bar menyesuaikan warna halaman, berlaku di iOS & Android
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-        // iOS-specific
         statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
       ),
     );
 
     return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF1B5E20) : Colors.white,
       body: Stack(
         children: [
           PageView.builder(
@@ -187,43 +206,56 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             itemBuilder: (_, i) => _buildPage(i),
           ),
 
-          // Skip button
+          // Tombol Lewati (Skip)
           if (_currentPage < _pages.length - 1)
             Positioned(
-              top: MediaQuery.of(context).padding.top + context.rs(16),
-              right: context.rs(20),
-              child: GestureDetector(
-                onTap: _skip,
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.rs(16),
-                    vertical: context.rs(8),
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.2)
-                        : Colors.black.withValues(alpha: 0.07),
+              top: MediaQuery.of(context).padding.top + context.rs(14),
+              right: context.rs(18),
+              child: Semantics(
+                button: true,
+                label: 'Lewati Onboarding',
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _skip,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.3)
-                          : Colors.black.withValues(alpha: 0.1),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    'Lewati',
-                    style: GoogleFonts.poppins(
-                      fontSize: context.rs(12),
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : AppColors.textSecondary,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.rs(14),
+                        vertical: context.rs(7),
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.16)
+                            : Colors.black.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.25)
+                              : Colors.black.withValues(alpha: 0.08),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        'Lewati',
+                        style: GoogleFonts.poppins(
+                          fontSize: context.rs(12),
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : AppColors.textSecondary,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
 
-          Positioned(bottom: 0, left: 0, right: 0, child: _buildBottomNav()),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: _buildBottomNav(),
+          ),
         ],
       ),
     );
@@ -254,7 +286,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF388E3C)],
+          colors: [Color(0xFF144D17), Color(0xFF1B5E20), Color(0xFF2E7D32)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -265,8 +297,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           SafeArea(
             bottom: false,
             child: SingleChildScrollView(
-              // SingleChildScrollView mencegah overflow di layar mungil
-              physics: const NeverScrollableScrollPhysics(),
+              physics: const BouncingScrollPhysics(),
               child: Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: context.horizontalPadding,
@@ -274,40 +305,43 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: context.rs(60)),
+                    SizedBox(height: context.rs(48)),
+                    _animatedBadge(page, isDark: true, fade: fade, slide: slide),
+                    SizedBox(height: context.rs(22)),
                     _animatedIcon(
                       page.icon,
                       isDark: true,
                       fade: fade,
                       slide: slide,
                     ),
-                    SizedBox(height: context.rs(36)),
+                    SizedBox(height: context.rs(28)),
                     _animatedTitle(
                       page,
                       isDark: true,
                       fade: fade,
                       slide: slide,
                     ),
-                    SizedBox(height: context.rs(20)),
+                    SizedBox(height: context.rs(16)),
                     FadeTransition(
                       opacity: fade,
                       child: Text(
                         page.description,
                         style: GoogleFonts.poppins(
-                          color: Colors.white.withValues(alpha: 0.78),
+                          color: Colors.white.withValues(alpha: 0.85),
                           fontSize: context.rs(13),
-                          height: 1.7,
+                          height: 1.65,
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                     ),
-                    SizedBox(height: context.rs(28)),
+                    SizedBox(height: context.rs(24)),
                     ..._buildBullets(
                       page.bulletPoints,
                       isDark: true,
                       fade: fade,
                       slide: slide,
                     ),
-                    SizedBox(height: context.rs(140)),
+                    SizedBox(height: context.rs(130)),
                   ],
                 ),
               ),
@@ -333,7 +367,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           SafeArea(
             bottom: false,
             child: SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
+              physics: const BouncingScrollPhysics(),
               child: Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: context.horizontalPadding,
@@ -341,21 +375,23 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: context.rs(60)),
+                    SizedBox(height: context.rs(48)),
+                    _animatedBadge(page, isDark: false, fade: fade, slide: slide),
+                    SizedBox(height: context.rs(22)),
                     _animatedIcon(
                       page.icon,
                       isDark: false,
                       fade: fade,
                       slide: slide,
                     ),
-                    SizedBox(height: context.rs(36)),
+                    SizedBox(height: context.rs(28)),
                     _animatedTitle(
                       page,
                       isDark: false,
                       fade: fade,
                       slide: slide,
                     ),
-                    SizedBox(height: context.rs(20)),
+                    SizedBox(height: context.rs(16)),
                     FadeTransition(
                       opacity: fade,
                       child: Text(
@@ -363,18 +399,19 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         style: GoogleFonts.poppins(
                           color: AppColors.textSecondary,
                           fontSize: context.rs(13),
-                          height: 1.7,
+                          height: 1.65,
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                     ),
-                    SizedBox(height: context.rs(28)),
+                    SizedBox(height: context.rs(24)),
                     ..._buildBullets(
                       page.bulletPoints,
                       isDark: false,
                       fade: fade,
                       slide: slide,
                     ),
-                    SizedBox(height: context.rs(140)),
+                    SizedBox(height: context.rs(130)),
                   ],
                 ),
               ),
@@ -386,6 +423,65 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   // ── Shared animated widgets ────────────────────────────────────
+
+  Widget _animatedBadge(
+    _OnboardPage page, {
+    required bool isDark,
+    required Animation<double> fade,
+    required Animation<double> slide,
+  }) {
+    return FadeTransition(
+      opacity: fade,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.4),
+          end: Offset.zero,
+        ).animate(slide),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: context.rs(10),
+            vertical: context.rs(5),
+          ),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.15)
+                : AppColors.paleGreen,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.28)
+                  : AppColors.primaryGreen.withValues(alpha: 0.25),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                page.badgeIcon,
+                size: context.rs(13),
+                color: isDark ? Colors.white : AppColors.primaryGreen,
+              ),
+              SizedBox(width: context.rs(6)),
+              Flexible(
+                child: Text(
+                  page.badgeText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(
+                    fontSize: context.rs(11),
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
+                    color: isDark ? Colors.white : AppColors.primaryGreen,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _animatedIcon(
     IconData icon, {
@@ -425,21 +521,22 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               page.title,
               style: GoogleFonts.poppins(
                 color: isDark
-                    ? Colors.white.withValues(alpha: 0.75)
+                    ? Colors.white.withValues(alpha: 0.8)
                     : AppColors.textSecondary,
-                fontSize: context.rs(18),
+                fontSize: context.rs(16),
                 fontWeight: FontWeight.w400,
-                height: 1.2,
+                height: 1.25,
               ),
             ),
+            SizedBox(height: context.rs(4)),
             Text(
               page.subtitle,
               style: GoogleFonts.poppins(
                 color: isDark ? Colors.white : AppColors.primaryGreen,
-                fontSize: context.rs(36),
-                fontWeight: FontWeight.w700,
-                height: 1.1,
-                letterSpacing: -1,
+                fontSize: context.rs(34),
+                fontWeight: FontWeight.w800,
+                height: 1.12,
+                letterSpacing: -1.0,
               ),
             ),
           ],
@@ -459,19 +556,19 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         opacity: fade,
         child: SlideTransition(
           position: Tween<Offset>(
-            begin: Offset(0, 0.1 * (e.key + 1)),
+            begin: Offset(0, 0.08 * (e.key + 1)),
             end: Offset.zero,
           ).animate(slide),
           child: Padding(
-            padding: EdgeInsets.only(bottom: context.rs(12)),
+            padding: EdgeInsets.only(bottom: context.rs(10)),
             child: Row(
               children: [
                 Container(
-                  width: context.rs(28),
-                  height: context.rs(28),
+                  width: context.rs(26),
+                  height: context.rs(26),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? Colors.white.withValues(alpha: 0.15)
+                        ? Colors.white.withValues(alpha: 0.16)
                         : AppColors.paleGreen,
                     shape: BoxShape.circle,
                     border: Border.all(
@@ -495,7 +592,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     e.value,
                     style: GoogleFonts.poppins(
                       color: isDark
-                          ? Colors.white.withValues(alpha: 0.88)
+                          ? Colors.white.withValues(alpha: 0.92)
                           : AppColors.textPrimary,
                       fontSize: context.rs(13),
                       fontWeight: FontWeight.w500,
@@ -512,25 +609,25 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   Widget _buildIconBox(IconData icon, {required bool isDark}) {
     return Container(
-      width: context.rs(80),
-      height: context.rs(80),
+      width: context.rs(76),
+      height: context.rs(76),
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.white.withValues(alpha: 0.15)
-            : AppColors.primaryGreen.withValues(alpha: 0.1),
+            ? Colors.white.withValues(alpha: 0.16)
+            : AppColors.primaryGreen.withValues(alpha: 0.09),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isDark
-              ? Colors.white.withValues(alpha: 0.25)
+              ? Colors.white.withValues(alpha: 0.28)
               : AppColors.primaryGreen.withValues(alpha: 0.2),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withValues(alpha: 0.15)
+                ? Colors.black.withValues(alpha: 0.18)
                 : AppColors.primaryGreen.withValues(alpha: 0.12),
-            blurRadius: 20,
+            blurRadius: 22,
             offset: const Offset(0, 8),
           ),
         ],
@@ -538,7 +635,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       child: Center(
         child: Icon(
           icon,
-          size: context.rs(38),
+          size: context.rs(36),
           color: isDark ? Colors.white : AppColors.primaryGreen,
         ),
       ),
@@ -557,32 +654,34 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             ? const LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Color(0xFF1B5E20)],
+                colors: [Colors.transparent, Color(0xFF144D17)],
               )
             : LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Colors.white.withValues(alpha: 0.98)],
+                colors: [Colors.transparent, Colors.white],
               ),
       ),
       padding: EdgeInsets.fromLTRB(
         context.horizontalPadding,
-        context.rs(32),
+        context.rs(16),
         context.horizontalPadding,
-        MediaQuery.of(context).padding.bottom + context.rs(28),
+        MediaQuery.of(context).padding.bottom + context.rs(20),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Dot indicators
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: List.generate(_pages.length, (i) {
               final isActive = i == _currentPage;
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
-                margin: EdgeInsets.only(right: context.rs(6)),
-                width: isActive ? context.rs(24) : context.rs(8),
-                height: context.rs(8),
+                margin: EdgeInsets.only(right: context.rs(5)),
+                width: isActive ? context.rs(22) : context.rs(7),
+                height: context.rs(7),
                 decoration: BoxDecoration(
                   color: isActive
                       ? (isDark ? Colors.white : AppColors.primaryGreen)
@@ -594,58 +693,68 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               );
             }),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
 
           // Next / Mulai button
-          GestureDetector(
-            onTap: _nextPage,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              padding: EdgeInsets.symmetric(
-                horizontal: isLast ? context.rs(28) : context.rs(20),
-                vertical: context.rs(14),
-              ),
-              decoration: BoxDecoration(
-                color: isDark ? Colors.white : AppColors.primaryGreen,
+          Flexible(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _nextPage,
                 borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: isDark
-                        ? Colors.black.withValues(alpha: 0.2)
-                        : AppColors.primaryGreen.withValues(alpha: 0.4),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isLast ? context.rs(20) : context.rs(16),
+                    vertical: context.rs(12),
                   ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (isLast) ...[
-                    Icon(
-                      Icons.rocket_launch_rounded,
-                      color: isDark ? AppColors.primaryGreen : Colors.white,
-                      size: context.rs(18),
-                    ),
-                    SizedBox(width: context.rs(8)),
-                  ],
-                  Text(
-                    isLast ? 'Mulai Sekarang' : 'Selanjutnya',
-                    style: GoogleFonts.poppins(
-                      color: isDark ? AppColors.primaryGreen : Colors.white,
-                      fontSize: context.rs(14),
-                      fontWeight: FontWeight.w700,
-                    ),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white : AppColors.primaryGreen,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark
+                            ? Colors.black.withValues(alpha: 0.22)
+                            : AppColors.primaryGreen.withValues(alpha: 0.38),
+                        blurRadius: 16,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
                   ),
-                  if (!isLast) ...[
-                    SizedBox(width: context.rs(8)),
-                    Icon(
-                      Icons.arrow_forward_rounded,
-                      color: isDark ? AppColors.primaryGreen : Colors.white,
-                      size: context.rs(16),
-                    ),
-                  ],
-                ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (isLast) ...[
+                        Icon(
+                          Icons.rocket_launch_rounded,
+                          color: isDark ? AppColors.primaryGreen : Colors.white,
+                          size: context.rs(17),
+                        ),
+                        SizedBox(width: context.rs(6)),
+                      ],
+                      Flexible(
+                        child: Text(
+                          isLast ? 'Mulai Sekarang' : 'Selanjutnya',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.poppins(
+                            color: isDark ? AppColors.primaryGreen : Colors.white,
+                            fontSize: context.rs(13),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      if (!isLast) ...[
+                        SizedBox(width: context.rs(6)),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          color: isDark ? AppColors.primaryGreen : Colors.white,
+                          size: context.rs(15),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
