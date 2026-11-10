@@ -479,6 +479,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     _hasShownTeacherAd = true;
 
     try {
+      final isPremium = await LicenseService.instance.isTeacherPremium();
+      if (isPremium) return; // shortcut: akun guru premium bebas iklan popup
+
       final config = await PopupAdService.instance.getAdsConfig();
       if (!mounted) return;
       if (config.teacher.isValid) {

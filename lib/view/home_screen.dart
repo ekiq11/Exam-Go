@@ -116,7 +116,9 @@ class _HomeScreenState extends State<HomeScreen>
     _hasShownAppLaunchAd = true;
 
     try {
-      final isPremium = await LicenseService.instance.isStudentPremium();
+      final isStudentPremium = await LicenseService.instance.isStudentPremium();
+      final isTeacherPremium = await LicenseService.instance.isTeacherPremium();
+      final isPremium = isStudentPremium || isTeacherPremium;
       final config = await PopupAdService.instance.getAdsConfig();
 
       if (!mounted) return;
