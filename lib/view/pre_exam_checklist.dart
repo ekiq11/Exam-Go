@@ -154,72 +154,97 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 30,
-              offset: const Offset(0, 10),
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 36,
+              offset: const Offset(0, 12),
             ),
           ],
         ),
-        child: Padding(
-          padding: EdgeInsets.all(context.rs(18)),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(context.rs(10)),
-                    decoration: BoxDecoration(
-                      color: AppColors.paleGreen,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.shield_outlined,
-                      color: AppColors.primaryGreen,
-                      size: 24,
-                    ),
+              // Header Gradient Banner
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(
+                  vertical: context.rs(20),
+                  horizontal: context.rs(20),
+                ),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF1B5E20), AppColors.primaryGreen],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  SizedBox(width: context.rs(12)),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Persiapan & Regulasi Ujian',
-                          style: GoogleFonts.poppins(
-                            fontSize: context.rs(15),
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                            height: 1.2,
-                          ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: context.rs(52),
+                      height: context.rs(52),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          width: 1.5,
                         ),
-                        Text(
-                          'Sistem Anti-Kecurangan ExamGo Aktif',
-                          style: GoogleFonts.poppins(
-                            fontSize: context.rs(11),
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
+                      ),
+                      child: Icon(
+                        Icons.shield_rounded,
+                        color: Colors.white,
+                        size: context.rs(26),
+                      ),
                     ),
-                  ),
-                ],
+                    SizedBox(height: context.rs(10)),
+                    Text(
+                      'Persiapan & Regulasi Ujian',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: context.rs(16.5),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    SizedBox(height: context.rs(3)),
+                    Text(
+                      'Sistem Anti-Kecurangan ExamGo Aktif',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: context.rs(11.5),
+                        color: Colors.white.withValues(alpha: 0.92),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              SizedBox(height: context.rs(16)),
 
               if (_isLoading)
                 const Padding(
-                  padding: EdgeInsets.all(32),
+                  padding: EdgeInsets.all(36),
                   child: CircularProgressIndicator(
                     color: AppColors.primaryGreen,
                   ),
                 )
               else if (_securityError != null)
-                _buildSecurityError()
+                Padding(
+                  padding: EdgeInsets.all(context.rs(20)),
+                  child: _buildSecurityError(),
+                )
               else
                 Flexible(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
+                    padding: EdgeInsets.fromLTRB(
+                      context.rs(18),
+                      context.rs(16),
+                      context.rs(18),
+                      context.rs(18),
+                    ),
                     child: _buildChecklistForm(),
                   ),
                 ),
@@ -396,91 +421,114 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
 
         SizedBox(height: context.rs(14)),
 
-        // Identitas Peserta
-        Text(
-          'IDENTITAS PESERTA',
-          style: GoogleFonts.poppins(
-            fontSize: context.rs(11),
-            fontWeight: FontWeight.w700,
-            color: Colors.grey.shade600,
-            letterSpacing: 1.1,
-          ),
+        // Divider: Data Identitas Peserta
+        Row(
+          children: [
+            const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: context.rs(8)),
+              child: Text(
+                'DATA IDENTITAS PESERTA',
+                style: GoogleFonts.poppins(
+                  fontSize: context.rs(10),
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF64748B),
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ),
+            const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
+          ],
         ),
-        SizedBox(height: context.rs(8)),
+        SizedBox(height: context.rs(10)),
         TextField(
           controller: _nameCtrl,
+          textCapitalization: TextCapitalization.words,
           style: GoogleFonts.poppins(
             fontSize: context.rs(13),
             fontWeight: FontWeight.w600,
+            color: const Color(0xFF0F172A),
           ),
           decoration: InputDecoration(
             labelText: 'Nama Lengkap',
-            labelStyle: GoogleFonts.poppins(fontSize: context.rs(12)),
-            hintText: 'Cth: Budi Santoso',
-            isDense: true,
-            filled: true,
-            fillColor: Colors.grey.shade50,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: context.rs(14),
-              vertical: context.rs(10),
+            labelStyle: GoogleFonts.poppins(
+              fontSize: context.rs(11.5),
+              color: const Color(0xFF64748B),
             ),
+            hintText: 'Cth: Budi Santoso',
+            hintStyle: GoogleFonts.poppins(
+              fontSize: context.rs(12),
+              color: const Color(0xFF94A3B8),
+            ),
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
             prefixIcon: const Icon(
               Icons.person_outline_rounded,
-              color: Colors.grey,
+              color: AppColors.primaryGreen,
               size: 20,
             ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: context.rs(14),
+              vertical: context.rs(12),
+            ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
               borderSide: const BorderSide(
                 color: AppColors.primaryGreen,
                 width: 2,
               ),
             ),
           ),
-          textCapitalization: TextCapitalization.words,
         ),
         SizedBox(height: context.rs(10)),
         TextField(
           controller: _nisCtrl,
-          keyboardType: TextInputType.number,
+          keyboardType: TextInputType.text,
           style: GoogleFonts.poppins(
             fontSize: context.rs(13),
             fontWeight: FontWeight.w600,
+            color: const Color(0xFF0F172A),
           ),
           decoration: InputDecoration(
             labelText: 'NIS / Nomor Peserta',
-            labelStyle: GoogleFonts.poppins(fontSize: context.rs(12)),
-            hintText: 'Masukkan NIS',
-            isDense: true,
-            filled: true,
-            fillColor: Colors.grey.shade50,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: context.rs(14),
-              vertical: context.rs(10),
+            labelStyle: GoogleFonts.poppins(
+              fontSize: context.rs(11.5),
+              color: const Color(0xFF64748B),
             ),
+            hintText: 'Masukkan NIS',
+            hintStyle: GoogleFonts.poppins(
+              fontSize: context.rs(12),
+              color: const Color(0xFF94A3B8),
+            ),
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
             prefixIcon: const Icon(
               Icons.badge_outlined,
-              color: Colors.grey,
+              color: AppColors.primaryGreen,
               size: 20,
             ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: context.rs(14),
+              vertical: context.rs(12),
+            ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
               borderSide: const BorderSide(
                 color: AppColors.primaryGreen,
                 width: 2,
@@ -495,24 +543,27 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
         // Checkbox Persetujuan
         _buildAgreementCheckbox(),
 
-        SizedBox(height: context.rs(16)),
+        SizedBox(height: context.rs(18)),
         Row(
           children: [
             Expanded(
-              child: TextButton(
-                onPressed: () => Navigator.of(context).pop(null),
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: context.rs(12)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(null),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFCBD5E1)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
-                ),
-                child: Text(
-                  'Batal',
-                  style: GoogleFonts.poppins(
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w600,
-                    fontSize: context.rs(12),
+                  child: Text(
+                    'Batal',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: context.rs(12.5),
+                      color: const Color(0xFF64748B),
+                    ),
                   ),
                 ),
               ),
@@ -521,13 +572,16 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
             Expanded(
               flex: 2,
               child: Container(
+                height: 48,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: _agreedToRules
                         ? [const Color(0xFF1B5E20), AppColors.primaryGreen]
-                        : [Colors.grey.shade600, Colors.grey.shade500],
+                        : [Colors.grey.shade400, Colors.grey.shade400],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                   boxShadow: _agreedToRules
                       ? [
                           BoxShadow(
@@ -545,9 +599,8 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
-                    padding: EdgeInsets.symmetric(vertical: context.rs(12)),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   child: Text(
@@ -555,7 +608,7 @@ class _PreExamChecklistDialogState extends State<PreExamChecklistDialog> {
                     style: GoogleFonts.poppins(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: context.rs(13),
+                      fontSize: context.rs(12.5),
                     ),
                   ),
                 ),

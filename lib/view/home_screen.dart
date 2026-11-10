@@ -123,14 +123,22 @@ class _HomeScreenState extends State<HomeScreen>
 
       // 1. Iklan EVENT: Prioritas tertinggi, tampil untuk semua user (Free maupun Premium)
       if (config.event.isValid) {
-        PopupAdDialog.show(context, ad: config.event, roleBadge: 'EVENT SPESIAL');
+        PopupAdDialog.show(
+          context,
+          ad: config.event,
+          roleBadge: 'EVENT SPESIAL',
+        );
         return;
       }
 
       // 2. Iklan SISWA: Tampil HANYA jika akun masih FREE
       //    Jika sudah Premium, iklan siswa disembunyikan otomatis
       if (!isPremium && config.student.isValid) {
-        PopupAdDialog.show(context, ad: config.student, roleBadge: 'PROMO SISWA');
+        PopupAdDialog.show(
+          context,
+          ad: config.student,
+          roleBadge: 'PROMO SISWA',
+        );
       }
     } catch (_) {}
   }
@@ -306,7 +314,8 @@ class _HomeScreenState extends State<HomeScreen>
     final resume = await ExamGoDialog.confirm(
       context,
       title: 'Lanjutkan Sesi Ujian?',
-      message: 'Ujian "${session.title}" belum diselesaikan. Ingin melanjutkan kembali ke ruang ujian?',
+      message:
+          'Ujian "${session.title}" belum diselesaikan. Ingin melanjutkan kembali ke ruang ujian?',
       confirmText: 'Lanjutkan',
       cancelText: 'Abaikan',
       icon: Icons.restore_rounded,
@@ -516,7 +525,10 @@ class _HomeScreenState extends State<HomeScreen>
                 studentName: name,
                 studentNis: nis,
                 isEvent: isEventExam,
-                initialSchedule: TryoutSchedule.fromMap(pkgDoc.id, pkgDoc.data() ?? {}),
+                initialSchedule: TryoutSchedule.fromMap(
+                  pkgDoc.id,
+                  pkgDoc.data() ?? {},
+                ),
                 returnToHome: true,
               ),
             ),
@@ -826,13 +838,19 @@ class _HomeScreenState extends State<HomeScreen>
                   child: Row(
                     children: [
                       Icon(
-                        isPrem ? Icons.workspace_premium_rounded : Icons.person_outline_rounded,
-                        color: isPrem ? const Color(0xFFD97706) : AppColors.primaryGreen,
+                        isPrem
+                            ? Icons.workspace_premium_rounded
+                            : Icons.person_outline_rounded,
+                        color: isPrem
+                            ? const Color(0xFFD97706)
+                            : AppColors.primaryGreen,
                         size: 20,
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        isPrem ? 'Status: Siswa Premium Lifetime' : 'Status: Akun Siswa Reguler',
+                        isPrem
+                            ? 'Status: Siswa Premium Lifetime'
+                            : 'Status: Akun Siswa Reguler',
                         style: GoogleFonts.poppins(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,
@@ -870,14 +888,19 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                         backgroundColor: const Color(0xFF0F172A),
                         behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     );
                     setState(() {});
                   }
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 13,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEF2F2),
                     borderRadius: BorderRadius.circular(16),
@@ -885,7 +908,11 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.delete_forever_rounded, color: Color(0xFFDC2626), size: 22),
+                      const Icon(
+                        Icons.delete_forever_rounded,
+                        color: Color(0xFFDC2626),
+                        size: 22,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -909,7 +936,11 @@ class _HomeScreenState extends State<HomeScreen>
                           ],
                         ),
                       ),
-                      const Icon(Icons.chevron_right_rounded, color: Color(0xFFDC2626), size: 20),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: Color(0xFFDC2626),
+                        size: 20,
+                      ),
                     ],
                   ),
                 ),
@@ -1050,13 +1081,17 @@ class _HomeScreenState extends State<HomeScreen>
                               ),
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFFEF4444), Color(0xFFF97316)],
+                                  colors: [
+                                    Color(0xFFEF4444),
+                                    Color(0xFFF97316),
+                                  ],
                                 ),
                                 borderRadius: BorderRadius.circular(6),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFFEF4444)
-                                        .withValues(alpha: 0.35),
+                                    color: const Color(
+                                      0xFFEF4444,
+                                    ).withValues(alpha: 0.35),
                                     blurRadius: 4,
                                     offset: const Offset(0, 1.5),
                                   ),
@@ -1428,146 +1463,152 @@ class _HomeScreenState extends State<HomeScreen>
                     opacity: expandRatio,
                     child: SafeArea(
                       bottom: false,
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        context.rs(20),
-                        0,
-                        context.rs(20),
-                        context.rs(18),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              _logoTapCount++;
-                              final remaining = 7 - _logoTapCount;
-                              if (_logoTapCount >= 7) {
-                                _logoTapCount = 0;
-                                openTeacherMode(context);
-                              } else if (remaining <= 3) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      '$remaining lagi untuk mode guru',
-                                      style: GoogleFonts.poppins(fontSize: 12),
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          context.rs(20),
+                          0,
+                          context.rs(20),
+                          context.rs(18),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                _logoTapCount++;
+                                final remaining = 7 - _logoTapCount;
+                                if (_logoTapCount >= 7) {
+                                  _logoTapCount = 0;
+                                  openTeacherMode(context);
+                                } else if (remaining <= 3) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        '$remaining lagi untuk mode guru',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      duration: const Duration(seconds: 1),
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      margin: EdgeInsets.fromLTRB(
+                                        context.rs(16),
+                                        0,
+                                        context.rs(16),
+                                        context.rs(80),
+                                      ),
                                     ),
-                                    duration: const Duration(seconds: 1),
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    margin: EdgeInsets.fromLTRB(
-                                      context.rs(16),
-                                      0,
-                                      context.rs(16),
-                                      context.rs(80),
-                                    ),
+                                  );
+                                }
+                              },
+                              child: Container(
+                                padding: EdgeInsets.all(context.rs(11)),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.25),
+                                    width: 1,
                                   ),
-                                );
-                              }
-                            },
-                            child: Container(
-                              padding: EdgeInsets.all(context.rs(11)),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.25),
-                                  width: 1,
                                 ),
-                              ),
-                              child: Icon(
-                                Icons.school,
-                                color: Colors.white,
-                                size: context.rs(28),
+                                child: Icon(
+                                  Icons.school,
+                                  color: Colors.white,
+                                  size: context.rs(28),
+                                ),
                               ),
                             ),
-                          ),
-                          SizedBox(width: context.rs(14)),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  AppConfig.appName,
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: context.rs(26),
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.1,
-                                    letterSpacing: -0.5,
-                                  ),
-                                ),
-                                SizedBox(height: context.rs(2)),
-                                Text(
-                                  'Secure Exam Browser',
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white.withValues(alpha: 0.72),
-                                    fontSize: context.rs(11),
-                                  ),
-                                ),
-                                SizedBox(height: context.rs(8)),
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: context.rs(8),
-                                    vertical: context.rs(4),
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  // FIX BUG-07: Gunakan _ClockWidget — hanya rebuild text jam,
-                                  // bukan seluruh HomeScreen setiap detik.
-                                  child: const _ClockWidget(),
-                                ),
-                              ],
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => _showAccountPrivacySheet(context),
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: context.rs(9),
-                                vertical: context.rs(5),
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.28),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
+                            SizedBox(width: context.rs(14)),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
-                                    Icons.shield_outlined,
-                                    color: Colors.white,
-                                    size: 13,
-                                  ),
-                                  SizedBox(width: context.rs(4)),
                                   Text(
-                                    'v${AppConfig.appVersion}',
+                                    AppConfig.appName,
                                     style: GoogleFonts.poppins(
                                       color: Colors.white,
-                                      fontSize: context.rs(10),
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: context.rs(26),
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.1,
+                                      letterSpacing: -0.5,
                                     ),
+                                  ),
+                                  SizedBox(height: context.rs(2)),
+                                  Text(
+                                    'Secure Exam Browser',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.72,
+                                      ),
+                                      fontSize: context.rs(11),
+                                    ),
+                                  ),
+                                  SizedBox(height: context.rs(8)),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: context.rs(8),
+                                      vertical: context.rs(4),
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.15,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    // FIX BUG-07: Gunakan _ClockWidget — hanya rebuild text jam,
+                                    // bukan seluruh HomeScreen setiap detik.
+                                    child: const _ClockWidget(),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                        ],
+                            GestureDetector(
+                              onTap: () => _showAccountPrivacySheet(context),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: context.rs(9),
+                                  vertical: context.rs(5),
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.28),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.shield_outlined,
+                                      color: Colors.white,
+                                      size: 13,
+                                    ),
+                                    SizedBox(width: context.rs(4)),
+                                    Text(
+                                      'v${AppConfig.appVersion}',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontSize: context.rs(10),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
 
               // COLLAPSED content
               Positioned(
@@ -1582,7 +1623,9 @@ class _HomeScreenState extends State<HomeScreen>
                     child: SafeArea(
                       bottom: false,
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: context.rs(16)),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: context.rs(16),
+                        ),
                         child: Row(
                           children: [
                             Container(
@@ -1939,123 +1982,25 @@ class _HomeScreenState extends State<HomeScreen>
       return {'name': name, 'email': email, 'whatsapp': wa};
     }
 
-    final nameCtrl = TextEditingController(text: name);
-    final emailCtrl = TextEditingController(text: email);
-    final waCtrl = TextEditingController(text: wa);
-
     if (!mounted) return null;
 
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-        actionsPadding: const EdgeInsets.all(20),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.paleGreen,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.person_pin_rounded, color: AppColors.primaryGreen, size: 22),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Data Peserta Tryout',
-                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Silakan lengkapi data Anda untuk pencatatan aktivasi token & monitoring admin:',
-                style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary, height: 1.4),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: nameCtrl,
-                textCapitalization: TextCapitalization.words,
-                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600),
-                decoration: InputDecoration(
-                  labelText: 'Nama Lengkap',
-                  hintText: 'Ahmad Fauzan',
-                  prefixIcon: const Icon(Icons.person_rounded, size: 18, color: AppColors.primaryGreen),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: emailCtrl,
-                keyboardType: TextInputType.emailAddress,
-                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600),
-                decoration: InputDecoration(
-                  labelText: 'Email Aktif',
-                  hintText: 'nama@email.com',
-                  prefixIcon: const Icon(Icons.alternate_email_rounded, size: 18, color: AppColors.primaryGreen),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: waCtrl,
-                keyboardType: TextInputType.phone,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600),
-                decoration: InputDecoration(
-                  labelText: 'Nomor WhatsApp Aktif',
-                  hintText: '081234567890',
-                  prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: AppColors.primaryGreen),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (nameCtrl.text.trim().isEmpty ||
-                  emailCtrl.text.trim().isEmpty ||
-                  waCtrl.text.trim().length < 8) {
-                return;
-              }
-              Navigator.of(ctx).pop(true);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryGreen,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-            ),
-            child: Text('Simpan & Lanjut', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-          ),
-        ],
+      builder: (ctx) => StudentProfileDialog(
+        initialName: name,
+        initialEmail: email,
+        initialWa: wa,
       ),
     );
 
     if (confirmed == true) {
-      final finalName = nameCtrl.text.trim();
-      final finalEmail = emailCtrl.text.trim().toLowerCase();
-      final finalWa = waCtrl.text.trim();
-      await prefs.setString('student_name', finalName);
-      await prefs.setString('student_email', finalEmail);
-      await prefs.setString('student_whatsapp', finalWa);
-      return {'name': finalName, 'email': finalEmail, 'whatsapp': finalWa};
+      final reloadedPrefs = await SharedPreferences.getInstance();
+      return {
+        'name': reloadedPrefs.getString('student_name') ?? '',
+        'email': reloadedPrefs.getString('student_email') ?? '',
+        'whatsapp': reloadedPrefs.getString('student_whatsapp') ?? '',
+      };
     }
     return null;
   }
@@ -2071,180 +2016,9 @@ class _HomeScreenState extends State<HomeScreen>
           return;
         }
 
-        final ctrl = TextEditingController();
         final token = await showDialog<String>(
           context: context,
-          builder: (ctx) => Dialog(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            child: Container(
-              padding: EdgeInsets.all(context.rs(28)),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 30,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(context.rs(16)),
-                    decoration: BoxDecoration(
-                      color: AppColors.paleGreen,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.key_rounded,
-                      color: AppColors.primaryGreen,
-                      size: 32,
-                    ),
-                  ),
-                  SizedBox(height: context.rs(16)),
-                  Text(
-                    'Input Token Ujian',
-                    style: GoogleFonts.poppins(
-                      fontSize: context.rs(20),
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: context.rs(4)),
-                  Text(
-                    'Masukkan token ujian (6 digit) atau kode Event / Lynk.id',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: context.rs(12.5),
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  SizedBox(height: context.rs(24)),
-                  TextField(
-                    controller: ctrl,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: context.rs(20),
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                    ),
-                    textCapitalization: TextCapitalization.characters,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'[A-Za-z0-9\-]'),
-                      ),
-                      TextInputFormatter.withFunction(
-                        (old, val) => val.copyWith(
-                          text: val.text.toUpperCase(),
-                          selection: val.selection,
-                        ),
-                      ),
-                    ],
-                    decoration: InputDecoration(
-                      hintText: '6 DIGIT / EVENT-XXXX',
-                      hintStyle: GoogleFonts.poppins(
-                        color: Colors.grey.shade400,
-                        fontSize: context.rs(13),
-                        letterSpacing: 1.5,
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey.shade50,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.shade200),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.shade200),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: AppColors.primaryGreen,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: context.rs(32)),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          onPressed: () => Navigator.of(ctx).pop(),
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.symmetric(
-                              vertical: context.rs(16),
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Text(
-                            'Batal',
-                            style: GoogleFonts.poppins(
-                              color: Colors.grey.shade600,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: context.rs(12)),
-                      Expanded(
-                        flex: 2,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF1B5E20),
-                                AppColors.primaryGreen,
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primaryGreen.withValues(
-                                  alpha: 0.3,
-                                ),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: ElevatedButton(
-                            onPressed: () => Navigator.of(
-                              ctx,
-                            ).pop(ctrl.text.trim().toUpperCase()),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              padding: EdgeInsets.symmetric(
-                                vertical: context.rs(16),
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            child: Text(
-                              'Cari Ujian',
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
+          builder: (ctx) => const ManualTokenInputDialog(),
         );
 
         if (token == null || token.isEmpty) return;
@@ -2357,9 +2131,14 @@ class _HomeScreenState extends State<HomeScreen>
                 token.startsWith('EVENT') ||
                 token.startsWith('EV') ||
                 actResult.message.toLowerCase().contains('event') ||
-                (targetExam != null && (targetExam.startsWith('EVENT') || targetExam.startsWith('EV')));
+                (targetExam != null &&
+                    (targetExam.startsWith('EVENT') ||
+                        targetExam.startsWith('EV')));
 
-            final resolvedEventId = (targetExam != null && targetExam.isNotEmpty && targetExam != '-')
+            final resolvedEventId =
+                (targetExam != null &&
+                    targetExam.isNotEmpty &&
+                    targetExam != '-')
                 ? targetExam
                 : token;
 
@@ -2375,7 +2154,9 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 );
               }
-            } else if (targetExam != null && targetExam.isNotEmpty && targetExam != '-') {
+            } else if (targetExam != null &&
+                targetExam.isNotEmpty &&
+                targetExam != '-') {
               _confirmAndStart(
                 'EXAMGO_TRYOUT://$targetExam',
                 title: 'Tryout Khusus',
@@ -2440,7 +2221,7 @@ class _HomeScreenState extends State<HomeScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Input Token Manual',
+                    'Input Token Ujian',
                     style: GoogleFonts.poppins(
                       fontSize: context.rs(14),
                       fontWeight: FontWeight.w700,
@@ -2448,7 +2229,7 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ),
                   Text(
-                    'Alternatif jika kamera rusak',
+                    'Token ujian & tiket event Lynk.id',
                     style: GoogleFonts.poppins(
                       fontSize: context.rs(11),
                       color: AppColors.textSecondary,
@@ -2993,4 +2774,913 @@ class _DotGridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ManualTokenInputDialog: Dialog modern serasi dengan _EventTokenDialog
+// ─────────────────────────────────────────────────────────────────
+class ManualTokenInputDialog extends StatefulWidget {
+  const ManualTokenInputDialog({super.key});
+
+  @override
+  State<ManualTokenInputDialog> createState() => _ManualTokenInputDialogState();
+}
+
+class _ManualTokenInputDialogState extends State<ManualTokenInputDialog> {
+  final TextEditingController _ctrl = TextEditingController();
+  String? _detectedType;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    final text = _ctrl.text.trim().toUpperCase();
+    String? type;
+    if (text.startsWith('EVENT') || text.startsWith('EV')) {
+      type = 'Tiket Event Spesial';
+    } else if (text.length == 6 && !text.contains('-')) {
+      type = 'Token Ujian Guru (6 Digit)';
+    } else if (text.contains('LYNK') || text.length > 8) {
+      type = 'Voucher / Tiket Tryout';
+    }
+    if (type != _detectedType) {
+      setState(() => _detectedType = type);
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.removeListener(_onTextChanged);
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pasteFromClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data?.text != null && data!.text!.isNotEmpty) {
+      final cleaned = data.text!.trim().toUpperCase().replaceAll(' ', '');
+      setState(() {
+        _ctrl.text = cleaned;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = _ctrl.text.trim();
+    final hasText = text.isNotEmpty;
+    final isLong = text.length > 10;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 430),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 36,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header Gradient Banner
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 22,
+                    horizontal: 20,
+                  ),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF1B5E20), AppColors.primaryGreen],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 54,
+                        height: 54,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.vpn_key_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Input Token Ujian',
+                        style: GoogleFonts.poppins(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Mendukung token 6-digit guru & tiket Event / Lynk.id',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 11.5,
+                          color: Colors.white.withValues(alpha: 0.92),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Content Form Body
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Token Type Chips
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 6,
+                                horizontal: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: const Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.dialpad_rounded,
+                                    size: 13,
+                                    color: Color(0xFF475569),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        '6 Digit Guru',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFF475569),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 6,
+                                horizontal: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF0FDF4),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: const Color(0xFFBBF7D0),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.confirmation_number_rounded,
+                                    size: 13,
+                                    color: AppColors.primaryGreen,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        'Tiket Event / Lynk',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.primaryGreen,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      Text(
+                        'Kode Token / Tiket Ujian:',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF475569),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _ctrl,
+                        textCapitalization: TextCapitalization.characters,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[A-Za-z0-9\-_]'),
+                          ),
+                          TextInputFormatter.withFunction(
+                            (old, val) => val.copyWith(
+                              text: val.text.toUpperCase(),
+                              selection: val.selection,
+                            ),
+                          ),
+                        ],
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          fontSize: isLong ? 14 : 16.5,
+                          letterSpacing: isLong ? 0.8 : 1.5,
+                          color: const Color(0xFF0F172A),
+                        ),
+                        decoration: InputDecoration(
+                          hintText: '6 DIGIT / EVENT-XXXX',
+                          hintStyle: GoogleFonts.poppins(
+                            color: const Color(0xFF94A3B8),
+                            fontSize: 12.5,
+                            letterSpacing: 0.5,
+                            fontWeight: FontWeight.normal,
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFFF8FAFC),
+                          prefixIcon: const Icon(
+                            Icons.vpn_key_rounded,
+                            size: 19,
+                            color: AppColors.primaryGreen,
+                          ),
+                          suffixIcon: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (hasText)
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.close_rounded,
+                                    size: 18,
+                                    color: Color(0xFF94A3B8),
+                                  ),
+                                  tooltip: 'Hapus',
+                                  onPressed: () => setState(() => _ctrl.clear()),
+                                ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.content_paste_rounded,
+                                  size: 18,
+                                  color: Color(0xFF64748B),
+                                ),
+                                tooltip: 'Tempel dari Clipboard',
+                                onPressed: _pasteFromClipboard,
+                              ),
+                            ],
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: AppColors.primaryGreen,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      if (_detectedType != null) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0FDF4),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: const Color(0xFF86EFAC),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.check_circle_rounded,
+                                size: 14,
+                                color: Color(0xFF16A34A),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                _detectedType!,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF166534),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: 20),
+
+                      // Action Buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 48,
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                style: OutlinedButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  side: const BorderSide(
+                                    color: Color(0xFFCBD5E1),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Batal',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color: const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF1B5E20),
+                                    AppColors.primaryGreen,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primaryGreen.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  final val = _ctrl.text.trim().toUpperCase();
+                                  if (val.isNotEmpty) {
+                                    Navigator.of(context).pop(val);
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  padding: EdgeInsets.zero,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Cari Ujian',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// StudentProfileDialog: Dialog biodata peserta tryout & event
+// ─────────────────────────────────────────────────────────────────
+class StudentProfileDialog extends StatefulWidget {
+  final String initialName;
+  final String initialEmail;
+  final String initialWa;
+
+  const StudentProfileDialog({
+    super.key,
+    required this.initialName,
+    required this.initialEmail,
+    required this.initialWa,
+  });
+
+  @override
+  State<StudentProfileDialog> createState() => _StudentProfileDialogState();
+}
+
+class _StudentProfileDialogState extends State<StudentProfileDialog> {
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _emailCtrl;
+  late final TextEditingController _waCtrl;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(text: widget.initialName);
+    _emailCtrl = TextEditingController(text: widget.initialEmail);
+    _waCtrl = TextEditingController(text: widget.initialWa);
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    _waCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final name = _nameCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
+    final wa = _waCtrl.text.trim();
+
+    if (name.isEmpty) {
+      setState(() => _errorMessage = 'Silakan masukkan Nama Lengkap Anda');
+      return;
+    }
+    if (wa.length < 8) {
+      setState(() => _errorMessage = 'Nomor WhatsApp aktif minimal 8 digit');
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('student_name', name);
+    await prefs.setString('student_email', email.toLowerCase());
+    await prefs.setString('student_whatsapp', wa);
+
+    if (!mounted) return;
+    Navigator.of(context).pop(true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 430),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.18),
+              blurRadius: 36,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header Gradient Banner
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 22,
+                    horizontal: 20,
+                  ),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF1B5E20), AppColors.primaryGreen],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 54,
+                        height: 54,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.person_pin_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Data Peserta Tryout',
+                        style: GoogleFonts.poppins(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Lengkapi identitas untuk presensi ujian & sertifikat resmi',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 11.5,
+                          color: Colors.white.withValues(alpha: 0.92),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Form Body
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Nama Lengkap Siswa:',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF475569),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _nameCtrl,
+                        textCapitalization: TextCapitalization.words,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13.5,
+                          color: const Color(0xFF0F172A),
+                          fontWeight: FontWeight.w600,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Misal: Ahmad Fauzan',
+                          hintStyle: GoogleFonts.poppins(
+                            color: const Color(0xFF94A3B8),
+                            fontSize: 12,
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFFF8FAFC),
+                          prefixIcon: const Icon(
+                            Icons.person_outline_rounded,
+                            size: 19,
+                            color: AppColors.primaryGreen,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: AppColors.primaryGreen,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      Text(
+                        'No. WhatsApp Aktif:',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF475569),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _waCtrl,
+                        keyboardType: TextInputType.phone,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        style: GoogleFonts.poppins(
+                          fontSize: 13.5,
+                          color: const Color(0xFF0F172A),
+                          fontWeight: FontWeight.w600,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Misal: 081234567890',
+                          hintStyle: GoogleFonts.poppins(
+                            color: const Color(0xFF94A3B8),
+                            fontSize: 12,
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFFF8FAFC),
+                          prefixIcon: const Icon(
+                            Icons.phone_android_rounded,
+                            size: 19,
+                            color: AppColors.primaryGreen,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: AppColors.primaryGreen,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      Text(
+                        'Email Siswa (Aktif):',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF475569),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _emailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13.5,
+                          color: const Color(0xFF0F172A),
+                          fontWeight: FontWeight.w600,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'nama@email.com',
+                          hintStyle: GoogleFonts.poppins(
+                            color: const Color(0xFF94A3B8),
+                            fontSize: 12,
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFFF8FAFC),
+                          prefixIcon: const Icon(
+                            Icons.alternate_email_rounded,
+                            size: 19,
+                            color: AppColors.primaryGreen,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFCBD5E1),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: AppColors.primaryGreen,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEE2E2),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: const Color(0xFFFCA5A5),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.error_outline_rounded,
+                                size: 16,
+                                color: Color(0xFFDC2626),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _errorMessage!,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF991B1B),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: 20),
+
+                      // Action Buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 48,
+                              child: OutlinedButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                style: OutlinedButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  side: const BorderSide(
+                                    color: Color(0xFFCBD5E1),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Batal',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color: const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF1B5E20),
+                                    AppColors.primaryGreen,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primaryGreen.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ElevatedButton(
+                                onPressed: _submit,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  padding: EdgeInsets.zero,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Simpan & Lanjut',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
