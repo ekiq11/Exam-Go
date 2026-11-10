@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../constant/app_colors.dart';
 import '../../models/exam_question_model.dart';
 import '../../utils/math_widget_factory.dart';
@@ -159,6 +161,207 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
     );
   }
 
+  void _showShareModal() {
+    final totalSoal = widget.questions.length;
+    final effectiveScore = widget.score ?? (totalSoal > 0 ? ((_countBenar / totalSoal) * 100).round() : 0);
+    final accuracy = totalSoal > 0 ? ((_countBenar / totalSoal) * 100).toStringAsFixed(1) : '0';
+    final statusText = (widget.statusKelulusan != null && widget.statusKelulusan!.isNotEmpty)
+        ? widget.statusKelulusan!
+        : (effectiveScore >= 65 ? 'Lulus Passing Grade' : 'Belum Memenuhi');
+
+    final shareText = '🎓 *HASIL RESMI TRYOUT EXAMGO*\n'
+        '━━━━━━━━━━━━━━━━━━━━━━\n'
+        '📝 *Ujian:* ${widget.title}\n'
+        '🏷️ *Kategori:* ${widget.kategori.toUpperCase()}\n'
+        '🏆 *Skor Akhir:* *$effectiveScore*\n'
+        '🎯 *Akurasi:* *$accuracy%*\n'
+        '📊 *Evaluasi:* *$statusText*\n'
+        '✅ Benar: $_countBenar | ❌ Salah: $_countSalah | ⏳ Kosong: $_countKosong\n'
+        '━━━━━━━━━━━━━━━━━━━━━━\n'
+        '📲 Dikerjakan di aplikasi *ExamGO* — Simulasi CAT BKN & UTBK-SNBT Terlengkap!\n'
+        'Tersedia di Google Play Store & Apple App Store.';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(22, 18, 22, 28),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.paleGreen,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.share_rounded, color: AppColors.primaryGreen, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Bagikan Hasil Tryout',
+                        style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
+                      Text(
+                        'Pamerkan pencapaian skor ke teman & media sosial',
+                        style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF1B5E20).withValues(alpha: 0.25),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          widget.kategori.toUpperCase(),
+                          style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                      Text(
+                        statusText.toUpperCase(),
+                        style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFFFDE047)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    widget.title,
+                    style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('SKOR AKHIR', style: GoogleFonts.poppins(fontSize: 9, color: Colors.white70)),
+                          Text('$effectiveScore', style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white)),
+                        ],
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Column(
+                          children: [
+                            Text('Akurasi', style: GoogleFonts.poppins(fontSize: 9, color: Colors.white70)),
+                            Text('$accuracy%', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: shareText));
+                      HapticFeedback.lightImpact();
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Teks hasil tryout disalin ke clipboard!', style: GoogleFonts.poppins(fontSize: 12)),
+                          backgroundColor: const Color(0xFF0F172A),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.copy_rounded, size: 16),
+                    label: Text('Salin Teks', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      side: const BorderSide(color: Color(0xFFCBD5E1)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      SharePlus.instance.share(ShareParams(text: shareText));
+                    },
+                    icon: const Icon(Icons.share_rounded, size: 16, color: Colors.white),
+                    label: Text('Bagikan', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: AppColors.primaryGreen,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final filtered = _filteredQuestions;
@@ -202,6 +405,11 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
           backgroundColor: AppColors.primaryGreen,
           elevation: 0,
           actions: [
+            IconButton(
+              icon: const Icon(Icons.share_rounded, color: Colors.white),
+              tooltip: 'Bagikan Hasil Tryout',
+              onPressed: _showShareModal,
+            ),
             IconButton(
               icon: const Icon(Icons.radar_rounded, color: Colors.white),
               tooltip: 'Grafik Radar Kemampuan',
@@ -414,6 +622,49 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                               'Lihat',
                               style: GoogleFonts.poppins(
                                 fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                InkWell(
+                  onTap: _showShareModal,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Share',
+                          style: GoogleFonts.poppins(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.85),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.share_rounded, size: 12, color: Color(0xFF67E8F9)),
+                            const SizedBox(width: 2.5),
+                            Text(
+                              'Hasil',
+                              style: GoogleFonts.poppins(
+                                fontSize: 11.5,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),

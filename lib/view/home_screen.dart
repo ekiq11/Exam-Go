@@ -9,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/app_remote_config.dart';
 import '../services/popup_ad_service.dart';
 import 'widgets/popup_ad_dialog.dart';
+import 'widgets/examgo_dialog.dart';
 import 'package:examgo/services/license_service.dart';
 import 'package:examgo/services/exam_session_service.dart';
 import 'package:examgo/services/monitoring_service.dart';
@@ -302,63 +303,15 @@ class _HomeScreenState extends State<HomeScreen>
     final session = await ExamSessionService.instance.getActiveSession();
     if (session == null || !mounted) return;
 
-    final resume = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Row(
-          children: [
-            const Icon(Icons.restore_rounded, color: Colors.orange),
-            const SizedBox(width: 8),
-            Text(
-              'Sesi Tidak Selesai',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        content: Text(
-          'Ujian "${session.title}" ditemukan tidak selesai.\n\nApakah Anda ingin melanjutkan ujian?',
-          style: GoogleFonts.poppins(fontSize: 13),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(
-              'Abaikan',
-              style: GoogleFonts.poppins(color: Colors.grey),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              // Cek apakah siswa masih diblokir oleh pengawas atau pindah device
-              if (session.examId.isNotEmpty && session.studentNis.isNotEmpty) {
-                final studentData = await MonitoringService.instance
-                    .getStudentData(session.examId, session.studentNis);
-                if (studentData != null) {
-                  if (studentData['status'] == 'BLOCKED') {
-                    if (mounted) _showViolationPopup();
-                    return;
-                  }
-                  final currentDeviceId = await MonitoringService.instance
-                      .getDeviceId();
-                  if (studentData['device_id'] != null &&
-                      studentData['device_id'] != currentDeviceId) {
-                    if (mounted) _showDeviceBlockedPopup();
-                    return;
-                  }
-                }
-              }
-              if (ctx.mounted) Navigator.of(ctx).pop(true);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-            child: Text(
-              'Lanjutkan',
-              style: GoogleFonts.poppins(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
+    final resume = await ExamGoDialog.confirm(
+      context,
+      title: 'Lanjutkan Sesi Ujian?',
+      message: 'Ujian "${session.title}" belum diselesaikan. Ingin melanjutkan kembali ke ruang ujian?',
+      confirmText: 'Lanjutkan',
+      cancelText: 'Abaikan',
+      icon: Icons.restore_rounded,
+      iconColor: const Color(0xFFD97706),
+      iconBgColor: const Color(0xFFFEF3C7),
     );
 
     if (resume != true || !mounted) {
@@ -435,39 +388,11 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _clearHistory() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Text(
-          'Hapus Riwayat?',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          'Semua riwayat scan akan dihapus.',
-          style: GoogleFonts.poppins(
-            fontSize: context.rs(13),
-            color: Colors.grey[600],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(
-              'Batal',
-              style: GoogleFonts.poppins(color: Colors.grey[600]),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(
-              'Hapus',
-              style: GoogleFonts.poppins(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
+    final confirm = await ExamGoDialog.danger(
+      context,
+      title: 'Hapus Riwayat Scan?',
+      message: 'Semua riwayat scan QR ujian akan dihapus dari perangkat.',
+      confirmText: 'Hapus',
     );
     if (confirm != true) return;
     try {
@@ -821,6 +746,181 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
+  void _showAccountPrivacySheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(22, 20, 22, 32),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.paleGreen,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.security_rounded,
+                    color: AppColors.primaryGreen,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Akun & Privasi Data',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                      Text(
+                        'Kepatuhan Standar Google Play & App Store',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            FutureBuilder<bool>(
+              future: LicenseService.instance.isStudentPremium(),
+              builder: (ctx, snap) {
+                final isPrem = snap.data ?? false;
+                return Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isPrem ? Icons.workspace_premium_rounded : Icons.person_outline_rounded,
+                        color: isPrem ? const Color(0xFFD97706) : AppColors.primaryGreen,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        isPrem ? 'Status: Siswa Premium Lifetime' : 'Status: Akun Siswa Reguler',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF334155),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 14),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final confirmed = await ExamGoDialog.danger(
+                    context,
+                    title: 'Hapus Akun & Data Perangkat?',
+                    message:
+                        'Seluruh data lokal, token lisensi aktif, riwayat pengerjaan tryout, dan cache soal pada perangkat ini akan dihapus permanen sesuai standar privasi data Apple & Google. Tindakan ini tidak dapat dibatalkan.',
+                    confirmText: 'Hapus Permanen',
+                  );
+
+                  if (confirmed == true) {
+                    await LicenseService.instance.clearAllUserAccountData();
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Seluruh data akun dan riwayat berhasil dibersihkan.',
+                          style: GoogleFonts.poppins(fontSize: 12),
+                        ),
+                        backgroundColor: const Color(0xFF0F172A),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    );
+                    setState(() {});
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFFECACA)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.delete_forever_rounded, color: Color(0xFFDC2626), size: 22),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Hapus Akun & Riwayat Ujian',
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFFDC2626),
+                              ),
+                            ),
+                            Text(
+                              'Bersihkan semua data lokal & reset app ke awal (Apple 5.1.1)',
+                              style: GoogleFonts.poppins(
+                                fontSize: 10.5,
+                                color: const Color(0xFF991B1B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right_rounded, color: Color(0xFFDC2626), size: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<Map<String, dynamic>> _getTryoutCardStatus() async {
     final isPremium = await LicenseService.instance.isStudentPremium();
     int newCount = 0;
@@ -1153,39 +1253,14 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _showError(String title, String msg) {
     if (!mounted) return;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Row(
-          children: [
-            const Icon(Icons.error_outline, color: AppColors.error),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  fontSize: context.rs(15),
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          msg,
-          style: GoogleFonts.poppins(fontSize: context.rs(13)),
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              'Tutup',
-              style: GoogleFonts.poppins(fontSize: context.rs(13)),
-            ),
-          ),
-        ],
-      ),
+    ExamGoDialog.info(
+      context,
+      title: title,
+      message: msg,
+      buttonText: 'Tutup',
+      icon: Icons.error_outline_rounded,
+      iconColor: const Color(0xFFDC2626),
+      iconBgColor: const Color(0xFFFEE2E2),
     );
   }
 
@@ -1448,25 +1523,39 @@ class _HomeScreenState extends State<HomeScreen>
                               ],
                             ),
                           ),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: context.rs(10),
-                              vertical: context.rs(5),
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.28),
-                                width: 1,
+                          GestureDetector(
+                            onTap: () => _showAccountPrivacySheet(context),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: context.rs(9),
+                                vertical: context.rs(5),
                               ),
-                            ),
-                            child: Text(
-                              'v${AppConfig.appVersion}',
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontSize: context.rs(10),
-                                fontWeight: FontWeight.w600,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.28),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.shield_outlined,
+                                    color: Colors.white,
+                                    size: 13,
+                                  ),
+                                  SizedBox(width: context.rs(4)),
+                                  Text(
+                                    'v${AppConfig.appVersion}',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.white,
+                                      fontSize: context.rs(10),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -1548,6 +1637,22 @@ class _HomeScreenState extends State<HomeScreen>
                                   ),
                                 ),
                               ],
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          GestureDetector(
+                            onTap: () => _showAccountPrivacySheet(context),
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.shield_outlined,
+                                color: Colors.white,
+                                size: 16,
+                              ),
                             ),
                           ),
                         ],

@@ -687,4 +687,24 @@ class LicenseService {
 
     return generated;
   }
+
+  /// Menghapus seluruh data lokal akun, lisensi, dan riwayat pada perangkat (Apple Guideline 5.1.1)
+  Future<void> clearAllUserAccountData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kStudentPremiumKey);
+    await prefs.remove(_kTeacherPremiumKey);
+    await prefs.remove(_kStudentAttemptsKey);
+    await prefs.remove(_kTeacherUploadsKey);
+    await prefs.remove('last_token_activated');
+    await prefs.remove('active_event_token');
+    await prefs.remove('active_event_id');
+    await prefs.remove('student_tryout_history');
+    await prefs.remove('student_name');
+    await prefs.remove('student_email');
+    await prefs.remove('student_whatsapp');
+    await prefs.remove('teacher_exam_history');
+    await prefs.remove('teacher_pin_hash');
+    await prefs.remove('biometric_auth_enabled');
+    await prefs.remove('examgo_onboarding_completed');
+  }
 }

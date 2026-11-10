@@ -2,6 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import '../constant/app_colors.dart';
+import 'widgets/examgo_dialog.dart';
 
 import 'package:examgo/constant/app_config.dart';
 import 'package:examgo/services/monitoring_service.dart';
@@ -160,18 +164,35 @@ class _TeacherMonitoringListScreenState
   }
 
   Future<void> _confirmDelete(Map<String, String> item) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await ExamGoDialog.danger(
+      context,
+      title: 'Hapus Sesi Ujian?',
+      message:
+          'Sesi "${item['title']}" (Token: ${item['examId']}) beserta seluruh data siswa dan log aktivitasnya akan dihapus permanen.',
+      confirmText: 'Ya, Hapus',
+    );
+
+    if (confirmed != true) return;
+    await _deleteSession(item['examId']!);
+  }
+
+  void _showQrDialog(Map<String, String> item) {
+    final token = item['examId'] ?? '';
+    final title = item['title'] ?? 'Ujian';
+    final url = item['url'] ?? '';
+
+    showDialog(
       context: context,
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
+                color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
               ),
@@ -180,88 +201,87 @@ class _TeacherMonitoringListScreenState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 6),
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  shape: BoxShape.circle,
+                  color: const Color(0xFFE6FFFA),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  Icons.delete_rounded,
-                  color: Colors.red.shade600,
-                  size: 32,
+                child: Text(
+                  'Token: $token',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF0F766E),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: QrImageView(
+                  data: url.isNotEmpty ? url : token,
+                  version: QrVersions.auto,
+                  size: 200,
+                  backgroundColor: Colors.white,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
-                'Hapus Sesi Ujian?',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 17,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Sesi "${item['title']}" beserta seluruh data siswa dan log aktivitasnya akan dihapus permanen.',
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: Colors.grey.shade600,
-                ),
+                'Minta siswa membuka ExamGO dan memindai QR ini atau mengetikkan token ujian di atas.',
                 textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(fontSize: 11.5, color: const Color(0xFF64748B)),
               ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(ctx).pop(false),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        side: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      child: Text(
-                        'Batal',
-                        style: GoogleFonts.poppins(
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.of(ctx).pop(true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.shade600,
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        'Ya, Hapus',
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGreen,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                ),
+                child: Text('Tutup', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
         ),
       ),
     );
+  }
 
-    if (confirmed != true) return;
-    await _deleteSession(item['examId']!);
+  void _shareExamInfo(Map<String, String> item) {
+    final title = item['title'] ?? 'Ujian';
+    final token = item['examId'] ?? '';
+    final msg = '*INFORMASI SESI UJIAN EXAMGO*\n'
+        '📋 *Ujian:* $title\n'
+        '🔑 *Kode Token:* *$token*\n\n'
+        '📲 *Langkah Mengikuti Ujian:*\n'
+        '1. Buka aplikasi *ExamGO* di smartphone Anda.\n'
+        '2. Pada menu Beranda, masukkan Token di atas pada kolom "Token Ujian" atau ketuk "🎯 Masuk Event".\n'
+        '3. Anda akan langsung diarahkan ke lembar soal ujian.\n\n'
+        '_Catatan: Pastikan koneksi internet stabil & patuhi tata tertib ujian._';
+    Clipboard.setData(ClipboardData(text: msg));
+    HapticFeedback.lightImpact();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Pesan info ujian & token $token disalin! Siap dibagikan ke WhatsApp siswa.', style: GoogleFonts.poppins(fontSize: 12)),
+        backgroundColor: const Color(0xFF0F172A),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Future<void> _deleteSession(String examId) async {
@@ -322,10 +342,10 @@ class _TeacherMonitoringListScreenState
             flexibleSpace: FlexibleSpaceBar(
               titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
               title: Text(
-                'Monitoring Ujian',
+                'Riwayat Ujian & Token Guru',
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w700,
-                  fontSize: 18,
+                  fontSize: 17,
                   color: Colors.white,
                 ),
               ),
@@ -555,129 +575,92 @@ class _TeacherMonitoringListScreenState
               ),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Row(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Icon Container
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [_kGreen, _kGreenL],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _kGreenL.withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.qr_code_rounded,
-                      color: Colors.white,
-                      size: 26,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item['title'] ?? 'Ujian',
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
-                            color: Colors.black87,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Icon Container
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [_kGreen, _kGreenL],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.calendar_today_rounded,
-                              size: 12,
-                              color: Colors.grey.shade500,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              dateStr,
-                              style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                color: Colors.grey.shade500,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              Icons.access_time_rounded,
-                              size: 12,
-                              color: Colors.grey.shade500,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              timeStr,
-                              style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                color: Colors.grey.shade500,
-                              ),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _kGreenL.withValues(alpha: 0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 6),
-                        Builder(
-                          builder: (_) {
-                            final rawUrl = item['url'] ?? '';
-                            final isExt =
-                                rawUrl.startsWith('http://') ||
-                                rawUrl.startsWith('https://');
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isExt
-                                    ? const Color(0xFFEFF6FF)
-                                    : const Color(0xFFECFDF5),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: isExt
-                                      ? const Color(0xFFBFDBFE)
-                                      : const Color(0xFFA7F3D0),
-                                  width: 0.8,
-                                ),
-                              ),
-                              child: Text(
-                                isExt
-                                    ? 'Tautan Eksternal (URL)'
-                                    : 'Soal CBT Native',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: isExt
-                                      ? const Color(0xFF1D4ED8)
-                                      : const Color(0xFF065F46),
-                                ),
-                              ),
-                            );
-                          },
+                        child: const Icon(
+                          Icons.qr_code_rounded,
+                          color: Colors.white,
+                          size: 24,
                         ),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    children: [
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['title'] ?? 'Ujian',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14.5,
+                                color: const Color(0xFF0F172A),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 3),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today_rounded,
+                                  size: 11.5,
+                                  color: Colors.grey.shade500,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  dateStr,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10.5,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.access_time_rounded,
+                                  size: 11.5,
+                                  color: Colors.grey.shade500,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  timeStr,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10.5,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
+                          horizontal: 8,
+                          vertical: 3,
                         ),
                         decoration: BoxDecoration(
                           color: _kGreen.withValues(alpha: 0.08),
@@ -686,17 +669,203 @@ class _TeacherMonitoringListScreenState
                         child: Text(
                           'Live',
                           style: GoogleFonts.poppins(
-                            fontSize: 11,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w700,
                             color: _kGreen,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        color: _kGreenL,
-                        size: 22,
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  // Row Token Badge & Format Type
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      // Prominent Token Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFF86EFAC)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.key_rounded,
+                              size: 13,
+                              color: Color(0xFF16A34A),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              'TOKEN: ${item['examId']}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF15803D),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            InkWell(
+                              onTap: () {
+                                Clipboard.setData(
+                                  ClipboardData(text: item['examId'] ?? ''),
+                                );
+                                HapticFeedback.lightImpact();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Token ${item['examId']} disalin!',
+                                      style: GoogleFonts.poppins(fontSize: 12),
+                                    ),
+                                    duration: const Duration(seconds: 1),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              },
+                              child: const Icon(
+                                Icons.copy_rounded,
+                                size: 13,
+                                color: Color(0xFF16A34A),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Builder(
+                        builder: (_) {
+                          final rawUrl = item['url'] ?? '';
+                          final isExt =
+                              rawUrl.startsWith('http://') ||
+                              rawUrl.startsWith('https://');
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isExt
+                                  ? const Color(0xFFEFF6FF)
+                                  : const Color(0xFFECFDF5),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isExt
+                                    ? const Color(0xFFBFDBFE)
+                                    : const Color(0xFFA7F3D0),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Text(
+                              isExt ? 'Tautan Eksternal' : 'Soal CBT Native',
+                              style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: isExt
+                                    ? const Color(0xFF1D4ED8)
+                                    : const Color(0xFF065F46),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                  const SizedBox(height: 6),
+                  // Quick Actions Bar
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () => _showQrDialog(item),
+                        icon: const Icon(
+                          Icons.qr_code_2_rounded,
+                          size: 15,
+                          color: Color(0xFF0F766E),
+                        ),
+                        label: Text(
+                          'Lihat QR',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF0F766E),
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 3,
+                          ),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => _shareExamInfo(item),
+                        icon: const Icon(
+                          Icons.share_rounded,
+                          size: 14,
+                          color: Color(0xFF2563EB),
+                        ),
+                        label: Text(
+                          'Bagikan',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF2563EB),
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 3,
+                          ),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TeacherMonitoringDetailScreen(
+                              examId: item['examId']!,
+                              title: item['title']!,
+                              url: item['url'],
+                            ),
+                          ),
+                        ),
+                        icon: const Icon(
+                          Icons.monitor_heart_rounded,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                        label: Text(
+                          'Pantau Live',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          backgroundColor: _kGreen,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 3,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                       ),
                     ],
                   ),

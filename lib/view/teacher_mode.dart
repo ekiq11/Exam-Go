@@ -8,6 +8,7 @@ import 'package:examgo/services/popup_ad_service.dart';
 import 'package:examgo/services/qr_generator.dart';
 import 'package:examgo/view/widgets/popup_ad_dialog.dart';
 import 'package:examgo/view/widgets/premium_token_dialog.dart';
+import 'package:examgo/view/widgets/examgo_dialog.dart';
 import 'package:examgo/view/teacher_monitoring_screen.dart';
 import 'package:examgo/view/teacher/teacher_exam_creator_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -884,6 +885,47 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
             ),
             const SizedBox(height: 10),
             _MenuTile(
+              icon: Icons.token_rounded,
+              color: const Color(0xFF0F766E),
+              title: 'Riwayat Ujian & Token Saya',
+              subtitle: 'Kelola token ujian, bagikan kode/QR ke siswa & pantau kehadiran',
+              trailing: FutureBuilder<List<String>>(
+                future: SharedPreferences.getInstance().then(
+                  (p) => p.getStringList('teacher_exam_history') ?? [],
+                ),
+                builder: (context, snap) {
+                  final count = snap.data?.length ?? 0;
+                  if (count == 0) return const SizedBox.shrink();
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE6FFFA),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFF2DD4BF)),
+                    ),
+                    child: Text(
+                      '$count Ujian',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF0F766E),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const TeacherMonitoringListScreen(),
+                  ),
+                );
+                if (mounted) _checkLicenseStatus();
+              },
+            ),
+            const SizedBox(height: 10),
+            _MenuTile(
               icon: Icons.qr_code_2_rounded,
               color: AppColors.primaryGreen,
               title: 'Buat QR Ujian URL',
@@ -966,33 +1008,11 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   }
 
   Future<void> _resetPin(BuildContext context) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Reset PIN?',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          'PIN akan dihapus. Anda harus membuat PIN baru.',
-          style: GoogleFonts.poppins(fontSize: 13),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Batal', style: GoogleFonts.poppins()),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(
-              'Reset',
-              style: GoogleFonts.poppins(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
+    final confirm = await ExamGoDialog.danger(
+      context,
+      title: 'Reset PIN Mode Guru?',
+      message: 'PIN akses saat ini akan dihapus. Anda harus membuat PIN 6-angka baru saat masuk berikutnya.',
+      confirmText: 'Reset PIN',
     );
     if (confirm != true) return;
     final prefs = await SharedPreferences.getInstance();
