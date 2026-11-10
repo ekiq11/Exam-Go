@@ -19,6 +19,7 @@ import 'package:http/http.dart' as http;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
+import 'package:examgo/view/widgets/anti_cheat_shield_overlay.dart';
 
 class ExamWebViewScreen extends StatefulWidget {
   final String url;
@@ -83,6 +84,11 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
   // menghindari false-positive violation saat system UI muncul sebentar
   bool _wasActuallyPaused = false;
   Timer? _pauseDebounce;
+
+  // Anti-Cheat Privacy Shield: tutup layar saat split-screen atau kehilangan fokus
+  bool _isShieldActive = false;
+  bool _isSplitScreenActive = false;
+  Timer? _shieldTimer;
 
   @override
   void initState() {
@@ -258,6 +264,42 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     );
   }
 
+  void _handleSplitScreenViolation() {
+    _minimizeCount++;
+    _triggerVibrationAlarm();
+    AnalyticsService.instance.logExamViolation(
+      examTitle: _examTitle,
+      violationCount: _minimizeCount,
+    );
+    _logActivity(
+      'EXIT_APP',
+      'Split-Screen / Layar Terbelah terdeteksi (ke-$_minimizeCount×)',
+    );
+    _notifyTeacherViaGas();
+    SecurityService.instance.bringToForeground();
+    SecurityService.instance.reapply();
+
+    final maxViolations = AppRemoteConfig.instance.maxViolations > 0
+        ? AppRemoteConfig.instance.maxViolations
+        : 3;
+
+    if (_minimizeCount >= maxViolations) {
+      _kickedOut = true;
+      MonitoringService.instance.setLocalBlock(widget.examId, widget.studentNis);
+      _sendMonitoringStatus('BLOCKED');
+      _showSnack(
+        '⚠️ Batas toleransi terlampaui: Dilarang membagi layar (Split-Screen).',
+        color: Colors.red.shade800,
+        duration: 5,
+      );
+      _performExit(null, 'blocked_split_screen');
+    } else {
+      _sendMonitoringStatus('PAUSED');
+      _showMinimizeWarning();
+      _showViolationDialog();
+    }
+  }
+
   @override
   void dispose() {
     _exitTimer?.cancel();
@@ -265,6 +307,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     _retryTimer?.cancel();
     _pauseDebounce?.cancel();
     _inactiveTimer?.cancel();
+    _shieldTimer?.cancel();
     _pingTimer?.cancel();
     // FIX CRASH-C1: Sama persis dengan bug StandardMethodCodec di home_screen (312 events).
     // Firestore juga menggunakan EventChannel. Saat dispose() dipanggil sebelum stream
@@ -315,11 +358,21 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     _examStartTime = DateTime.now();
     await _saveSession(); // simpan sesi ke disk
     // Mulai timer ujian
-    _examTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+    _examTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
       _examElapsedSeconds++;
       // Update violations di storage setiap 30 detik
       if (_examElapsedSeconds % 30 == 0) {
         ExamSessionService.instance.updateViolations(_minimizeCount);
+      }
+      // Deteksi Split-Screen / Multi-Window secara berkala setiap detik
+      if (_securityEnabled && !_isExiting) {
+        final inMulti = await SecurityService.instance.isInMultiWindowMode();
+        if (inMulti != _isSplitScreenActive && mounted) {
+          setState(() => _isSplitScreenActive = inMulti);
+          if (inMulti) {
+            _handleSplitScreenViolation();
+          }
+        }
       }
     });
     await AnalyticsService.instance.logExamStarted(
@@ -346,7 +399,9 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     switch (state) {
       case AppLifecycleState.paused:
         _inactiveTimer?.cancel();
+        _shieldTimer?.cancel();
         _pauseDebounce?.cancel();
+        if (mounted) setState(() => _isShieldActive = true);
         // FIX BUG: Perpanjang jeda menjadi 1500ms agar PowerManager OS sempat 
         // meng-update status isInteractive menjadi false saat layar dimatikan.
         // Mencegah "False Positive" pelanggaran saat mematikan layar sekejap.
@@ -412,6 +467,14 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
 
       case AppLifecycleState.inactive:
         _inactiveTimer?.cancel();
+        _shieldTimer?.cancel();
+        // Aktifkan tirai anti-intip setelah 500ms agar siswa tidak bisa membaca soal
+        // saat membuka sidebar/floating window atau panel notifikasi.
+        _shieldTimer = Timer(const Duration(milliseconds: 500), () {
+          if (mounted && _securityEnabled && !_isExiting) {
+            setState(() => _isShieldActive = true);
+          }
+        });
         // Beri jeda toleransi 2000ms untuk menghindari false-positive dari
         // notifikasi banner sekilas atau pop-up sistem singkat.
         // Jika tetap inactive > 2 detik, artinya ada floating window (Chrome /
@@ -471,6 +534,10 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
 
       case AppLifecycleState.resumed:
         _inactiveTimer?.cancel();
+        _shieldTimer?.cancel();
+        if (mounted && _isShieldActive) {
+          setState(() => _isShieldActive = false);
+        }
         if (!_wasActuallyPaused) return;
         _wasActuallyPaused = false;
 
@@ -1328,8 +1395,14 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: Column(
-          children: [
+        body: AntiCheatShieldOverlay(
+          isShieldActive: _isShieldActive || _isSplitScreenActive,
+          onRecover: () {
+            SecurityService.instance.bringToForeground();
+            SecurityService.instance.reapply();
+          },
+          child: Column(
+            children: [
             _buildHeader(),
             if (_loading)
               LinearProgressIndicator(
@@ -1412,7 +1485,8 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildHeader() {

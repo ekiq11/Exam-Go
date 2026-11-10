@@ -20,6 +20,7 @@ import '../../utils/math_widget_factory.dart';
 import 'tryout_discussion_screen.dart';
 import 'tryout_schedule_screen.dart';
 import 'widgets/exam_question_table_widget.dart';
+import '../widgets/anti_cheat_shield_overlay.dart';
 
 class StudentExamSessionScreen extends StatefulWidget {
   final String token;
@@ -89,6 +90,8 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   bool _isBlocked = false;
   bool _isSubmitted = false;
   bool _isShowingWarningDialog = false;
+  bool _isShieldActive = false;
+  bool _isSplitScreenActive = false;
   StreamSubscription<DocumentSnapshot>? _statusListener;
 
   static const int _maxViolations = 3;
@@ -138,9 +141,13 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
 
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
+      if (mounted) setState(() => _isShieldActive = true);
       _violations++;
       _handleViolationDetected();
     } else if (state == AppLifecycleState.resumed) {
+      if (mounted && _isShieldActive) {
+        setState(() => _isShieldActive = false);
+      }
       _enterImmersiveMode();
       SecurityService.instance.reapply();
       _checkRemainingTime();
@@ -606,8 +613,18 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     _checkRemainingTime();
 
     _tickerTimer?.cancel();
-    _tickerTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+    _tickerTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
       _checkRemainingTime();
+      if (!_isSubmitted && !_isBlocked) {
+        final inMulti = await SecurityService.instance.isInMultiWindowMode();
+        if (inMulti != _isSplitScreenActive && mounted) {
+          setState(() => _isSplitScreenActive = inMulti);
+          if (inMulti) {
+            _violations++;
+            _handleViolationDetected();
+          }
+        }
+      }
     });
   }
 
@@ -1915,8 +1932,14 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
             const SizedBox(width: 6),
           ],
         ),
-        body: Column(
-          children: [
+        body: AntiCheatShieldOverlay(
+          isShieldActive: _isShieldActive || _isSplitScreenActive,
+          onRecover: () {
+            SecurityService.instance.bringToForeground();
+            SecurityService.instance.reapply();
+          },
+          child: Column(
+            children: [
             // Bar Navigasi Subtest jika dalam mode per_subtest
             if (_isPerSubtest && _subtests.length > 1)
               Container(
@@ -2516,7 +2539,8 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildOptionCard(

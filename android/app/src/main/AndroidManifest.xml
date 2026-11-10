@@ -31,7 +31,8 @@
         android:icon="@mipmap/ic_launcher"
         android:hardwareAccelerated="true"
         android:usesCleartextTraffic="false"
-        android:extractNativeLibs="false">
+        android:extractNativeLibs="false"
+        android:resizeableActivity="false">
 
         <activity
             android:name=".MainActivity"

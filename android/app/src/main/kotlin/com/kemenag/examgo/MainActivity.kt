@@ -91,44 +91,33 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     // ════════════════════════════════════════════════════════════════
-    // ANTI SPLIT SCREEN — Lapisan 1: onMultiWindowModeChanged()
-    //
-    // resizeableActivity="false" di manifest TIDAK cukup di Android 7.x
-    // (API 24-25). User masih bisa masuk split screen via gesture.
-    // Fix: override callback ini dan langsung finishAndRemoveTask() +
-    // restart Activity dalam mode fullscreen.
-    //
-    // Lapisan 2: Jika sedang dalam Lock Task mode (ujian aktif),
-    // finishAndRemoveTask akan gagal — fallback ke moveTaskToBack()
-    // agar app tetap di foreground.
+    // ANTI SPLIT SCREEN — Override kedua signature Android:
+    // 1. onMultiWindowModeChanged(Boolean, Configuration) untuk Android 8.0+ (API 26+)
+    // 2. onMultiWindowModeChanged(Boolean) untuk Android 7.x (API 24-25)
     // ════════════════════════════════════════════════════════════════
+    override fun onMultiWindowModeChanged(
+        isInMultiWindowMode: Boolean,
+        newConfig: android.content.res.Configuration
+    ) {
+        super.onMultiWindowModeChanged(isInMultiWindowMode, newConfig)
+        if (isInMultiWindowMode) {
+            handleSplitScreenDetected()
+        }
+    }
+
     @Suppress("DEPRECATION")
     override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean) {
         super.onMultiWindowModeChanged(isInMultiWindowMode)
         if (isInMultiWindowMode) {
-            Log.w("ExamGO", "⚠️ Split screen detected! Forcing fullscreen...")
-            if (isLockTaskActive) {
-                // Saat ujian aktif: jangan destroy activity, cukup paksa fullscreen kembali
-                // dengan membawa task ke foreground. Lock Task mode akan mengambil alih.
-                moveTaskToBack(false)
-                startActivity(Intent(this, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                })
-            } else {
-                // Di luar ujian: keluar dari split screen dengan restart activity
-                // Restart tanpa animasi agar perpindahan tidak terlihat oleh user
-                val intent = Intent(this, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                }
-                startActivity(intent)
-                overridePendingTransition(0, 0) // tanpa animasi
-                finish()
-            }
+            handleSplitScreenDetected()
         }
     }
 
-    // (Lapisan 2 dihapus karena method isInMultiWindowMode tidak dapat di-override di SDK ini)
+    private fun handleSplitScreenDetected() {
+        Log.w("ExamGO", "⚠️ Split screen / Multi-window detected! Reasserting fullscreen...")
+        // Jangan pernah panggil moveTaskToBack()! Paksa activity kembali ke fullscreen depan.
+        bringToForeground(null)
+    }
 
     // ANTI SPLIT SCREEN — Lapisan 3: override onPictureInPictureModeChanged()
     // Blokir Picture-in-Picture mode juga (celah serupa split screen).
@@ -137,24 +126,24 @@ class MainActivity : FlutterFragmentActivity() {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode)
         if (isInPictureInPictureMode) {
             Log.w("ExamGO", "⚠️ PiP mode detected! Forcing exit...")
-            // Keluar dari PiP mode dengan memindahkan task kembali ke foreground
-            val intent = Intent(this, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-            startActivity(intent)
+            bringToForeground(null)
         }
     }
 
-    // FIX INFINIX/TRANSSION: insetsController adalah null di onCreate() pada
-    // beberapa device Infinix X6855 (MediaTek Helio G88) karena window belum
-    // sepenuhnya attached ke WindowManager saat onCreate dipanggil.
-    // onWindowFocusChanged(true) dipanggil saat window sudah visible dan
-    // insetsController sudah terjamin non-null.
-    // Ini juga mengurangi startup jank (366 frames skipped) karena tidak ada
-    // layout pass tambahan sebelum first frame.
+    // onWindowFocusChanged: jika fokus hilang saat ujian (misal floating window/sidebar),
+    // segera bawa kembali activity ke depan setelah jeda singkat
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (!hasFocus) return
+        if (!hasFocus) {
+            if (isLockTaskActive) {
+                window.decorView.postDelayed({
+                    if (!hasWindowFocus() && isLockTaskActive) {
+                        bringToForeground(null)
+                    }
+                }, 300)
+            }
+            return
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.setDecorFitsSystemWindows(false)
             window.insetsController?.apply {
@@ -283,6 +272,10 @@ class MainActivity : FlutterFragmentActivity() {
                 "bringToForeground"     -> bringToForeground(result)
                 "isLockTaskActive"      -> result.success(isLockTaskActive)
                 "isScreenOn"            -> isScreenOn(result)
+                "isInMultiWindowMode"   -> {
+                    val inMulti = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) isInMultiWindowMode else false
+                    result.success(inMulti)
+                }
                 // FIX CAMERA-CRASH: Pre-flight check sebelum CameraX diinisialisasi.
                 // Device Advan (dan beberapa brand lokal) melaporkan 0 kamera tersedia
                 // saat Camera HAL bermasalah, menyebabkan CameraUnavailableException
@@ -335,14 +328,14 @@ class MainActivity : FlutterFragmentActivity() {
         }
     }
 
-    private fun bringToForeground(result: MethodChannel.Result) {
+    private fun bringToForeground(result: MethodChannel.Result? = null) {
         try {
             startActivity(Intent(this, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
             })
-            result.success(true)
+            result?.success(true)
         } catch (e: Exception) {
-            result.success(false)
+            result?.success(false)
         }
     }
 

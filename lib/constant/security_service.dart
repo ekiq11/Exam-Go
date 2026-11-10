@@ -41,6 +41,17 @@ class SecurityService {
     } catch (_) {}
   }
 
+  /// Cek apakah perangkat sedang dalam mode Split-Screen / Multi-Window
+  Future<bool> isInMultiWindowMode() async {
+    if (kIsWeb) return false;
+    try {
+      final inMulti = await _channel.invokeMethod<bool>('isInMultiWindowMode');
+      return inMulti ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Mengecek keamanan sistem level OS: Root, Jailbreak, Developer Mode.
   /// Mengembalikan String alasan error, atau null jika perangkat aman.
   Future<String?> checkDeviceIntegrity() async {

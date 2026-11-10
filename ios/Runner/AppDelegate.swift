@@ -305,6 +305,10 @@ class KioskChannelHandler {
         case "isLockTaskActive":
             result(delegate.isKioskActive)
 
+        case "isInMultiWindowMode":
+            // iOS iPadOS: Guided Access / UIRequiresFullScreen mencegah split view
+            result(false)
+
         case "isScreenOn":
             // [FIX S-6] UIScreen.main.brightness TIDAK akurat:
             // - Di Low Power Mode brightness bisa mendekati 0 saat layar masih menyala
