@@ -60,7 +60,7 @@
   <div id="landing-announcement-bar" class="bg-gradient-to-r from-brand-600 via-teal-600 to-indigo-600 text-white text-xs sm:text-sm py-2 px-4 shadow-md text-center font-medium relative z-50">
     <div class="max-w-7xl mx-auto flex items-center justify-center gap-2 flex-wrap">
       <span class="px-2 py-0.5 rounded-full bg-white/20 text-white font-bold text-[11px] uppercase tracking-wider">⚡ PENGUMUMAN</span>
-      <span id="announcement-text">Pendaftaran Tryout Akbar SNBT 2026 Gelombang 1 Dibuka! Kuota promo diskon terbatas.</span>
+      <span id="announcement-text">⚡ Beli sekarang hanya Rp.49000 akses seumur hidup, khusus 1000 peserta</span>
       <a href="#event-promo" class="underline font-bold hover:text-brand-100 transition-colors ml-1">Lihat Promo &rarr;</a>
     </div>
   </div>
@@ -1040,25 +1040,24 @@
         }
       }
 
-      // Load dynamic settings: via google.script.run jika di dalam GAS, atau fetch jika di domain Cloudflare
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run
-          .withSuccessHandler(applyLandingSettings)
-          .getLandingPageSettings();
-      } else {
-        fetch('https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec', {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'getLandingPageSettings' })
-        })
+      // Load dynamic settings: via /api/landing-settings jika di domain examgo.id, atau fetch langsung ke GAS
+      const settingsApiUrl = (window.location.hostname === 'examgo.id' || window.location.hostname.endsWith('.examgo.id'))
+        ? '/api/landing-settings'
+        : 'https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec?action=get_landing_settings';
+
+      fetch(settingsApiUrl)
         .then(function(res) { return res.json(); })
         .then(function(json) {
           if (json && json.settings) applyLandingSettings(json.settings);
         })
         .catch(function() {
-          // Tetap tampil sempurna menggunakan template bawaan jika offline
+          // Fallback ke google.script.run jika di dalam GAS
+          if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run
+              .withSuccessHandler(applyLandingSettings)
+              .getLandingPageSettings();
+          }
         });
-      }
 
       // Initialize live purchase toasts after 2.5s
       setTimeout(showLivePurchaseToast, 2500);

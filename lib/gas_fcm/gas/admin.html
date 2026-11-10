@@ -8789,38 +8789,63 @@
       if (btn) btn.disabled = true;
       showToast('Memuat konfigurasi landing page...', 'info');
 
-      google.script.run
-        .withSuccessHandler(function (s) {
-          if (btn) btn.disabled = false;
-          if (!s) {
-            showToast('Pengaturan default dimuat', 'info');
-            return;
-          }
-          if (document.getElementById('set-hero-badge')) document.getElementById('set-hero-badge').value = s.hero_badge || '';
-          if (document.getElementById('set-hero-title')) document.getElementById('set-hero-title').value = s.hero_title || '';
-          if (document.getElementById('set-hero-subtitle')) document.getElementById('set-hero-subtitle').value = s.hero_subtitle || '';
-          if (document.getElementById('set-event-active')) document.getElementById('set-event-active').checked = s.is_featured_event_active !== false;
-          if (document.getElementById('set-event-title')) document.getElementById('set-event-title').value = s.featured_event_title || '';
-          if (document.getElementById('set-event-date')) document.getElementById('set-event-date').value = s.featured_event_date || '';
-          if (document.getElementById('set-event-desc')) document.getElementById('set-event-desc').value = s.featured_event_desc || '';
-          if (document.getElementById('set-promo-original')) document.getElementById('set-promo-original').value = s.promo_price_original || '';
-          if (document.getElementById('set-promo-discount')) document.getElementById('set-promo-discount').value = s.promo_price_discount || '';
-          if (document.getElementById('set-promo-tag')) document.getElementById('set-promo-tag').value = s.promo_tag || '';
-          if (document.getElementById('set-lynkid-url')) document.getElementById('set-lynkid-url').value = s.lynkid_url || '';
-          if (document.getElementById('set-playstore-url')) document.getElementById('set-playstore-url').value = s.playstore_url || 'https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id';
-          if (document.getElementById('set-appstore-url')) document.getElementById('set-appstore-url').value = s.appstore_url || 'https://apps.apple.com/id/app/examgo/id6759708435?l=id';
-          if (document.getElementById('set-apk-url')) document.getElementById('set-apk-url').value = s.download_apk_url || '';
-          if (document.getElementById('set-wa-number')) document.getElementById('set-wa-number').value = s.whatsapp_number || '';
-          if (document.getElementById('set-wa-msg')) document.getElementById('set-wa-msg').value = s.whatsapp_message || '';
-          if (document.getElementById('set-announcement-active')) document.getElementById('set-announcement-active').checked = s.is_announcement_active !== false;
-          if (document.getElementById('set-announcement-text')) document.getElementById('set-announcement-text').value = s.announcement_text || '';
-          showToast('Data konfigurasi berhasil dimuat');
-        })
-        .withFailureHandler(function (err) {
-          if (btn) btn.disabled = false;
-          showToast('Gagal memuat konfigurasi: ' + (err.message || err), 'error');
-        })
-        .getLandingPageSettings();
+      function populateForm(s) {
+        if (btn) btn.disabled = false;
+        if (!s) {
+          showToast('Pengaturan default dimuat', 'info');
+          return;
+        }
+        if (document.getElementById('set-hero-badge')) document.getElementById('set-hero-badge').value = s.hero_badge || '';
+        if (document.getElementById('set-hero-title')) document.getElementById('set-hero-title').value = s.hero_title || '';
+        if (document.getElementById('set-hero-subtitle')) document.getElementById('set-hero-subtitle').value = s.hero_subtitle || '';
+        if (document.getElementById('set-event-active')) document.getElementById('set-event-active').checked = s.is_featured_event_active !== false;
+        if (document.getElementById('set-event-title')) document.getElementById('set-event-title').value = s.featured_event_title || '';
+        if (document.getElementById('set-event-date')) document.getElementById('set-event-date').value = s.featured_event_date || '';
+        if (document.getElementById('set-event-desc')) document.getElementById('set-event-desc').value = s.featured_event_desc || '';
+        if (document.getElementById('set-promo-original')) document.getElementById('set-promo-original').value = s.promo_price_original || '';
+        if (document.getElementById('set-promo-discount')) document.getElementById('set-promo-discount').value = s.promo_price_discount || '';
+        if (document.getElementById('set-promo-tag')) document.getElementById('set-promo-tag').value = s.promo_tag || '';
+        if (document.getElementById('set-lynkid-url')) document.getElementById('set-lynkid-url').value = s.lynkid_url || 'https://lynk.id/examgo';
+        if (document.getElementById('set-playstore-url')) document.getElementById('set-playstore-url').value = s.playstore_url || 'https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id';
+        if (document.getElementById('set-appstore-url')) document.getElementById('set-appstore-url').value = s.appstore_url || 'https://apps.apple.com/id/app/examgo/id6759708435?l=id';
+        if (document.getElementById('set-apk-url')) document.getElementById('set-apk-url').value = s.download_apk_url || '';
+        if (document.getElementById('set-wa-number')) document.getElementById('set-wa-number').value = s.whatsapp_number || '6289693652230';
+        if (document.getElementById('set-wa-msg')) document.getElementById('set-wa-msg').value = s.whatsapp_message || 'Halo Admin ExamGO, saya ingin membeli token tryout / konsultasi paket ujian';
+        if (document.getElementById('set-announcement-active')) document.getElementById('set-announcement-active').checked = s.is_announcement_active !== false;
+        if (document.getElementById('set-announcement-text')) document.getElementById('set-announcement-text').value = s.announcement_text || '';
+        showToast('Data konfigurasi berhasil dimuat');
+      }
+
+      function loadViaRest() {
+        fetch('https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec?action=get_landing_settings')
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (res && res.settings) populateForm(res.settings);
+            else if (btn) btn.disabled = false;
+          })
+          .catch(function (err) {
+            if (btn) btn.disabled = false;
+            showToast('Gagal memuat konfigurasi: ' + (err.message || err), 'error');
+          });
+      }
+
+      try {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          google.script.run
+            .withSuccessHandler(function (s) {
+              populateForm(s);
+            })
+            .withFailureHandler(function (err) {
+              console.warn('google.script.run load gagal, fallback ke REST API...', err);
+              loadViaRest();
+            })
+            .getLandingPageSettings();
+        } else {
+          loadViaRest();
+        }
+      } catch (e) {
+        loadViaRest();
+      }
     }
 
     function submitLandingSettingsForm() {
@@ -8867,26 +8892,62 @@
         btn.disabled = true;
       }
 
-      google.script.run
-        .withSuccessHandler(function (res) {
-          if (btn) {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-          }
-          if (res && res.error) {
-            showToast(res.error, 'error');
-          } else {
-            showToast('Konfigurasi Landing Page berhasil disimpan & live!', 'success');
-          }
+      function handleSaveSuccess(res) {
+        if (btn) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }
+        if (res && res.error) {
+          showToast('Gagal: ' + res.error, 'error');
+        } else {
+          showToast('Konfigurasi Landing Page berhasil disimpan & live!', 'success');
+        }
+      }
+
+      function handleSaveError(err) {
+        if (btn) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }
+        showToast('Gagal menyimpan: ' + (err.message || err), 'error');
+      }
+
+      function saveViaRest() {
+        const payload = JSON.stringify({
+          action: 'saveLandingPageSettings',
+          settings: settings,
+          username: creds.username || creds.user,
+          password: creds.password || creds.pass
+        });
+
+        fetch('https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: payload
         })
-        .withFailureHandler(function (err) {
-          if (btn) {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-          }
-          showToast('Gagal menyimpan: ' + (err.message || err), 'error');
-        })
-        .saveLandingPageSettings(settings, creds.username || creds.user, creds.password || creds.pass);
+          .then(function (res) { return res.json(); })
+          .then(function (res) { handleSaveSuccess(res); })
+          .catch(function (err) { handleSaveError(err); });
+      }
+
+      // Coba google.script.run, dan fallback otomatis ke REST jika diblokir cross-origin iframe
+      try {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+          google.script.run
+            .withSuccessHandler(function (res) {
+              handleSaveSuccess(res);
+            })
+            .withFailureHandler(function (err) {
+              console.warn('google.script.run gagal (NetworkError HTTP 0 pada iframe), mencoba fallback REST API...', err);
+              saveViaRest();
+            })
+            .saveLandingPageSettings(settings, creds.username || creds.user, creds.password || creds.pass);
+        } else {
+          saveViaRest();
+        }
+      } catch (e) {
+        saveViaRest();
+      }
     }
 
     function getActualLandingUrl() {
