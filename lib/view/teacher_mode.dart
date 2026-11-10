@@ -888,7 +888,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               icon: Icons.token_rounded,
               color: const Color(0xFF0F766E),
               title: 'Riwayat Ujian & Token Saya',
-              subtitle: 'Kelola token ujian, bagikan kode/QR ke siswa & pantau kehadiran',
+              subtitle: 'Kelola token ujian, bagikan QR code ke kelas & arsip sesi',
               trailing: FutureBuilder<List<String>>(
                 future: SharedPreferences.getInstance().then(
                   (p) => p.getStringList('teacher_exam_history') ?? [],
@@ -918,7 +918,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const TeacherMonitoringListScreen(),
+                    builder: (_) => const TeacherMonitoringListScreen(isLiveMode: false),
                   ),
                 );
                 if (mounted) _checkLicenseStatus();
@@ -940,15 +940,15 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
             ),
             const SizedBox(height: 10),
             _MenuTile(
-              icon: Icons.monitor_heart_rounded,
+              icon: Icons.radar_rounded,
               color: Colors.orange,
-              title: 'Monitoring Ujian',
-              subtitle: 'Pantau aktivitas peserta ujian',
+              title: 'Live Monitoring Peserta',
+              subtitle: 'Radar real-time pengawasan: pantau online, kecurangan & buka blokir',
               onTap: () async {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const TeacherMonitoringListScreen(),
+                    builder: (_) => const TeacherMonitoringListScreen(isLiveMode: true),
                   ),
                 );
                 if (mounted) _checkLicenseStatus();

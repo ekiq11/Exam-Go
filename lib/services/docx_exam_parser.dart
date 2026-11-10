@@ -6,6 +6,7 @@ import 'package:xml/xml.dart';
 
 import '../constant/app_config.dart';
 import '../models/exam_question_model.dart';
+import '../utils/math_widget_factory.dart';
 import 'math_latex_converter.dart';
 
 class DocxParseResult {
@@ -108,14 +109,22 @@ class DocxExamParser {
           final imageFile = archive.findFile(fullZipPath);
           if (imageFile != null) {
             final fileName = fullZipPath.split('/').last;
+            final imageBytes = Uint8List.fromList(imageFile.content as List<int>);
             final driveUrl = await _uploadImageToDrive(
-              Uint8List.fromList(imageFile.content as List<int>),
+              imageBytes,
               fileName,
             );
             if (driveUrl != null && driveUrl.isNotEmpty) {
               rIdToDriveUrl[rId] = driveUrl;
             } else {
-              warnings.add('Gagal mengunggah gambar $fileName ke Google Drive.');
+              // Fallback offline/lokal jika upload Google Drive gagal/timeout:
+              // Gunakan Base64 Data URI agar gambar 100% selalu tampil di layar preview!
+              final ext = fileName.split('.').last.toLowerCase();
+              final mime = ext == 'jpg' || ext == 'jpeg'
+                  ? 'image/jpeg'
+                  : (ext == 'gif' ? 'image/gif' : 'image/png');
+              rIdToDriveUrl[rId] = 'data:$mime;base64,${base64Encode(imageBytes)}';
+              warnings.add('Gambar $fileName dimuat langsung dari berkas (fallback lokal).');
             }
           }
         }
@@ -480,14 +489,8 @@ class DocxExamParser {
             runBuffer.write(child.innerText);
           } else if (cName == 'br') {
             runBuffer.write('<br/>');
-          } else if (cName == 'drawing') {
-            for (final blip in child.findAllElements('a:blip')) {
-              final rEmbed = blip.getAttribute('r:embed') ?? blip.getAttribute('embed');
-              if (rEmbed != null && rEmbed.isNotEmpty) {
-                imageRIds.add(rEmbed);
-                runBuffer.write(' [IMAGE:$rEmbed] ');
-              }
-            }
+          } else if (cName == 'drawing' || cName == 'pict') {
+            _extractImageRIdsFromNode(child, imageRIds, runBuffer);
           }
         }
       }
@@ -520,15 +523,9 @@ class DocxExamParser {
       return;
     }
 
-    // 4. Drawing langsung di <w:p>
-    if (localName == 'drawing') {
-      for (final blip in node.findAllElements('a:blip')) {
-        final rEmbed = blip.getAttribute('r:embed') ?? blip.getAttribute('embed');
-        if (rEmbed != null && rEmbed.isNotEmpty) {
-          imageRIds.add(rEmbed);
-          buffer.write(' [IMAGE:$rEmbed] ');
-        }
-      }
+    // 4. Drawing atau Pict langsung di <w:p>
+    if (localName == 'drawing' || localName == 'pict') {
+      _extractImageRIdsFromNode(node, imageRIds, buffer);
       return;
     }
 
@@ -536,6 +533,27 @@ class DocxExamParser {
     for (final child in node.children) {
       if (child is XmlElement) {
         _extractRunFormattingAndContent(child, buffer, imageRIds);
+      }
+    }
+  }
+
+  /// Ekstraksi ID relasi gambar (rId) dari DrawingML (a:blip) maupun VML (v:imagedata)
+  static void _extractImageRIdsFromNode(
+    XmlElement node,
+    List<String> imageRIds,
+    StringBuffer buffer,
+  ) {
+    for (final el in [node, ...node.descendants.whereType<XmlElement>()]) {
+      final name = el.name.local;
+      if (name == 'blip' || name == 'imagedata') {
+        final rId = el.getAttribute('r:embed') ??
+            el.getAttribute('embed') ??
+            el.getAttribute('r:id') ??
+            el.getAttribute('id');
+        if (rId != null && rId.isNotEmpty && !imageRIds.contains(rId)) {
+          imageRIds.add(rId);
+          buffer.write(' [IMAGE:$rId] ');
+        }
       }
     }
   }
@@ -607,6 +625,11 @@ class DocxExamParser {
       final apiKey = AppConfig.gasApiKey;
       if (gasUrl.isEmpty || apiKey.isEmpty) return null;
 
+      final ext = filename.split('.').last.toLowerCase();
+      final mime = ext == 'jpg' || ext == 'jpeg'
+          ? 'image/jpeg'
+          : (ext == 'gif' ? 'image/gif' : 'image/png');
+
       final base64Data = base64Encode(imageBytes);
       final resp = await http.post(
         Uri.parse(gasUrl),
@@ -616,15 +639,23 @@ class DocxExamParser {
           'action': 'uploadFileToDrive',
           'base64': base64Data,
           'filename': filename,
-          'mimeType': 'image/png',
+          'mimeType': mime,
           'folderId': AppConfig.driveFolderId,
         }),
       ).timeout(const Duration(seconds: 25));
 
       if (resp.statusCode == 200) {
         final resJson = jsonDecode(resp.body) as Map<String, dynamic>;
-        if (resJson['success'] == true && resJson['url'] != null) {
-          return resJson['url'] as String;
+        if (resJson['success'] == true) {
+          // Prioritaskan direct Google Usercontent CDN (lh3.googleusercontent.com)
+          final fileId = resJson['fileId']?.toString();
+          if (fileId != null && fileId.isNotEmpty) {
+            return 'https://lh3.googleusercontent.com/d/$fileId';
+          }
+          final rawUrl = resJson['url'] as String?;
+          if (rawUrl != null && rawUrl.isNotEmpty) {
+            return MathHtmlFormatter.convertDriveUrl(rawUrl);
+          }
         }
       }
     } catch (_) {}

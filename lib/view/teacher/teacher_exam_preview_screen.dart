@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -670,8 +671,6 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
   }
 
   Widget _buildQuestionCard(ExamQuestion q, {String? subtestJudul}) {
-    final driveImg = MathHtmlFormatter.convertDriveUrl(q.gambar);
-
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -762,36 +761,9 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
           ],
 
           // Gambar Pertanyaan jika ada
-          if (driveImg.isNotEmpty) ...[
+          if (q.gambar.isNotEmpty) ...[
             const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: CachedNetworkImage(
-                imageUrl: driveImg,
-                httpHeaders: MathHtmlFormatter.networkImageHeaders,
-                placeholder: (context, url) => Container(
-                  height: 120,
-                  color: Colors.grey.shade100,
-                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryGreen)),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  padding: const EdgeInsets.all(12),
-                  color: Colors.red.shade50,
-                  child: Row(
-                    children: [
-                      const Icon(Icons.broken_image_outlined, color: Colors.red, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Gambar tidak dapat dimuat ($driveImg)',
-                          style: GoogleFonts.poppins(fontSize: 11, color: Colors.red),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            _buildQuestionImage(q.gambar),
           ],
 
           const SizedBox(height: 14),
@@ -886,17 +858,7 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
                   ),
                 if (img.isNotEmpty) ...[
                   if (text.isNotEmpty) const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: CachedNetworkImage(
-                      imageUrl: MathHtmlFormatter.convertDriveUrl(img),
-                      httpHeaders: MathHtmlFormatter.networkImageHeaders,
-                      height: 100,
-                      fit: BoxFit.contain,
-                      errorWidget: (context, url, error) =>
-                          const SizedBox.shrink(),
-                    ),
-                  ),
+                  _buildQuestionImage(img, height: 100),
                 ],
               ],
             ),
@@ -912,6 +874,66 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
     return ExamQuestionTableWidget(
       tabelStr: tabelStr,
       subtestJudul: subtestJudul,
+    );
+  }
+
+  Widget _buildQuestionImage(String rawUrl, {double? height, BoxFit fit = BoxFit.contain}) {
+    if (rawUrl.isEmpty) return const SizedBox.shrink();
+    final cleanUrl = MathHtmlFormatter.convertDriveUrl(rawUrl);
+
+    // Dukung Base64 Data URI untuk preview gambar 100% instan/offline
+    if (cleanUrl.startsWith('data:image')) {
+      final commaIdx = cleanUrl.indexOf(',');
+      if (commaIdx != -1) {
+        try {
+          final bytes = base64Decode(cleanUrl.substring(commaIdx + 1));
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.memory(
+              bytes,
+              height: height,
+              fit: fit,
+              errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+            ),
+          );
+        } catch (_) {}
+      }
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: CachedNetworkImage(
+        imageUrl: cleanUrl,
+        httpHeaders: MathHtmlFormatter.networkImageHeaders,
+        height: height,
+        fit: fit,
+        placeholder: (context, url) => Container(
+          height: height ?? 120,
+          color: Colors.grey.shade100,
+          child: const Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.primaryGreen,
+            ),
+          ),
+        ),
+        errorWidget: (context, url, error) => Container(
+          padding: const EdgeInsets.all(12),
+          color: Colors.red.shade50,
+          child: Row(
+            children: [
+              const Icon(Icons.broken_image_outlined, color: Colors.red, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Gambar tidak dapat dimuat ($cleanUrl)',
+                  style: GoogleFonts.poppins(fontSize: 11, color: Colors.red),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

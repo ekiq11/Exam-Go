@@ -91,7 +91,8 @@ _ActivityType _getActivityType(String type) =>
 
 // ─── Daftar Sesi Ujian (List Screen) ─────────────────────────────────────────
 class TeacherMonitoringListScreen extends StatefulWidget {
-  const TeacherMonitoringListScreen({super.key});
+  final bool isLiveMode;
+  const TeacherMonitoringListScreen({super.key, this.isLiveMode = false});
   @override
   State<TeacherMonitoringListScreen> createState() =>
       _TeacherMonitoringListScreenState();
@@ -323,30 +324,66 @@ class _TeacherMonitoringListScreenState
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // ── Gradient SliverAppBar ──────────────────────────────
+          // ── Gradient SliverAppBar (Redesain Elegan & Anti-Overlap) ────
           SliverAppBar(
-            expandedHeight: 160,
+            expandedHeight: 165,
             pinned: true,
             stretch: true,
             backgroundColor: _kGreen,
             foregroundColor: Colors.white,
             elevation: 0,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-                tooltip: 'Segarkan Riwayat',
-                onPressed: _loadHistory,
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 12, top: 6, bottom: 6),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    width: 1,
+                  ),
+                ),
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+                  tooltip: 'Kembali',
+                  onPressed: () => Navigator.pop(context),
+                ),
               ),
-              const SizedBox(width: 8),
+            ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 14, top: 6, bottom: 6),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.25),
+                      width: 1,
+                    ),
+                  ),
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
+                    tooltip: 'Segarkan Riwayat',
+                    onPressed: _loadHistory,
+                  ),
+                ),
+              ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
+              centerTitle: false,
+              titlePadding: const EdgeInsetsDirectional.only(start: 64, bottom: 16, end: 64),
               title: Text(
-                'Riwayat Ujian & Token Guru',
+                widget.isLiveMode ? 'Live Monitoring Ujian' : 'Riwayat & Token Ujian',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w700,
-                  fontSize: 17,
+                  fontSize: 16,
                   color: Colors.white,
+                  letterSpacing: -0.2,
                 ),
               ),
               background: Stack(
@@ -358,19 +395,20 @@ class _TeacherMonitoringListScreenState
                         colors: [
                           Color(0xFF1B5E20),
                           Color(0xFF2E7D32),
-                          Color(0xFF43A047),
+                          Color(0xFF388E3C),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                     ),
                   ),
+                  // Dekorasi Geometris Halus
                   Positioned(
                     top: -40,
-                    right: -40,
+                    right: -30,
                     child: Container(
-                      width: 180,
-                      height: 180,
+                      width: 170,
+                      height: 170,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withValues(alpha: 0.06),
@@ -378,43 +416,145 @@ class _TeacherMonitoringListScreenState
                     ),
                   ),
                   Positioned(
-                    bottom: -20,
+                    bottom: -30,
                     left: -20,
                     child: Container(
-                      width: 120,
-                      height: 120,
+                      width: 130,
+                      height: 130,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withValues(alpha: 0.04),
                       ),
                     ),
                   ),
+                  // Badge Subtitle saat expanded
+                  Positioned(
+                    left: 20,
+                    bottom: 52,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            widget.isLiveMode ? Icons.sensors_rounded : Icons.token_rounded,
+                            size: 13,
+                            color: widget.isLiveMode ? Colors.amberAccent : Colors.white70,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            widget.isLiveMode
+                                ? 'Radar Pengawasan Real-Time'
+                                : 'Kelola Token & Arsip Sesi',
+                            style: GoogleFonts.poppins(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   Positioned(
                     top: 50,
-                    right: 24,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Icon(
-                          Icons.monitor_heart_rounded,
-                          size: 48,
-                          color: Colors.white.withValues(alpha: 0.15),
+                    right: 20,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.18),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${_history.length} Sesi Ujian',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.7),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.inventory_2_outlined, size: 14, color: Colors.white70),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${_history.length} Sesi',
+                            style: GoogleFonts.poppins(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           ),
+
+          // ── Live Proctoring Header Banner (Jika mode Live Monitoring) ──
+          if (!_loading && _history.isNotEmpty && widget.isLiveMode)
+            SliverToBoxAdapter(
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFFCD34D)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF59E0B),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.radar_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Pusat Pengawasan Real-Time',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: const Color(0xFF92400E),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Ketuk kartu sesi ujian di bawah untuk memantau status siswa, jeda/split-screen, dan buka blokir secara live.',
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              color: const Color(0xFFB45309),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
           // ── Body ──────────────────────────────────────────────
           _loading
