@@ -186,10 +186,13 @@ void main() {
       expect(content, contains('renderAllMath()'));
 
       // Official Store download links check
+      // Store links & Lynk.id checkout URL
+      expect(content, contains('https://lynk.id/examgo'));
       expect(content, contains('https://play.google.com/store/apps/details?id=com.kemenag.examgo'));
       expect(content, contains('https://apps.apple.com/id/app/examgo/id6759708435'));
       expect(content, contains('btn-hero-playstore'));
       expect(content, contains('btn-hero-appstore'));
+      expect(content, contains('btn-mobile-lynkid'));
 
       // Script hydration
       expect(content, contains('google.script.run'));
@@ -341,6 +344,11 @@ void main() {
 
       // Ensure old unwanted DNS is completely eliminated
       expect(workerContent, isNot(contains('myolc.my.id')));
+
+      // Ensure /admin embeds iframe on-domain and does NOT 302 redirect away from examgo.id
+      expect(workerContent, contains('path === "/admin"'));
+      expect(workerContent, contains('iframe id="admin-frame"'));
+      expect(workerContent, isNot(contains('Response.redirect(GAS_ADMIN_URL, 302)')));
 
       // Ensure routes
       expect(workerContent, contains('GAS_ADMIN_URL = "https://script.google.com/macros/s/'));
