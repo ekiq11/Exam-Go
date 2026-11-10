@@ -262,6 +262,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   }
 
   void _handleViolationDetected() {
+    SecurityService.instance.bringToForeground();
+    SecurityService.instance.reapply();
+
     MonitoringService.instance.logActivity(
       examId: widget.token,
       nis: widget.studentNis,

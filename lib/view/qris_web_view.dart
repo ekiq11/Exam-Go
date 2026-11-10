@@ -264,6 +264,7 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
     _examTimer?.cancel();
     _retryTimer?.cancel();
     _pauseDebounce?.cancel();
+    _inactiveTimer?.cancel();
     _pingTimer?.cancel();
     // FIX CRASH-C1: Sama persis dengan bug StandardMethodCodec di home_screen (312 events).
     // Firestore juga menggunakan EventChannel. Saat dispose() dipanggil sebelum stream
@@ -410,13 +411,62 @@ class _ExamWebViewScreenState extends State<ExamWebViewScreen>
         break;
 
       case AppLifecycleState.inactive:
-        // FIX: Banyak siswa terblokir otomatis ("False Positive") karena status 'inactive'.
-        // Inactive terjadi saat:
-        // 1. Ada notifikasi masuk (WhatsApp, dll) muncul dari atas layar.
-        // 2. Muncul pop-up sistem (Peringatan Baterai Lemah, Alarm).
-        // 3. Siswa tidak sengaja menyentuh ujung atas layar.
-        // Kita TIDAK BOLEH menghukum siswa untuk hal ini. Pelanggaran hanya dihitung
-        // saat aplikasi benar-benar di-minimize (masuk ke state 'paused').
+        _inactiveTimer?.cancel();
+        // Beri jeda toleransi 2000ms untuk menghindari false-positive dari
+        // notifikasi banner sekilas atau pop-up sistem singkat.
+        // Jika tetap inactive > 2 detik, artinya ada floating window (Chrome /
+        // WhatsApp / Sidebar / Pop-up view) yang sedang aktif di atas ExamGO.
+        _inactiveTimer = Timer(const Duration(milliseconds: 2000), () async {
+          if (!mounted || _isExiting || !_securityEnabled || _isFrozen) return;
+          final isScreenOn = await SecurityService.instance.isScreenOn();
+          if (!isScreenOn && mounted) return;
+
+          _wasActuallyPaused = true;
+          _minimizeCount++;
+          _triggerVibrationAlarm();
+
+          AnalyticsService.instance.logExamViolation(
+            examTitle: _examTitle,
+            violationCount: _minimizeCount,
+          );
+
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).clearSnackBars();
+
+          final maxViolations = AppRemoteConfig.instance.maxViolations > 0
+              ? AppRemoteConfig.instance.maxViolations
+              : 3;
+
+          // Tarik kembali aplikasi ExamGO ke depan untuk menutup floating app
+          SecurityService.instance.bringToForeground();
+          SecurityService.instance.reapply();
+
+          if (_minimizeCount >= maxViolations) {
+            _kickedOut = true;
+            MonitoringService.instance.setLocalBlock(widget.examId, widget.studentNis);
+            _logActivity(
+              'EXIT_APP',
+              'Aplikasi lain mengambang / kehilangan fokus (ke-$_minimizeCount×) — Diblokir',
+            );
+            _sendMonitoringStatus('BLOCKED');
+            _notifyTeacherViaGas();
+            _showSnack(
+              '⚠️ Peringatan ke-$_minimizeCount: Pelanggaran jendela mengambang dilaporkan ke pengawas.',
+              color: Colors.red.shade800,
+              duration: 5,
+            );
+            _performExit(null, 'blocked_violation');
+          } else {
+            _logActivity(
+              'EXIT_APP',
+              'Aplikasi lain mengambang / kehilangan fokus (ke-$_minimizeCount×)',
+            );
+            _sendMonitoringStatus('PAUSED');
+            _notifyTeacherViaGas();
+            _showMinimizeWarning();
+            _showViolationDialog();
+          }
+        });
         break;
 
       case AppLifecycleState.resumed:

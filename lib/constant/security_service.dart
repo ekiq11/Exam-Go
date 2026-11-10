@@ -33,6 +33,14 @@ class SecurityService {
     }
   }
 
+  /// Tarik kembali aplikasi ke foreground jika ada floating window / aplikasi lain di atasnya
+  Future<void> bringToForeground() async {
+    if (kIsWeb) return;
+    try {
+      await _channel.invokeMethod('bringToForeground');
+    } catch (_) {}
+  }
+
   /// Mengecek keamanan sistem level OS: Root, Jailbreak, Developer Mode.
   /// Mengembalikan String alasan error, atau null jika perangkat aman.
   Future<String?> checkDeviceIntegrity() async {
