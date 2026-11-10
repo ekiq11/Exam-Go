@@ -687,7 +687,9 @@ class _TryoutSpiderChartWidgetState extends State<TryoutSpiderChartWidget>
                         decoration: BoxDecoration(
                           color: s.color.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: s.color.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: s.color.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,

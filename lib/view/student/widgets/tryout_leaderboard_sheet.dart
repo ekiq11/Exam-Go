@@ -383,8 +383,11 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 6,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
@@ -431,44 +434,50 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'PERINGKAT NASIONAL',
-                    style: GoogleFonts.poppins(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.75),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'PERINGKAT NASIONAL',
+                      style: GoogleFonts.poppins(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.75),
+                      ),
                     ),
-                  ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        '#${data.userRank}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 34,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          height: 1.1,
-                        ),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            '#${data.userRank}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 34,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              height: 1.1,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'dari ${data.totalParticipants} peserta',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.85),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'dari ${data.totalParticipants} peserta',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.85),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
@@ -573,8 +582,11 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                 ),
               ),
               const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
                 children: [
                   Text(
                     'Skor Anda: ${widget.userScore} / Target: $targetScore',
@@ -587,7 +599,7 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      isSurpassed ? '+${diff} Poin (Lolos Target! 🎉)' : 'Kurang ${diff.abs()} Poin',
+                      isSurpassed ? '+$diff Poin (Lolos Target! 🎉)' : 'Kurang ${diff.abs()} Poin',
                       style: GoogleFonts.poppins(
                         fontSize: 9.5,
                         fontWeight: FontWeight.bold,
@@ -815,3 +827,4 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
     );
   }
 }
+

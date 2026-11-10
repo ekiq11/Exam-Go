@@ -623,34 +623,46 @@ class _TeacherMonitoringListScreenState
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 3),
-                            Row(
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 2,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.calendar_today_rounded,
-                                  size: 11.5,
-                                  color: Colors.grey.shade500,
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.calendar_today_rounded,
+                                      size: 11.5,
+                                      color: Colors.grey.shade500,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      dateStr,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 10.5,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  dateStr,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 10.5,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Icon(
-                                  Icons.access_time_rounded,
-                                  size: 11.5,
-                                  color: Colors.grey.shade500,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  timeStr,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 10.5,
-                                    color: Colors.grey.shade600,
-                                  ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.access_time_rounded,
+                                      size: 11.5,
+                                      color: Colors.grey.shade500,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      timeStr,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 10.5,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),

@@ -613,129 +613,141 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                   ],
                 ),
                 const Spacer(),
-                InkWell(
-                  onTap: _showLeaderboardSheet,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-                    ),
-                    child: Column(
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
-                          'Peringkat',
-                          style: GoogleFonts.poppins(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white.withValues(alpha: 0.85),
+                        InkWell(
+                          onTap: _showLeaderboardSheet,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Peringkat',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.emoji_events_rounded, size: 13, color: Color(0xFFFDE047)),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      'Rank',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.emoji_events_rounded, size: 13, color: Color(0xFFFDE047)),
-                            const SizedBox(width: 3),
-                            Text(
-                              'Rank',
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                        const SizedBox(width: 6),
+                        InkWell(
+                          onTap: _showRadarSheet,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                InkWell(
-                  onTap: _showRadarSheet,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Radar',
-                          style: GoogleFonts.poppins(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white.withValues(alpha: 0.85),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Radar',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.radar_rounded, size: 13, color: Color(0xFFFDE047)),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      'Lihat',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.radar_rounded, size: 13, color: Color(0xFFFDE047)),
-                            const SizedBox(width: 3),
-                            Text(
-                              'Lihat',
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                        const SizedBox(width: 6),
+                        InkWell(
+                          onTap: _showShareModal,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                InkWell(
-                  onTap: _showShareModal,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Share',
-                          style: GoogleFonts.poppins(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white.withValues(alpha: 0.85),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Share',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.share_rounded, size: 12, color: Color(0xFF67E8F9)),
+                                    const SizedBox(width: 2.5),
+                                    Text(
+                                      'Hasil',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.share_rounded, size: 12, color: Color(0xFF67E8F9)),
-                            const SizedBox(width: 2.5),
-                            Text(
-                              'Hasil',
-                              style: GoogleFonts.poppins(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
                         ),
                       ],
                     ),
