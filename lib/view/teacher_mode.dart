@@ -894,7 +894,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               icon: Icons.token_rounded,
               color: const Color(0xFF0F766E),
               title: 'Riwayat Ujian & Token Saya',
-              subtitle: 'Kelola token ujian, bagikan QR code ke kelas & arsip sesi',
+              subtitle: 'Kelola token ujian, lihat detail QR & bagikan kode ke siswa',
               trailing: FutureBuilder<List<String>>(
                 future: SharedPreferences.getInstance().then(
                   (p) => p.getStringList('teacher_exam_history') ?? [],

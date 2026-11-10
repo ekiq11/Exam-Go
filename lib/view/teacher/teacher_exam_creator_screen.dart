@@ -724,6 +724,7 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
     _currentPackage!.jenisWaktu = _jenisWaktu;
     _currentPackage!.durasiMenit =
         int.tryParse(_durationController.text.trim()) ?? 90;
+    _currentPackage!.allowRetake = false; // Soal buatan guru 1x pengerjaan per device
 
     if (_subtests.isNotEmpty) {
       final allQuestions = <ExamQuestion>[];

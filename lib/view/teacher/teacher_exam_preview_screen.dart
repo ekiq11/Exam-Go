@@ -245,7 +245,7 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
         _publishProgressPercent = 0.15;
       });
 
-      // 1. Simpan paket_tryout
+      // 1. Simpan paket_tryout (Default 1x pengerjaan per device untuk soal buatan guru)
       await firestore.collection('paket_tryout').doc(token).set({
         'paket_id': token,
         'nama_paket': widget.package.namaPaket,
@@ -255,6 +255,8 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
         'total_soal': widget.package.totalSoal,
         'created_at': FieldValue.serverTimestamp(),
         'status': 'ACTIVE',
+        'allow_retake': false,
+        'is_teacher_generated': true,
       });
 
       // 2. Simpan subtest & soal

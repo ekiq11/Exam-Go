@@ -1195,6 +1195,20 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         violations: _violations,
       );
 
+      // Kunci kembali izin ujian ulang di server agar pengerjaan berikutnya harus meminta izin guru lagi
+      try {
+        await FirebaseFirestore.instance
+            .collection('exam_sessions')
+            .doc(widget.token)
+            .collection('students')
+            .doc(widget.studentNis)
+            .set({
+              'allow_retake': false,
+            }, SetOptions(merge: true));
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('retake_allowed_${widget.token}_${widget.studentNis}');
+      } catch (_) {}
+
       // Simpan riwayat ujian & butir soal ke lokal agar bisa ditinjau di Pembahasan
       await StudentTryoutHistoryService.instance.saveAttempt(
         token: widget.token,
@@ -1205,7 +1219,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         questions: _allQuestions,
         allowRetake:
             _package?.allowRetake ??
-            (widget.initialSchedule?.allowRetake ?? true),
+            (widget.initialSchedule?.allowRetake ?? false),
       );
 
       // Bersihkan cache sesi ujian lokal

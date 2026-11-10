@@ -240,6 +240,36 @@ class MonitoringService {
     } catch (_) {}
   }
 
+  /// Guru / Pengawas mengizinkan siswa tertentu untuk mengerjakan ulang ujian
+  Future<void> allowStudentRetake({
+    required String examId,
+    required String nis,
+  }) async {
+    try {
+      await _db
+          .collection('exam_sessions')
+          .doc(examId)
+          .collection('students')
+          .doc(nis)
+          .set({
+            'status': 'ONLINE',
+            'allow_retake': true,
+            'retake_granted_at': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+
+      await logActivity(
+        examId: examId,
+        nis: nis,
+        activityType: 'INFO',
+        description: 'Pengawas memberikan izin kepada siswa untuk mengerjakan ulang ujian.',
+      );
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('blocked_${examId}_$nis');
+      await prefs.setBool('retake_allowed_${examId}_$nis', true);
+    } catch (_) {}
+  }
+
   /// Membuat sesi ujian baru dengan TTL 10 hari (expires_at) dan student_count = 0
   Future<void> createExamSession({
     required String examId,

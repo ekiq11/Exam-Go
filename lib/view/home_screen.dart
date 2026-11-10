@@ -1,7 +1,11 @@
 import 'package:examgo/firebas_analytics/analytic_service.dart';
 import 'package:examgo/models/tryout_schedule_model.dart';
+import 'package:examgo/models/exam_question_model.dart';
+import 'package:examgo/services/exam_cache_service.dart';
+import 'package:examgo/services/student_tryout_history_service.dart';
 import 'package:examgo/services/tryout_reminder_service.dart';
 import 'package:examgo/view/student/event_dashboard_screen.dart';
+import 'package:examgo/view/student/tryout_discussion_screen.dart';
 import 'package:examgo/view/widgets/premium_token_dialog.dart';
 import 'package:examgo/view/student/tryout_schedule_screen.dart';
 import 'package:flutter/services.dart';
@@ -518,6 +522,87 @@ class _HomeScreenState extends State<HomeScreen>
               .get();
         }
         if (pkgDoc.exists) {
+          final pkgData = pkgDoc.data() ?? {};
+          final isTeacherGen = pkgData['is_teacher_generated'] == true ||
+              pkgData['allow_retake'] == false;
+
+          // ── Cek Pembatasan 1 Device / 1 Kali Pengerjaan (Soal Buatan Guru) ──
+          if (isTeacherGen) {
+            final history =
+                await StudentTryoutHistoryService.instance.getHistory();
+            final existingAttempt = history
+                .where((h) => h.token.trim().toUpperCase() == tokenUpper)
+                .firstOrNull;
+
+            // Cek apakah guru sudah memberikan izin ujian ulang di server
+            bool retakePermitted = false;
+            if (nis.isNotEmpty) {
+              final sData = await MonitoringService.instance.getStudentData(
+                tokenUpper,
+                nis,
+              );
+              if (sData != null && sData['allow_retake'] == true) {
+                retakePermitted = true;
+              }
+            }
+
+            // Jika sudah pernah mengerjakan dan belum diizinkan ulang oleh guru -> Alihkan ke Pembahasan & Kunci
+            if (existingAttempt != null && !retakePermitted) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Ujian ini hanya dapat dikerjakan 1 kali pada perangkat ini. Mengalihkan ke Halaman Pembahasan & Kunci...',
+                    style: GoogleFonts.poppins(fontSize: 12),
+                  ),
+                  backgroundColor: const Color(0xFF0F172A),
+                  duration: const Duration(seconds: 4),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+
+              // Ambil butir soal dari cache atau unduh jika belum lengkap
+              List<ExamQuestion> questions = existingAttempt.questions;
+              if (questions.isEmpty) {
+                final cached =
+                    await ExamCacheService.instance.loadExam(tokenUpper);
+                if (cached != null && cached.questions.isNotEmpty) {
+                  questions = cached.questions;
+                } else {
+                  final downloaded =
+                      await ExamCacheService.instance.downloadAndCacheExam(
+                    paketId: tokenUpper,
+                  );
+                  questions = downloaded.questions;
+                }
+              }
+
+              if (mounted) {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TryoutDiscussionScreen(
+                      title: existingAttempt.namaPaket.isNotEmpty
+                          ? existingAttempt.namaPaket
+                          : (pkgData['nama_paket'] ?? 'Pembahasan Ujian'),
+                      kategori: existingAttempt.kategori.isNotEmpty
+                          ? existingAttempt.kategori
+                          : (pkgData['kategori'] ?? 'CBT Guru'),
+                      questions: questions,
+                      studentAnswers: existingAttempt.jawaban,
+                      score: existingAttempt.finalScore,
+                      statusKelulusan: existingAttempt.statusKelulusan,
+                      returnToHome: true,
+                      token: tokenUpper,
+                    ),
+                  ),
+                );
+              }
+              if (mounted) setState(() {});
+              return;
+            }
+          }
+
           if (!mounted) return;
           await Navigator.push(
             context,
