@@ -382,8 +382,10 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
             ),
           ],
         ),
-        content: SingleChildScrollView(
-          child: Column(
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -483,7 +485,8 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
             ],
           ),
         ),
-        actions: [
+      ),
+      actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(

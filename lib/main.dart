@@ -115,38 +115,55 @@ void main() async {
 
   // ── Crashlytics: tangkap semua crash Flutter & Dart ────────────
   //
-  // ROOT CAUSE FIX (v6.0.1 — 33 events, 15 users):
+  // ROOT CAUSE FIX (Crashlytics overflow & rendering warnings):
   // ─────────────────────────────────────────────────────────────────
-  // Stack trace Crashlytics menunjukkan:
-  //   FlutterError.onError → recordFlutterFatalError
-  //   ← EventChannel.receiveBroadcastStream.<fn> (platform_channel.dart:727)
-  //   ← PlatformException: "No active stream to cancel"
+  // Sebelumnya FlutterError.onError langsung memanggil recordFlutterFatalError
+  // tanpa memfilter layout overflow (RenderFlex overflowed by X pixels) atau
+  // rendering warnings (computeDryLayout, RenderShiftedBox, RenderObject.detach).
+  // Akibatnya, layout overflow biasa dicatat oleh Crashlytics sebagai 'FATAL CRASH'
+  // dan merusak metrik Crash-Free Users di Play Console padahal app tidak force close.
   //
-  // MASALAH: Sebelumnya FlutterError.onError langsung diarahkan ke
-  // recordFlutterFatalError TANPA filter. Semua PlatformException dari
-  // EventChannel (connectivity_plus, Firestore) yang terjadi saat cancel
-  // stream di dispose() dicatat sebagai FATAL crash.
-  //
-  // SOLUSI: Intercept FlutterError.onError dengan filter. Jika error adalah
-  // PlatformException 'No active stream to cancel', abaikan (bukan crash sejati).
-  // Jika error lain → teruskan ke recordFlutterFatalError seperti biasa.
+  // SOLUSI:
+  // 1. Filter PlatformException dari EventChannel (stream cancel).
+  // 2. Catat layout overflow & framework rendering warning sebagai NON-FATAL.
+  // 3. Hanya error kritis sejati yang dicatat sebagai fatal crash.
   FlutterError.onError = (FlutterErrorDetails details) {
     final exception = details.exception;
-    // Filter PlatformException non-fatal dari EventChannel yang terjadi saat
-    // dispose() membatalkan stream yang belum sepenuhnya tersambung ke native.
-    // Ini BUKAN crash sejati — app tidak force-close, user tidak terdampak.
+    final expStr = details.exceptionAsString();
+
+    // 1. Filter PlatformException non-fatal dari EventChannel (stream cancel)
     if (exception is PlatformException) {
       final msg = exception.message ?? '';
       final code = exception.code;
-      if (msg.contains('No active') || code.contains('No active') ||
-          msg.contains('no active') || msg.contains('stream')) {
-        // Log ringan untuk debugging tapi TIDAK kirim ke Crashlytics
-        debugPrint('[ExamGo] Filtered PlatformException (non-fatal): ${exception.message}');
+      if (msg.contains('No active') ||
+          code.contains('No active') ||
+          msg.contains('no active') ||
+          msg.contains('stream')) {
         return;
       }
     }
-    // Semua error lain tetap dikirim ke Crashlytics sebagai fatal
+
+    // 2. Layout overflow & framework rendering warning dicatat sebagai non-fatal
+    final isRenderWarning = details.silent ||
+        expStr.contains('overflowed') ||
+        expStr.contains('computeDryLayout') ||
+        expStr.contains('RenderShiftedBox.paint') ||
+        expStr.contains('RenderObject.detach') ||
+        expStr.contains('UTF-16');
+
+    if (isRenderWarning) {
+      FirebaseCrashlytics.instance.recordFlutterError(details, fatal: false);
+      return;
+    }
+
+    // 3. Error kritis framework lainnya dicatat sebagai fatal
     FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+  };
+
+  // Pastikan render error sporadis di release mode tidak merusak layar pengguna
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    FirebaseCrashlytics.instance.recordFlutterError(details, fatal: false);
+    return const SizedBox.shrink();
   };
 
   // FIX BUG-01: Tangkap uncaught async error di luar Flutter framework.

@@ -117,11 +117,13 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
             ),
           ],
         ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               Text(
                 'Pilih Preset Rekomendasi:',
                 style: GoogleFonts.poppins(
@@ -198,7 +200,8 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
             ],
           ),
         ),
-        actions: [
+      ),
+      actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(

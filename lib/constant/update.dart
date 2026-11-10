@@ -181,7 +181,13 @@ class UpdateService {
     // Normalize line endings
     s = s.replaceAll('\r\n', '\n').replaceAll('\r', '\n').trim();
 
-    // FIXED: string interpolasi Dart yang benar
-    return s.length > 300 ? '${s.substring(0, 297)}...' : s;
+    // FIXED: string interpolasi Dart yang benar & aman dari pemotongan surrogate pair UTF-16
+    if (s.length > 300) {
+      int len = 297;
+      final last = s.codeUnitAt(len - 1);
+      if (last >= 0xD800 && last <= 0xDBFF) len--;
+      return '${s.substring(0, len)}...';
+    }
+    return s;
   }
 }

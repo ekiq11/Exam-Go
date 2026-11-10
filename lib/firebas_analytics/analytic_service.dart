@@ -49,6 +49,14 @@ class AnalyticsService {
     }
   }
 
+  static String _safeTruncate(String s, int maxLen) {
+    if (s.isEmpty || s.length <= maxLen) return s;
+    int len = maxLen;
+    final last = s.codeUnitAt(len - 1);
+    if (last >= 0xD800 && last <= 0xDBFF) len--;
+    return s.substring(0, len);
+  }
+
   // ─── QR Scanner Events ────────────────────────────────────────
 
   /// Saat QR berhasil di-scan
@@ -64,10 +72,7 @@ class AnalyticsService {
           'method': method,
           'is_encrypted': isEncrypted ? 'true' : 'false',
           if (examTitle != null && examTitle.isNotEmpty)
-            'exam_title': examTitle.substring(
-              0,
-              examTitle.length > 100 ? 100 : examTitle.length,
-            ),
+            'exam_title': _safeTruncate(examTitle, 100),
         },
       );
     } catch (e) {
@@ -99,10 +104,7 @@ class AnalyticsService {
       await _analytics.logEvent(
         name: 'exam_started',
         parameters: {
-          'exam_title': examTitle.substring(
-            0,
-            examTitle.length > 100 ? 100 : examTitle.length,
-          ),
+          'exam_title': _safeTruncate(examTitle, 100),
           'exam_host': host, // Hanya host, bukan full URL (privasi)
         },
       );
@@ -123,10 +125,7 @@ class AnalyticsService {
       await _analytics.logEvent(
         name: 'exam_ended',
         parameters: {
-          'exam_title': examTitle.substring(
-            0,
-            examTitle.length > 100 ? 100 : examTitle.length,
-          ),
+          'exam_title': _safeTruncate(examTitle, 100),
           'duration_seconds': durationSeconds,
           'minimize_count': minimizeCount,
         },
@@ -163,10 +162,7 @@ class AnalyticsService {
       await _analytics.logEvent(
         name: 'exam_violation',
         parameters: {
-          'exam_title': examTitle.substring(
-            0,
-            examTitle.length > 100 ? 100 : examTitle.length,
-          ),
+          'exam_title': _safeTruncate(examTitle, 100),
           'violation_count': violationCount,
         },
       );
@@ -188,10 +184,7 @@ class AnalyticsService {
         parameters: {
           'exam_host': examHost,
           // Potong error message — jangan log data sensitif
-          'error_short': errorMessage.substring(
-            0,
-            errorMessage.length > 100 ? 100 : errorMessage.length,
-          ),
+          'error_short': _safeTruncate(errorMessage, 100),
           // Hanya sertakan field jika tidak null — hindari mengirim null ke Firebase
           // ignore: use_null_aware_elements — Map<String, Object> tidak support ?'key': nullable
           if (errorCode != null) 'error_code': errorCode,
