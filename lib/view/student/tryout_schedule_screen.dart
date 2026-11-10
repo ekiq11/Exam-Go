@@ -20,6 +20,7 @@ import 'package:examgo/view/student/widgets/tryout_detail_sheet.dart';
 import 'package:examgo/view/student/widgets/tryout_spider_chart_widget.dart';
 import 'package:examgo/view/student/widgets/tryout_leaderboard_sheet.dart';
 import 'package:examgo/services/tryout_reminder_service.dart';
+import 'package:examgo/view/widgets/app_back_button.dart';
 
 /// Halaman Katalog Paket & Jadwal Tryout Nasional serta Riwayat & Pembahasan
 class TryoutScheduleScreen extends StatefulWidget {
@@ -310,6 +311,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
+        leading: const AppBackButton.light(),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

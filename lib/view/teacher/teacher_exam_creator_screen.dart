@@ -12,6 +12,7 @@ import '../../services/docx_template_generator.dart';
 import '../../services/gform_exam_parser.dart';
 import '../../services/license_service.dart';
 import '../widgets/premium_token_dialog.dart';
+import '../widgets/app_back_button.dart';
 import 'docx_format_guide_screen.dart';
 import 'teacher_exam_preview_screen.dart';
 
@@ -1028,21 +1029,7 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
         backgroundColor: Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.arrow_back_rounded,
-              color: Color(0xFF0F172A),
-              size: 18,
-            ),
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: const AppBackButton.dark(),
         actions: [
           IconButton(
             icon: Container(

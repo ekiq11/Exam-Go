@@ -16,6 +16,7 @@ import '../../services/qr_payload.dart';
 import '../../utils/math_widget_factory.dart';
 import '../student/widgets/exam_question_table_widget.dart';
 import '../widgets/premium_token_dialog.dart';
+import '../widgets/app_back_button.dart';
 import 'teacher_exam_published_dialog.dart';
 
 class TeacherExamPreviewScreen extends StatefulWidget {
@@ -424,6 +425,7 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7FAF7),
       appBar: AppBar(
+        leading: const AppBackButton.light(),
         title: Text(
           'Preview Soal Ujian',
           style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),

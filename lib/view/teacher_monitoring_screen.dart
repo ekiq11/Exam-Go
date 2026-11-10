@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../constant/app_colors.dart';
 import 'widgets/examgo_dialog.dart';
+import 'widgets/app_back_button.dart';
 
 import 'package:examgo/constant/app_config.dart';
 import 'package:examgo/services/monitoring_service.dart';
@@ -332,25 +333,7 @@ class _TeacherMonitoringListScreenState
             backgroundColor: _kGreen,
             foregroundColor: Colors.white,
             elevation: 0,
-            leading: Padding(
-              padding: const EdgeInsets.only(left: 12, top: 6, bottom: 6),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.25),
-                    width: 1,
-                  ),
-                ),
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
-                  tooltip: 'Kembali',
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-            ),
+            leading: const AppBackButton.light(),
             actions: [
               Padding(
                 padding: const EdgeInsets.only(right: 14, top: 6, bottom: 6),
@@ -1224,6 +1207,7 @@ class _TeacherMonitoringDetailScreenState
                   builder: (context, constraints) {
                     final isCollapsed = constraints.scrollOffset > 130;
                     return SliverAppBar(
+                      leading: const AppBackButton.light(),
                       expandedHeight: 210,
                       pinned: true,
                       stretch: true,
@@ -3338,6 +3322,7 @@ class _StudentActivityLogScreenState extends State<StudentActivityLogScreen> {
             builder: (context, constraints) {
               final isCollapsed = constraints.scrollOffset > 130;
               return SliverAppBar(
+                leading: const AppBackButton.light(),
                 expandedHeight: 230,
                 pinned: true,
                 backgroundColor: const Color(0xFF2E7D32),

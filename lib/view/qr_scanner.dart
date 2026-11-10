@@ -12,6 +12,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 
 import '../constant/app_colors.dart';
 import '../constant/responsive.dart';
+import 'widgets/app_back_button.dart';
 
 class ScanResult {
   final String url;
@@ -649,10 +650,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: _circleBtn(
-          icon: Icons.close,
-          onTap: () => Navigator.of(context).pop(),
-        ),
+        leading: const AppBackButton.close(),
         title: Text(
           'Scan QR Ujian',
           style: GoogleFonts.poppins(
@@ -806,20 +804,6 @@ class _QRScannerScreenState extends State<QRScannerScreen>
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _circleBtn({required IconData icon, required VoidCallback onTap}) {
-    return Container(
-      margin: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.5),
-        shape: BoxShape.circle,
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: Colors.white),
-        onPressed: onTap,
       ),
     );
   }

@@ -10,6 +10,7 @@ import 'tryout_schedule_screen.dart';
 import 'widgets/exam_question_table_widget.dart';
 import 'widgets/tryout_leaderboard_sheet.dart';
 import 'widgets/tryout_spider_chart_widget.dart';
+import '../widgets/app_back_button.dart';
 
 /// Layar pembahasan dan kunci jawaban tryout lengkap dengan rendering LaTeX
 class TryoutDiscussionScreen extends StatefulWidget {
@@ -20,6 +21,7 @@ class TryoutDiscussionScreen extends StatefulWidget {
   final int? score;
   final String? statusKelulusan;
   final bool returnToDashboardOnExit;
+
   /// Jika true, tombol keluar kembali ke HomeScreen (bukan TryoutScheduleScreen).
   final bool returnToHome;
   final String? token;
@@ -51,8 +53,10 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
     return widget.questions.where((q) {
       final userAns = widget.studentAnswers[q.soalId]?.toUpperCase() ?? '';
       final correctAns = q.kunci.toUpperCase();
-      if (_filter == 'Benar') return userAns.isNotEmpty && userAns == correctAns;
-      if (_filter == 'Salah') return userAns.isNotEmpty && userAns != correctAns;
+      if (_filter == 'Benar')
+        return userAns.isNotEmpty && userAns == correctAns;
+      if (_filter == 'Salah')
+        return userAns.isNotEmpty && userAns != correctAns;
       if (_filter == 'Kosong') return userAns.isEmpty;
       return true;
     }).toList();
@@ -152,10 +156,15 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGreen,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                child: Text('Tutup', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+                child: Text(
+                  'Tutup',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -166,8 +175,11 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
 
   void _showLeaderboardSheet() {
     final totalSoal = widget.questions.length;
-    final effectiveScore = widget.score ?? (totalSoal > 0 ? ((_countBenar / totalSoal) * 100).round() : 0);
-    final effectiveToken = (widget.token != null && widget.token!.trim().isNotEmpty)
+    final effectiveScore =
+        widget.score ??
+        (totalSoal > 0 ? ((_countBenar / totalSoal) * 100).round() : 0);
+    final effectiveToken =
+        (widget.token != null && widget.token!.trim().isNotEmpty)
         ? widget.token!.trim()
         : widget.title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_');
     TryoutLeaderboardSheet.show(
@@ -181,13 +193,19 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
 
   void _showShareModal() {
     final totalSoal = widget.questions.length;
-    final effectiveScore = widget.score ?? (totalSoal > 0 ? ((_countBenar / totalSoal) * 100).round() : 0);
-    final accuracy = totalSoal > 0 ? ((_countBenar / totalSoal) * 100).toStringAsFixed(1) : '0';
-    final statusText = (widget.statusKelulusan != null && widget.statusKelulusan!.isNotEmpty)
+    final effectiveScore =
+        widget.score ??
+        (totalSoal > 0 ? ((_countBenar / totalSoal) * 100).round() : 0);
+    final accuracy = totalSoal > 0
+        ? ((_countBenar / totalSoal) * 100).toStringAsFixed(1)
+        : '0';
+    final statusText =
+        (widget.statusKelulusan != null && widget.statusKelulusan!.isNotEmpty)
         ? widget.statusKelulusan!
         : (effectiveScore >= 65 ? 'Lulus Passing Grade' : 'Belum Memenuhi');
 
-    final shareText = '🎓 *HASIL RESMI TRYOUT EXAMGO*\n'
+    final shareText =
+        '🎓 *HASIL RESMI TRYOUT EXAMGO*\n'
         '━━━━━━━━━━━━━━━━━━━━━━\n'
         '📝 *Ujian:* ${widget.title}\n'
         '🏷️ *Kategori:* ${widget.kategori.toUpperCase()}\n'
@@ -232,7 +250,11 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                     color: AppColors.paleGreen,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.share_rounded, color: AppColors.primaryGreen, size: 22),
+                  child: const Icon(
+                    Icons.share_rounded,
+                    color: AppColors.primaryGreen,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -241,11 +263,17 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                     children: [
                       Text(
                         'Bagikan Hasil Tryout',
-                        style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w700),
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       Text(
                         'Pamerkan pencapaian skor ke teman & media sosial',
-                        style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ],
                   ),
@@ -277,26 +305,41 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.18),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           widget.kategori.toUpperCase(),
-                          style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                       Text(
                         statusText.toUpperCase(),
-                        style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.bold, color: const Color(0xFFFDE047)),
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFFFDE047),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
                   Text(
                     widget.title,
-                    style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -306,21 +349,50 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('SKOR AKHIR', style: GoogleFonts.poppins(fontSize: 9, color: Colors.white70)),
-                          Text('$effectiveScore', style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.white)),
+                          Text(
+                            'SKOR AKHIR',
+                            style: GoogleFonts.poppins(
+                              fontSize: 9,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          Text(
+                            '$effectiveScore',
+                            style: GoogleFonts.poppins(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
                         ],
                       ),
                       const Spacer(),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Column(
                           children: [
-                            Text('Akurasi', style: GoogleFonts.poppins(fontSize: 9, color: Colors.white70)),
-                            Text('$accuracy%', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                            Text(
+                              'Akurasi',
+                              style: GoogleFonts.poppins(
+                                fontSize: 9,
+                                color: Colors.white70,
+                              ),
+                            ),
+                            Text(
+                              '$accuracy%',
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -340,17 +412,25 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Teks hasil tryout disalin ke clipboard!', style: GoogleFonts.poppins(fontSize: 12)),
+                          content: Text(
+                            'Teks hasil tryout disalin ke clipboard!',
+                            style: GoogleFonts.poppins(fontSize: 12),
+                          ),
                           backgroundColor: const Color(0xFF0F172A),
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
                     },
                     icon: const Icon(Icons.copy_rounded, size: 16),
-                    label: Text('Salin Teks', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                    label: Text(
+                      'Salin Teks',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       side: const BorderSide(color: Color(0xFFCBD5E1)),
                     ),
                   ),
@@ -362,13 +442,25 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                       Navigator.pop(ctx);
                       SharePlus.instance.share(ShareParams(text: shareText));
                     },
-                    icon: const Icon(Icons.share_rounded, size: 16, color: Colors.white),
-                    label: Text('Bagikan', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: Colors.white)),
+                    icon: const Icon(
+                      Icons.share_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                    label: Text(
+                      'Bagikan',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       elevation: 0,
                       backgroundColor: AppColors.primaryGreen,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                   ),
                 ),
@@ -397,9 +489,10 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            tooltip: widget.returnToDashboardOnExit ? 'Kembali ke Dashboard Tryout' : 'Kembali',
+          leading: AppBackButton.light(
+            tooltip: widget.returnToDashboardOnExit
+                ? 'Kembali ke Dashboard Tryout'
+                : 'Kembali',
             onPressed: _onExit,
           ),
           title: Column(
@@ -408,13 +501,20 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
             children: [
               Text(
                 'Pembahasan & Kunci',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
                 widget.title,
-                style: GoogleFonts.poppins(fontSize: 11, color: Colors.white.withValues(alpha: 0.85)),
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: Colors.white.withValues(alpha: 0.85),
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -424,7 +524,10 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
           elevation: 0,
           actions: [
             IconButton(
-              icon: const Icon(Icons.emoji_events_rounded, color: Color(0xFFFDE047)),
+              icon: const Icon(
+                Icons.emoji_events_rounded,
+                color: Color(0xFFFDE047),
+              ),
               tooltip: 'Peringkat Nasional & Target Kampus',
               onPressed: _showLeaderboardSheet,
             ),
@@ -458,22 +561,35 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                   ? _buildEmptyFilteredState()
                   : SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      child: _buildQuestionDetailCard(currentQ!, _currentIndex + 1, filtered.length),
+                      child: _buildQuestionDetailCard(
+                        currentQ!,
+                        _currentIndex + 1,
+                        filtered.length,
+                      ),
                     ),
             ),
           ],
         ),
-        bottomNavigationBar: filtered.isEmpty ? null : _buildStickyBottomNav(filtered.length),
+        bottomNavigationBar: filtered.isEmpty
+            ? null
+            : _buildStickyBottomNav(filtered.length),
       ),
     );
   }
 
   Widget _buildScoreCard() {
     final totalSoal = widget.questions.length;
-    final effectiveScore = widget.score ?? (totalSoal > 0 ? ((_countBenar / totalSoal) * 100).round() : 0);
-    final accuracy = totalSoal > 0 ? ((_countBenar / totalSoal) * 100).toStringAsFixed(1) : '0';
-    final isLulus = widget.statusKelulusan != null && widget.statusKelulusan!.toLowerCase().contains('lulus');
-    final statusText = (widget.statusKelulusan != null && widget.statusKelulusan!.isNotEmpty)
+    final effectiveScore =
+        widget.score ??
+        (totalSoal > 0 ? ((_countBenar / totalSoal) * 100).round() : 0);
+    final accuracy = totalSoal > 0
+        ? ((_countBenar / totalSoal) * 100).toStringAsFixed(1)
+        : '0';
+    final isLulus =
+        widget.statusKelulusan != null &&
+        widget.statusKelulusan!.toLowerCase().contains('lulus');
+    final statusText =
+        (widget.statusKelulusan != null && widget.statusKelulusan!.isNotEmpty)
         ? widget.statusKelulusan!
         : (effectiveScore >= 65 ? 'Lulus Passing Grade' : 'Belum Memenuhi');
 
@@ -483,10 +599,7 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1B5E20),
-            Color(0xFF2E7D32),
-          ],
+          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -507,16 +620,25 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
               children: [
                 Flexible(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3.5,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.25),
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.school_rounded, size: 13, color: Colors.white),
+                        const Icon(
+                          Icons.school_rounded,
+                          size: 13,
+                          color: Colors.white,
+                        ),
                         const SizedBox(width: 5),
                         Flexible(
                           child: Text(
@@ -537,7 +659,10 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 3.5,
+                  ),
                   decoration: BoxDecoration(
                     color: (isLulus || effectiveScore >= 65)
                         ? const Color(0xFF4ADE80).withValues(alpha: 0.22)
@@ -613,160 +738,27 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                   ],
                 ),
                 const Spacer(),
-                Flexible(
-                  fit: FlexFit.loose,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerRight,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        InkWell(
-                          onTap: _showLeaderboardSheet,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.16),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Peringkat',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white.withValues(alpha: 0.85),
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.emoji_events_rounded, size: 13, color: Color(0xFFFDE047)),
-                                    const SizedBox(width: 3),
-                                    Text(
-                                      'Rank',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        InkWell(
-                          onTap: _showRadarSheet,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.16),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Radar',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white.withValues(alpha: 0.85),
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.radar_rounded, size: 13, color: Color(0xFFFDE047)),
-                                    const SizedBox(width: 3),
-                                    Text(
-                                      'Lihat',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        InkWell(
-                          onTap: _showShareModal,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.16),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Share',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white.withValues(alpha: 0.85),
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.share_rounded, size: 12, color: Color(0xFF67E8F9)),
-                                    const SizedBox(width: 2.5),
-                                    Text(
-                                      'Hasil',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  width: 100,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.16),
+                    ),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        'Akurasi',
+                        'Akurasi Anda',
                         style: GoogleFonts.poppins(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w500,
@@ -777,7 +769,11 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.bolt_rounded, size: 13, color: Color(0xFFFDE047)),
+                          const Icon(
+                            Icons.bolt_rounded,
+                            size: 13,
+                            color: Color(0xFFFDE047),
+                          ),
                           const SizedBox(width: 2),
                           Text(
                             '$accuracy%',
@@ -808,13 +804,37 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
             ),
             child: Row(
               children: [
-                _buildMiniStatBox('Total', '$totalSoal', Icons.format_list_numbered_rounded, const Color(0xFF475569), const Color(0xFFF8FAFC)),
+                _buildMiniStatBox(
+                  'Total',
+                  '$totalSoal',
+                  Icons.format_list_numbered_rounded,
+                  const Color(0xFF475569),
+                  const Color(0xFFF8FAFC),
+                ),
                 const SizedBox(width: 5),
-                _buildMiniStatBox('Benar', '$_countBenar', Icons.check_circle_rounded, const Color(0xFF15803D), const Color(0xFFDCFCE7)),
+                _buildMiniStatBox(
+                  'Benar',
+                  '$_countBenar',
+                  Icons.check_circle_rounded,
+                  const Color(0xFF15803D),
+                  const Color(0xFFDCFCE7),
+                ),
                 const SizedBox(width: 5),
-                _buildMiniStatBox('Salah', '$_countSalah', Icons.cancel_rounded, const Color(0xFFB91C1C), const Color(0xFFFEE2E2)),
+                _buildMiniStatBox(
+                  'Salah',
+                  '$_countSalah',
+                  Icons.cancel_rounded,
+                  const Color(0xFFB91C1C),
+                  const Color(0xFFFEE2E2),
+                ),
                 const SizedBox(width: 5),
-                _buildMiniStatBox('Kosong', '$_countKosong', Icons.remove_circle_outline_rounded, const Color(0xFF64748B), const Color(0xFFF1F5F9)),
+                _buildMiniStatBox(
+                  'Kosong',
+                  '$_countKosong',
+                  Icons.remove_circle_outline_rounded,
+                  const Color(0xFF64748B),
+                  const Color(0xFFF1F5F9),
+                ),
               ],
             ),
           ),
@@ -823,7 +843,13 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
     );
   }
 
-  Widget _buildMiniStatBox(String label, String value, IconData icon, Color color, Color bg) {
+  Widget _buildMiniStatBox(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    Color bg,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 2),
@@ -914,10 +940,14 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                     foregroundColor: AppColors.primaryGreen,
                     disabledForegroundColor: const Color(0xFF94A3B8),
                     side: BorderSide(
-                      color: hasPrev ? AppColors.primaryGreen : const Color(0xFFCBD5E1),
+                      color: hasPrev
+                          ? AppColors.primaryGreen
+                          : const Color(0xFFCBD5E1),
                       width: 1.5,
                     ),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -948,7 +978,9 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                     disabledBackgroundColor: const Color(0xFFE2E8F0),
                     disabledForegroundColor: const Color(0xFF94A3B8),
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ),
@@ -1015,8 +1047,10 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
         itemBuilder: (context, i) {
           final q = list[i];
           final userAns = widget.studentAnswers[q.soalId]?.toUpperCase() ?? '';
-          final isCorrect = userAns.isNotEmpty && userAns == q.kunci.toUpperCase();
-          final isWrong = userAns.isNotEmpty && userAns != q.kunci.toUpperCase();
+          final isCorrect =
+              userAns.isNotEmpty && userAns == q.kunci.toUpperCase();
+          final isWrong =
+              userAns.isNotEmpty && userAns != q.kunci.toUpperCase();
           final isSelected = i == _currentIndex;
 
           Color bg;
@@ -1043,7 +1077,9 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                 color: bg,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: isSelected ? AppColors.primaryGreen : Colors.transparent,
+                  color: isSelected
+                      ? AppColors.primaryGreen
+                      : Colors.transparent,
                   width: isSelected ? 2 : 1,
                 ),
               ),
@@ -1062,7 +1098,11 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
     );
   }
 
-  Widget _buildQuestionDetailCard(ExamQuestion q, int displayNum, int totalFiltered) {
+  Widget _buildQuestionDetailCard(
+    ExamQuestion q,
+    int displayNum,
+    int totalFiltered,
+  ) {
     final userAns = widget.studentAnswers[q.soalId]?.toUpperCase() ?? '';
     final correctAns = q.kunci.toUpperCase();
     final isCorrect = userAns.isNotEmpty && userAns == correctAns;
@@ -1085,7 +1125,10 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(6),
@@ -1101,11 +1144,16 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: isCorrect
                           ? const Color(0xFFDCFCE7)
-                          : (isWrong ? const Color(0xFFFEE2E2) : const Color(0xFFF1F5F9)),
+                          : (isWrong
+                                ? const Color(0xFFFEE2E2)
+                                : const Color(0xFFF1F5F9)),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
@@ -1114,23 +1162,31 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                         Icon(
                           isCorrect
                               ? Icons.check_circle_rounded
-                              : (isWrong ? Icons.cancel_rounded : Icons.help_outline_rounded),
+                              : (isWrong
+                                    ? Icons.cancel_rounded
+                                    : Icons.help_outline_rounded),
                           size: 14,
                           color: isCorrect
                               ? const Color(0xFF16A34A)
-                              : (isWrong ? const Color(0xFFDC2626) : const Color(0xFF64748B)),
+                              : (isWrong
+                                    ? const Color(0xFFDC2626)
+                                    : const Color(0xFF64748B)),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           userAns.isEmpty
                               ? 'Tidak Dijawab'
-                              : (isCorrect ? 'Jawaban Benar ($userAns)' : 'Jawaban Salah ($userAns)'),
+                              : (isCorrect
+                                    ? 'Jawaban Benar ($userAns)'
+                                    : 'Jawaban Salah ($userAns)'),
                           style: GoogleFonts.poppins(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                             color: isCorrect
                                 ? const Color(0xFF15803D)
-                                : (isWrong ? const Color(0xFFB91C1C) : const Color(0xFF64748B)),
+                                : (isWrong
+                                      ? const Color(0xFFB91C1C)
+                                      : const Color(0xFF64748B)),
                           ),
                         ),
                       ],
@@ -1150,14 +1206,22 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                   tabelStr: q.tabel,
                   subtestJudul: widget.title,
                 ),
-                const Divider(height: 20, thickness: 1, color: Color(0xFFF1F5F9)),
+                const Divider(
+                  height: 20,
+                  thickness: 1,
+                  color: Color(0xFFF1F5F9),
+                ),
               ],
 
               // Pertanyaan Teks
               HtmlWidget(
                 MathHtmlFormatter.format(q.pertanyaan),
                 factoryBuilder: () => MathWidgetFactory(fontSize: 14),
-                textStyle: GoogleFonts.poppins(fontSize: 13.5, color: const Color(0xFF0F172A), height: 1.5),
+                textStyle: GoogleFonts.poppins(
+                  fontSize: 13.5,
+                  color: const Color(0xFF0F172A),
+                  height: 1.5,
+                ),
               ),
 
               // Tabel Data Numerik jika ada (di bawah pertanyaan)
@@ -1181,7 +1245,8 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                     MathHtmlFormatter.convertDriveUrl(q.gambar),
                     headers: MathHtmlFormatter.networkImageHeaders,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
                   ),
                 ),
               ],
@@ -1194,13 +1259,21 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
         // Pilihan Jawaban A, B, C, D, E
         Text(
           'Pilihan Jawaban:',
-          style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF475569)),
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF475569),
+          ),
         ),
         const SizedBox(height: 8),
 
         ...['A', 'B', 'C', 'D', 'E'].map((opt) {
           final text = _getOptionText(q, opt);
-          if (text.isEmpty && opt != 'A' && opt != 'B' && opt != 'C' && opt != 'D') {
+          if (text.isEmpty &&
+              opt != 'A' &&
+              opt != 'B' &&
+              opt != 'C' &&
+              opt != 'D') {
             return const SizedBox.shrink();
           }
 
@@ -1226,7 +1299,10 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
             decoration: BoxDecoration(
               color: bgColor,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: borderColor, width: (isKey || isChosen) ? 1.5 : 1),
+              border: Border.all(
+                color: borderColor,
+                width: (isKey || isChosen) ? 1.5 : 1,
+              ),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1238,7 +1314,9 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                   decoration: BoxDecoration(
                     color: isKey
                         ? const Color(0xFF16A34A)
-                        : (isChosen ? const Color(0xFFDC2626) : const Color(0xFFF1F5F9)),
+                        : (isChosen
+                              ? const Color(0xFFDC2626)
+                              : const Color(0xFFF1F5F9)),
                     shape: BoxShape.circle,
                   ),
                   child: Text(
@@ -1246,7 +1324,9 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: (isKey || isChosen) ? Colors.white : const Color(0xFF475569),
+                      color: (isKey || isChosen)
+                          ? Colors.white
+                          : const Color(0xFF475569),
                     ),
                   ),
                 ),
@@ -1255,31 +1335,48 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                   child: HtmlWidget(
                     MathHtmlFormatter.format(text),
                     factoryBuilder: () => MathWidgetFactory(fontSize: 13),
-                    textStyle: GoogleFonts.poppins(fontSize: 12.5, color: const Color(0xFF1E293B)),
+                    textStyle: GoogleFonts.poppins(
+                      fontSize: 12.5,
+                      color: const Color(0xFF1E293B),
+                    ),
                   ),
                 ),
                 if (isKey)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFDCFCE7),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       'KUNCI',
-                      style: GoogleFonts.poppins(fontSize: 9.5, fontWeight: FontWeight.bold, color: const Color(0xFF15803D)),
+                      style: GoogleFonts.poppins(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF15803D),
+                      ),
                     ),
                   ),
                 if (isChosen && !isKey)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFEE2E2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       'PILIHANMU',
-                      style: GoogleFonts.poppins(fontSize: 9.5, fontWeight: FontWeight.bold, color: const Color(0xFFB91C1C)),
+                      style: GoogleFonts.poppins(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFB91C1C),
+                      ),
                     ),
                   ),
               ],
@@ -1303,7 +1400,11 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.lightbulb_rounded, color: Color(0xFF15803D), size: 18),
+                  const Icon(
+                    Icons.lightbulb_rounded,
+                    color: Color(0xFF15803D),
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Pembahasan Soal',
@@ -1329,12 +1430,20 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                 HtmlWidget(
                   MathHtmlFormatter.format(q.pembahasan),
                   factoryBuilder: () => MathWidgetFactory(fontSize: 13),
-                  textStyle: GoogleFonts.poppins(fontSize: 12.5, color: const Color(0xFF14532D), height: 1.5),
+                  textStyle: GoogleFonts.poppins(
+                    fontSize: 12.5,
+                    color: const Color(0xFF14532D),
+                    height: 1.5,
+                  ),
                 )
               else
                 Text(
                   'Kunci jawaban yang benar adalah opsi $correctAns. Pembahasan teks belum disediakan untuk butir ini.',
-                  style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF15803D), fontStyle: FontStyle.italic),
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: const Color(0xFF15803D),
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
             ],
           ),
@@ -1345,12 +1454,18 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
 
   String _getOptionText(ExamQuestion q, String opt) {
     switch (opt) {
-      case 'A': return q.opsiA;
-      case 'B': return q.opsiB;
-      case 'C': return q.opsiC;
-      case 'D': return q.opsiD;
-      case 'E': return q.opsiE;
-      default: return '';
+      case 'A':
+        return q.opsiA;
+      case 'B':
+        return q.opsiB;
+      case 'C':
+        return q.opsiC;
+      case 'D':
+        return q.opsiD;
+      case 'E':
+        return q.opsiE;
+      default:
+        return '';
     }
   }
 
@@ -1359,11 +1474,18 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.filter_list_off_rounded, size: 40, color: Color(0xFF94A3B8)),
+          const Icon(
+            Icons.filter_list_off_rounded,
+            size: 40,
+            color: Color(0xFF94A3B8),
+          ),
           const SizedBox(height: 8),
           Text(
             'Tidak ada butir soal dengan status "$_filter"',
-            style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B)),
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              color: const Color(0xFF64748B),
+            ),
           ),
         ],
       ),

@@ -9,6 +9,7 @@ import 'package:examgo/services/qr_generator.dart';
 import 'package:examgo/view/widgets/popup_ad_dialog.dart';
 import 'package:examgo/view/widgets/premium_token_dialog.dart';
 import 'package:examgo/view/widgets/examgo_dialog.dart';
+import 'package:examgo/view/widgets/app_back_button.dart';
 import 'package:examgo/view/teacher_monitoring_screen.dart';
 import 'package:examgo/view/teacher/teacher_exam_creator_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -247,6 +248,7 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        leading: const AppBackButton.light(),
         title: Text('Mode Guru', style: GoogleFonts.poppins()),
         backgroundColor: AppColors.primaryGreen,
         foregroundColor: Colors.white,
@@ -758,6 +760,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
+        leading: const AppBackButton.light(),
         title: Text('Dashboard Guru', style: GoogleFonts.poppins()),
         backgroundColor: AppColors.primaryGreen,
         foregroundColor: Colors.white,
@@ -1295,6 +1298,7 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
+        leading: const AppBackButton.light(),
         title: Text('Pengaturan Biometrik', style: GoogleFonts.poppins()),
         backgroundColor: AppColors.primaryGreen,
         foregroundColor: Colors.white,

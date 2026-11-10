@@ -12,6 +12,7 @@ import '../../services/tryout_schedule_service.dart';
 import '../pre_exam_checklist.dart';
 import 'student_exam_session_screen.dart';
 import 'tryout_discussion_screen.dart';
+import '../widgets/app_back_button.dart';
 
 enum _EventScheduleStatus { open, belumMulai, sudahSelesai }
 
@@ -567,14 +568,9 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                             ),
                           ),
                           const SizedBox(width: 8),
-                          IconButton(
-                            icon: const Icon(Icons.close_rounded, color: Colors.white, size: 22),
+                          AppBackButton.close(
+                            padding: EdgeInsets.zero,
                             onPressed: () => Navigator.pop(context),
-                            tooltip: 'Kembali',
-                            style: IconButton.styleFrom(
-                              backgroundColor: Colors.white.withValues(alpha: 0.12),
-                              padding: const EdgeInsets.all(8),
-                            ),
                           ),
                         ],
                       ),

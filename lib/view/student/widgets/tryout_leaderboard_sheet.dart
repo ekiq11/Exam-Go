@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../constant/app_colors.dart';
 import '../../../services/student_tryout_history_service.dart';
+import '../../widgets/app_back_button.dart';
 
 /// Modal bottom sheet modern untuk menampilkan Peringkat Nasional (Leaderboard) & Target Passing Grade
 class TryoutLeaderboardSheet extends StatefulWidget {
@@ -325,12 +326,9 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                     ],
                   ),
                 ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(
-                    Icons.close_rounded,
-                    color: Color(0xFF64748B),
-                  ),
+                const AppBackButton.close(
+                  isLight: false,
+                  padding: EdgeInsets.zero,
                 ),
               ],
             ),
