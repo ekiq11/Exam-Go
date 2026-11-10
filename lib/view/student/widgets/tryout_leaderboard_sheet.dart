@@ -55,15 +55,21 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
   }
 
   void _loadData() {
-    _leaderboardFuture = StudentTryoutHistoryService.instance.getNationalLeaderboard(
-      token: widget.token,
-      kategori: widget.kategori,
-      userScore: widget.userScore,
+    _leaderboardFuture = StudentTryoutHistoryService.instance
+        .getNationalLeaderboard(
+          token: widget.token,
+          kategori: widget.kategori,
+          userScore: widget.userScore,
+        );
+    _targetGoalFuture = StudentTryoutHistoryService.instance.getTargetGoal(
+      widget.kategori,
     );
-    _targetGoalFuture = StudentTryoutHistoryService.instance.getTargetGoal(widget.kategori);
   }
 
-  Future<void> _showEditTargetDialog(String currentName, int currentScore) async {
+  Future<void> _showEditTargetDialog(
+    String currentName,
+    int currentScore,
+  ) async {
     final nameCtrl = TextEditingController(text: currentName);
     final scoreCtrl = TextEditingController(text: currentScore.toString());
 
@@ -95,12 +101,19 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                 color: const Color(0xFFFEF3C7),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.flag_rounded, color: Color(0xFFD97706), size: 20),
+              child: const Icon(
+                Icons.flag_rounded,
+                color: Color(0xFFD97706),
+                size: 20,
+              ),
             ),
             const SizedBox(width: 10),
             Text(
               'Target Impian Saya',
-              style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -111,7 +124,11 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
             children: [
               Text(
                 'Pilih Preset Rekomendasi:',
-                style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B),
+                ),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -125,7 +142,10 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                     },
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(8),
@@ -133,7 +153,10 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                       ),
                       child: Text(
                         '${p['name']} (${p['score']})',
-                        style: GoogleFonts.poppins(fontSize: 10.5, fontWeight: FontWeight.w500),
+                        style: GoogleFonts.poppins(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   );
@@ -145,8 +168,13 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                 decoration: InputDecoration(
                   labelText: 'Nama Kampus / Formasi',
                   labelStyle: GoogleFonts.poppins(fontSize: 12),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                 ),
                 style: GoogleFonts.poppins(fontSize: 13),
               ),
@@ -157,8 +185,13 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                 decoration: InputDecoration(
                   labelText: 'Target Skor (Passing Grade)',
                   labelStyle: GoogleFonts.poppins(fontSize: 12),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                 ),
                 style: GoogleFonts.poppins(fontSize: 13),
               ),
@@ -168,7 +201,10 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey.shade600)),
+            child: Text(
+              'Batal',
+              style: GoogleFonts.poppins(color: Colors.grey.shade600),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -184,9 +220,17 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryGreen,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child: Text('Simpan Target', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text(
+              'Simpan Target',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -194,7 +238,9 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
 
     if (updated == true && mounted) {
       setState(() {
-        _targetGoalFuture = StudentTryoutHistoryService.instance.getTargetGoal(widget.kategori);
+        _targetGoalFuture = StudentTryoutHistoryService.instance.getTargetGoal(
+          widget.kategori,
+        );
       });
     }
   }
@@ -204,9 +250,7 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
     final screenH = MediaQuery.of(context).size.height;
 
     return Container(
-      constraints: BoxConstraints(
-        maxHeight: screenH * 0.88,
-      ),
+      constraints: BoxConstraints(maxHeight: screenH * 0.88),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -247,7 +291,11 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 22),
+                  child: const Icon(
+                    Icons.emoji_events_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -276,7 +324,10 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: Color(0xFF64748B),
+                  ),
                 ),
               ],
             ),
@@ -291,7 +342,9 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
-                    child: CircularProgressIndicator(color: AppColors.primaryGreen),
+                    child: CircularProgressIndicator(
+                      color: AppColors.primaryGreen,
+                    ),
                   );
                 }
 
@@ -350,7 +403,9 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      ...data.entries.map((e) => _buildLeaderboardTile(e, data.userRank)),
+                      ...data.entries.map(
+                        (e) => _buildLeaderboardTile(e, data.userRank),
+                      ),
                     ],
                   ),
                 );
@@ -390,16 +445,25 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
             runSpacing: 6,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3.5,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.28),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.star_rounded, size: 13, color: Color(0xFFFDE047)),
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 13,
+                      color: Color(0xFFFDE047),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'HASIL POSISI ANDA',
@@ -479,7 +543,10 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -489,7 +556,10 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                   children: [
                     Text(
                       'Skor Anda',
-                      style: GoogleFonts.poppins(fontSize: 9.5, color: Colors.white70),
+                      style: GoogleFonts.poppins(
+                        fontSize: 9.5,
+                        color: Colors.white70,
+                      ),
                     ),
                     Text(
                       '${widget.userScore}',
@@ -513,7 +583,8 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
     return FutureBuilder<Map<String, dynamic>>(
       future: _targetGoalFuture,
       builder: (context, snap) {
-        final targetName = snap.data?['name']?.toString() ?? 'Target Kampus / Formasi';
+        final targetName =
+            snap.data?['name']?.toString() ?? 'Target Kampus / Formasi';
         final targetScore = (snap.data?['score'] as num?)?.toInt() ?? 685;
         final diff = widget.userScore - targetScore;
         final isSurpassed = diff >= 0;
@@ -530,7 +601,11 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.track_changes_rounded, size: 16, color: Color(0xFF2563EB)),
+                  const Icon(
+                    Icons.track_changes_rounded,
+                    size: 16,
+                    color: Color(0xFF2563EB),
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -552,7 +627,11 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.edit_rounded, size: 13, color: Color(0xFF2563EB)),
+                          const Icon(
+                            Icons.edit_rounded,
+                            size: 13,
+                            color: Color(0xFF2563EB),
+                          ),
                           const SizedBox(width: 3),
                           Text(
                             'Ubah',
@@ -577,7 +656,9 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                   minHeight: 7,
                   backgroundColor: const Color(0xFFE2E8F0),
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    isSurpassed ? const Color(0xFF16A34A) : const Color(0xFFD97706),
+                    isSurpassed
+                        ? const Color(0xFF16A34A)
+                        : const Color(0xFFD97706),
                   ),
                 ),
               ),
@@ -590,20 +671,32 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                 children: [
                   Text(
                     'Skor Anda: ${widget.userScore} / Target: $targetScore',
-                    style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF64748B)),
+                    style: GoogleFonts.poppins(
+                      fontSize: 10.5,
+                      color: const Color(0xFF64748B),
+                    ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSurpassed ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
+                      color: isSurpassed
+                          ? const Color(0xFFDCFCE7)
+                          : const Color(0xFFFEF3C7),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      isSurpassed ? '+$diff Poin (Lolos Target! 🎉)' : 'Kurang ${diff.abs()} Poin',
+                      isSurpassed
+                          ? '+$diff Poin (Lolos Target! 🎉)'
+                          : 'Kurang ${diff.abs()} Poin',
                       style: GoogleFonts.poppins(
                         fontSize: 9.5,
                         fontWeight: FontWeight.bold,
-                        color: isSurpassed ? const Color(0xFF166534) : const Color(0xFFB45309),
+                        color: isSurpassed
+                            ? const Color(0xFF166534)
+                            : const Color(0xFFB45309),
                       ),
                     ),
                   ),
@@ -696,11 +789,16 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
               gradient: LinearGradient(
                 colors: isGold
                     ? [const Color(0xFFFBBF24), const Color(0xFFD97706)]
-                    : [color.withValues(alpha: 0.35), color.withValues(alpha: 0.65)],
+                    : [
+                        color.withValues(alpha: 0.35),
+                        color.withValues(alpha: 0.65),
+                      ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(14),
+              ),
             ),
             child: Center(
               child: Text(
@@ -757,7 +855,9 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                 style: GoogleFonts.poppins(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: e.rank <= 3 ? const Color(0xFFB45309) : const Color(0xFF64748B),
+                  color: e.rank <= 3
+                      ? const Color(0xFFB45309)
+                      : const Color(0xFF64748B),
                 ),
               ),
             ),
@@ -775,7 +875,9 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                         style: GoogleFonts.poppins(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
-                          color: isMe ? const Color(0xFF065F46) : const Color(0xFF1E293B),
+                          color: isMe
+                              ? const Color(0xFF065F46)
+                              : const Color(0xFF1E293B),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -784,14 +886,21 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                     if (isMe) ...[
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 1.5,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF059669),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           'Anda',
-                          style: GoogleFonts.poppins(fontSize: 8.5, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: GoogleFonts.poppins(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ],
@@ -827,4 +936,3 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
     );
   }
 }
-
