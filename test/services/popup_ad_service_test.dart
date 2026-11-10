@@ -52,7 +52,7 @@ void main() {
         'isActive': true,
       });
       expect(ad.ctaUrl, 'https://lynk.id/examgo/guru-premium');
-      expect(ad.imageUrl, 'https://drive.google.com/uc?export=view&id=1a2B3c4D5e');
+      expect(ad.imageUrl, 'https://lh3.googleusercontent.com/d/1a2B3c4D5e');
       expect(ad.isValid, isTrue);
     });
   });

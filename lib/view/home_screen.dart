@@ -1344,7 +1344,7 @@ class _HomeScreenState extends State<HomeScreen>
       expandedHeight: expandedHeight,
       collapsedHeight: kToolbarHeight,
       pinned: true,
-      stretch: false,
+      stretch: true,
       backgroundColor: const Color(0xFF1B5E20),
       elevation: 0,
       automaticallyImplyLeading: false,
@@ -1354,7 +1354,7 @@ class _HomeScreenState extends State<HomeScreen>
           final maxH = expandedHeight + MediaQuery.of(context).padding.top;
           final collapseRatio = ((maxH - constraints.maxHeight) / (maxH - minH))
               .clamp(0.0, 1.0);
-          final expandRatio = 1.0 - collapseRatio;
+          final expandRatio = (1.0 - collapseRatio).clamp(0.0, 1.0);
 
           return Stack(
             fit: StackFit.expand,
@@ -1422,10 +1422,12 @@ class _HomeScreenState extends State<HomeScreen>
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: Opacity(
-                  opacity: expandRatio.clamp(0.0, 1.0),
-                  child: SafeArea(
-                    bottom: false,
+                child: IgnorePointer(
+                  ignoring: expandRatio < 0.25,
+                  child: Opacity(
+                    opacity: expandRatio,
+                    child: SafeArea(
+                      bottom: false,
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(
                         context.rs(20),
@@ -1565,6 +1567,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
               ),
+            ),
 
               // COLLAPSED content
               Positioned(
@@ -1572,90 +1575,93 @@ class _HomeScreenState extends State<HomeScreen>
                 right: 0,
                 bottom: 0,
                 top: 0,
-                child: Opacity(
-                  opacity: collapseRatio.clamp(0.0, 1.0),
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: context.rs(16)),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(7),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                              Icons.school,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            AppConfig.appName,
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _connected
-                                  ? Colors.white.withValues(alpha: 0.2)
-                                  : Colors.orange.withValues(alpha: 0.3),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                    color: _connected
-                                        ? const Color(0xFFA5D6A7)
-                                        : Colors.orange.shade300,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  _connected ? 'Online' : 'Offline',
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          GestureDetector(
-                            onTap: () => _showAccountPrivacySheet(context),
-                            child: Container(
-                              padding: const EdgeInsets.all(5),
+                child: IgnorePointer(
+                  ignoring: collapseRatio < 0.75,
+                  child: Opacity(
+                    opacity: collapseRatio,
+                    child: SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: context.rs(16)),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(7),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.18),
-                                shape: BoxShape.circle,
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Icon(
-                                Icons.shield_outlined,
+                                Icons.school,
                                 color: Colors.white,
-                                size: 16,
+                                size: 18,
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 10),
+                            Text(
+                              AppConfig.appName,
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _connected
+                                    ? Colors.white.withValues(alpha: 0.2)
+                                    : Colors.orange.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: _connected
+                                          ? const Color(0xFFA5D6A7)
+                                          : Colors.orange.shade300,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    _connected ? 'Online' : 'Offline',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            GestureDetector(
+                              onTap: () => _showAccountPrivacySheet(context),
+                              child: Container(
+                                padding: const EdgeInsets.all(5),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.18),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.shield_outlined,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

@@ -30,18 +30,18 @@ void main() {
       expect(formatted, contains('data-math="'));
     });
 
-    test('Mengonversi link Google Drive file/d/ID ke uc?export=view&id=ID', () {
+    test('Mengonversi link Google Drive file/d/ID ke CDN lh3.googleusercontent.com', () {
       const driveUrl = 'https://drive.google.com/file/d/1a2B3c4D5e6F/view?usp=sharing';
       final direct = MathHtmlFormatter.convertDriveUrl(driveUrl);
 
-      expect(direct, equals('https://drive.google.com/uc?export=view&id=1a2B3c4D5e6F'));
+      expect(direct, equals('https://lh3.googleusercontent.com/d/1a2B3c4D5e6F'));
     });
 
-    test('Google Drive ID murni dikonversi ke URL uc?export=view', () {
+    test('Google Drive ID murni dikonversi ke URL CDN lh3.googleusercontent.com', () {
       const driveId = '1a2B3c4D5e6F';
       final direct = MathHtmlFormatter.convertDriveUrl(driveId);
 
-      expect(direct, equals('https://drive.google.com/uc?export=view&id=1a2B3c4D5e6F'));
+      expect(direct, equals('https://lh3.googleusercontent.com/d/1a2B3c4D5e6F'));
     });
   });
 

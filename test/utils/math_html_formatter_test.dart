@@ -31,14 +31,14 @@ void main() {
       );
     });
 
-    test('Mengonversi link Google Drive thumbnail dan uc menjadi viewable', () {
+    test('Mengonversi link Google Drive thumbnail dan uc menjadi viewable CDN', () {
       // 1. Google Drive ID biasa
       const rawId = '1djyOjoZrPjcVzh21B9BY_cT3oRHnaRB5';
       final converted1 = MathHtmlFormatter.convertDriveUrl(rawId);
       expect(
         converted1,
         equals(
-          'https://drive.google.com/uc?export=view&id=1djyOjoZrPjcVzh21B9BY_cT3oRHnaRB5',
+          'https://lh3.googleusercontent.com/d/1djyOjoZrPjcVzh21B9BY_cT3oRHnaRB5',
         ),
       );
 
@@ -49,7 +49,7 @@ void main() {
       expect(
         converted2,
         equals(
-          'https://drive.google.com/uc?export=view&id=1djyOjoZrPjcVzh21B9BY_cT3oRHnaRB5',
+          'https://lh3.googleusercontent.com/d/1djyOjoZrPjcVzh21B9BY_cT3oRHnaRB5',
         ),
       );
 
@@ -60,7 +60,7 @@ void main() {
       expect(
         converted3,
         equals(
-          'https://drive.google.com/uc?export=view&id=1djyOjoZrPjcVzh21B9BY_cT3oRHnaRB5',
+          'https://lh3.googleusercontent.com/d/1djyOjoZrPjcVzh21B9BY_cT3oRHnaRB5',
         ),
       );
     });

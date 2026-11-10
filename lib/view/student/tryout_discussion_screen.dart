@@ -8,6 +8,7 @@ import '../../models/exam_question_model.dart';
 import '../../utils/math_widget_factory.dart';
 import 'tryout_schedule_screen.dart';
 import 'widgets/exam_question_table_widget.dart';
+import 'widgets/tryout_leaderboard_sheet.dart';
 import 'widgets/tryout_spider_chart_widget.dart';
 
 /// Layar pembahasan dan kunci jawaban tryout lengkap dengan rendering LaTeX
@@ -21,6 +22,7 @@ class TryoutDiscussionScreen extends StatefulWidget {
   final bool returnToDashboardOnExit;
   /// Jika true, tombol keluar kembali ke HomeScreen (bukan TryoutScheduleScreen).
   final bool returnToHome;
+  final String? token;
 
   const TryoutDiscussionScreen({
     super.key,
@@ -32,6 +34,7 @@ class TryoutDiscussionScreen extends StatefulWidget {
     this.statusKelulusan,
     this.returnToDashboardOnExit = false,
     this.returnToHome = false,
+    this.token,
   });
 
   @override
@@ -158,6 +161,21 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showLeaderboardSheet() {
+    final totalSoal = widget.questions.length;
+    final effectiveScore = widget.score ?? (totalSoal > 0 ? ((_countBenar / totalSoal) * 100).round() : 0);
+    final effectiveToken = (widget.token != null && widget.token!.trim().isNotEmpty)
+        ? widget.token!.trim()
+        : widget.title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_');
+    TryoutLeaderboardSheet.show(
+      context,
+      token: effectiveToken,
+      title: widget.title,
+      kategori: widget.kategori,
+      userScore: effectiveScore,
     );
   }
 
@@ -406,14 +424,19 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
           elevation: 0,
           actions: [
             IconButton(
-              icon: const Icon(Icons.share_rounded, color: Colors.white),
-              tooltip: 'Bagikan Hasil Tryout',
-              onPressed: _showShareModal,
+              icon: const Icon(Icons.emoji_events_rounded, color: Color(0xFFFDE047)),
+              tooltip: 'Peringkat Nasional & Target Kampus',
+              onPressed: _showLeaderboardSheet,
             ),
             IconButton(
               icon: const Icon(Icons.radar_rounded, color: Colors.white),
               tooltip: 'Grafik Radar Kemampuan',
               onPressed: _showRadarSheet,
+            ),
+            IconButton(
+              icon: const Icon(Icons.share_rounded, color: Colors.white),
+              tooltip: 'Bagikan Hasil Tryout',
+              onPressed: _showShareModal,
             ),
             const SizedBox(width: 4),
           ],
@@ -590,6 +613,49 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
                   ],
                 ),
                 const Spacer(),
+                InkWell(
+                  onTap: _showLeaderboardSheet,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Peringkat',
+                          style: GoogleFonts.poppins(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.85),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.emoji_events_rounded, size: 13, color: Color(0xFFFDE047)),
+                            const SizedBox(width: 3),
+                            Text(
+                              'Rank',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
                 InkWell(
                   onTap: _showRadarSheet,
                   borderRadius: BorderRadius.circular(12),

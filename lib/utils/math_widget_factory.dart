@@ -233,32 +233,41 @@ class MathHtmlFormatter {
     'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
   };
 
-  /// Menormalisasi link Google Drive agar langsung dapat di-load sebagai image
+  /// Menormalisasi link Google Drive ke CDN resmi Google (lh3.googleusercontent.com)
+  /// agar bebas dari blokir CORS, anti-hotlinking, dan cookie browser.
   static String convertDriveUrl(String url) {
     if (url.isEmpty) return url;
-    if (!url.startsWith('http') && !url.contains('/')) {
-      return 'https://drive.google.com/uc?export=view&id=$url';
-    }
-    if (url.contains('uc?export=view') ||
-        (url.contains('uc?id=') && url.contains('export=view'))) {
-      return url;
-    }
     if (url.contains('googleusercontent.com')) return url;
+
+    // Bare File ID (misal: 1mM7PTjpZKQnHCQX14BdQiOcoqVRdMlZJ)
+    if (!url.startsWith('http') && !url.contains('/')) {
+      return 'https://lh3.googleusercontent.com/d/$url';
+    }
+
+    // 1. /file/d/{id}
     final fileMatch = RegExp(r'/file/d/([^/?&]+)').firstMatch(url);
     if (fileMatch != null) {
-      final id = fileMatch.group(1)!;
-      return 'https://drive.google.com/uc?export=view&id=$id';
+      return 'https://lh3.googleusercontent.com/d/${fileMatch.group(1)}';
     }
+
+    // 2. /d/{id}
+    final dMatch = RegExp(r'/d/([^/?&]+)').firstMatch(url);
+    if (dMatch != null) {
+      return 'https://lh3.googleusercontent.com/d/${dMatch.group(1)}';
+    }
+
+    // 3. ?id={id} atau &id={id} (termasuk uc?export=view&id=...)
     final idMatch = RegExp(r'[?&]id=([^&]+)').firstMatch(url);
     if (idMatch != null) {
-      final id = idMatch.group(1)!;
-      return 'https://drive.google.com/uc?export=view&id=$id';
+      return 'https://lh3.googleusercontent.com/d/${idMatch.group(1)}';
     }
+
+    // 4. open?id={id}
     final openMatch = RegExp(r'open\?id=([^&]+)').firstMatch(url);
     if (openMatch != null) {
-      final id = openMatch.group(1)!;
-      return 'https://drive.google.com/uc?export=view&id=$id';
+      return 'https://lh3.googleusercontent.com/d/${openMatch.group(1)}';
     }
+
     return url;
   }
 }

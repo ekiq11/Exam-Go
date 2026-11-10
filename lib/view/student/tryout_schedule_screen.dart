@@ -18,6 +18,7 @@ import 'package:examgo/view/widgets/premium_token_dialog.dart';
 import 'package:examgo/view/student/widgets/tryout_card_widget.dart';
 import 'package:examgo/view/student/widgets/tryout_detail_sheet.dart';
 import 'package:examgo/view/student/widgets/tryout_spider_chart_widget.dart';
+import 'package:examgo/view/student/widgets/tryout_leaderboard_sheet.dart';
 import 'package:examgo/services/tryout_reminder_service.dart';
 
 /// Halaman Katalog Paket & Jadwal Tryout Nasional serta Riwayat & Pembahasan
@@ -1430,6 +1431,34 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                     ),
                   ),
                 ),
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: () => TryoutLeaderboardSheet.show(
+                    context,
+                    token: item.token,
+                    title: item.namaPaket,
+                    kategori: item.kategori,
+                    userScore: item.finalScore,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    height: 44,
+                    width: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF9C3),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFDE047)),
+                    ),
+                    child: const Tooltip(
+                      message: 'Peringkat Nasional & Target Kampus',
+                      child: Icon(
+                        Icons.emoji_events_rounded,
+                        color: Color(0xFFCA8A04),
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
                 if (item.allowRetake) ...[
                   const SizedBox(width: 8),
                   Expanded(
@@ -1524,6 +1553,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
           score: item.finalScore,
           statusKelulusan: item.statusKelulusan,
           returnToDashboardOnExit: false,
+          token: item.token,
         ),
       ),
     );
