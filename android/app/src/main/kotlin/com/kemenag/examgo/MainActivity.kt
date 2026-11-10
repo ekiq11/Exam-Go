@@ -69,10 +69,12 @@ class MainActivity : FlutterFragmentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        // API 31+ (Android 12+): Blokir SEMUA non-system overlay windows
-        // (Chat Head WhatsApp, floating browser, floating apps, translasi layar, dll)
+        // API 31+ (Android 12+): Blokir non-system overlay windows jika diizinkan OS.
+        // Wajib try-catch agar tidak crash di ROM yang membatasi HIDE_OVERLAY_WINDOWS.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            window.setHideOverlayWindows(true)
+            try {
+                window.setHideOverlayWindows(true)
+            } catch (_: Exception) {}
         }
 
         // Untuk API < 30: FLAG_FULLSCREEN masih aman dan cukup
