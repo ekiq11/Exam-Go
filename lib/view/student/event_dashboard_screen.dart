@@ -81,57 +81,45 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
   static const Color _kBg = Color(0xFFF5F7F5); // ExamGO Soft Background
 
   String get _greet {
-    final h = DateTime.now().hour;
+    final h = (DateTime.now().add(_trustedOffset)).hour;
     if (h < 11) return 'Selamat Pagi';
     if (h < 15) return 'Selamat Siang';
     if (h < 18) return 'Selamat Sore';
     return 'Selamat Malam';
   }
 
+  /// Hari & Tanggal resmi standar Indonesia (contoh: "Rabu, 11 November 2026")
   String get _shortDate {
-    final n = DateTime.now();
-    const d = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-    const m = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'Mei',
-      'Jun',
-      'Jul',
-      'Agu',
-      'Sep',
-      'Okt',
-      'Nov',
-      'Des',
-    ];
-    return '${d[n.weekday - 1]}, ${n.day} ${m[n.month - 1]} ${n.year}';
+    final n = DateTime.now().add(_trustedOffset);
+    return IndoDateFormatter.formatHariTanggal(
+      n.toIso8601String(),
+      shortMonth: false,
+    );
   }
 
-  String _fmtTanggal(String raw) {
-    if (raw.isEmpty) return 'Fleksibel';
-    try {
-      final p = raw.split('-');
-      if (p.length == 3) {
-        const bulan = [
-          'Januari',
-          'Februari',
-          'Maret',
-          'April',
-          'Mei',
-          'Juni',
-          'Juli',
-          'Agustus',
-          'September',
-          'Oktober',
-          'November',
-          'Desember',
-        ];
-        final mIdx = int.tryParse(p[1]) ?? 1;
-        return '${p[2]} ${bulan[mIdx - 1]} ${p[0]}';
-      }
-    } catch (_) {}
-    return raw;
+  /// Format tanggal standar Indonesia untuk event
+  String _fmtTanggal(String? raw, {bool withDay = true}) {
+    if (raw == null || raw.trim().isEmpty) return 'Fleksibel';
+    if (withDay) {
+      return IndoDateFormatter.formatHariTanggal(raw, shortMonth: false);
+    }
+    final dt = IndoDateFormatter.parse(raw);
+    if (dt == null) return raw;
+    const bulan = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    return '${dt.day} ${bulan[dt.month - 1]} ${dt.year}';
   }
 
   @override
@@ -700,19 +688,30 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
                               vertical: 5,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.12),
+                              color: Colors.white.withValues(alpha: 0.14),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.18),
+                                color: Colors.white.withValues(alpha: 0.22),
                               ),
                             ),
-                            child: Text(
-                              _shortDate,
-                              style: GoogleFonts.poppins(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.calendar_month_rounded,
+                                  color: _kAccent,
+                                  size: 13,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  _shortDate,
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -909,8 +908,8 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
                 Expanded(
                   child: _buildColInfo(
                     icon: Icons.calendar_today_rounded,
-                    label: 'Tanggal',
-                    value: _fmtTanggal(sch?.tanggal ?? ''),
+                    label: 'Tanggal Ujian',
+                    value: _fmtTanggal(sch?.tanggal, withDay: true),
                     color: _kGreenMid,
                   ),
                 ),
@@ -918,9 +917,13 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
                 Expanded(
                   child: _buildColInfo(
                     icon: Icons.access_time_rounded,
-                    label: 'Pukul',
+                    label: 'Waktu Pelaksanaan',
                     value: sch != null && sch.jamMulai.isNotEmpty
-                        ? '${sch.jamMulai} - ${sch.jamSelesai}'
+                        ? IndoDateFormatter.formatJam(
+                            sch.jamMulai,
+                            sch.jamSelesai,
+                            rawDateStr: sch.tanggal,
+                          )
                         : 'Bebas',
                     color: const Color(0xFF3B82F6),
                   ),
@@ -930,7 +933,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
                   child: _buildColInfo(
                     icon: Icons.timer_rounded,
                     label: 'Durasi',
-                    value: '${sch?.durasiMenit ?? 90} Mnt',
+                    value: '${sch?.durasiMenit ?? 90} Menit',
                     color: const Color(0xFF8B5CF6),
                   ),
                 ),
@@ -986,7 +989,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
         ? 'Ujian Belum Dimulai (Segera)'
         : 'Waktu Ujian Selesai';
     final sub = isBefore
-        ? 'Ujian dibuka pada ${_fmtTanggal(sch?.tanggal ?? '')} pukul ${sch?.jamMulai ?? '08:00'}.'
+        ? 'Ujian dibuka pada ${_fmtTanggal(sch?.tanggal, withDay: true)} pukul ${sch?.jamMulai ?? '08:00'} ${IndoDateFormatter.detectTimeZone(sch?.tanggal)}.'
         : 'Waktu pengerjaan telah berakhir. Silakan tinjau nilai & pembahasan di bawah.';
 
     return Container(
@@ -1258,154 +1261,312 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
   }
 
   Widget _buildLeaderboardSection() {
+    final hasPodium = _leaderboard.length >= 3;
+    final listItems = hasPodium ? _leaderboard.skip(3).toList() : _leaderboard;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header Papan Peringkat
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7),
-                  borderRadius: BorderRadius.circular(10),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.18),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: const Icon(
                   Icons.emoji_events_rounded,
                   color: Color(0xFFD97706),
-                  size: 20,
+                  size: 22,
                 ),
               ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Papan Peringkat Peserta',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF0F172A),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Papan Peringkat Peserta',
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF0F172A),
+                      ),
                     ),
+                    Text(
+                      'Peringkat langsung peserta Tryout Nasional',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (_leaderboard.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _kPaleGreen,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: _kGreenMid.withValues(alpha: 0.25)),
                   ),
-                  Text(
-                    'Peringkat langsung peserta yang telah submit',
+                  child: Text(
+                    '${_leaderboard.length} Peserta',
                     style: GoogleFonts.poppins(
                       fontSize: 10.5,
-                      color: const Color(0xFF64748B),
+                      fontWeight: FontWeight.bold,
+                      color: _kGreenDeep,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+
+          // Posisi Anda Saat Ini (Sticky Banner jika sudah submit)
+          if (_sudahDikerjakan && _myRank != null) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [_kGreenDeep, _kGreenMid],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: _kGreenMid.withValues(alpha: 0.25),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.stars_rounded, color: _kAccent, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Posisi Anda Saat Ini',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white.withValues(alpha: 0.85),
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          'Peringkat #$_myRank dari ${_leaderboard.length} Peserta',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: _kAccent,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      '${_myScore ?? 0} Poin',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF78350F),
+                      ),
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
+
           const SizedBox(height: 14),
+
+          // Konten Leaderboard
           if (_leaderboard.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
+              padding: const EdgeInsets.symmetric(vertical: 28),
               child: Center(
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.military_tech_outlined,
-                      size: 40,
-                      color: Colors.grey.shade400,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Belum ada peserta yang mengumpulkan ujian.',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.grey.shade500,
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF3C7).withValues(alpha: 0.6),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.emoji_events_outlined,
+                        size: 44,
+                        color: Color(0xFFD97706),
                       ),
                     ),
+                    const SizedBox(height: 12),
                     Text(
-                      'Jadilah yang pertama di papan peringkat!',
+                      'Belum ada peserta yang mengumpulkan.',
                       style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        color: _kGreenMid,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF334155),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Jadilah yang pertama di papan peringkat nasional!',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11.5,
+                        color: const Color(0xFF64748B),
                       ),
                     ),
                   ],
                 ),
               ),
             )
-          else
+          else ...[
+            // Podium Top 3 (Tampil jika minimal 3 peserta)
+            if (hasPodium) _buildTop3Podium(),
+
+            // Judul List Jika Ada Podium
+            if (hasPodium && listItems.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10, left: 2),
+                child: Text(
+                  'Peringkat Selanjutnya (#4 - #${_leaderboard.length.clamp(0, 15)})',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF64748B),
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ],
+
+            // List Peserta (Rank 4+ atau seluruh peserta jika < 3)
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: _leaderboard.length.clamp(0, 10),
-              separatorBuilder: (_, _) =>
-                  const Divider(height: 14, color: Color(0xFFF1F5F9)),
+              itemCount: listItems.length.clamp(0, hasPodium ? 12 : 15),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
-                final entry = _leaderboard[index];
-                final rank = index + 1;
+                final entry = listItems[index];
+                final rank = hasPodium ? index + 4 : index + 1;
 
-                Color? badgeColor;
-                if (rank == 1) badgeColor = const Color(0xFFFFB300); // Gold
-                if (rank == 2) badgeColor = const Color(0xFF94A3B8); // Silver
-                if (rank == 3) badgeColor = const Color(0xFFB45309); // Bronze
+                Color rankBg = const Color(0xFFF1F5F9);
+                Color rankText = const Color(0xFF475569);
+                if (rank == 1) {
+                  rankBg = const Color(0xFFFEF3C7);
+                  rankText = const Color(0xFFB45309);
+                } else if (rank == 2) {
+                  rankBg = const Color(0xFFF1F5F9);
+                  rankText = const Color(0xFF475569);
+                } else if (rank == 3) {
+                  rankBg = const Color(0xFFFFFBEB);
+                  rankText = const Color(0xFFB45309);
+                }
 
                 return Container(
                   padding: const EdgeInsets.symmetric(
-                    vertical: 4,
-                    horizontal: 6,
+                    vertical: 10,
+                    horizontal: 12,
                   ),
                   decoration: BoxDecoration(
                     color: entry.isMe
                         ? _kPaleGreen
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
+                        : (index.isEven ? const Color(0xFFF8FAFC) : Colors.white),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: entry.isMe
+                          ? _kGreenLight.withValues(alpha: 0.5)
+                          : const Color(0xFFF1F5F9),
+                      width: entry.isMe ? 1.5 : 1,
+                    ),
                   ),
                   child: Row(
                     children: [
-                      SizedBox(
-                        width: 28,
-                        child: badgeColor != null
-                            ? Icon(
-                                Icons.workspace_premium_rounded,
-                                color: badgeColor,
-                                size: 22,
-                              )
-                            : Text(
-                                '#$rank',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF64748B),
-                                ),
-                              ),
+                      Container(
+                        width: 32,
+                        height: 32,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: entry.isMe ? _kGreenMid : rankBg,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '#$rank',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: entry.isMe ? Colors.white : rankText,
+                          ),
+                        ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       CircleAvatar(
-                        radius: 14,
+                        radius: 16,
                         backgroundColor: entry.isMe
-                            ? _kGreenMid
-                            : Colors.grey.shade200,
+                            ? _kGreenDeep
+                            : const Color(0xFFE2E8F0),
                         child: Text(
                           entry.nama.isNotEmpty
                               ? entry.nama[0].toUpperCase()
                               : '?',
                           style: GoogleFonts.poppins(
-                            fontSize: 11,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.bold,
-                            color: entry.isMe
-                                ? Colors.white
-                                : Colors.grey.shade700,
+                            color: entry.isMe ? Colors.white : const Color(0xFF334155),
                           ),
                         ),
                       ),
@@ -1414,20 +1575,48 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              entry.nama + (entry.isMe ? ' (Kamu)' : ''),
-                              style: GoogleFonts.poppins(
-                                fontSize: 12.5,
-                                fontWeight: entry.isMe
-                                    ? FontWeight.bold
-                                    : FontWeight.w600,
-                                color: entry.isMe
-                                    ? _kGreenDeep
-                                    : const Color(0xFF1E293B),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    entry.nama,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12.5,
+                                      fontWeight: entry.isMe
+                                          ? FontWeight.bold
+                                          : FontWeight.w600,
+                                      color: entry.isMe
+                                          ? _kGreenDeep
+                                          : const Color(0xFF1E293B),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (entry.isMe) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 1.5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _kGreenMid,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      'Kamu',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 9,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
+                            const SizedBox(height: 1),
                             Text(
                               'NIS: ${entry.nis.length > 4 ? '${entry.nis.substring(0, 4)}***' : entry.nis}',
                               style: GoogleFonts.poppins(
@@ -1438,21 +1627,234 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
                           ],
                         ),
                       ),
-                      Text(
-                        '${entry.skor}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: entry.isMe ? _kGreenMid : const Color(0xFF0F172A),
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${entry.skor}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                              color: entry.isMe ? _kGreenMid : const Color(0xFF0F172A),
+                            ),
+                          ),
+                          Text(
+                            'poin',
+                            style: GoogleFonts.poppins(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 );
               },
             ),
+          ],
         ],
       ),
+    );
+  }
+
+  /// Visual Podium Top 3 (Gaya Olimpiade Elegan & Modern)
+  Widget _buildTop3Podium() {
+    if (_leaderboard.length < 3) return const SizedBox.shrink();
+    final first = _leaderboard[0];
+    final second = _leaderboard[1];
+    final third = _leaderboard[2];
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.fromLTRB(8, 14, 8, 0),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // Juara 2 (Perak - Kiri)
+          Expanded(
+            child: _buildPodiumColumn(
+              second,
+              2,
+              80,
+              const Color(0xFF94A3B8),
+              '🥈',
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Juara 1 (Emas - Tengah, Lebih Tinggi & Menonjol)
+          Expanded(
+            child: _buildPodiumColumn(
+              first,
+              1,
+              100,
+              const Color(0xFFF59E0B),
+              '👑',
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Juara 3 (Perunggu - Kanan)
+          Expanded(
+            child: _buildPodiumColumn(
+              third,
+              3,
+              68,
+              const Color(0xFFB45309),
+              '🥉',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPodiumColumn(
+    _LeaderboardEntry entry,
+    int rank,
+    double height,
+    Color accentColor,
+    String medalEmoji,
+  ) {
+    final isFirst = rank == 1;
+    final displayName = entry.nama.split(' ').take(2).join(' ');
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Emoji Mahkota / Medali
+        Text(
+          medalEmoji,
+          style: TextStyle(fontSize: isFirst ? 22 : 18),
+        ),
+        const SizedBox(height: 2),
+        // Avatar dengan Ring Berwarna Juara
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(2.5),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: accentColor, width: isFirst ? 2.5 : 1.5),
+                boxShadow: isFirst
+                    ? [
+                        BoxShadow(
+                          color: accentColor.withValues(alpha: 0.35),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: CircleAvatar(
+                radius: isFirst ? 22 : 18,
+                backgroundColor: entry.isMe
+                    ? _kGreenMid
+                    : accentColor.withValues(alpha: 0.2),
+                child: Text(
+                  entry.nama.isNotEmpty ? entry.nama[0].toUpperCase() : '?',
+                  style: GoogleFonts.poppins(
+                    fontSize: isFirst ? 14 : 12,
+                    fontWeight: FontWeight.bold,
+                    color: entry.isMe ? Colors.white : const Color(0xFF1E293B),
+                  ),
+                ),
+              ),
+            ),
+            if (entry.isMe)
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    color: _kGreenMid,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check, size: 10, color: Colors.white),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        // Nama Peserta
+        SizedBox(
+          height: 30,
+          child: Text(
+            displayName + (entry.isMe ? ' (Kamu)' : ''),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.poppins(
+              fontSize: 10.5,
+              fontWeight: isFirst || entry.isMe ? FontWeight.bold : FontWeight.w600,
+              color: entry.isMe ? _kGreenDeep : const Color(0xFF1E293B),
+              height: 1.15,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        // Balok Podium
+        Container(
+          width: double.infinity,
+          height: height,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isFirst
+                  ? [const Color(0xFFFEF3C7), const Color(0xFFFDE047)]
+                  : (rank == 2
+                      ? [const Color(0xFFF1F5F9), const Color(0xFFE2E8F0)]
+                      : [const Color(0xFFFFFBEB), const Color(0xFFFEF3C7)]),
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+            border: Border.all(color: accentColor.withValues(alpha: 0.4)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '#$rank',
+                style: GoogleFonts.poppins(
+                  fontSize: isFirst ? 20 : 16,
+                  fontWeight: FontWeight.w900,
+                  color: accentColor,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${entry.skor} pts',
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
