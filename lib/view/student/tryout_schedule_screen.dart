@@ -15,6 +15,7 @@ import 'package:examgo/view/student/tryout_discussion_screen.dart';
 import 'package:examgo/view/student/student_exam_session_screen.dart';
 import 'package:examgo/view/pre_exam_checklist.dart';
 import 'package:examgo/view/widgets/premium_token_dialog.dart';
+import 'package:examgo/view/student/widgets/exam_time_lock_dialog.dart';
 import 'package:examgo/view/student/widgets/tryout_card_widget.dart';
 import 'package:examgo/view/student/widgets/tryout_detail_sheet.dart';
 import 'package:examgo/view/student/widgets/tryout_spider_chart_widget.dart';
@@ -1363,53 +1364,72 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Row(
               children: [
-                Expanded(
-                  flex: item.allowRetake ? 3 : 1,
-                  child: SizedBox(
-                    height: 44,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF1B5E20), AppColors.primaryGreen],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primaryGreen.withValues(
-                              alpha: 0.25,
+                Builder(
+                  builder: (context) {
+                    final isLocked =
+                        !item.allowRetake && !item.isExamTimeEnded;
+                    return Expanded(
+                      flex: item.allowRetake ? 3 : 1,
+                      child: SizedBox(
+                        height: 44,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: isLocked
+                                  ? const [
+                                      Color(0xFFB45309),
+                                      Color(0xFFD97706),
+                                    ]
+                                  : const [
+                                      Color(0xFF1B5E20),
+                                      AppColors.primaryGreen,
+                                    ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton.icon(
-                        onPressed: () => _openDiscussion(item),
-                        icon: const Icon(
-                          Icons.auto_stories_rounded,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                        label: Text(
-                          'Bahas',
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            color: Colors.white,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isLocked
+                                        ? const Color(0xFFD97706)
+                                        : AppColors.primaryGreen)
+                                    .withValues(
+                                  alpha: 0.25,
+                                ),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: () => _openDiscussion(item),
+                            icon: Icon(
+                              isLocked
+                                  ? Icons.lock_clock_rounded
+                                  : Icons.auto_stories_rounded,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                            label: Text(
+                              isLocked ? 'Terkunci' : 'Bahas',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
                 const SizedBox(width: 8),
                 InkWell(
@@ -1508,6 +1528,17 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
   }
 
   Future<void> _openDiscussion(StudentTryoutHistoryItem item) async {
+    // Jika bukan tryout bebas (allowRetake == false) dan waktu ujian resmi belum selesai
+    if (!item.allowRetake && !item.isExamTimeEnded) {
+      if (!mounted) return;
+      await showExamTimeLockDialog(
+        context,
+        endTime: item.examEndTime ?? DateTime.now(),
+        examTitle: item.namaPaket,
+      );
+      return;
+    }
+
     var questions = item.questions;
     if (questions.isEmpty) {
       showDialog(

@@ -53,10 +53,12 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
     return widget.questions.where((q) {
       final userAns = widget.studentAnswers[q.soalId]?.toUpperCase() ?? '';
       final correctAns = q.kunci.toUpperCase();
-      if (_filter == 'Benar')
+      if (_filter == 'Benar') {
         return userAns.isNotEmpty && userAns == correctAns;
-      if (_filter == 'Salah')
+      }
+      if (_filter == 'Salah') {
         return userAns.isNotEmpty && userAns != correctAns;
+      }
       if (_filter == 'Kosong') return userAns.isEmpty;
       return true;
     }).toList();

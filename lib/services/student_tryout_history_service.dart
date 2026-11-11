@@ -12,6 +12,7 @@ class StudentTryoutHistoryItem {
   final String namaPaket;
   final String kategori;
   final DateTime submittedAt;
+  final DateTime? examEndTime;
   final int finalScore;
   final int maxScore;
   final int totalBenar;
@@ -31,6 +32,7 @@ class StudentTryoutHistoryItem {
     required this.namaPaket,
     required this.kategori,
     required this.submittedAt,
+    this.examEndTime,
     required this.finalScore,
     required this.maxScore,
     required this.totalBenar,
@@ -46,11 +48,25 @@ class StudentTryoutHistoryItem {
     this.subtestScores,
   });
 
+  /// Apakah waktu ujian resmi sudah habis sehingga pembahasan & kunci boleh dibuka
+  bool get isExamTimeEnded {
+    if (examEndTime == null) return true;
+    return DateTime.now().isAfter(examEndTime!);
+  }
+
+  /// Sisa waktu sebelum kunci & pembahasan dibuka (dalam menit/detik)
+  Duration? get remainingExamDuration {
+    if (examEndTime == null) return null;
+    final diff = examEndTime!.difference(DateTime.now());
+    return diff.isNegative ? Duration.zero : diff;
+  }
+
   StudentTryoutHistoryItem copyWith({
     String? token,
     String? namaPaket,
     String? kategori,
     DateTime? submittedAt,
+    DateTime? examEndTime,
     int? finalScore,
     int? maxScore,
     int? totalBenar,
@@ -70,6 +86,7 @@ class StudentTryoutHistoryItem {
       namaPaket: namaPaket ?? this.namaPaket,
       kategori: kategori ?? this.kategori,
       submittedAt: submittedAt ?? this.submittedAt,
+      examEndTime: examEndTime ?? this.examEndTime,
       finalScore: finalScore ?? this.finalScore,
       maxScore: maxScore ?? this.maxScore,
       totalBenar: totalBenar ?? this.totalBenar,
@@ -92,6 +109,7 @@ class StudentTryoutHistoryItem {
       'nama_paket': namaPaket,
       'kategori': kategori,
       'submitted_at': submittedAt.toIso8601String(),
+      if (examEndTime != null) 'exam_end_time': examEndTime!.toIso8601String(),
       'final_score': finalScore,
       'max_score': maxScore,
       'total_benar': totalBenar,
@@ -138,6 +156,9 @@ class StudentTryoutHistoryItem {
       submittedAt: json['submitted_at'] != null
           ? DateTime.tryParse(json['submitted_at'].toString()) ?? DateTime.now()
           : DateTime.now(),
+      examEndTime: json['exam_end_time'] != null
+          ? DateTime.tryParse(json['exam_end_time'].toString())
+          : null,
       finalScore: (json['final_score'] as num?)?.toInt() ?? 0,
       maxScore: (json['max_score'] as num?)?.toInt() ?? 100,
       totalBenar: (json['total_benar'] as num?)?.toInt() ?? 0,
@@ -338,6 +359,7 @@ class StudentTryoutHistoryService {
     required ExamEvaluationResult result,
     required Map<String, String> answers,
     required List<ExamQuestion> questions,
+    DateTime? examEndTime,
     bool allowRetake = true,
     Map<String, dynamic>? subtestScores,
   }) async {
@@ -353,6 +375,7 @@ class StudentTryoutHistoryService {
         namaPaket: namaPaket,
         kategori: kategori,
         submittedAt: DateTime.now(),
+        examEndTime: examEndTime,
         finalScore: result.finalScore,
         maxScore: result.maxScore,
         totalBenar: result.totalBenar,

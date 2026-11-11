@@ -207,7 +207,10 @@ class _TeacherMonitoringListScreenState
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold),
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -215,16 +218,26 @@ class _TeacherMonitoringListScreenState
 
               // Prominent Token Box with Copy Button
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF0FDF4),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF86EFAC), width: 1.2),
+                  border: Border.all(
+                    color: const Color(0xFF86EFAC),
+                    width: 1.2,
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.key_rounded, size: 16, color: Color(0xFF16A34A)),
+                    const Icon(
+                      Icons.key_rounded,
+                      size: 16,
+                      color: Color(0xFF16A34A),
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'TOKEN: $token',
@@ -242,7 +255,10 @@ class _TeacherMonitoringListScreenState
                         HapticFeedback.lightImpact();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Token $token berhasil disalin!', style: GoogleFonts.poppins(fontSize: 12)),
+                            content: Text(
+                              'Token $token berhasil disalin!',
+                              style: GoogleFonts.poppins(fontSize: 12),
+                            ),
                             duration: const Duration(seconds: 1),
                             behavior: SnackBarBehavior.floating,
                           ),
@@ -254,7 +270,11 @@ class _TeacherMonitoringListScreenState
                           color: const Color(0xFFDCFCE7),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Icon(Icons.copy_rounded, size: 14, color: Color(0xFF16A34A)),
+                        child: const Icon(
+                          Icons.copy_rounded,
+                          size: 14,
+                          color: Color(0xFF16A34A),
+                        ),
                       ),
                     ),
                   ],
@@ -281,7 +301,10 @@ class _TeacherMonitoringListScreenState
               Text(
                 'Siswa dapat memindai QR ini atau memasukkan kode token di atas pada aplikasi ExamGO.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 11.5, color: const Color(0xFF64748B)),
+                style: GoogleFonts.poppins(
+                  fontSize: 11.5,
+                  color: const Color(0xFF64748B),
+                ),
               ),
               const SizedBox(height: 18),
 
@@ -293,10 +316,18 @@ class _TeacherMonitoringListScreenState
                       onPressed: () => Navigator.pop(ctx),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Color(0xFFCBD5E1)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
-                      child: Text('Tutup', style: GoogleFonts.poppins(color: const Color(0xFF475569), fontWeight: FontWeight.w600)),
+                      child: Text(
+                        'Tutup',
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFF475569),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -307,12 +338,25 @@ class _TeacherMonitoringListScreenState
                         Navigator.pop(ctx);
                         _shareExamInfo(item);
                       },
-                      icon: const Icon(Icons.share_rounded, size: 15, color: Colors.white),
-                      label: Text('Bagikan ke Siswa', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.5)),
+                      icon: const Icon(
+                        Icons.share_rounded,
+                        size: 15,
+                        color: Colors.white,
+                      ),
+                      label: Text(
+                        'Bagikan ke Siswa',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.5,
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _kGreen,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
                     ),
@@ -329,7 +373,8 @@ class _TeacherMonitoringListScreenState
   void _shareExamInfo(Map<String, String> item) async {
     final title = item['title'] ?? 'Ujian';
     final token = item['examId'] ?? '';
-    final msg = '*INFORMASI SESI UJIAN EXAMGO*\n'
+    final msg =
+        '*INFORMASI SESI UJIAN EXAMGO*\n'
         '📋 *Ujian:* $title\n'
         '🔑 *Kode Token:* *$token*\n\n'
         '📲 *Langkah Mengikuti Ujian:*\n'
@@ -337,18 +382,23 @@ class _TeacherMonitoringListScreenState
         '2. Pada menu Beranda, masukkan Token di atas pada kolom "Token Ujian" atau ketuk "🎯 Masuk Event".\n'
         '3. Anda akan langsung diarahkan ke lembar soal ujian.\n\n'
         '_Catatan: Pastikan koneksi internet stabil & patuhi tata tertib ujian._';
-    
+
     Clipboard.setData(ClipboardData(text: msg));
     HapticFeedback.lightImpact();
-    
+
     try {
-      await Share.share(msg, subject: 'Token Ujian ExamGO: $token');
+      await SharePlus.instance.share(
+        ShareParams(text: msg, subject: 'Token Ujian ExamGO: $token'),
+      );
     } catch (_) {}
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Pesan info ujian & token $token disalin! Siap dibagikan ke WhatsApp siswa.', style: GoogleFonts.poppins(fontSize: 12)),
+          content: Text(
+            'Pesan info ujian & token $token disalin! Siap dibagikan ke WhatsApp siswa.',
+            style: GoogleFonts.poppins(fontSize: 12),
+          ),
           backgroundColor: const Color(0xFF0F172A),
           behavior: SnackBarBehavior.floating,
         ),
@@ -418,69 +468,69 @@ class _TeacherMonitoringListScreenState
                   ),
                   child: IconButton(
                     padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
+                    icon: const Icon(
+                      Icons.refresh_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                     tooltip: 'Segarkan Riwayat',
                     onPressed: _loadHistory,
                   ),
                 ),
               ),
             ],
+
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: false,
-              titlePadding: const EdgeInsetsDirectional.only(start: 64, bottom: 16, end: 64),
+              titlePadding: const EdgeInsetsDirectional.only(
+                start: 64,
+                end: 64,
+                bottom: 16,
+              ),
               title: Text(
-                widget.isLiveMode ? 'Live Monitoring Peserta' : 'Riwayat Ujian & Token Saya',
+                widget.isLiveMode
+                    ? 'Live Monitoring Peserta'
+                    : 'Riwayat Ujian & Token Saya',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w700,
                   fontSize: 15.5,
-                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
                   letterSpacing: -0.2,
+                  color: Colors.white,
                 ),
               ),
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Container(
-                    decoration: const BoxDecoration(
+                  // Background gradient
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                         colors: [
                           Color(0xFF1B5E20),
                           Color(0xFF2E7D32),
                           Color(0xFF388E3C),
                         ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
                       ),
                     ),
                   ),
-                  // Dekorasi Geometris Halus
+
+                  // Dekorasi geometris
                   Positioned(
                     top: -40,
                     right: -30,
-                    child: Container(
-                      width: 170,
-                      height: 170,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.06),
-                      ),
-                    ),
+                    child: _buildDecorCircle(size: 170, alpha: 0.06),
                   ),
                   Positioned(
                     bottom: -30,
                     left: -20,
-                    child: Container(
-                      width: 130,
-                      height: 130,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.04),
-                      ),
-                    ),
+                    child: _buildDecorCircle(size: 130, alpha: 0.04),
                   ),
-                  // Badges Subtitle saat expanded (Ditempatkan di kiri bawah, bebas tumpang tindih dengan refresh button di kanan atas)
+
+                  // Badge subtitle (kiri bawah, tidak bertabrakan dengan tombol refresh)
                   Positioned(
                     left: 20,
                     right: 20,
@@ -489,25 +539,22 @@ class _TeacherMonitoringListScreenState
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Flexible(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.16),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                width: 1,
-                              ),
-                            ),
+                          child: _buildBadge(
+                            backgroundAlpha: 0.16,
+                            backgroundColor: Colors.black,
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  widget.isLiveMode ? Icons.sensors_rounded : Icons.token_rounded,
+                                  widget.isLiveMode
+                                      ? Icons.sensors_rounded
+                                      : Icons.token_rounded,
                                   size: 13,
-                                  color: widget.isLiveMode ? Colors.amberAccent : Colors.white70,
+                                  color: widget.isLiveMode
+                                      ? Colors.amberAccent
+                                      : Colors.white70,
                                 ),
-                                const SizedBox(width: 5),
+                                const SizedBox(width: 6),
                                 Flexible(
                                   child: Text(
                                     widget.isLiveMode
@@ -518,7 +565,9 @@ class _TeacherMonitoringListScreenState
                                     style: GoogleFonts.poppins(
                                       fontSize: 10.5,
                                       fontWeight: FontWeight.w500,
-                                      color: Colors.white.withValues(alpha: 0.9),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -527,20 +576,18 @@ class _TeacherMonitoringListScreenState
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.16),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.2),
-                            ),
-                          ),
+                        _buildBadge(
+                          backgroundAlpha: 0.16,
+                          backgroundColor: Colors.white,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.inventory_2_outlined, size: 12, color: Colors.white70),
-                              const SizedBox(width: 5),
+                              const Icon(
+                                Icons.inventory_2_outlined,
+                                size: 13,
+                                color: Colors.white70,
+                              ),
+                              const SizedBox(width: 6),
                               Text(
                                 '${_history.length} Sesi',
                                 style: GoogleFonts.poppins(
@@ -1340,7 +1387,11 @@ class _TeacherMonitoringDetailScreenState
                       ),
                       actions: [
                         Padding(
-                          padding: const EdgeInsets.only(right: 14, top: 6, bottom: 6),
+                          padding: const EdgeInsets.only(
+                            right: 14,
+                            top: 6,
+                            bottom: 6,
+                          ),
                           child: Container(
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.18),
@@ -3364,7 +3415,10 @@ class _TeacherMonitoringDetailScreenState
                   if (s['allow_retake'] == true)
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFECFDF5),
                         borderRadius: BorderRadius.circular(12),
@@ -3373,7 +3427,11 @@ class _TeacherMonitoringDetailScreenState
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 16),
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            color: Color(0xFF16A34A),
+                            size: 16,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             'Izin Ujian Ulang Aktif (Siswa Dapat Mengulang)',
@@ -3397,7 +3455,11 @@ class _TeacherMonitoringDetailScreenState
                           name,
                           onSuccess: () => setState(() {}),
                         ),
-                        icon: const Icon(Icons.replay_rounded, size: 16, color: _kGreen),
+                        icon: const Icon(
+                          Icons.replay_rounded,
+                          size: 16,
+                          color: _kGreen,
+                        ),
                         label: Text(
                           'Izinkan Ujian Ulang',
                           style: GoogleFonts.poppins(
@@ -4292,6 +4354,33 @@ Future<void> _showUnblockConfirmation(
   }
 }
 
+Widget _buildDecorCircle({required double size, required double alpha}) {
+  return Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: Colors.white.withValues(alpha: alpha),
+    ),
+  );
+}
+
+Widget _buildBadge({
+  required Widget child,
+  required Color backgroundColor,
+  required double backgroundAlpha,
+}) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    decoration: BoxDecoration(
+      color: backgroundColor.withValues(alpha: backgroundAlpha),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
+    ),
+    child: child,
+  );
+}
+
 // ─── Helper Konfirmasi Izin Ujian Ulang ─────────────────────────────────────────
 Future<void> _showAllowRetakeConfirmation(
   BuildContext context,
@@ -4326,11 +4415,7 @@ Future<void> _showAllowRetakeConfirmation(
                 color: _kGreen.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.replay_rounded,
-                color: _kGreen,
-                size: 32,
-              ),
+              child: const Icon(Icons.replay_rounded, color: _kGreen, size: 32),
             ),
             const SizedBox(height: 16),
             Text(
@@ -4415,7 +4500,11 @@ Future<void> _showAllowRetakeConfirmation(
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -4427,7 +4516,9 @@ Future<void> _showAllowRetakeConfirmation(
           ),
           backgroundColor: _kGreenL,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
         ),
       );

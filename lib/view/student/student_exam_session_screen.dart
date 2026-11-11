@@ -20,6 +20,7 @@ import '../../utils/math_widget_factory.dart';
 import 'tryout_discussion_screen.dart';
 import 'tryout_schedule_screen.dart';
 import 'widgets/exam_question_table_widget.dart';
+import 'widgets/exam_time_lock_dialog.dart';
 import '../widgets/anti_cheat_shield_overlay.dart';
 
 class StudentExamSessionScreen extends StatefulWidget {
@@ -596,6 +597,26 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
       } else {
         _subtestEndTime = now.add(Duration(minutes: currentSt.durasiMenit));
         await prefs.setInt(stEndKey, _subtestEndTime!.millisecondsSinceEpoch);
+      }
+
+      final totalPkgEndKey =
+          'exam_pkg_total_end_${widget.token}_${widget.studentNis}';
+      final savedTotalMs = prefs.getInt(totalPkgEndKey);
+      if (savedTotalMs != null) {
+        _packageEndTime = DateTime.fromMillisecondsSinceEpoch(savedTotalMs);
+      } else {
+        final totalMins =
+            _subtests.fold<int>(0, (acc, st) => acc + st.durasiMenit);
+        _packageEndTime = now.add(
+          Duration(
+            minutes:
+                totalMins > 0 ? totalMins : (_package?.durasiMenit ?? 90),
+          ),
+        );
+        await prefs.setInt(
+          totalPkgEndKey,
+          _packageEndTime!.millisecondsSinceEpoch,
+        );
       }
     } else {
       final pkgEndKey = 'exam_pkg_end_${widget.token}_${widget.studentNis}';
@@ -1217,6 +1238,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         result: evalResult,
         answers: _answers,
         questions: _allQuestions,
+        examEndTime: _packageEndTime ??
+            DateTime.now().add(
+              Duration(minutes: _package?.durasiMenit ?? 90),
+            ),
         allowRetake:
             _package?.allowRetake ??
             (widget.initialSchedule?.allowRetake ?? false),
@@ -1530,50 +1555,70 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
               ],
 
               // Tombol Aksi Harmonis ExamGO
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => TryoutDiscussionScreen(
-                          title: _package?.namaPaket ?? 'Pembahasan Tryout',
-                          kategori: _package?.kategori ?? ExamCategory.umum,
-                          questions: _allQuestions,
-                          studentAnswers: _answers,
-                          score: result.finalScore,
-                          statusKelulusan: result.statusKelulusan,
-                          returnToDashboardOnExit: !widget.returnToHome,
-                          returnToHome: widget.returnToHome,
+              Builder(
+                builder: (context) {
+                  final isTimeEnded = _packageEndTime == null ||
+                      DateTime.now().isAfter(_packageEndTime!);
+                  return SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        if (!isTimeEnded) {
+                          showExamTimeLockDialog(
+                            context,
+                            endTime: _packageEndTime!,
+                            examTitle: _package?.namaPaket,
+                          );
+                          return;
+                        }
+                        Navigator.pop(ctx);
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => TryoutDiscussionScreen(
+                              title: _package?.namaPaket ?? 'Pembahasan Tryout',
+                              kategori: _package?.kategori ?? ExamCategory.umum,
+                              questions: _allQuestions,
+                              studentAnswers: _answers,
+                              score: result.finalScore,
+                              statusKelulusan: result.statusKelulusan,
+                              returnToDashboardOnExit: !widget.returnToHome,
+                              returnToHome: widget.returnToHome,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: Icon(
+                        isTimeEnded
+                            ? Icons.menu_book_rounded
+                            : Icons.lock_clock_rounded,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                      label: Text(
+                        isTimeEnded
+                            ? 'Lihat Pembahasan & Kunci'
+                            : 'Pembahasan & Kunci (Terkunci)',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13.5,
                         ),
                       ),
-                    );
-                  },
-                  icon: const Icon(
-                    Icons.menu_book_rounded,
-                    size: 18,
-                    color: Colors.white,
-                  ),
-                  label: Text(
-                    'Lihat Pembahasan & Kunci',
-                    style: GoogleFonts.poppins(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13.5,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isTimeEnded
+                            ? AppColors.primaryGreen
+                            : const Color(0xFFD97706),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
                     ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryGreen,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
+                  );
+                },
               ),
               const SizedBox(height: 10),
               SizedBox(

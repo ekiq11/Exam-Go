@@ -6,6 +6,7 @@ import 'package:examgo/services/student_tryout_history_service.dart';
 import 'package:examgo/services/tryout_reminder_service.dart';
 import 'package:examgo/view/student/event_dashboard_screen.dart';
 import 'package:examgo/view/student/tryout_discussion_screen.dart';
+import 'package:examgo/view/student/widgets/exam_time_lock_dialog.dart';
 import 'package:examgo/view/widgets/premium_token_dialog.dart';
 import 'package:examgo/view/student/tryout_schedule_screen.dart';
 import 'package:flutter/services.dart';
@@ -546,13 +547,39 @@ class _HomeScreenState extends State<HomeScreen>
               }
             }
 
-            // Jika sudah pernah mengerjakan dan belum diizinkan ulang oleh guru -> Alihkan ke Pembahasan & Kunci
+            // Jika sudah pernah mengerjakan dan belum diizinkan ulang oleh guru -> Alihkan ke Pembahasan jika waktu sudah habis
             if (existingAttempt != null && !retakePermitted) {
               if (!mounted) return;
+
+              // Hitung apakah waktu ujian resmi masih berjalan
+              DateTime? effectiveEndTime = existingAttempt.examEndTime;
+              if (effectiveEndTime == null && pkgData['durasi_menit'] != null) {
+                final durasi = (pkgData['durasi_menit'] as num).toInt();
+                final tentativeEnd =
+                    existingAttempt.submittedAt.add(Duration(minutes: durasi));
+                if (DateTime.now().isBefore(tentativeEnd)) {
+                  effectiveEndTime = tentativeEnd;
+                }
+              }
+
+              // Jika waktu ujian belum habis, kunci akses pembahasan demi integritas ujian
+              if (effectiveEndTime != null &&
+                  DateTime.now().isBefore(effectiveEndTime)) {
+                await showExamTimeLockDialog(
+                  context,
+                  endTime: effectiveEndTime,
+                  examTitle: existingAttempt.namaPaket.isNotEmpty
+                      ? existingAttempt.namaPaket
+                      : (pkgData['nama_paket'] ?? 'Ujian'),
+                );
+                return;
+              }
+
+              // Jika waktu ujian sudah berakhir -> Alihkan ke Pembahasan & Kunci
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Ujian ini hanya dapat dikerjakan 1 kali pada perangkat ini. Mengalihkan ke Halaman Pembahasan & Kunci...',
+                    'Waktu ujian telah berakhir. Mengalihkan ke Halaman Pembahasan & Kunci...',
                     style: GoogleFonts.poppins(fontSize: 12),
                   ),
                   backgroundColor: const Color(0xFF0F172A),

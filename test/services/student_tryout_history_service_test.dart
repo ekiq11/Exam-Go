@@ -80,5 +80,72 @@ void main() {
       final item2 = history2.firstWhere((h) => h.token == 'SNBT-003');
       expect(item2.allowRetake, isTrue);
     });
+
+    test('StudentTryoutHistoryItem calculates isExamTimeEnded and remainingExamDuration accurately', () {
+      final now = DateTime.now();
+
+      // Case 1: examEndTime is in the future (exam still ongoing)
+      final futureEndTime = now.add(const Duration(minutes: 45));
+      final itemOngoing = StudentTryoutHistoryItem(
+        token: 'TEST-FUT',
+        namaPaket: 'Tryout Masih Berjalan',
+        kategori: 'CBT',
+        submittedAt: now,
+        examEndTime: futureEndTime,
+        finalScore: 80,
+        maxScore: 100,
+        totalBenar: 8,
+        totalSalah: 2,
+        totalKosong: 0,
+        totalSoal: 10,
+        isPassed: true,
+        statusKelulusan: 'LULUS',
+        predikat: 'Baik',
+        allowRetake: false,
+        jawaban: {},
+        questions: [],
+      );
+
+      expect(itemOngoing.isExamTimeEnded, isFalse);
+      expect(itemOngoing.remainingExamDuration, isNotNull);
+      expect(itemOngoing.remainingExamDuration!.inMinutes, inInclusiveRange(44, 45));
+
+      // Case 2: examEndTime is in the past (exam ended)
+      final pastEndTime = now.subtract(const Duration(minutes: 10));
+      final itemEnded = itemOngoing.copyWith(examEndTime: pastEndTime);
+
+      expect(itemEnded.isExamTimeEnded, isTrue);
+      expect(itemEnded.remainingExamDuration, Duration.zero);
+
+      // Case 3: examEndTime is null (defaults to ended / open)
+      final itemNull = StudentTryoutHistoryItem(
+        token: 'TEST-NULL',
+        namaPaket: 'Tryout Bebas',
+        kategori: 'CBT',
+        submittedAt: now,
+        examEndTime: null,
+        finalScore: 80,
+        maxScore: 100,
+        totalBenar: 8,
+        totalSalah: 2,
+        totalKosong: 0,
+        totalSoal: 10,
+        isPassed: true,
+        statusKelulusan: 'LULUS',
+        predikat: 'Baik',
+        allowRetake: false,
+        jawaban: {},
+        questions: [],
+      );
+      expect(itemNull.isExamTimeEnded, isTrue);
+      expect(itemNull.remainingExamDuration, isNull);
+
+      // Serialization & Deserialization
+      final json = itemOngoing.toJson();
+      expect(json['exam_end_time'], isNotNull);
+      final deserialized = StudentTryoutHistoryItem.fromJson(json);
+      expect(deserialized.examEndTime, isNotNull);
+      expect(deserialized.isExamTimeEnded, isFalse);
+    });
   });
 }
