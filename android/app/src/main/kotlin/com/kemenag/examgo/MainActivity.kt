@@ -283,6 +283,7 @@ class MainActivity : FlutterFragmentActivity() {
                 // Solusi: cek FEATURE_CAMERA_ANY lewat PackageManager sebelum
                 // MobileScannerController.start() pernah dipanggil di Dart.
                 "checkCameraAvailable"  -> checkCameraAvailable(result)
+                "getElapsedRealtime"    -> result.success(android.os.SystemClock.elapsedRealtime())
                 else                    -> result.notImplemented()
             }
         }

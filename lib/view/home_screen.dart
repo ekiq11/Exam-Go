@@ -525,13 +525,14 @@ class _HomeScreenState extends State<HomeScreen>
         }
         if (pkgDoc.exists) {
           final pkgData = pkgDoc.data() ?? {};
-          final isTeacherGen = pkgData['is_teacher_generated'] == true ||
+          final isTeacherGen =
+              pkgData['is_teacher_generated'] == true ||
               pkgData['allow_retake'] == false;
 
           // ── Cek Pembatasan 1 Device / 1 Kali Pengerjaan (Soal Buatan Guru) ──
           if (isTeacherGen) {
-            final history =
-                await StudentTryoutHistoryService.instance.getHistory();
+            final history = await StudentTryoutHistoryService.instance
+                .getHistory();
             final existingAttempt = history
                 .where((h) => h.token.trim().toUpperCase() == tokenUpper)
                 .firstOrNull;
@@ -556,16 +557,18 @@ class _HomeScreenState extends State<HomeScreen>
               DateTime? effectiveEndTime = existingAttempt.examEndTime;
               if (effectiveEndTime == null && pkgData['durasi_menit'] != null) {
                 final durasi = (pkgData['durasi_menit'] as num).toInt();
-                effectiveEndTime =
-                    existingAttempt.submittedAt.add(Duration(minutes: durasi));
+                effectiveEndTime = existingAttempt.submittedAt.add(
+                  Duration(minutes: durasi),
+                );
               }
 
               // Verifikasi anti-cheat jam HP manual via TrustedTimeService
-              final isTimeEnded =
-                  await TrustedTimeService.instance.isExamTimeEnded(
-                examEndTime: effectiveEndTime,
-                submittedAt: existingAttempt.submittedAt,
-              );
+              final isTimeEnded = await TrustedTimeService.instance
+                  .isExamTimeEnded(
+                    examEndTime: effectiveEndTime,
+                    submittedAt: existingAttempt.submittedAt,
+                    elapsedRealtimeMs: existingAttempt.elapsedRealtimeMs,
+                  );
 
               // Jika waktu ujian belum habis, kunci akses pembahasan demi integritas ujian
               if (!isTimeEnded && effectiveEndTime != null) {
@@ -597,15 +600,14 @@ class _HomeScreenState extends State<HomeScreen>
               // Ambil butir soal dari cache atau unduh jika belum lengkap
               List<ExamQuestion> questions = existingAttempt.questions;
               if (questions.isEmpty) {
-                final cached =
-                    await ExamCacheService.instance.loadExam(tokenUpper);
+                final cached = await ExamCacheService.instance.loadExam(
+                  tokenUpper,
+                );
                 if (cached != null && cached.questions.isNotEmpty) {
                   questions = cached.questions;
                 } else {
-                  final downloaded =
-                      await ExamCacheService.instance.downloadAndCacheExam(
-                    paketId: tokenUpper,
-                  );
+                  final downloaded = await ExamCacheService.instance
+                      .downloadAndCacheExam(paketId: tokenUpper);
                   questions = downloaded.questions;
                 }
               }
@@ -1047,7 +1049,7 @@ class _HomeScreenState extends State<HomeScreen>
                               ),
                             ),
                             Text(
-                              'Bersihkan semua data lokal & reset app ke awal (Apple 5.1.1)',
+                              'Bersihkan semua data lokal & reset app ke awal',
                               style: GoogleFonts.poppins(
                                 fontSize: 10.5,
                                 color: const Color(0xFF991B1B),
@@ -3181,7 +3183,8 @@ class _ManualTokenInputDialogState extends State<ManualTokenInputDialog> {
                                     color: Color(0xFF94A3B8),
                                   ),
                                   tooltip: 'Hapus',
-                                  onPressed: () => setState(() => _ctrl.clear()),
+                                  onPressed: () =>
+                                      setState(() => _ctrl.clear()),
                                 ),
                               IconButton(
                                 icon: const Icon(
@@ -3230,9 +3233,7 @@ class _ManualTokenInputDialogState extends State<ManualTokenInputDialog> {
                           decoration: BoxDecoration(
                             color: const Color(0xFFF0FDF4),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: const Color(0xFF86EFAC),
-                            ),
+                            border: Border.all(color: const Color(0xFF86EFAC)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -3687,9 +3688,7 @@ class _StudentProfileDialogState extends State<StudentProfileDialog> {
                           decoration: BoxDecoration(
                             color: const Color(0xFFFEE2E2),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: const Color(0xFFFCA5A5),
-                            ),
+                            border: Border.all(color: const Color(0xFFFCA5A5)),
                           ),
                           child: Row(
                             children: [

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/exam_question_model.dart';
 import 'license_service.dart';
 import 'national_exam_evaluator.dart';
+import 'trusted_time_service.dart';
 
 /// Model riwayat pengerjaan tryout siswa
 class StudentTryoutHistoryItem {
@@ -13,6 +14,7 @@ class StudentTryoutHistoryItem {
   final String kategori;
   final DateTime submittedAt;
   final DateTime? examEndTime;
+  final int? elapsedRealtimeMs;
   final int finalScore;
   final int maxScore;
   final int totalBenar;
@@ -33,6 +35,7 @@ class StudentTryoutHistoryItem {
     required this.kategori,
     required this.submittedAt,
     this.examEndTime,
+    this.elapsedRealtimeMs,
     required this.finalScore,
     required this.maxScore,
     required this.totalBenar,
@@ -67,6 +70,7 @@ class StudentTryoutHistoryItem {
     String? kategori,
     DateTime? submittedAt,
     DateTime? examEndTime,
+    int? elapsedRealtimeMs,
     int? finalScore,
     int? maxScore,
     int? totalBenar,
@@ -87,6 +91,7 @@ class StudentTryoutHistoryItem {
       kategori: kategori ?? this.kategori,
       submittedAt: submittedAt ?? this.submittedAt,
       examEndTime: examEndTime ?? this.examEndTime,
+      elapsedRealtimeMs: elapsedRealtimeMs ?? this.elapsedRealtimeMs,
       finalScore: finalScore ?? this.finalScore,
       maxScore: maxScore ?? this.maxScore,
       totalBenar: totalBenar ?? this.totalBenar,
@@ -110,6 +115,7 @@ class StudentTryoutHistoryItem {
       'kategori': kategori,
       'submitted_at': submittedAt.toIso8601String(),
       if (examEndTime != null) 'exam_end_time': examEndTime!.toIso8601String(),
+      if (elapsedRealtimeMs != null) 'elapsed_realtime_ms': elapsedRealtimeMs,
       'final_score': finalScore,
       'max_score': maxScore,
       'total_benar': totalBenar,
@@ -159,6 +165,7 @@ class StudentTryoutHistoryItem {
       examEndTime: json['exam_end_time'] != null
           ? DateTime.tryParse(json['exam_end_time'].toString())
           : null,
+      elapsedRealtimeMs: (json['elapsed_realtime_ms'] as num?)?.toInt(),
       finalScore: (json['final_score'] as num?)?.toInt() ?? 0,
       maxScore: (json['max_score'] as num?)?.toInt() ?? 100,
       totalBenar: (json['total_benar'] as num?)?.toInt() ?? 0,
@@ -370,12 +377,18 @@ class StudentTryoutHistoryService {
       final effectiveSubtests = subtestScores ??
           result.subtests.map((k, v) => MapEntry(k, v.toMap()));
 
+      int? elapsedMs;
+      try {
+        elapsedMs = await TrustedTimeService.instance.getElapsedRealtime();
+      } catch (_) {}
+
       final newItem = StudentTryoutHistoryItem(
         token: token,
         namaPaket: namaPaket,
         kategori: kategori,
         submittedAt: DateTime.now(),
         examEndTime: examEndTime,
+        elapsedRealtimeMs: elapsedMs,
         finalScore: result.finalScore,
         maxScore: result.maxScore,
         totalBenar: result.totalBenar,

@@ -460,8 +460,11 @@ class _TeacherMonitoringListScreenState
                 centerTitle: false,
                 actions: [
                   Padding(
-                    padding:
-                        const EdgeInsets.only(right: 14, top: 6, bottom: 6),
+                    padding: const EdgeInsets.only(
+                      right: 14,
+                      top: 6,
+                      bottom: 6,
+                    ),
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.18),
@@ -1089,8 +1092,9 @@ class _TeacherMonitoringListScreenState
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
                             ),
                           ),
                         ),
@@ -1130,8 +1134,9 @@ class _TeacherMonitoringListScreenState
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
                             ),
                           ),
                         ),
@@ -1151,10 +1156,10 @@ class _TeacherMonitoringListScreenState
                                   MaterialPageRoute(
                                     builder: (_) =>
                                         TeacherMonitoringDetailScreen(
-                                      examId: item['examId']!,
-                                      title: item['title']!,
-                                      url: item['url'],
-                                    ),
+                                          examId: item['examId']!,
+                                          title: item['title']!,
+                                          url: item['url'],
+                                        ),
                                   ),
                                 );
                               },
@@ -1180,8 +1185,9 @@ class _TeacherMonitoringListScreenState
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
                               ),
                             ),
                           ),
@@ -1219,8 +1225,9 @@ class _TeacherMonitoringListScreenState
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
                               ),
                             ),
                           ),
@@ -3497,7 +3504,7 @@ class _TeacherMonitoringDetailScreenState
                         const SizedBox(height: 10),
                         SizedBox(
                           width: double.infinity,
-                          height: 40,
+                          height: 45,
                           child: ElevatedButton.icon(
                             onPressed: () => _showUnblockConfirmation(
                               context,
@@ -4446,10 +4453,7 @@ Future<void> _showUnblockConfirmation(
   if (confirmed != true) return;
   if (!context.mounted) return;
 
-  await MonitoringService.instance.unblockStudent(
-    examId: examId,
-    nis: nis,
-  );
+  await MonitoringService.instance.unblockStudent(examId: examId, nis: nis);
 
   if (!context.mounted) return;
 

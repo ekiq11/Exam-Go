@@ -1534,6 +1534,7 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
       final isEnded = await TrustedTimeService.instance.isExamTimeEnded(
         examEndTime: item.examEndTime,
         submittedAt: item.submittedAt,
+        elapsedRealtimeMs: item.elapsedRealtimeMs,
       );
       if (!isEnded) {
         if (!mounted) return;

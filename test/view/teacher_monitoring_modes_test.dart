@@ -6,7 +6,7 @@ import 'package:examgo/view/teacher_monitoring_screen.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() {
+  setUp(() async {
     final now = DateTime.now().millisecondsSinceEpoch;
     SharedPreferences.setMockInitialValues({
       'teacher_pin_hash': 'testhash',
@@ -14,10 +14,21 @@ void main() {
         'EXAM-101|Matematika Wajib|$now|http://exam.url',
       ],
     });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('teacher_exam_history', [
+      'EXAM-101|Matematika Wajib|$now|http://exam.url',
+    ]);
   });
 
   group('TeacherMonitoringListScreen Modes & Anti-Overlap Tests', () {
     testWidgets('Riwayat Ujian & Token Saya (isLiveMode: false) renders tokens without Pantau Live button', (tester) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       await tester.pumpWidget(
         const MaterialApp(
           home: TeacherMonitoringListScreen(isLiveMode: false),
@@ -43,6 +54,13 @@ void main() {
     });
 
     testWidgets('Live Monitoring Peserta (isLiveMode: true) renders live proctoring with Pantau Live button', (tester) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       await tester.pumpWidget(
         const MaterialApp(
           home: TeacherMonitoringListScreen(isLiveMode: true),

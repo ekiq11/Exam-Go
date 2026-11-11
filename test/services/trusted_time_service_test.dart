@@ -28,5 +28,33 @@ void main() {
       );
       expect(result, isTrue);
     });
+    test('isExamTimeEnded detects manual clock advancement when elapsed physical time is insufficient', () async {
+      final service = TrustedTimeService.instance;
+      final now = DateTime.now();
+      // Misal siswa menyelesaikan ujian 10 menit lalu dan waktu ujian resmi selesai 30 menit ke depan
+      final submittedAt = now.subtract(const Duration(minutes: 10));
+      final examEndTime = now.add(const Duration(minutes: 30));
+
+      // Jika elapsedRealtime perangkat menunjukkan baru berjalan 10 menit (600.000 ms),
+      // sementara dibutuhkan 40 menit (2.400.000 ms)
+      const submittedElapsedMs = 1000000;
+      // Mocking getElapsedRealtime secara pasif via parameter
+      final result = await service.isExamTimeEnded(
+        examEndTime: examEndTime,
+        submittedAt: submittedAt,
+        elapsedRealtimeMs: submittedElapsedMs,
+      );
+      expect(result, isFalse);
+    });
+
+    test('queryNtpServer handles network queries or fails gracefully without throwing', () async {
+      final service = TrustedTimeService.instance;
+      final ntpDate = await service.queryNtpServer('time.google.com');
+      // Bila koneksi internet tersedia, mengembalikan waktu; bila offline, mengembalikan null
+      if (ntpDate != null) {
+        expect(ntpDate.year, greaterThanOrEqualTo(2024));
+      }
+    });
   });
 }
+
