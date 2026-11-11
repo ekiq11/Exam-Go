@@ -387,107 +387,107 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
           width: double.maxFinite,
           child: SingleChildScrollView(
             child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Nama / Topik Subtest',
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF334155),
-                ),
-              ),
-              const SizedBox(height: 6),
-              TextField(
-                controller: titleCtrl,
-                autofocus: true,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: const Color(0xFF0F172A),
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Misal: Penalaran Matematika',
-                  hintStyle: GoogleFonts.poppins(
-                    fontSize: 13,
-                    color: const Color(0xFF94A3B8),
-                  ),
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: AppColors.primaryGreen,
-                      width: 1.5,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Alokasi Waktu (Menit)',
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF334155),
-                ),
-              ),
-              const SizedBox(height: 6),
-              TextField(
-                controller: durCtrl,
-                keyboardType: TextInputType.number,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: const Color(0xFF0F172A),
-                ),
-                decoration: InputDecoration(
-                  hintText: '30',
-                  suffixText: 'menit',
-                  suffixStyle: GoogleFonts.poppins(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Nama / Topik Subtest',
+                  style: GoogleFonts.poppins(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF64748B),
+                    color: const Color(0xFF334155),
                   ),
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: titleCtrl,
+                  autofocus: true,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: const Color(0xFF0F172A),
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: AppColors.primaryGreen,
-                      width: 1.5,
+                  decoration: InputDecoration(
+                    hintText: 'Misal: Penalaran Matematika',
+                    hintStyle: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFFF8FAFC),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: AppColors.primaryGreen,
+                        width: 1.5,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                Text(
+                  'Alokasi Waktu (Menit)',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF334155),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: durCtrl,
+                  keyboardType: TextInputType.number,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: const Color(0xFF0F172A),
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '30',
+                    suffixText: 'menit',
+                    suffixStyle: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF64748B),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFFF8FAFC),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: AppColors.primaryGreen,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      actions: [
+        actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
@@ -724,7 +724,8 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
     _currentPackage!.jenisWaktu = _jenisWaktu;
     _currentPackage!.durasiMenit =
         int.tryParse(_durationController.text.trim()) ?? 90;
-    _currentPackage!.allowRetake = false; // Soal buatan guru 1x pengerjaan per device
+    _currentPackage!.allowRetake =
+        false; // Soal buatan guru 1x pengerjaan per device
 
     if (_subtests.isNotEmpty) {
       final allQuestions = <ExamQuestion>[];
@@ -1432,7 +1433,7 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                   Expanded(
                     child: _buildTimerModeOption(
                       title: 'Per Subtest',
-                      desc: 'Timer berganti tiap sesi',
+                      desc: 'Timer persesi',
                       value: 'per_subtest',
                       icon: Icons.splitscreen_rounded,
                     ),
