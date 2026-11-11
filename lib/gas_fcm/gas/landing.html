@@ -1,21 +1,25 @@
 <!DOCTYPE html>
 <html lang="id" class="scroll-smooth overflow-x-hidden">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ExamGO — Platform Tryout SNBT, SKD & CBT Ujian Sekolah #1</title>
-  <meta name="description" content="Simulasi CBT resmi paling presisi untuk pejuang UTBK SNBT & SKD Kedinasan 2026. Timer mandiri per-subtes, sistem penilaian IRT, rumus KaTeX tajam, dan proteksi kiosk anti-curang.">
-  
+  <meta name="description"
+    content="Simulasi CBT resmi paling presisi untuk pejuang UTBK SNBT & SKD Kedinasan 2026. Timer mandiri per-subtes, sistem penilaian IRT, rumus KaTeX tajam, dan proteksi kiosk anti-curang.">
+
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-  
-    <!-- KaTeX CSS & JS for Math Rendering -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+    rel="stylesheet">
+
+  <!-- KaTeX CSS & JS for Math Rendering -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
-  
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -47,20 +51,27 @@
     .glow-emerald {
       box-shadow: 0 0 40px -10px rgba(16, 185, 129, 0.4);
     }
+
     .gradient-hero {
       background: radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.15) 0%, transparent 60%),
-                  radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
+        radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
     }
   </style>
-  <link rel="icon" type="image/png" href="data:image/png;base64,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">
+  <link rel="icon" type="image/png"
+    href="data:image/png;base64,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">
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-brand-500 selection:text-white overflow-x-hidden w-full max-w-full">
+
+<body
+  class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-brand-500 selection:text-white overflow-x-hidden w-full max-w-full">
 
   <!-- 1. Urgent Announcement Top Bar -->
-  <div id="landing-announcement-bar" class="bg-gradient-to-r from-brand-600 via-teal-600 to-indigo-600 text-white text-xs sm:text-sm py-2 px-4 shadow-md text-center font-medium relative z-50">
+  <div id="landing-announcement-bar"
+    class="bg-gradient-to-r from-brand-600 via-teal-600 to-indigo-600 text-white text-xs sm:text-sm py-2 px-4 shadow-md text-center font-medium relative z-50">
     <div class="max-w-7xl mx-auto flex items-center justify-center gap-2 flex-wrap">
-      <span class="px-2 py-0.5 rounded-full bg-white/20 text-white font-bold text-[11px] uppercase tracking-wider">⚡ PROMO RESMI 2026</span>
-      <span id="announcement-text">⚡ Siswa Premium Rp 25.000 • Guru & Proktor Rp 35.000 — Akses Seumur Hidup Tanpa Langganan Bulanan!</span>
+      <span class="px-2 py-0.5 rounded-full bg-white/20 text-white font-bold text-[11px] uppercase tracking-wider">⚡
+        PROMO RESMI 2026</span>
+      <span id="announcement-text">⚡ Siswa Premium Rp 25.000 • Guru & Proktor Rp 35.000 — Akses Seumur Hidup Tanpa
+        Langganan Bulanan!</span>
       <a href="#harga" class="underline font-bold hover:text-brand-100 transition-colors ml-1">Lihat Paket &rarr;</a>
     </div>
   </div>
@@ -68,15 +79,20 @@
   <!-- 2. Modern Floating Header / Nav -->
   <header class="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/80 transition-all">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
-      
+
       <!-- Brand Logo -->
       <a href="#" class="flex items-center gap-2.5 sm:gap-3 group">
-        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white/10 p-1 backdrop-blur-md border border-brand-500/30 shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform flex items-center justify-center shrink-0">
-          <img src="data:image/png;base64,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" alt="ExamGO Logo" class="w-full h-full object-contain rounded-xl">
+        <div
+          class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white/10 p-1 backdrop-blur-md border border-brand-500/30 shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform flex items-center justify-center shrink-0">
+          <img
+            src="data:image/png;base64,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"
+            alt="ExamGO Logo" class="w-full h-full object-contain rounded-xl">
         </div>
         <div>
           <span class="text-lg sm:text-xl font-extrabold tracking-tight text-white flex items-center gap-1.5">
-            ExamGO <span class="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-400 border border-brand-500/20 font-bold">CBT #1</span>
+            ExamGO <span
+              class="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-400 border border-brand-500/20 font-bold">CBT
+              #1</span>
           </span>
           <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium block">Simulasi SNBT, CPNS & CBT Guru</span>
         </div>
@@ -97,8 +113,12 @@
 
       <!-- Header CTA Buttons -->
       <div class="flex items-center gap-2 sm:gap-3">
-        <a id="btn-nav-lynkid" href="https://lynk.id/examgo" target="_blank" class="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white text-xs sm:text-sm font-bold shadow-lg shadow-brand-500/25 transition-all hover:scale-[1.02] active:scale-95">
-          <svg class="w-4 h-4 text-emerald-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+        <a id="btn-nav-lynkid" href="https://lynk.id/examgo" target="_blank"
+          class="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white text-xs sm:text-sm font-bold shadow-lg shadow-brand-500/25 transition-all hover:scale-[1.02] active:scale-95">
+          <svg class="w-4 h-4 text-emerald-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+          </svg>
           <span class="font-mono">lynk.id/examgo</span>
           <span class="text-[10px] hidden sm:inline-block bg-white/20 px-1.5 py-0.5 rounded font-bold">⚡ Beli</span>
         </a>
@@ -110,40 +130,51 @@
   <!-- 3. Hero Section (Conversion Hook) -->
   <section class="relative pt-10 pb-16 sm:pt-20 sm:pb-32 gradient-hero overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      
+
       <div class="text-center max-w-3xl mx-auto space-y-5 sm:space-y-6">
-        
+
         <!-- Eyebrow Badges: Store Link & Status -->
         <div class="flex flex-wrap items-center justify-center gap-2">
-          <a href="https://lynk.id/examgo" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 border border-brand-500/40 text-[11px] sm:text-xs font-semibold text-slate-200 shadow-md hover:border-brand-400 transition-colors">
+          <a href="https://lynk.id/examgo" target="_blank"
+            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 border border-brand-500/40 text-[11px] sm:text-xs font-semibold text-slate-200 shadow-md hover:border-brand-400 transition-colors">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span>Toko Resmi:</span>
             <span class="text-brand-300 font-mono font-bold tracking-tight">lynk.id/examgo</span>
-            <span class="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-extrabold uppercase tracking-wider border border-emerald-500/30">VERIFIED</span>
+            <span
+              class="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-extrabold uppercase tracking-wider border border-emerald-500/30">VERIFIED</span>
           </a>
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-[11px] sm:text-xs font-bold tracking-wide shadow-sm">
+          <div
+            class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-[11px] sm:text-xs font-bold tracking-wide shadow-sm">
             <span id="hero-badge-text">🔥 CBT ANTI-CURANG #1 • UTBK SNBT, CPNS & UJIAN GURU 2026</span>
           </div>
         </div>
 
         <!-- Main Headline -->
-        <h1 id="hero-title-text" class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.18] sm:leading-[1.15]">
-          Raih Kampus & Karir Impian, <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-teal-300 to-amber-300">Gelar Ujian Bebas Curang!</span>
+        <h1 id="hero-title-text"
+          class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.18] sm:leading-[1.15]">
+          Raih Kampus & Karir Impian, <span
+            class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-teal-300 to-amber-300">Gelar Ujian
+            Bebas Curang!</span>
         </h1>
 
         <!-- Subtitle -->
-        <p id="hero-subtitle-text" class="text-sm sm:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto font-normal">
-          Satu aplikasi cerdas untuk <strong>Siswa</strong> & <strong>Guru</strong>: Siswa simulasi tryout SNBT & CPNS hemat kuota dengan ranking nasional riil. Guru & Sekolah menggelar ujian CBT terkunci Kiosk Mode anti-curang dengan rekap nilai otomatis.
+        <p id="hero-subtitle-text"
+          class="text-sm sm:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto font-normal">
+          Satu aplikasi cerdas untuk <strong>Siswa</strong> & <strong>Guru</strong>: Siswa simulasi tryout SNBT & CPNS
+          hemat kuota dengan ranking nasional riil. Guru & Sekolah menggelar ujian CBT terkunci Kiosk Mode anti-curang
+          dengan rekap nilai otomatis.
         </p>
 
         <!-- CTA Buttons & Dual Paths -->
         <div class="space-y-4 pt-3 sm:pt-4">
           <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a href="#harga" class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-sm sm:text-base shadow-xl shadow-brand-500/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+            <a href="#harga"
+              class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-sm sm:text-base shadow-xl shadow-brand-500/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
               <span>🎓 Siswa Premium (Rp 25.000)</span>
               <span>&rarr;</span>
             </a>
-            <a href="#harga" class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-400/40 font-extrabold text-sm sm:text-base shadow-xl transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+            <a href="#harga"
+              class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-400/40 font-extrabold text-sm sm:text-base shadow-xl transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
               <span>🛡️ Guru & Proktor (Rp 35.000)</span>
               <span>&rarr;</span>
             </a>
@@ -151,141 +182,185 @@
 
           <!-- App Store & Play Store Download Badges -->
           <div class="pt-2 flex items-center justify-center gap-3">
-            <a href="https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id" target="_blank" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700/80 hover:border-slate-500 text-slate-300 hover:text-white text-xs font-medium transition-colors">
+            <a href="https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id" target="_blank"
+              class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700/80 hover:border-slate-500 text-slate-300 hover:text-white text-xs font-medium transition-colors">
               <span>▶</span> Google Play Store
             </a>
-            <a href="https://apps.apple.com/id/app/examgo/id6759708435?l=id" target="_blank" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700/80 hover:border-slate-500 text-slate-300 hover:text-white text-xs font-medium transition-colors">
+            <a href="https://apps.apple.com/id/app/examgo/id6759708435?l=id" target="_blank"
+              class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700/80 hover:border-slate-500 text-slate-300 hover:text-white text-xs font-medium transition-colors">
               <span>🍎</span> Apple App Store
             </a>
           </div>
-              <span class="inline-flex items-center gap-1 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-800">
-                <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                <span>QRIS, GoPay, OVO, ShopeePay, DANA</span>
-              </span>
-              <span class="inline-flex items-center gap-1 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-800">
-                <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                <span>Token Otomatis & Instan Muncul</span>
-              </span>
-              <span class="inline-flex items-center gap-1 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-800">
-                <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
-                <span>Tanpa Langganan Berulang</span>
-              </span>
-            </div>
-          </div>
-
-          <!-- Official Store Download Buttons -->
-          <div class="flex flex-wrap items-center justify-center gap-3">
-            <!-- Google Play Store -->
-            <a id="btn-hero-playstore" href="https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id" target="_blank" class="px-5 py-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700/80 transition-all flex items-center gap-3 shadow-md hover:border-brand-500/50 hover:scale-[1.02]">
-              <svg class="w-6 h-6 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3.609 1.814L13.792 12 3.61 22.186a1.986 1.986 0 01-.61-1.428V3.242c0-.555.223-1.059.61-1.428zm11.235 11.238l2.25 2.25-11.45 6.543 9.2-8.793zm0-2.104l-9.2-8.793 11.45 6.543-2.25 2.25zm1.464 1.052l3.438-1.965c.78-.445.78-1.173 0-1.618l-3.438-1.965-2.25 2.25 2.25 2.25z"/>
-              </svg>
-              <div class="text-left">
-                <div class="text-[9px] text-slate-400 uppercase tracking-widest font-semibold leading-none">TEMUKAN DI</div>
-                <div class="text-xs font-bold text-white leading-tight">Google Play</div>
-              </div>
-            </a>
-
-            <!-- Apple App Store -->
-            <a id="btn-hero-appstore" href="https://apps.apple.com/id/app/examgo/id6759708435?l=id" target="_blank" class="px-5 py-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700/80 transition-all flex items-center gap-3 shadow-md hover:border-brand-500/50 hover:scale-[1.02]">
-              <svg class="w-6 h-6 text-slate-100 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.79 1.07-1.9 0.95-3.02-.93.04-2.11.64-2.77 1.42-.58.68-1.09 1.8-0.95 2.88 1.05.08 2.14-.54 2.77-1.28z"/>
-              </svg>
-              <div class="text-left">
-                <div class="text-[9px] text-slate-400 uppercase tracking-widest font-semibold leading-none">UNDUH DI</div>
-                <div class="text-xs font-bold text-white leading-tight">App Store</div>
-              </div>
-            </a>
-          </div>
-        </div>
-
-        <!-- Micro Social Proof -->
-        <div class="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400 font-semibold">
-          <div class="flex items-center gap-1.5">
-            <span class="text-amber-400">★★★★★</span>
-            <span class="text-slate-200">4.9/5 Kepuasan Siswa</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <svg class="w-4 h-4 text-brand-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-            <span>100% Kiosk Mode Terkunci</span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <svg class="w-4 h-4 text-brand-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-            <span>Timer Mandiri Tiap Subtes</span>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Hero Visual Mockup: Simulated CBT Student Screen -->
-      <div class="mt-14 max-w-4xl mx-auto relative">
-        <div class="rounded-3xl p-1 bg-gradient-to-b from-brand-500/40 via-slate-800 to-slate-900 shadow-2xl glow-emerald">
-          <div class="bg-slate-900 rounded-[22px] overflow-hidden border border-slate-800">
-            
-            <!-- Window Header -->
-            <div class="bg-slate-950 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
-                <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
-                <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
-                <span class="text-xs text-slate-400 font-mono ml-2">ExamGO Student Session • SNBT UTBK 2026</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 text-[10px] font-bold border border-brand-500/30">KIOSK LOCKED</span>
-              </div>
-            </div>
-
-            <!-- Simulated Exam UI -->
-            <div class="p-6 sm:p-8 space-y-6">
-              
-              <!-- Timer & Subtest Navigation Bar -->
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-3">
-                <div>
-                  <div class="text-[11px] font-bold text-brand-400 uppercase tracking-wider">Babak 1 dari 7 Subtest</div>
-                  <div class="text-base sm:text-lg font-bold text-white">Penalaran Umum (TPS)</div>
-                </div>
-                <div class="flex items-center gap-3 self-end sm:self-auto">
-                  <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 font-mono font-bold text-sm">
-                    <svg class="w-4 h-4 animate-spin text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"></circle><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2"></path></svg>
-                    <span>Sisa Waktu: 24:38</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Question Body Preview -->
-              <div class="space-y-4">
-                <div class="flex items-start gap-3">
-                  <span class="w-7 h-7 rounded-lg bg-brand-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">1</span>
-                  <div class="text-sm sm:text-base text-slate-200 leading-relaxed font-medium">
-                    Jika diketahui fungsi $f(x) = 2x^2 - 4x + 5$ dan garis singgung tegak lurus dengan garis $x + 8y - 10 = 0$, berapakah nilai gradien garis singgung kurva pada titik tersebut?
-                  </div>
-                </div>
-
-                <!-- Multiple Choice Options -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
-                  <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-semibold text-slate-300 flex items-center gap-3 hover:border-brand-500/50 transition-all cursor-pointer">
-                    <span class="w-6 h-6 rounded bg-slate-800 text-slate-300 flex items-center justify-center text-[11px] font-bold">A</span>
-                    <span>$m = 4$</span>
-                  </div>
-                  <div class="p-3 rounded-xl bg-brand-500/10 border border-brand-500 text-xs font-semibold text-brand-300 flex items-center gap-3 transition-all cursor-pointer">
-                    <span class="w-6 h-6 rounded bg-brand-500 text-slate-950 flex items-center justify-center text-[11px] font-bold">B</span>
-                    <span>$m = 8$ (Jawaban Terpilih)</span>
-                  </div>
-                  <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-semibold text-slate-300 flex items-center gap-3 hover:border-brand-500/50 transition-all cursor-pointer">
-                    <span class="w-6 h-6 rounded bg-slate-800 text-slate-300 flex items-center justify-center text-[11px] font-bold">C</span>
-                    <span>$m = 12$</span>
-                  </div>
-                  <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-semibold text-slate-300 flex items-center gap-3 hover:border-brand-500/50 transition-all cursor-pointer">
-                    <span class="w-6 h-6 rounded bg-slate-800 text-slate-300 flex items-center justify-center text-[11px] font-bold">D</span>
-                    <span>$m = 16$</span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
+          <span class="inline-flex items-center gap-1 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-800">
+            <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                clip-rule="evenodd"></path>
+            </svg>
+            <span>QRIS, GoPay, OVO, ShopeePay, DANA</span>
+          </span>
+          <span class="inline-flex items-center gap-1 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-800">
+            <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                clip-rule="evenodd"></path>
+            </svg>
+            <span>Token Otomatis & Instan Muncul</span>
+          </span>
+          <span class="inline-flex items-center gap-1 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-800">
+            <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                clip-rule="evenodd"></path>
+            </svg>
+            <span>Tanpa Langganan Berulang</span>
+          </span>
         </div>
       </div>
+
+      <!-- Official Store Download Buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <!-- Google Play Store -->
+        <a id="btn-hero-playstore" href="https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id"
+          target="_blank"
+          class="px-5 py-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700/80 transition-all flex items-center gap-3 shadow-md hover:border-brand-500/50 hover:scale-[1.02]">
+          <svg class="w-6 h-6 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M3.609 1.814L13.792 12 3.61 22.186a1.986 1.986 0 01-.61-1.428V3.242c0-.555.223-1.059.61-1.428zm11.235 11.238l2.25 2.25-11.45 6.543 9.2-8.793zm0-2.104l-9.2-8.793 11.45 6.543-2.25 2.25zm1.464 1.052l3.438-1.965c.78-.445.78-1.173 0-1.618l-3.438-1.965-2.25 2.25 2.25 2.25z" />
+          </svg>
+          <div class="text-left">
+            <div class="text-[9px] text-slate-400 uppercase tracking-widest font-semibold leading-none">TEMUKAN DI</div>
+            <div class="text-xs font-bold text-white leading-tight">Google Play</div>
+          </div>
+        </a>
+
+        <!-- Apple App Store -->
+        <a id="btn-hero-appstore" href="https://apps.apple.com/id/app/examgo/id6759708435?l=id" target="_blank"
+          class="px-5 py-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700/80 transition-all flex items-center gap-3 shadow-md hover:border-brand-500/50 hover:scale-[1.02]">
+          <svg class="w-6 h-6 text-slate-100 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.79 1.07-1.9 0.95-3.02-.93.04-2.11.64-2.77 1.42-.58.68-1.09 1.8-0.95 2.88 1.05.08 2.14-.54 2.77-1.28z" />
+          </svg>
+          <div class="text-left">
+            <div class="text-[9px] text-slate-400 uppercase tracking-widest font-semibold leading-none">UNDUH DI</div>
+            <div class="text-xs font-bold text-white leading-tight">App Store</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Micro Social Proof -->
+    <div class="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400 font-semibold">
+      <div class="flex items-center gap-1.5">
+        <span class="text-amber-400">★★★★★</span>
+        <span class="text-slate-200">4.9/5 Kepuasan Siswa</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-brand-400" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+            clip-rule="evenodd"></path>
+        </svg>
+        <span>100% Kiosk Mode Terkunci</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-brand-400" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+            clip-rule="evenodd"></path>
+        </svg>
+        <span>Timer Mandiri Tiap Subtes</span>
+      </div>
+    </div>
+
+    </div>
+
+    <!-- Hero Visual Mockup: Simulated CBT Student Screen -->
+    <div class="mt-14 max-w-4xl mx-auto relative">
+      <div
+        class="rounded-3xl p-1 bg-gradient-to-b from-brand-500/40 via-slate-800 to-slate-900 shadow-2xl glow-emerald">
+        <div class="bg-slate-900 rounded-[22px] overflow-hidden border border-slate-800">
+
+          <!-- Window Header -->
+          <div class="bg-slate-950 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+              <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+              <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+              <span class="text-xs text-slate-400 font-mono ml-2">ExamGO Student Session • SNBT UTBK 2026</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span
+                class="px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 text-[10px] font-bold border border-brand-500/30">KIOSK
+                LOCKED</span>
+            </div>
+          </div>
+
+          <!-- Simulated Exam UI -->
+          <div class="p-6 sm:p-8 space-y-6">
+
+            <!-- Timer & Subtest Navigation Bar -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-3">
+              <div>
+                <div class="text-[11px] font-bold text-brand-400 uppercase tracking-wider">Babak 1 dari 7 Subtest</div>
+                <div class="text-base sm:text-lg font-bold text-white">Penalaran Umum (TPS)</div>
+              </div>
+              <div class="flex items-center gap-3 self-end sm:self-auto">
+                <div
+                  class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 font-mono font-bold text-sm">
+                  <svg class="w-4 h-4 animate-spin text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2"></path>
+                  </svg>
+                  <span>Sisa Waktu: 24:38</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Question Body Preview -->
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <span
+                  class="w-7 h-7 rounded-lg bg-brand-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">1</span>
+                <div class="text-sm sm:text-base text-slate-200 leading-relaxed font-medium">
+                  Jika diketahui fungsi $f(x) = 2x^2 - 4x + 5$ dan garis singgung tegak lurus dengan garis $x + 8y - 10
+                  = 0$, berapakah nilai gradien garis singgung kurva pada titik tersebut?
+                </div>
+              </div>
+
+              <!-- Multiple Choice Options -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+                <div
+                  class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-semibold text-slate-300 flex items-center gap-3 hover:border-brand-500/50 transition-all cursor-pointer">
+                  <span
+                    class="w-6 h-6 rounded bg-slate-800 text-slate-300 flex items-center justify-center text-[11px] font-bold">A</span>
+                  <span>$m = 4$</span>
+                </div>
+                <div
+                  class="p-3 rounded-xl bg-brand-500/10 border border-brand-500 text-xs font-semibold text-brand-300 flex items-center gap-3 transition-all cursor-pointer">
+                  <span
+                    class="w-6 h-6 rounded bg-brand-500 text-slate-950 flex items-center justify-center text-[11px] font-bold">B</span>
+                  <span>$m = 8$ (Jawaban Terpilih)</span>
+                </div>
+                <div
+                  class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-semibold text-slate-300 flex items-center gap-3 hover:border-brand-500/50 transition-all cursor-pointer">
+                  <span
+                    class="w-6 h-6 rounded bg-slate-800 text-slate-300 flex items-center justify-center text-[11px] font-bold">C</span>
+                  <span>$m = 12$</span>
+                </div>
+                <div
+                  class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-semibold text-slate-300 flex items-center gap-3 hover:border-brand-500/50 transition-all cursor-pointer">
+                  <span
+                    class="w-6 h-6 rounded bg-slate-800 text-slate-300 flex items-center justify-center text-[11px] font-bold">D</span>
+                  <span>$m = 16$</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
 
     </div>
   </section>
@@ -293,44 +368,58 @@
   <!-- 4. Featured Event Promotion Card (Setting Admin Dinamis) -->
   <section id="event-promo" class="py-16 bg-slate-900/60 border-y border-slate-800/80">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-brand-950/40 rounded-3xl p-6 sm:p-10 border border-brand-500/30 shadow-2xl relative overflow-hidden">
+
+      <div
+        class="bg-gradient-to-br from-slate-900 via-slate-900 to-brand-950/40 rounded-3xl p-6 sm:p-10 border border-brand-500/30 shadow-2xl relative overflow-hidden">
         <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-          
+
           <div class="space-y-4 max-w-2xl">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/20 text-brand-400 text-xs font-bold border border-brand-500/30">
+            <div
+              class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/20 text-brand-400 text-xs font-bold border border-brand-500/30">
               <span id="promo-tag-text">Diskon 62% Khusus Siswa!</span>
             </div>
             <h2 id="featured-event-title" class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
               Tryout Akbar UTBK SNBT 2026 Gelombang 1
             </h2>
             <p id="featured-event-desc" class="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
-              7 Subtest Lengkap (Penalaran Umum, PPU, PBM, PK, Literasi Indo, Literasi Inggris, PM). Penilaian skala UTBK & pembahasan mendalam.
+              7 Subtest Lengkap (Penalaran Umum, PPU, PBM, PK, Literasi Indo, Literasi Inggris, PM). Penilaian skala
+              UTBK & pembahasan mendalam.
             </p>
             <div class="flex items-center gap-3 text-xs sm:text-sm text-slate-300 font-semibold">
-              <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
               <span id="featured-event-date">Sabtu - Minggu, 15 - 16 November 2026</span>
             </div>
           </div>
 
           <!-- Price & CTA Box -->
-          <div class="bg-slate-950/90 rounded-2xl p-6 border border-slate-800 text-center lg:text-left space-y-4 min-w-[280px]">
+          <div
+            class="bg-slate-950/90 rounded-2xl p-6 border border-slate-800 text-center lg:text-left space-y-4 min-w-[280px]">
             <div>
               <span class="text-xs text-slate-400 block line-through" id="promo-price-original">Rp 75.000</span>
               <div class="text-3xl font-extrabold text-white mt-0.5" id="promo-price-discount">Rp 25.000</div>
-              <span class="text-[11px] text-brand-400 font-bold block mt-1">Akses Penuh Lifetime + Pembahasan Lengkap</span>
+              <span class="text-[11px] text-brand-400 font-bold block mt-1">Akses Penuh Lifetime + Pembahasan
+                Lengkap</span>
             </div>
-            <a id="btn-promo-lynkid" href="https://lynk.id/examgo" target="_blank" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-sm shadow-lg shadow-brand-500/25 transition-all block text-center active:scale-95">
+            <a id="btn-promo-lynkid" href="https://lynk.id/examgo" target="_blank"
+              class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-sm shadow-lg shadow-brand-500/25 transition-all block text-center active:scale-95">
               Daftar via lynk.id/examgo ⚡
             </a>
             <div class="text-[10px] text-slate-400 text-center flex items-center justify-center gap-1">
-              <svg class="w-3.5 h-3.5 text-emerald-400 inline shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+              <svg class="w-3.5 h-3.5 text-emerald-400 inline shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"></path>
+              </svg>
               <span>Token dikirim instan di layar & email kamu</span>
             </div>
           </div>
 
         </div>
-        <div class="absolute -right-20 -top-20 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -right-20 -top-20 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none">
+        </div>
       </div>
 
     </div>
@@ -339,18 +428,19 @@
   <!-- 5. Pain vs Solution Comparison -->
   <section id="fitur" class="py-20 bg-slate-950">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
+
       <div class="text-center max-w-2xl mx-auto mb-16 space-y-3">
         <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
           Kenapa Banyak Siswa Gagal di Ujian Nyata?
         </h2>
         <p class="text-sm sm:text-base text-slate-400 leading-relaxed">
-          Ujian UTBK & SKD bukan hanya tentang pintar materi, tapi ketahanan mental dan kecepatan menghadapi batas waktu per-subtes.
+          Ujian UTBK & SKD bukan hanya tentang pintar materi, tapi ketahanan mental dan kecepatan menghadapi batas waktu
+          per-subtes.
         </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-        
+
         <!-- The Wrong Way: Tryout Biasa -->
         <div class="bg-red-950/10 border border-red-900/30 rounded-3xl p-6 sm:p-8 space-y-4">
           <div class="flex items-center gap-3 pb-3 border-b border-red-900/30 text-red-400 font-bold text-base">
@@ -360,11 +450,13 @@
           <ul class="space-y-3 text-sm text-slate-300">
             <li class="flex items-start gap-2.5">
               <span class="text-red-400 font-bold mt-0.5">•</span>
-              <span><b>Timer 1 Total:</b> Siswa kehabisan waktu di subtes akhir karena salah strategi alokasi waktu.</span>
+              <span><b>Timer 1 Total:</b> Siswa kehabisan waktu di subtes akhir karena salah strategi alokasi
+                waktu.</span>
             </li>
             <li class="flex items-start gap-2.5">
               <span class="text-red-400 font-bold mt-0.5">•</span>
-              <span><b>Banyak Joki & Contekan:</b> Tidak ada penguncian layar, siswa bisa split screen mencari contekan.</span>
+              <span><b>Banyak Joki & Contekan:</b> Tidak ada penguncian layar, siswa bisa split screen mencari
+                contekan.</span>
             </li>
             <li class="flex items-start gap-2.5">
               <span class="text-red-400 font-bold mt-0.5">•</span>
@@ -372,13 +464,15 @@
             </li>
             <li class="flex items-start gap-2.5">
               <span class="text-red-400 font-bold mt-0.5">•</span>
-              <span><b>Tanpa Pembahasan Jelas:</b> Hanya menampilkan skor tanpa tahu letak kesalahan langkah pengerjaan.</span>
+              <span><b>Tanpa Pembahasan Jelas:</b> Hanya menampilkan skor tanpa tahu letak kesalahan langkah
+                pengerjaan.</span>
             </li>
           </ul>
         </div>
 
         <!-- The ExamGO Way -->
-        <div class="bg-brand-950/20 border border-brand-500/30 rounded-3xl p-6 sm:p-8 space-y-4 shadow-xl shadow-brand-500/5">
+        <div
+          class="bg-brand-950/20 border border-brand-500/30 rounded-3xl p-6 sm:p-8 space-y-4 shadow-xl shadow-brand-500/5">
           <div class="flex items-center gap-3 pb-3 border-b border-brand-500/30 text-brand-400 font-bold text-base">
             <span class="w-7 h-7 rounded-full bg-brand-500/20 flex items-center justify-center text-sm">✓</span>
             <span>Keunggulan Mutlak ExamGO</span>
@@ -386,19 +480,23 @@
           <ul class="space-y-3 text-sm text-slate-200">
             <li class="flex items-start gap-2.5">
               <span class="text-brand-400 font-bold mt-0.5">✓</span>
-              <span><b>Timer Mandiri Per-Subtes:</b> Persis UTBK asli. Waktu habis otomatis berpindah dan babak terkunci.</span>
+              <span><b>Timer Mandiri Per-Subtes:</b> Persis UTBK asli. Waktu habis otomatis berpindah dan babak
+                terkunci.</span>
             </li>
             <li class="flex items-start gap-2.5">
               <span class="text-brand-400 font-bold mt-0.5">✓</span>
-              <span><b>100% Kiosk Mode Terkunci:</b> Blokir screenshot, rekam layar, dan lapor otomatis ke guru jika keluar aplikasi.</span>
+              <span><b>100% Kiosk Mode Terkunci:</b> Blokir screenshot, rekam layar, dan lapor otomatis ke guru jika
+                keluar aplikasi.</span>
             </li>
             <li class="flex items-start gap-2.5">
               <span class="text-brand-400 font-bold mt-0.5">✓</span>
-              <span><b>Serverless Google Cloud:</b> Stabil, super kencang, dan data jawaban tersimpan otomatis per detik.</span>
+              <span><b>Serverless Google Cloud:</b> Stabil, super kencang, dan data jawaban tersimpan otomatis per
+                detik.</span>
             </li>
             <li class="flex items-start gap-2.5">
               <span class="text-brand-400 font-bold mt-0.5">✓</span>
-              <span><b>KaTeX Math & Pembahasan:</b> Rumus pecahan, akar, eksponen tajam di HP dengan trik cepat pembahasan.</span>
+              <span><b>KaTeX Math & Pembahasan:</b> Rumus pecahan, akar, eksponen tajam di HP dengan trik cepat
+                pembahasan.</span>
             </li>
           </ul>
         </div>
@@ -411,25 +509,30 @@
   <!-- 5.1 DEDICATED SECTION: SOLUSI UNTUK SISWA -->
   <section id="siswa" class="py-20 bg-slate-900/70 border-t border-slate-800 relative overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      
+
       <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-xs font-bold uppercase tracking-wider">
+        <div
+          class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-xs font-bold uppercase tracking-wider">
           <span>🎓 KHUSUS SISWA & PEJUANG KAMPUS</span>
         </div>
         <h2 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">
-          Modal Rp 25.000, Latihan Tryout Sepuasnya <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-teal-300">Sampai Lolos PTN!</span>
+          Modal Rp 25.000, Latihan Tryout Sepuasnya <span
+            class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-teal-300">Sampai Lolos PTN!</span>
         </h2>
         <p class="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
-          Gak perlu bayar bimbel mahal tiap bulan. Akses seluruh bank soal SNBT 2026, SKD CPNS, dan Kedinasan dengan fitur cerdas yang bikin belajarmu terarah dan hemat kuota.
+          Gak perlu bayar bimbel mahal tiap bulan. Akses seluruh bank soal SNBT 2026, SKD CPNS, dan Kedinasan dengan
+          fitur cerdas yang bikin belajarmu terarah dan hemat kuota.
         </p>
       </div>
 
       <!-- 4 Features for Students -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 hover:border-brand-500/50 transition-all flex flex-col justify-between">
+
+        <div
+          class="bg-slate-950 p-6 rounded-2xl border border-slate-800 hover:border-brand-500/50 transition-all flex flex-col justify-between">
           <div class="space-y-3">
-            <div class="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-400 flex items-center justify-center text-2xl font-bold">
+            <div
+              class="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-400 flex items-center justify-center text-2xl font-bold">
               📚
             </div>
             <h3 class="text-base font-bold text-white">Tryout Terlengkap 2026</h3>
@@ -442,9 +545,11 @@
           </div>
         </div>
 
-        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 hover:border-brand-500/50 transition-all flex flex-col justify-between">
+        <div
+          class="bg-slate-950 p-6 rounded-2xl border border-slate-800 hover:border-brand-500/50 transition-all flex flex-col justify-between">
           <div class="space-y-3">
-            <div class="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center text-2xl font-bold">
+            <div
+              class="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center text-2xl font-bold">
               💾
             </div>
             <h3 class="text-base font-bold text-white">Mode Ujian Offline</h3>
@@ -457,9 +562,11 @@
           </div>
         </div>
 
-        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 hover:border-brand-500/50 transition-all flex flex-col justify-between">
+        <div
+          class="bg-slate-950 p-6 rounded-2xl border border-slate-800 hover:border-brand-500/50 transition-all flex flex-col justify-between">
           <div class="space-y-3">
-            <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-2xl font-bold">
+            <div
+              class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-2xl font-bold">
               🏆
             </div>
             <h3 class="text-base font-bold text-white">Peringkat Real-Time</h3>
@@ -472,9 +579,11 @@
           </div>
         </div>
 
-        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 hover:border-brand-500/50 transition-all flex flex-col justify-between">
+        <div
+          class="bg-slate-950 p-6 rounded-2xl border border-slate-800 hover:border-brand-500/50 transition-all flex flex-col justify-between">
           <div class="space-y-3">
-            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl font-bold">
+            <div
+              class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl font-bold">
               🎯
             </div>
             <h3 class="text-base font-bold text-white">Radar Subtes & Target</h3>
@@ -491,7 +600,8 @@
 
       <!-- Action Button for Students -->
       <div class="mt-12 text-center">
-        <a href="#harga" class="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-brand-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
+        <a href="#harga"
+          class="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-brand-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
           <span>Dapatkan Siswa Premium (Rp 25.000 Sekali Bayar)</span>
           <span>&rarr;</span>
         </a>
@@ -503,30 +613,37 @@
   <!-- 5.2 DEDICATED SECTION: SOLUSI UNTUK GURU & PROKTOR -->
   <section id="guru" class="py-20 bg-slate-950 border-t border-slate-800 relative overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      
+
       <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider">
+        <div
+          class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider">
           <span>🛡️ KHUSUS GURU, DOSEN & PROKTOR SEKOLAH</span>
         </div>
         <h2 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">
-          Gelar Ujian Sekolah Bebas Curang, <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-emerald-400">Koreksi Nilai Otomatis!</span>
+          Gelar Ujian Sekolah Bebas Curang, <span
+            class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-emerald-400">Koreksi
+            Nilai Otomatis!</span>
         </h2>
         <p class="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
-          Tinggalkan kerepotan koreksi manual ratusan lembar jawaban atau kekhawatiran siswa buka AI dan split-screen saat ujian berbasis smartphone.
+          Tinggalkan kerepotan koreksi manual ratusan lembar jawaban atau kekhawatiran siswa buka AI dan split-screen
+          saat ujian berbasis smartphone.
         </p>
       </div>
 
       <!-- 4 Features for Teachers -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 hover:border-amber-500/50 transition-all flex flex-col justify-between">
+
+        <div
+          class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 hover:border-amber-500/50 transition-all flex flex-col justify-between">
           <div class="space-y-3">
-            <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-2xl font-bold">
+            <div
+              class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-2xl font-bold">
               🛡️
             </div>
             <h3 class="text-base font-bold text-white">Kiosk Shield Anti-Curang</h3>
             <p class="text-xs text-slate-400 leading-relaxed">
-              Layar HP siswa terkunci ketat. Otomatis mendeteksi split-screen, floating apps, screenshot, dan minimize aplikasi.
+              Layar HP siswa terkunci ketat. Otomatis mendeteksi split-screen, floating apps, screenshot, dan minimize
+              aplikasi.
             </p>
           </div>
           <div class="pt-4 mt-4 border-t border-slate-900 text-[11px] text-amber-300 font-semibold">
@@ -534,14 +651,17 @@
           </div>
         </div>
 
-        <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 hover:border-amber-500/50 transition-all flex flex-col justify-between">
+        <div
+          class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 hover:border-amber-500/50 transition-all flex flex-col justify-between">
           <div class="space-y-3">
-            <div class="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center text-2xl font-bold">
+            <div
+              class="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center text-2xl font-bold">
               📑
             </div>
             <h3 class="text-base font-bold text-white">1-Click Import Soal</h3>
             <p class="text-xs text-slate-400 leading-relaxed">
-              Tidak perlu ketik ulang! Cukup upload dokumen Word (.docx) atau tempel link Google Form, soal langsung siap diujikan.
+              Tidak perlu ketik ulang! Cukup upload dokumen Word (.docx) atau tempel link Google Form, soal langsung
+              siap diujikan.
             </p>
           </div>
           <div class="pt-4 mt-4 border-t border-slate-900 text-[11px] text-teal-300 font-semibold">
@@ -549,14 +669,17 @@
           </div>
         </div>
 
-        <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 hover:border-amber-500/50 transition-all flex flex-col justify-between">
+        <div
+          class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 hover:border-amber-500/50 transition-all flex flex-col justify-between">
           <div class="space-y-3">
-            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl font-bold">
+            <div
+              class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl font-bold">
               🎟️
             </div>
             <h3 class="text-base font-bold text-white">Scan QR Sesi Ujian</h3>
             <p class="text-xs text-slate-400 leading-relaxed">
-              Cukup tampilkan QR Code di proyektor. Siswa scan dan langsung masuk ujian tanpa registrasi akun yang rumit.
+              Cukup tampilkan QR Code di proyektor. Siswa scan dan langsung masuk ujian tanpa registrasi akun yang
+              rumit.
             </p>
           </div>
           <div class="pt-4 mt-4 border-t border-slate-900 text-[11px] text-emerald-300 font-semibold">
@@ -564,14 +687,17 @@
           </div>
         </div>
 
-        <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 hover:border-amber-500/50 transition-all flex flex-col justify-between">
+        <div
+          class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 hover:border-amber-500/50 transition-all flex flex-col justify-between">
           <div class="space-y-3">
-            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl font-bold">
+            <div
+              class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl font-bold">
               📊
             </div>
             <h3 class="text-base font-bold text-white">Rekap Nilai Excel & PDF</h3>
             <p class="text-xs text-slate-400 leading-relaxed">
-              Ujian selesai, hasil penilaian, analisis butir soal, dan rekap format Excel (.xlsx) serta PDF resmi siap dicetak.
+              Ujian selesai, hasil penilaian, analisis butir soal, dan rekap format Excel (.xlsx) serta PDF resmi siap
+              dicetak.
             </p>
           </div>
           <div class="pt-4 mt-4 border-t border-slate-900 text-[11px] text-indigo-300 font-semibold">
@@ -583,7 +709,8 @@
 
       <!-- Action Button for Teachers -->
       <div class="mt-12 text-center">
-        <a href="#harga" class="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-emerald-600 hover:from-amber-400 hover:to-emerald-500 text-slate-950 font-black text-sm sm:text-base shadow-lg shadow-amber-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
+        <a href="#harga"
+          class="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-emerald-600 hover:from-amber-400 hover:to-emerald-500 text-slate-950 font-black text-sm sm:text-base shadow-lg shadow-amber-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
           <span>Amankan Lisensi Guru (Rp 35.000 • Unlimited Siswa)</span>
           <span>&rarr;</span>
         </a>
@@ -595,7 +722,7 @@
   <!-- 6. Materi & Subtest Breakdown -->
   <section id="materi" class="py-20 bg-slate-900/40 border-t border-slate-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
+
       <div class="text-center max-w-2xl mx-auto mb-16 space-y-3">
         <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
           Materi Lengkap Sesuai Kisi-Kisi Terbaru
@@ -606,12 +733,15 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
+
         <!-- SNBT UTBK Card -->
-        <div class="bg-slate-950 p-6 rounded-3xl border border-slate-800 hover:border-brand-500/40 transition-all space-y-4">
+        <div
+          class="bg-slate-950 p-6 rounded-3xl border border-slate-800 hover:border-brand-500/40 transition-all space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-slate-800">
             <span class="text-lg font-bold text-white">UTBK SNBT 2026</span>
-            <span class="px-2.5 py-0.5 rounded-full bg-brand-500/10 text-brand-400 text-xs font-bold border border-brand-500/20">7 Subtest • 210 Menit</span>
+            <span
+              class="px-2.5 py-0.5 rounded-full bg-brand-500/10 text-brand-400 text-xs font-bold border border-brand-500/20">7
+              Subtest • 210 Menit</span>
           </div>
           <ul class="space-y-2 text-xs text-slate-300 font-medium">
             <li class="flex items-center justify-between py-1 border-b border-slate-900">
@@ -646,10 +776,13 @@
         </div>
 
         <!-- SKD CPNS Card -->
-        <div class="bg-slate-950 p-6 rounded-3xl border border-slate-800 hover:border-indigo-500/40 transition-all space-y-4">
+        <div
+          class="bg-slate-950 p-6 rounded-3xl border border-slate-800 hover:border-indigo-500/40 transition-all space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-slate-800">
             <span class="text-lg font-bold text-white">SKD CPNS / Kedinasan</span>
-            <span class="px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-bold border border-indigo-500/20">3 Subtest • 100 Menit</span>
+            <span
+              class="px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-bold border border-indigo-500/20">3
+              Subtest • 100 Menit</span>
           </div>
           <ul class="space-y-2 text-xs text-slate-300 font-medium">
             <li class="flex items-center justify-between py-1 border-b border-slate-900">
@@ -671,10 +804,13 @@
         </div>
 
         <!-- TKA & Ujian Sekolah Card -->
-        <div class="bg-slate-950 p-6 rounded-3xl border border-slate-800 hover:border-amber-500/40 transition-all space-y-4">
+        <div
+          class="bg-slate-950 p-6 rounded-3xl border border-slate-800 hover:border-amber-500/40 transition-all space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-slate-800">
             <span class="text-lg font-bold text-white">TKA & Ujian Sekolah</span>
-            <span class="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">Materi Akademik</span>
+            <span
+              class="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">Materi
+              Akademik</span>
           </div>
           <ul class="space-y-2 text-xs text-slate-300 font-medium">
             <li class="flex items-center justify-between py-1 border-b border-slate-900">
@@ -703,7 +839,7 @@
   <!-- 7. How It Works (3 Steps) -->
   <section class="py-20 bg-slate-950">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
+
       <div class="text-center max-w-2xl mx-auto mb-16 space-y-3">
         <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
           Cara Memulai Sangat Mudah
@@ -714,44 +850,53 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        
+
         <div class="bg-slate-900/60 p-6 rounded-3xl border border-slate-800 relative">
-          <div class="w-12 h-12 rounded-2xl bg-brand-500/20 text-brand-400 font-extrabold text-xl flex items-center justify-center mb-4 border border-brand-500/30">
+          <div
+            class="w-12 h-12 rounded-2xl bg-brand-500/20 text-brand-400 font-extrabold text-xl flex items-center justify-center mb-4 border border-brand-500/30">
             1
           </div>
           <h3 class="text-base font-bold text-white mb-2">Beli Token di Lynk.id</h3>
           <p class="text-xs text-slate-400 leading-relaxed">
-            Pilih paket tryout yang kamu inginkan di toko Lynk.id, selesaikan pembayaran instan via QRIS, GoPay, OVO, atau ShopeePay.
+            Pilih paket tryout yang kamu inginkan di toko Lynk.id, selesaikan pembayaran instan via QRIS, GoPay, OVO,
+            atau ShopeePay.
           </p>
         </div>
 
         <div class="bg-slate-900/60 p-6 rounded-3xl border border-slate-800 relative flex flex-col justify-between">
           <div>
-            <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 font-extrabold text-xl flex items-center justify-center mb-4 border border-indigo-500/30">
+            <div
+              class="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 font-extrabold text-xl flex items-center justify-center mb-4 border border-indigo-500/30">
               2
             </div>
             <h3 class="text-base font-bold text-white mb-2">Download di Play Store & App Store</h3>
             <p class="text-xs text-slate-400 leading-relaxed mb-4">
-              Instal aplikasi resmi ExamGO langsung dari Google Play Store (Android) atau Apple App Store (iOS). Ringan (~25 MB), aman, dan bebas lag.
+              Instal aplikasi resmi ExamGO langsung dari Google Play Store (Android) atau Apple App Store (iOS). Ringan
+              (~25 MB), aman, dan bebas lag.
             </p>
           </div>
           <div class="flex items-center gap-2 pt-3 border-t border-slate-800/80">
-            <a id="btn-step-playstore" href="https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id" target="_blank" class="flex-1 py-2 px-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-bold text-emerald-400 hover:border-emerald-500/50 transition-colors text-center">
+            <a id="btn-step-playstore" href="https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id"
+              target="_blank"
+              class="flex-1 py-2 px-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-bold text-emerald-400 hover:border-emerald-500/50 transition-colors text-center">
               Google Play
             </a>
-            <a id="btn-step-appstore" href="https://apps.apple.com/id/app/examgo/id6759708435?l=id" target="_blank" class="flex-1 py-2 px-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-bold text-slate-200 hover:border-slate-600 transition-colors text-center">
+            <a id="btn-step-appstore" href="https://apps.apple.com/id/app/examgo/id6759708435?l=id" target="_blank"
+              class="flex-1 py-2 px-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-bold text-slate-200 hover:border-slate-600 transition-colors text-center">
               App Store (iOS)
             </a>
           </div>
         </div>
 
         <div class="bg-slate-900/60 p-6 rounded-3xl border border-slate-800 relative">
-          <div class="w-12 h-12 rounded-2xl bg-teal-500/20 text-teal-400 font-extrabold text-xl flex items-center justify-center mb-4 border border-teal-500/30">
+          <div
+            class="w-12 h-12 rounded-2xl bg-teal-500/20 text-teal-400 font-extrabold text-xl flex items-center justify-center mb-4 border border-teal-500/30">
             3
           </div>
           <h3 class="text-base font-bold text-white mb-2">Tempel Token & Mulai!</h3>
           <p class="text-xs text-slate-400 leading-relaxed">
-            Masukkan token yang kamu dapatkan ke dalam aplikasi ExamGO, layar akan terkunci aman, dan simulasi tryout resmi langsung dimulai!
+            Masukkan token yang kamu dapatkan ke dalam aplikasi ExamGO, layar akan terkunci aman, dan simulasi tryout
+            resmi langsung dimulai!
           </p>
         </div>
 
@@ -762,36 +907,45 @@
 
   <!-- 7.5 Testimonials & Social Proof Section -->
   <section id="testimoni" class="py-20 bg-slate-950 border-t border-slate-800 relative overflow-hidden">
-    <div class="absolute inset-0 bg-radial-at-c from-emerald-500/5 via-transparent to-transparent pointer-events-none"></div>
+    <div class="absolute inset-0 bg-radial-at-c from-emerald-500/5 via-transparent to-transparent pointer-events-none">
+    </div>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-      
+
       <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+        <div
+          class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider">
           <span>⭐ KISAH SUKSES SISWA & ALUMNI</span>
         </div>
         <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
           Mereka Sudah Membuktikannya, Sekarang Giliran Kamu!
         </h2>
         <p class="text-sm sm:text-base text-slate-400 leading-relaxed">
-          Ratusan calon mahasiswa & taruna berhasil lolos kampus impian dan sekolah kedinasan favorit berkat latihan intensif dengan simulasi resmi ExamGO.
+          Ratusan calon mahasiswa & taruna berhasil lolos kampus impian dan sekolah kedinasan favorit berkat latihan
+          intensif dengan simulasi resmi ExamGO.
         </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-        
+
         <!-- Card 1 -->
-        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-emerald-500/40 transition-all hover:-translate-y-1 shadow-lg">
+        <div
+          class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-emerald-500/40 transition-all hover:-translate-y-1 shadow-lg">
           <div class="space-y-4">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-1 text-amber-400 text-sm">★★★★★</div>
-              <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Lolos IPDN 2025</span>
+              <span
+                class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Lolos
+                IPDN 2025</span>
             </div>
             <p class="text-xs sm:text-sm text-slate-300 leading-relaxed italic">
-              "Sistem timer per-subtest di ExamGO bener-bener melatih pacing waktu pas ujian CAT BKN sesungguhnya. Nggak ada panik waktu habis, nilaiku tembus 458 dan lolos peringkat atas!"
+              "Sistem timer per-subtest di ExamGO bener-bener melatih pacing waktu pas ujian CAT BKN sesungguhnya. Nggak
+              ada panik waktu habis, nilaiku tembus 458 dan lolos peringkat atas!"
             </p>
           </div>
           <div class="flex items-center gap-3 pt-4 border-t border-slate-800/80 mt-5">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center font-bold text-xs text-white shadow-sm">FR</div>
+            <div
+              class="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center font-bold text-xs text-white shadow-sm">
+              FR</div>
             <div>
               <div class="text-xs font-bold text-white">Fathir Ramadhan</div>
               <div class="text-[10px] text-slate-400">Praja IPDN • Peringkat 4 Nasional SKD</div>
@@ -800,18 +954,24 @@
         </div>
 
         <!-- Card 2 -->
-        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-brand-500/40 transition-all hover:-translate-y-1 shadow-lg">
+        <div
+          class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-brand-500/40 transition-all hover:-translate-y-1 shadow-lg">
           <div class="space-y-4">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-1 text-amber-400 text-sm">★★★★★</div>
-              <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-300 border border-brand-500/20">Lolos FTI ITB</span>
+              <span
+                class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-300 border border-brand-500/20">Lolos
+                FTI ITB</span>
             </div>
             <p class="text-xs sm:text-sm text-slate-300 leading-relaxed italic">
-              "Mode kiosk terkunci anti-curang bikin latihan tryout jujur 100%. Ranking nasionalnya akurat banget buat tolok ukur. Skor TPS-ku tembus 748 dan lolos pilihan pertama ITB!"
+              "Mode kiosk terkunci anti-curang bikin latihan tryout jujur 100%. Ranking nasionalnya akurat banget buat
+              tolok ukur. Skor TPS-ku tembus 748 dan lolos pilihan pertama ITB!"
             </p>
           </div>
           <div class="flex items-center gap-3 pt-4 border-t border-slate-800/80 mt-5">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-brand-500 flex items-center justify-center font-bold text-xs text-white shadow-sm">AP</div>
+            <div
+              class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 to-brand-500 flex items-center justify-center font-bold text-xs text-white shadow-sm">
+              AP</div>
             <div>
               <div class="text-xs font-bold text-white">Arya Pratama</div>
               <div class="text-[10px] text-slate-400">FTI Institut Teknologi Bandung (ITB)</div>
@@ -820,18 +980,24 @@
         </div>
 
         <!-- Card 3 -->
-        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-amber-500/40 transition-all hover:-translate-y-1 shadow-lg">
+        <div
+          class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-amber-500/40 transition-all hover:-translate-y-1 shadow-lg">
           <div class="space-y-4">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-1 text-amber-400 text-sm">★★★★★</div>
-              <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20">Lolos PKN STAN</span>
+              <span
+                class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20">Lolos
+                PKN STAN</span>
             </div>
             <p class="text-xs sm:text-sm text-slate-300 leading-relaxed italic">
-              "Rumus matematika LaTeX dan tabel di pembahasannya tajem dan rapi banget di layar HP. Pembahasan tuntas per opsi bener-bener ngebongkar jebakan soal TIU & TPA."
+              "Rumus matematika LaTeX dan tabel di pembahasannya tajem dan rapi banget di layar HP. Pembahasan tuntas
+              per opsi bener-bener ngebongkar jebakan soal TIU & TPA."
             </p>
           </div>
           <div class="flex items-center gap-3 pt-4 border-t border-slate-800/80 mt-5">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-600 to-orange-500 flex items-center justify-center font-bold text-xs text-white shadow-sm">ZN</div>
+            <div
+              class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-600 to-orange-500 flex items-center justify-center font-bold text-xs text-white shadow-sm">
+              ZN</div>
             <div>
               <div class="text-xs font-bold text-white">Zahra Nadhira</div>
               <div class="text-[10px] text-slate-400">Mahasiswi PKN STAN • Akuntansi Publik</div>
@@ -840,18 +1006,24 @@
         </div>
 
         <!-- Card 4 -->
-        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-purple-500/40 transition-all hover:-translate-y-1 shadow-lg">
+        <div
+          class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-purple-500/40 transition-all hover:-translate-y-1 shadow-lg">
           <div class="space-y-4">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-1 text-amber-400 text-sm">★★★★★</div>
-              <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20">Lolos FK UI</span>
+              <span
+                class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-300 border border-purple-500/20">Lolos
+                FK UI</span>
             </div>
             <p class="text-xs sm:text-sm text-slate-300 leading-relaxed italic">
-              "Bank soalnya up-to-date dengan standar terbaru SNPMB. Beli paket di Lynk.id langsung dapat token, sekali tempel langsung buka semua tryout tanpa ribet langganan bulanan."
+              "Bank soalnya up-to-date dengan standar terbaru SNPMB. Beli paket di Lynk.id langsung dapat token, sekali
+              tempel langsung buka semua tryout tanpa ribet langganan bulanan."
             </p>
           </div>
           <div class="flex items-center gap-3 pt-4 border-t border-slate-800/80 mt-5">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center font-bold text-xs text-white shadow-sm">DK</div>
+            <div
+              class="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center font-bold text-xs text-white shadow-sm">
+              DK</div>
             <div>
               <div class="text-xs font-bold text-white">Dinda Kirana</div>
               <div class="text-[10px] text-slate-400">Fakultas Kedokteran UI • Skor 762</div>
@@ -860,18 +1032,24 @@
         </div>
 
         <!-- Card 5 -->
-        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-teal-500/40 transition-all hover:-translate-y-1 shadow-lg">
+        <div
+          class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-teal-500/40 transition-all hover:-translate-y-1 shadow-lg">
           <div class="space-y-4">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-1 text-amber-400 text-sm">★★★★★</div>
-              <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-teal-500/10 text-teal-400 border border-teal-500/20">Lolos Poltekim</span>
+              <span
+                class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-teal-500/10 text-teal-400 border border-teal-500/20">Lolos
+                Poltekim</span>
             </div>
             <p class="text-xs sm:text-sm text-slate-300 leading-relaxed italic">
-              "Aplikasi ringan, tanpa iklan, dan navigasi soalnya sangat responsif. Sangat terbantu dengan timer mandiri per subtest waktu latihan SKD TWK, TIU, TKP!"
+              "Aplikasi ringan, tanpa iklan, dan navigasi soalnya sangat responsif. Sangat terbantu dengan timer mandiri
+              per subtest waktu latihan SKD TWK, TIU, TKP!"
             </p>
           </div>
           <div class="flex items-center gap-3 pt-4 border-t border-slate-800/80 mt-5">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-teal-600 to-emerald-400 flex items-center justify-center font-bold text-xs text-white shadow-sm">BW</div>
+            <div
+              class="w-10 h-10 rounded-full bg-gradient-to-tr from-teal-600 to-emerald-400 flex items-center justify-center font-bold text-xs text-white shadow-sm">
+              BW</div>
             <div>
               <div class="text-xs font-bold text-white">Bima Wicaksono</div>
               <div class="text-[10px] text-slate-400">Taruna Poltekim Kemenkumham</div>
@@ -880,18 +1058,24 @@
         </div>
 
         <!-- Card 6 -->
-        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-blue-500/40 transition-all hover:-translate-y-1 shadow-lg">
+        <div
+          class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between hover:border-blue-500/40 transition-all hover:-translate-y-1 shadow-lg">
           <div class="space-y-4">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-1 text-amber-400 text-sm">★★★★★</div>
-              <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-300 border border-blue-500/20">Lolos UGM 2025</span>
+              <span
+                class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-300 border border-blue-500/20">Lolos
+                UGM 2025</span>
             </div>
             <p class="text-xs sm:text-sm text-slate-300 leading-relaxed italic">
-              "Soal penalaran matematika dan literasinya mirip banget sama aslinya. Pembahasannya jelas bukan cuma kunci doang. Wajib banget buat yang mau tembus PTN klaster 1!"
+              "Soal penalaran matematika dan literasinya mirip banget sama aslinya. Pembahasannya jelas bukan cuma kunci
+              doang. Wajib banget buat yang mau tembus PTN klaster 1!"
             </p>
           </div>
           <div class="flex items-center gap-3 pt-4 border-t border-slate-800/80 mt-5">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center font-bold text-xs text-white shadow-sm">NP</div>
+            <div
+              class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center font-bold text-xs text-white shadow-sm">
+              NP</div>
             <div>
               <div class="text-xs font-bold text-white">Nabila Putri</div>
               <div class="text-[10px] text-slate-400">Ilmu Komunikasi UGM • Peringkat 1 Soshum</div>
@@ -907,9 +1091,10 @@
   <!-- 8. Pricing Table (High-Converting Cuan Generator) -->
   <section id="harga" class="py-20 bg-slate-900/40 border-t border-slate-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
+
       <div class="text-center max-w-2xl mx-auto mb-16 space-y-3">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-bold uppercase tracking-wider">
+        <div
+          class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-bold uppercase tracking-wider">
           <span>💎 HARGA PROMO RESMI 2026</span>
         </div>
         <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
@@ -921,9 +1106,10 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
-        
+
         <!-- Plan 1: Siswa Premium (Rp 25.000) -->
-        <div class="bg-slate-950 p-8 rounded-3xl border border-slate-800 hover:border-brand-500/40 transition-all flex flex-col justify-between space-y-6">
+        <div
+          class="bg-slate-950 p-8 rounded-3xl border border-slate-800 hover:border-brand-500/40 transition-all flex flex-col justify-between space-y-6">
           <div class="space-y-4">
             <span class="text-xs font-bold text-brand-400 uppercase tracking-wider">UNTUK SISWA & PEJUANG KAMPUS</span>
             <div class="text-2xl font-bold text-white">Siswa Premium Lifetime</div>
@@ -932,10 +1118,13 @@
               <span class="text-xs text-slate-400 line-through">Rp 75.000</span>
               <span class="text-xs text-brand-400 font-bold">Sekali Bayar</span>
             </div>
-            <p class="text-xs text-slate-400 leading-relaxed">Akses penuh ratusan paket tryout SNBT, SKD CPNS, & Kedinasan selamanya.</p>
+            <p class="text-xs text-slate-400 leading-relaxed">Akses penuh ratusan paket tryout SNBT, SKD CPNS, &
+              Kedinasan selamanya.</p>
             <ul class="space-y-3 text-xs text-slate-300 pt-2 border-t border-slate-900">
-              <li class="flex items-center gap-2 text-brand-300 font-semibold">✓ Akses SEMUA Paket Tryout Nasional 2026</li>
-              <li class="flex items-center gap-2 text-brand-300 font-semibold">✓ Mode Simpan Ujian Offline di HP (Hemat Kuota)</li>
+              <li class="flex items-center gap-2 text-brand-300 font-semibold">✓ Akses SEMUA Paket Tryout Nasional 2026
+              </li>
+              <li class="flex items-center gap-2 text-brand-300 font-semibold">✓ Mode Simpan Ujian Offline di HP (Hemat
+                Kuota)</li>
               <li class="flex items-center gap-2">✓ Papan Peringkat Real-Time Se-Indonesia</li>
               <li class="flex items-center gap-2">✓ Radar Analisis Subtes (Spider Chart)</li>
               <li class="flex items-center gap-2">✓ Target Passing Grade PTN / CPNS Tracker</li>
@@ -943,14 +1132,17 @@
               <li class="flex items-center gap-2">✓ 100% Bebas Iklan Pengganggu</li>
             </ul>
           </div>
-          <a id="btn-plan-student" href="https://lynk.id/examgo" target="_blank" class="w-full py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs text-center border border-slate-700 transition-colors block active:scale-95 shadow-md">
+          <a id="btn-plan-student" href="https://lynk.id/examgo" target="_blank"
+            class="w-full py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs text-center border border-slate-700 transition-colors block active:scale-95 shadow-md">
             Beli Siswa di lynk.id/examgo (Rp 25rb) ⚡
           </a>
         </div>
 
         <!-- Plan 2: Guru & Proktor Premium (Rp 35.000) - Featured Best Seller -->
-        <div class="bg-gradient-to-b from-brand-950/70 via-slate-950 to-slate-950 p-8 rounded-3xl border-2 border-brand-500 shadow-2xl glow-emerald flex flex-col justify-between space-y-6 relative">
-          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 text-xs font-black tracking-wide uppercase shadow-md flex items-center gap-1.5">
+        <div
+          class="bg-gradient-to-b from-brand-950/70 via-slate-950 to-slate-950 p-8 rounded-3xl border-2 border-brand-500 shadow-2xl glow-emerald flex flex-col justify-between space-y-6 relative">
+          <div
+            class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 text-xs font-black tracking-wide uppercase shadow-md flex items-center gap-1.5">
             <span>👑</span>
             <span>Paling Dicari Guru & Sekolah</span>
           </div>
@@ -962,24 +1154,30 @@
               <span class="text-xs text-slate-400 line-through">Rp 150.000</span>
               <span class="text-xs text-emerald-400 font-bold">Sekali Bayar</span>
             </div>
-            <p class="text-xs text-slate-300 leading-relaxed">Sistem CBT anti-curang terlengkap untuk ujian kelas, sumatif, dan sekolah.</p>
+            <p class="text-xs text-slate-300 leading-relaxed">Sistem CBT anti-curang terlengkap untuk ujian kelas,
+              sumatif, dan sekolah.</p>
             <ul class="space-y-3 text-xs text-slate-200 pt-2 border-t border-slate-800">
-              <li class="flex items-center gap-2 text-amber-300 font-semibold">✓ Kiosk Shield Anti-Curang (Auto Lock HP Siswa)</li>
-              <li class="flex items-center gap-2 text-amber-300 font-semibold">✓ 1-Click Import Soal Word DOCX & Google Form</li>
-              <li class="flex items-center gap-2 text-emerald-300 font-semibold">✓ Live Monitoring Siswa & Kick Pelanggar Live</li>
+              <li class="flex items-center gap-2 text-amber-300 font-semibold">✓ Kiosk Shield Anti-Curang (Auto Lock HP
+                Siswa)</li>
+              <li class="flex items-center gap-2 text-amber-300 font-semibold">✓ 1-Click Import Soal Word DOCX & Google
+                Form</li>
+              <li class="flex items-center gap-2 text-emerald-300 font-semibold">✓ Live Monitoring Siswa & Kick
+                Pelanggar Live</li>
               <li class="flex items-center gap-2">✓ Generator Token Sesi & Cetak QR Code Ujian</li>
               <li class="flex items-center gap-2">✓ Download Rekap Nilai Excel (.xlsx) & PDF Resmi</li>
               <li class="flex items-center gap-2">✓ Bisa Online Cloud & Offline Jaringan Lokal (LAN)</li>
               <li class="flex items-center gap-2 text-amber-300 font-bold">✓ UNLIMITED Siswa & Ujian Tanpa Batasan</li>
             </ul>
           </div>
-          <a id="btn-plan-teacher" href="https://lynk.id/examgo" target="_blank" class="w-full py-4 rounded-xl bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-black text-xs text-center shadow-lg shadow-brand-500/30 transition-all block active:scale-95">
+          <a id="btn-plan-teacher" href="https://lynk.id/examgo" target="_blank"
+            class="w-full py-4 rounded-xl bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-black text-xs text-center shadow-lg shadow-brand-500/30 transition-all block active:scale-95">
             Beli Lisensi Guru di lynk.id/examgo (Rp 35rb) 🛡️
           </a>
         </div>
 
         <!-- Plan 3: Sekolah & Bimbel (Master Voucher 1000+ Siswa) -->
-        <div class="bg-slate-950 p-8 rounded-3xl border border-slate-800 hover:border-teal-500/40 transition-all flex flex-col justify-between space-y-6">
+        <div
+          class="bg-slate-950 p-8 rounded-3xl border border-slate-800 hover:border-teal-500/40 transition-all flex flex-col justify-between space-y-6">
           <div class="space-y-4">
             <span class="text-xs font-bold text-teal-400 uppercase tracking-wider">INSTITUSI, SEKOLAH & BIMBEL</span>
             <div class="text-2xl font-bold text-white">Master Voucher Sekolah</div>
@@ -987,7 +1185,8 @@
               <span class="text-3xl font-extrabold text-white">Kolektif</span>
               <span class="text-xs text-slate-400">/ 1000+ Siswa</span>
             </div>
-            <p class="text-xs text-slate-400 leading-relaxed">Satu kode voucher khusus nama sekolah untuk seluruh siswa satu angkatan.</p>
+            <p class="text-xs text-slate-400 leading-relaxed">Satu kode voucher khusus nama sekolah untuk seluruh siswa
+              satu angkatan.</p>
             <ul class="space-y-3 text-xs text-slate-300 pt-2 border-t border-slate-900">
               <li class="flex items-center gap-2">✓ 1 Master Voucher Custom Nama Sekolah</li>
               <li class="flex items-center gap-2">✓ Kuota Hingga 1000+ Siswa Bersamaan</li>
@@ -996,7 +1195,8 @@
               <li class="flex items-center gap-2">✓ Faktur & Kwitansi Resmi Sekolah</li>
             </ul>
           </div>
-          <a id="btn-plan-school" href="https://wa.me/6289693652230" target="_blank" class="w-full py-4 rounded-xl bg-teal-900/40 hover:bg-teal-900/60 text-teal-300 border border-teal-500/30 font-bold text-xs text-center transition-colors block">
+          <a id="btn-plan-school" href="https://wa.me/6289693652230" target="_blank"
+            class="w-full py-4 rounded-xl bg-teal-900/40 hover:bg-teal-900/60 text-teal-300 border border-teal-500/30 font-bold text-xs text-center transition-colors block">
             Konsultasi Sekolah via WhatsApp 💬
           </a>
         </div>
@@ -1009,7 +1209,7 @@
   <!-- 9. FAQ Accordion -->
   <section id="faq" class="py-20 bg-slate-950">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-      
+
       <div class="text-center space-y-3">
         <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
           Pertanyaan Sering Diajukan (FAQ)
@@ -1018,64 +1218,85 @@
       </div>
 
       <div class="space-y-4">
-        
-        <details class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
+
+        <details
+          class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
           <summary class="flex items-center justify-between font-bold text-sm text-white">
             <span>Bagaimana cara mendapatkan token setelah bayar di Lynk.id?</span>
             <span class="text-brand-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <p class="mt-3 text-xs text-slate-300 leading-relaxed">
-            Seketika setelah pembayaran berhasil (QRIS, E-Wallet, atau Virtual Account), kode token lisensi akan otomatis muncul di layar konfirmasi Lynk.id dan dikirimkan ke email kamu. Kamu cukup menyalin kode tersebut dan menempelkannya ke aplikasi ExamGO pada menu <strong>Aktivasi Lisensi</strong>. Akun langsung aktif seumur hidup tanpa masa kedaluwarsa!
+            Seketika setelah pembayaran berhasil (QRIS, E-Wallet, atau Virtual Account), kode token lisensi akan
+            otomatis muncul di layar konfirmasi Lynk.id dan dikirimkan ke email kamu. Kamu cukup menyalin kode tersebut
+            dan menempelkannya ke aplikasi ExamGO pada menu <strong>Aktivasi Lisensi</strong>. Akun langsung aktif
+            seumur hidup tanpa masa kedaluwarsa!
           </p>
         </details>
 
-        <details class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
+        <details
+          class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
           <summary class="flex items-center justify-between font-bold text-sm text-white">
             <span>Untuk Guru: Bagaimana cara kerja Kiosk Anti-Curang ExamGO saat ujian kelas?</span>
             <span class="text-brand-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <p class="mt-3 text-xs text-slate-300 leading-relaxed">
-            Guru cukup membuat sesi ujian di Mode Guru atau import bank soal (Word DOCX / Google Form), lalu bagikan QR Code atau PIN sesi ke siswa. Begitu siswa mulai ujian, aplikasi ExamGO mengunci layar smartphone secara penuh: siswa tidak bisa berpindah aplikasi, split screen, membuka floating AI/Google, atau screenshot. Jika siswa memaksa keluar, proktor menerima notifikasi seketika dan dapat langsung mendiskualifikasi/kick dari dashboard live monitoring.
+            Guru cukup membuat sesi ujian di Mode Guru atau import bank soal (Word DOCX / Google Form), lalu bagikan QR
+            Code atau PIN sesi ke siswa. Begitu siswa mulai ujian, aplikasi ExamGO mengunci layar smartphone secara
+            penuh: siswa tidak bisa berpindah aplikasi, split screen, membuka floating AI/Google, atau screenshot. Jika
+            siswa memaksa keluar, proktor menerima notifikasi seketika dan dapat langsung mendiskualifikasi/kick dari
+            dashboard live monitoring.
           </p>
         </details>
 
-        <details class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
+        <details
+          class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
           <summary class="flex items-center justify-between font-bold text-sm text-white">
             <span>Untuk Guru: Apakah lisensi Rp 35.000 berlaku selamanya dan berapa batas siswanya?</span>
             <span class="text-brand-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <p class="mt-3 text-xs text-slate-300 leading-relaxed">
-            Ya! Lisensi Guru & Proktor Premium berlaku seumur hidup (Lifetime) sekali bayar Rp 35.000 saja tanpa langganan bulanan. Guru dapat membuat sesi ujian untuk <strong>UNLIMITED siswa</strong> dan <strong>UNLIMITED kelas</strong>, serta langsung mengunduh hasil rekap nilai otomatis dalam format Excel (.xlsx) dan PDF resmi siap cetak.
+            Ya! Lisensi Guru & Proktor Premium berlaku seumur hidup (Lifetime) sekali bayar Rp 35.000 saja tanpa
+            langganan bulanan. Guru dapat membuat sesi ujian untuk <strong>UNLIMITED siswa</strong> dan
+            <strong>UNLIMITED kelas</strong>, serta langsung mengunduh hasil rekap nilai otomatis dalam format Excel
+            (.xlsx) dan PDF resmi siap cetak.
           </p>
         </details>
 
-        <details class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
+        <details
+          class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
           <summary class="flex items-center justify-between font-bold text-sm text-white">
             <span>Apakah aplikasi ExamGO tersedia untuk Android dan iOS (iPhone/iPad)?</span>
             <span class="text-brand-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <p class="mt-3 text-xs text-slate-300 leading-relaxed">
-            ExamGO resmi tersedia di Google Play Store (Android) dan Apple App Store (iOS). Ukuran aplikasi sangat hemat (~25 MB), ringan di HP spek menengah ke bawah, dan sudah mendukung pengerjaan offline hemat kuota.
+            ExamGO resmi tersedia di Google Play Store (Android) dan Apple App Store (iOS). Ukuran aplikasi sangat hemat
+            (~25 MB), ringan di HP spek menengah ke bawah, dan sudah mendukung pengerjaan offline hemat kuota.
           </p>
         </details>
 
-        <details class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
+        <details
+          class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
           <summary class="flex items-center justify-between font-bold text-sm text-white">
             <span>Apa itu sistem Timer Mandiri Per-Subtes?</span>
             <span class="text-brand-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <p class="mt-3 text-xs text-slate-300 leading-relaxed">
-            Sesuai aturan resmi UTBK BP3/SNPMB, waktu pengerjaan dihitung mandiri per subtes (misal Penalaran Umum 30 menit). Ketika waktu habis, aplikasi akan langsung mengunci jawaban babak tersebut dan berpindah ke subtes berikutnya tanpa bisa kembali ke babak sebelumnya.
+            Sesuai aturan resmi UTBK BP3/SNPMB, waktu pengerjaan dihitung mandiri per subtes (misal Penalaran Umum 30
+            menit). Ketika waktu habis, aplikasi akan langsung mengunci jawaban babak tersebut dan berpindah ke subtes
+            berikutnya tanpa bisa kembali ke babak sebelumnya.
           </p>
         </details>
 
-        <details class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
+        <details
+          class="group bg-slate-900/60 rounded-2xl border border-slate-800 p-5 [&_summary::-webkit-details-marker]:hidden cursor-pointer">
           <summary class="flex items-center justify-between font-bold text-sm text-white">
             <span>Apakah ada pembahasan soal setelah selesai tryout?</span>
             <span class="text-brand-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <p class="mt-3 text-xs text-slate-300 leading-relaxed">
-            Pasti ada! Begitu seluruh subtes selesai dikerjakan, siswa langsung dapat melihat rekap skor per-subtes, kunci jawaban, dan pembahasan rumus langkah demi langkah dengan rendering LaTeX matematika yang tajam dan rapi.
+            Pasti ada! Begitu seluruh subtes selesai dikerjakan, siswa langsung dapat melihat rekap skor per-subtes,
+            kunci jawaban, dan pembahasan rumus langkah demi langkah dengan rendering LaTeX matematika yang tajam dan
+            rapi.
           </p>
         </details>
 
@@ -1085,26 +1306,35 @@
   </section>
 
   <!-- 10. Final High-Urgency CTA -->
-  <section class="py-20 bg-gradient-to-b from-slate-950 via-brand-950/40 to-slate-950 border-t border-slate-800 text-center relative overflow-hidden">
+  <section
+    class="py-20 bg-gradient-to-b from-slate-950 via-brand-950/40 to-slate-950 border-t border-slate-800 text-center relative overflow-hidden">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 relative z-10">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-xs font-bold">
+      <div
+        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-xs font-bold">
         <span>⚡ INVESTASI TERBAIK 2026</span>
       </div>
       <h2 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
         Satu Aplikasi untuk Siswa Berprestasi & Guru Berdedikasi
       </h2>
       <p class="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
-        Siswa siap tembus PTN & CPNS impian, Guru siap gelar ujian digital aman tanpa drama nyontek. Akses seumur hidup, tanpa biaya langganan berulang!
+        Siswa siap tembus PTN & CPNS impian, Guru siap gelar ujian digital aman tanpa drama nyontek. Akses seumur hidup,
+        tanpa biaya langganan berulang!
       </p>
       <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-        <a id="btn-final-siswa" href="https://lynk.id/examgo" target="_blank" class="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-sm shadow-xl shadow-brand-500/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+        <a id="btn-final-siswa" href="https://lynk.id/examgo" target="_blank"
+          class="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-sm shadow-xl shadow-brand-500/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
           <span>🎓 Beli Siswa Premium (Rp 25.000)</span>
         </a>
-        <a id="btn-final-guru" href="https://lynk.id/examgo" target="_blank" class="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-emerald-600 hover:from-amber-400 hover:to-emerald-500 text-slate-950 font-black text-sm shadow-xl shadow-amber-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+        <a id="btn-final-guru" href="https://lynk.id/examgo" target="_blank"
+          class="w-full sm:w-auto px-7 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-emerald-600 hover:from-amber-400 hover:to-emerald-500 text-slate-950 font-black text-sm shadow-xl shadow-amber-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
           <span>🛡️ Beli Lisensi Guru (Rp 35.000)</span>
         </a>
-        <a id="btn-final-wa" href="https://wa.me/6289693652230" target="_blank" class="w-full sm:w-auto px-5 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs transition-all flex items-center justify-center gap-2">
-          <svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.044c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.073.043.419-.101.824z"/></svg>
+        <a id="btn-final-wa" href="https://wa.me/6289693652230" target="_blank"
+          class="w-full sm:w-auto px-5 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs transition-all flex items-center justify-center gap-2">
+          <svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.044c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.073.043.419-.101.824z" />
+          </svg>
           <span>Tanya WhatsApp</span>
         </a>
       </div>
@@ -1113,28 +1343,36 @@
 
   <!-- 11. Footer -->
   <footer class="bg-slate-950 border-t border-slate-800/80 py-10 pb-28 sm:pb-10 text-xs text-slate-400">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+    <div
+      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
       <div>
         <span class="font-bold text-white">ExamGO Indonesia</span> • Platform Tryout CBT & Assessment Terkunci
         <div class="text-slate-400 mt-1">Hak Cipta &copy; 2026 ExamGO. Seluruh hak cipta dilindungi undang-undang.</div>
       </div>
       <div class="flex items-center gap-4">
-        <a href="https://lynk.id/examgo" target="_blank" class="text-slate-300 hover:text-white font-mono font-bold">lynk.id/examgo</a>
+        <a href="https://lynk.id/examgo" target="_blank"
+          class="text-slate-300 hover:text-white font-mono font-bold">lynk.id/examgo</a>
         <span class="text-slate-700">•</span>
-        <a id="footer-wa-link" href="https://wa.me/6289693652230" target="_blank" class="text-brand-400 hover:text-brand-300 font-bold">Bantuan WhatsApp</a>
+        <a id="footer-wa-link" href="https://wa.me/6289693652230" target="_blank"
+          class="text-brand-400 hover:text-brand-300 font-bold">Bantuan WhatsApp</a>
       </div>
     </div>
   </footer>
 
   <!-- Live Realtime Dynamic Purchase Toast (Social Proof & FOMO) -->
-  <div id="live-purchase-toast" class="fixed bottom-24 sm:bottom-6 left-3 sm:left-6 z-40 transform transition-all duration-500 translate-y-24 opacity-0 pointer-events-auto max-w-[calc(100vw-24px)] sm:max-w-sm">
-    <div class="bg-slate-900/95 border border-slate-700/80 rounded-2xl p-3 shadow-2xl backdrop-blur-md flex items-center gap-3">
+  <div id="live-purchase-toast"
+    class="fixed bottom-24 sm:bottom-6 left-3 sm:left-6 z-40 transform transition-all duration-500 translate-y-24 opacity-0 pointer-events-auto max-w-[calc(100vw-24px)] sm:max-w-sm">
+    <div
+      class="bg-slate-900/95 border border-slate-700/80 rounded-2xl p-3 shadow-2xl backdrop-blur-md flex items-center gap-3">
       <div class="relative flex-shrink-0">
-        <div id="toast-buyer-avatar" class="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-600 to-teal-500 flex items-center justify-center text-white font-bold text-xs shadow-inner">
+        <div id="toast-buyer-avatar"
+          class="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-600 to-teal-500 flex items-center justify-center text-white font-bold text-xs shadow-inner">
           RD
         </div>
-        <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full animate-ping"></span>
-        <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
+        <span
+          class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full animate-ping"></span>
+        <span
+          class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
       </div>
       <div class="flex-1 min-w-0 pr-1">
         <div class="flex items-center gap-1.5">
@@ -1145,31 +1383,46 @@
           <span id="toast-buyer-time" class="text-slate-400 text-[10px]">Baru saja</span>
         </div>
         <p class="text-xs font-semibold text-slate-100 truncate">
-          <span id="toast-buyer-name" class="font-bold text-brand-300">Rizky D.</span> (<span id="toast-buyer-city">Surabaya</span>)
+          <span id="toast-buyer-name" class="font-bold text-brand-300">Rizky D.</span> (<span
+            id="toast-buyer-city">Surabaya</span>)
         </p>
         <p class="text-[11px] text-slate-300 truncate">
           Membeli <span id="toast-buyer-package" class="font-medium text-emerald-300">Paket All-Access SNBT 2026</span>
         </p>
       </div>
-      <button onclick="document.getElementById('live-purchase-toast').classList.add('translate-y-24', 'opacity-0')" class="text-slate-500 hover:text-slate-300 p-1 flex-shrink-0" title="Tutup">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      <button onclick="document.getElementById('live-purchase-toast').classList.add('translate-y-24', 'opacity-0')"
+        class="text-slate-500 hover:text-slate-300 p-1 flex-shrink-0" title="Tutup">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
       </button>
     </div>
   </div>
 
   <!-- 12. Bottom Sticky CTA on Mobile -->
-  <div class="fixed bottom-0 inset-x-0 z-50 p-2 sm:hidden bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/90 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-2xl flex items-center gap-2">
-    <a id="btn-mobile-wa" href="https://wa.me/6289693652230" target="_blank" class="p-3 bg-slate-900/90 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white flex items-center justify-center shrink-0" title="Bantuan WhatsApp">
-      <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.044c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.073.043.419-.101.824z"/></svg>
+  <div
+    class="fixed bottom-0 inset-x-0 z-50 p-2 sm:hidden bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/90 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-2xl flex items-center gap-2">
+    <a id="btn-mobile-wa" href="https://wa.me/6289693652230" target="_blank"
+      class="p-3 bg-slate-900/90 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white flex items-center justify-center shrink-0"
+      title="Bantuan WhatsApp">
+      <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
+        <path
+          d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.044c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.073.043.419-.101.824z" />
+      </svg>
     </a>
-    <a id="btn-mobile-lynkid" href="https://lynk.id/examgo" target="_blank" class="flex-1 py-2.5 px-3 bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-brand-500/25 flex items-center justify-between active:scale-[0.98] transition-all">
+    <a id="btn-mobile-lynkid" href="https://lynk.id/examgo" target="_blank"
+      class="flex-1 py-2.5 px-3 bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-brand-500/25 flex items-center justify-between active:scale-[0.98] transition-all">
       <div class="flex flex-col text-left leading-tight truncate mr-2">
-        <span class="text-[9px] uppercase tracking-wider text-emerald-200 font-semibold truncate">Siswa Rp 25rb • Guru Rp 35rb</span>
+        <span class="text-[9px] uppercase tracking-wider text-emerald-200 font-semibold truncate">Siswa Rp 25rb • Guru
+          Rp 35rb</span>
         <span class="text-xs font-bold text-white font-mono truncate">lynk.id/examgo</span>
       </div>
-      <div class="flex items-center gap-1 bg-white/20 hover:bg-white/30 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shrink-0">
+      <div
+        class="flex items-center gap-1 bg-white/20 hover:bg-white/30 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shrink-0">
         <span>Beli Token</span>
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+        </svg>
       </div>
     </a>
   </div>
@@ -1180,10 +1433,10 @@
       if (typeof renderMathInElement === 'function') {
         renderMathInElement(document.body, {
           delimiters: [
-            {left: '$$', right: '$$', display: true},
-            {left: '$', right: '$', display: false},
-            {left: '\\(', right: '\\)', display: false},
-            {left: '\\[', right: '\\]', display: true}
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '\\[', right: '\\]', display: true }
           ],
           ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
           throwOnError: false
@@ -1191,7 +1444,7 @@
       }
     }
 
-    window.addEventListener('DOMContentLoaded', function() {
+    window.addEventListener('DOMContentLoaded', function () {
       renderAllMath();
       setTimeout(renderAllMath, 200);
       setTimeout(renderAllMath, 800);
@@ -1199,7 +1452,7 @@
       // Load dynamic settings from Google Apps Script if available
       function applyLandingSettings(s) {
         if (!s) return;
-        
+
         // 1. Texts
         if (s.hero_badge) document.getElementById('hero-badge-text').innerText = s.hero_badge;
         if (s.hero_title) document.getElementById('hero-title-text').innerText = s.hero_title;
@@ -1210,7 +1463,7 @@
         if (s.promo_price_original) document.getElementById('promo-price-original').innerText = s.promo_price_original;
         if (s.promo_price_discount) document.getElementById('promo-price-discount').innerText = s.promo_price_discount;
         if (s.promo_tag) document.getElementById('promo-tag-text').innerText = s.promo_tag;
-        
+
         // 2. Announcement banner
         const annBar = document.getElementById('landing-announcement-bar');
         if (annBar) {
@@ -1244,7 +1497,7 @@
           'btn-final-guru',
           'btn-mobile-lynkid'
         ];
-        lynkButtons.forEach(function(id) {
+        lynkButtons.forEach(function (id) {
           const el = document.getElementById(id);
           if (el) el.href = lynkTarget;
         });
@@ -1262,7 +1515,7 @@
           const asStep = document.getElementById('btn-step-appstore');
           if (asStep) asStep.href = s.appstore_url;
         }
-        
+
         // Re-render math formulas if settings contained dynamic LaTeX
         renderAllMath();
 
@@ -1271,9 +1524,9 @@
           const waNum = s.whatsapp_number.replace(/[^0-9]/g, '');
           const waMsg = encodeURIComponent(s.whatsapp_message || 'Halo Admin ExamGO, saya ingin membeli token tryout / konsultasi paket ujian.');
           const waLink = 'https://wa.me/' + waNum + '?text=' + waMsg;
-          
+
           const waEls = ['btn-plan-school', 'btn-final-wa', 'footer-wa-link', 'btn-mobile-wa'];
-          waEls.forEach(function(id) {
+          waEls.forEach(function (id) {
             const el = document.getElementById(id);
             if (el) el.href = waLink;
           });
@@ -1286,11 +1539,11 @@
         : 'https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec?action=get_landing_settings';
 
       fetch(settingsApiUrl)
-        .then(function(res) { return res.json(); })
-        .then(function(json) {
+        .then(function (res) { return res.json(); })
+        .then(function (json) {
           if (json && json.settings) applyLandingSettings(json.settings);
         })
-        .catch(function() {
+        .catch(function () {
           // Fallback ke google.script.run jika di dalam GAS
           if (typeof google !== 'undefined' && google.script && google.script.run) {
             google.script.run
@@ -1344,7 +1597,7 @@
       toast.classList.remove('translate-y-24', 'opacity-0');
       toast.classList.add('translate-y-0', 'opacity-100');
 
-      setTimeout(function() {
+      setTimeout(function () {
         toast.classList.remove('translate-y-0', 'opacity-100');
         toast.classList.add('translate-y-24', 'opacity-0');
 
@@ -1354,4 +1607,5 @@
     }
   </script>
 </body>
+
 </html>
