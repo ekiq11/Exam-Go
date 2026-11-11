@@ -128,10 +128,10 @@
   </header>
 
   <!-- 3. Hero Section (Conversion Hook) -->
-  <section class="relative pt-10 pb-16 sm:pt-20 sm:pb-32 gradient-hero overflow-hidden">
+  <section class="relative pt-6 pb-12 sm:pt-16 sm:pb-28 gradient-hero overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-      <div class="text-center max-w-3xl mx-auto space-y-5 sm:space-y-6">
+      <div class="text-center max-w-3xl mx-auto space-y-4 sm:space-y-6">
 
         <!-- Eyebrow Badges: Store Link & Status -->
         <div class="flex flex-wrap items-center justify-center gap-2">
@@ -151,7 +151,7 @@
 
         <!-- Main Headline -->
         <h1 id="hero-title-text"
-          class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.18] sm:leading-[1.15]">
+          class="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.2] sm:leading-[1.15]">
           Raih Kampus & Karir Impian, <span
             class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-teal-300 to-amber-300">Gelar Ujian
             Bebas Curang!</span>
@@ -159,145 +159,149 @@
 
         <!-- Subtitle -->
         <p id="hero-subtitle-text"
-          class="text-sm sm:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto font-normal">
+          class="text-xs sm:text-base lg:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto font-normal">
           Satu aplikasi cerdas untuk <strong>Siswa</strong> & <strong>Guru</strong>: Siswa simulasi tryout SNBT & CPNS
           hemat kuota dengan ranking nasional riil. Guru & Sekolah menggelar ujian CBT terkunci Kiosk Mode anti-curang
           dengan rekap nilai otomatis.
         </p>
 
+        <!-- Audience Quick Selector (Marketing Segmentation) -->
+        <div class="inline-flex p-1 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-inner max-w-full">
+          <a href="#siswa" class="px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold text-brand-300 hover:text-white hover:bg-slate-800/80 transition-all flex items-center gap-1.5">
+            <span>🎓</span>
+            <span>Untuk Siswa & PTN</span>
+          </a>
+          <div class="w-px bg-slate-800 my-1"></div>
+          <a href="#guru" class="px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold text-amber-300 hover:text-white hover:bg-slate-800/80 transition-all flex items-center gap-1.5">
+            <span>🛡️</span>
+            <span>Untuk Guru & Sekolah</span>
+          </a>
+        </div>
+
         <!-- CTA Buttons & Dual Paths -->
-        <div class="space-y-4 pt-3 sm:pt-4">
-          <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a href="#harga"
-              class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-sm sm:text-base shadow-xl shadow-brand-500/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+        <div class="space-y-3 pt-2 sm:pt-4">
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-lg mx-auto">
+            <a id="btn-hero-siswa-lynkid" href="https://lynk.id/examgo" target="_blank"
+              class="w-full sm:flex-1 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-sm shadow-xl shadow-brand-500/30 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2">
               <span>🎓 Siswa Premium (Rp 25.000)</span>
               <span>&rarr;</span>
             </a>
-            <a href="#harga"
-              class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-400/40 font-extrabold text-sm sm:text-base shadow-xl transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+            <a id="btn-hero-guru-lynkid" href="https://lynk.id/examgo" target="_blank"
+              class="w-full sm:flex-1 py-3.5 px-6 rounded-2xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-400/40 font-extrabold text-sm shadow-xl transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2">
               <span>🛡️ Guru & Proktor (Rp 35.000)</span>
               <span>&rarr;</span>
             </a>
           </div>
 
-          <!-- App Store & Play Store Download Badges -->
-          <div class="pt-2 flex items-center justify-center gap-3">
-            <a href="https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id" target="_blank"
-              class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700/80 hover:border-slate-500 text-slate-300 hover:text-white text-xs font-medium transition-colors">
-              <span>▶</span> Google Play Store
+          <!-- Official Store Download Badges (Side-by-Side on Mobile) -->
+          <div class="flex items-center justify-center gap-2 sm:gap-3 pt-1 w-full max-w-md mx-auto">
+            <!-- Google Play Store -->
+            <a id="btn-hero-playstore" href="https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id"
+              target="_blank"
+              class="flex-1 py-2 px-3 sm:px-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700/80 transition-all flex items-center justify-center gap-2 sm:gap-2.5 shadow-md hover:border-brand-500/50 active:scale-95">
+              <svg class="w-5 h-5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M3.609 1.814L13.792 12 3.61 22.186a1.986 1.986 0 01-.61-1.428V3.242c0-.555.223-1.059.61-1.428zm11.235 11.238l2.25 2.25-11.45 6.543 9.2-8.793zm0-2.104l-9.2-8.793 11.45 6.543-2.25 2.25zm1.464 1.052l3.438-1.965c.78-.445.78-1.173 0-1.618l-3.438-1.965-2.25 2.25 2.25 2.25z" />
+              </svg>
+              <div class="text-left">
+                <div class="text-[8px] sm:text-[9px] text-slate-400 uppercase tracking-wider font-semibold leading-none">TEMUKAN DI</div>
+                <div class="text-[11px] sm:text-xs font-bold text-white leading-tight">Google Play</div>
+              </div>
             </a>
-            <a href="https://apps.apple.com/id/app/examgo/id6759708435?l=id" target="_blank"
-              class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700/80 hover:border-slate-500 text-slate-300 hover:text-white text-xs font-medium transition-colors">
-              <span>🍎</span> Apple App Store
+
+            <!-- Apple App Store -->
+            <a id="btn-hero-appstore" href="https://apps.apple.com/id/app/examgo/id6759708435?l=id" target="_blank"
+              class="flex-1 py-2 px-3 sm:px-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700/80 transition-all flex items-center justify-center gap-2 sm:gap-2.5 shadow-md hover:border-brand-500/50 active:scale-95">
+              <svg class="w-5 h-5 text-slate-100 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.79 1.07-1.9 0.95-3.02-.93.04-2.11.64-2.77 1.42-.58.68-1.09 1.8-0.95 2.88 1.05.08 2.14-.54 2.77-1.28z" />
+              </svg>
+              <div class="text-left">
+                <div class="text-[8px] sm:text-[9px] text-slate-400 uppercase tracking-wider font-semibold leading-none">UNDUH DI</div>
+                <div class="text-[11px] sm:text-xs font-bold text-white leading-tight">App Store</div>
+              </div>
             </a>
           </div>
-          <span class="inline-flex items-center gap-1 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-800">
-            <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"></path>
-            </svg>
-            <span>QRIS, GoPay, OVO, ShopeePay, DANA</span>
-          </span>
-          <span class="inline-flex items-center gap-1 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-800">
-            <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"></path>
-            </svg>
-            <span>Token Otomatis & Instan Muncul</span>
-          </span>
-          <span class="inline-flex items-center gap-1 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-800">
-            <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"></path>
-            </svg>
-            <span>Tanpa Langganan Berulang</span>
-          </span>
+
+          <!-- Micro Payment & Conversion Badges -->
+          <div class="pt-2 flex flex-wrap items-center justify-center gap-2 text-[11px] text-slate-300">
+            <span class="inline-flex items-center gap-1 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-800">
+              <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              <span>QRIS, GoPay, OVO, ShopeePay, DANA</span>
+            </span>
+            <span class="inline-flex items-center gap-1 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-800">
+              <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              <span>Token Otomatis & Instan Muncul</span>
+            </span>
+            <span class="inline-flex items-center gap-1 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-800">
+              <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              <span>Tanpa Langganan Berulang</span>
+            </span>
+          </div>
+
         </div>
-      </div>
 
-      <!-- Official Store Download Buttons -->
-      <div class="flex flex-wrap items-center justify-center gap-3">
-        <!-- Google Play Store -->
-        <a id="btn-hero-playstore" href="https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id"
-          target="_blank"
-          class="px-5 py-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700/80 transition-all flex items-center gap-3 shadow-md hover:border-brand-500/50 hover:scale-[1.02]">
-          <svg class="w-6 h-6 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M3.609 1.814L13.792 12 3.61 22.186a1.986 1.986 0 01-.61-1.428V3.242c0-.555.223-1.059.61-1.428zm11.235 11.238l2.25 2.25-11.45 6.543 9.2-8.793zm0-2.104l-9.2-8.793 11.45 6.543-2.25 2.25zm1.464 1.052l3.438-1.965c.78-.445.78-1.173 0-1.618l-3.438-1.965-2.25 2.25 2.25 2.25z" />
-          </svg>
-          <div class="text-left">
-            <div class="text-[9px] text-slate-400 uppercase tracking-widest font-semibold leading-none">TEMUKAN DI</div>
-            <div class="text-xs font-bold text-white leading-tight">Google Play</div>
+        <!-- Micro Social Proof -->
+        <div class="pt-3 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-slate-400 font-semibold">
+          <div class="flex items-center gap-1.5">
+            <span class="text-amber-400">★★★★★</span>
+            <span class="text-slate-200">4.9/5 Kepuasan Pengguna</span>
           </div>
-        </a>
-
-        <!-- Apple App Store -->
-        <a id="btn-hero-appstore" href="https://apps.apple.com/id/app/examgo/id6759708435?l=id" target="_blank"
-          class="px-5 py-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700/80 transition-all flex items-center gap-3 shadow-md hover:border-brand-500/50 hover:scale-[1.02]">
-          <svg class="w-6 h-6 text-slate-100 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.79 1.07-1.9 0.95-3.02-.93.04-2.11.64-2.77 1.42-.58.68-1.09 1.8-0.95 2.88 1.05.08 2.14-.54 2.77-1.28z" />
-          </svg>
-          <div class="text-left">
-            <div class="text-[9px] text-slate-400 uppercase tracking-widest font-semibold leading-none">UNDUH DI</div>
-            <div class="text-xs font-bold text-white leading-tight">App Store</div>
+          <div class="flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-brand-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"></path>
+            </svg>
+            <span>100% Kiosk Shield Terkunci</span>
           </div>
-        </a>
-      </div>
-    </div>
+          <div class="flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-brand-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd"></path>
+            </svg>
+            <span>Timer Mandiri Tiap Subtes</span>
+          </div>
+        </div>
 
-    <!-- Micro Social Proof -->
-    <div class="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400 font-semibold">
-      <div class="flex items-center gap-1.5">
-        <span class="text-amber-400">★★★★★</span>
-        <span class="text-slate-200">4.9/5 Kepuasan Siswa</span>
       </div>
-      <div class="flex items-center gap-1.5">
-        <svg class="w-4 h-4 text-brand-400" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-            clip-rule="evenodd"></path>
-        </svg>
-        <span>100% Kiosk Mode Terkunci</span>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <svg class="w-4 h-4 text-brand-400" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-            clip-rule="evenodd"></path>
-        </svg>
-        <span>Timer Mandiri Tiap Subtes</span>
-      </div>
-    </div>
 
-    </div>
+      <!-- Hero Visual Mockup: Simulated CBT Student Screen -->
+      <div class="mt-10 sm:mt-14 max-w-4xl mx-auto relative">
+        <div
+          class="rounded-3xl p-1 bg-gradient-to-b from-brand-500/40 via-slate-800 to-slate-900 shadow-2xl glow-emerald">
+          <div class="bg-slate-900 rounded-[22px] overflow-hidden border border-slate-800">
 
-    <!-- Hero Visual Mockup: Simulated CBT Student Screen -->
-    <div class="mt-14 max-w-4xl mx-auto relative">
-      <div
-        class="rounded-3xl p-1 bg-gradient-to-b from-brand-500/40 via-slate-800 to-slate-900 shadow-2xl glow-emerald">
-        <div class="bg-slate-900 rounded-[22px] overflow-hidden border border-slate-800">
-
-          <!-- Window Header -->
-          <div class="bg-slate-950 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
-              <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
-              <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
-              <span class="text-xs text-slate-400 font-mono ml-2">ExamGO Student Session • SNBT UTBK 2026</span>
+            <!-- Window Header -->
+            <div class="bg-slate-950 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-slate-800 flex items-center justify-between">
+              <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <span class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500/80 shrink-0"></span>
+                <span class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-yellow-500/80 shrink-0"></span>
+                <span class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500/80 shrink-0"></span>
+                <span class="text-[11px] sm:text-xs text-slate-400 font-mono ml-1 sm:ml-2 truncate">ExamGO • SNBT UTBK 2026</span>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span
+                  class="px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 text-[9px] sm:text-[10px] font-bold border border-brand-500/30">KIOSK
+                  LOCKED</span>
+              </div>
             </div>
-            <div class="flex items-center gap-2">
-              <span
-                class="px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 text-[10px] font-bold border border-brand-500/30">KIOSK
-                LOCKED</span>
-            </div>
-          </div>
 
-          <!-- Simulated Exam UI -->
-          <div class="p-6 sm:p-8 space-y-6">
+            <!-- Simulated Exam UI -->
+            <div class="p-4 sm:p-8 space-y-4 sm:space-y-6">
 
             <!-- Timer & Subtest Navigation Bar -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-3">
@@ -1403,25 +1407,28 @@
 
   <!-- 12. Bottom Sticky CTA on Mobile -->
   <div
-    class="fixed bottom-0 inset-x-0 z-50 p-2 sm:hidden bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/90 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-2xl flex items-center gap-2">
+    class="fixed bottom-0 inset-x-0 z-50 p-2 sm:hidden bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/90 pb-[max(0.65rem,env(safe-area-inset-bottom))] shadow-2xl flex items-center gap-2">
     <a id="btn-mobile-wa" href="https://wa.me/6289693652230" target="_blank"
-      class="p-3 bg-slate-900/90 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white flex items-center justify-center shrink-0"
+      class="p-3 bg-slate-900/90 border border-slate-700/80 rounded-xl text-slate-300 hover:text-white flex items-center justify-center shrink-0 relative"
       title="Bantuan WhatsApp">
+      <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-slate-950 animate-pulse"></span>
       <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
         <path
           d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.044c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.073.043.419-.101.824z" />
       </svg>
     </a>
     <a id="btn-mobile-lynkid" href="https://lynk.id/examgo" target="_blank"
-      class="flex-1 py-2.5 px-3 bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-brand-500/25 flex items-center justify-between active:scale-[0.98] transition-all">
+      class="flex-1 py-2.5 px-3.5 bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-brand-500/30 flex items-center justify-between active:scale-[0.97] transition-all">
       <div class="flex flex-col text-left leading-tight truncate mr-2">
-        <span class="text-[9px] uppercase tracking-wider text-emerald-200 font-semibold truncate">Siswa Rp 25rb • Guru
-          Rp 35rb</span>
-        <span class="text-xs font-bold text-white font-mono truncate">lynk.id/examgo</span>
+        <span class="text-[9px] uppercase tracking-wider text-emerald-200 font-bold flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-ping"></span>
+          SEKALI BAYAR • LIFETIME
+        </span>
+        <span class="text-xs font-bold text-white truncate">Siswa 25rb • Guru 35rb</span>
       </div>
       <div
-        class="flex items-center gap-1 bg-white/20 hover:bg-white/30 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shrink-0">
-        <span>Beli Token</span>
+        class="flex items-center gap-1 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg text-xs font-black shrink-0 tracking-wide">
+        <span>Beli</span>
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
         </svg>
