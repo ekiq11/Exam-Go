@@ -147,5 +147,40 @@ void main() {
       expect(deserialized.examEndTime, isNotNull);
       expect(deserialized.isExamTimeEnded, isFalse);
     });
+
+    test('StudentTryoutHistoryService.maskName obscures student name appropriately', () {
+      expect(StudentTryoutHistoryService.maskName('Ahmad Subki'), 'Ahmad S.');
+      expect(StudentTryoutHistoryService.maskName('Budi'), 'Bud***');
+      expect(StudentTryoutHistoryService.maskName('Joe'), 'Joe');
+      expect(StudentTryoutHistoryService.maskName('Alexander'), 'Ale***');
+      expect(StudentTryoutHistoryService.maskName(''), 'Siswa ExamGO');
+    });
+
+    test('getNationalLeaderboard returns 100% real data without dummy cohort injection', () async {
+      final service = StudentTryoutHistoryService.instance;
+
+      final result = await service.getNationalLeaderboard(
+        token: 'SNBT-REAL-001',
+        kategori: 'SNBT',
+        userScore: 785,
+        userName: 'Ahmad Subki',
+      );
+
+      // Verify that no synthetic cohort (e.g. 20 fake students) is created
+      expect(result.entries.length, lessThanOrEqualTo(1));
+      if (result.entries.isNotEmpty) {
+        expect(result.entries.first.isCurrentUser, isTrue);
+        expect(result.entries.first.score, 785);
+        expect(result.entries.first.name, 'Ahmad S.');
+        expect(result.userRank, 1);
+        expect(result.totalParticipants, 1);
+      }
+
+      // Ensure none of the old dummy cohort names exist
+      final dummyNames = ['Rizky A.', 'Nabila S.', 'Fathir M.', 'Putri W.'];
+      for (final dummy in dummyNames) {
+        expect(result.entries.any((e) => e.name == dummy), isFalse);
+      }
+    });
   });
 }

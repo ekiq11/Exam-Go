@@ -394,19 +394,68 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                         const SizedBox(height: 20),
                       ],
 
-                      // 4. Full Leaderboard List
-                      Text(
-                        'Daftar Peringkat Teratas (Top ${data.entries.length})',
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF334155),
+                      // 4. Leaderboard List
+                      if (data.entries.isEmpty) ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 32,
+                            horizontal: 20,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFF1F5F9),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.leaderboard_outlined,
+                                  size: 28,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Belum Ada Data Peringkat',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF334155),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Hasil ujian peserta yang terdaftar akan otomatis tampil di sini secara real-time.',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11.5,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      ...data.entries.map(
-                        (e) => _buildLeaderboardTile(e, data.userRank),
-                      ),
+                      ] else ...[
+                        Text(
+                          'Daftar Peringkat Peserta (${data.entries.length} Peserta)',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF334155),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ...data.entries.map(
+                          (e) => _buildLeaderboardTile(e, data.userRank),
+                        ),
+                      ],
                     ],
                   ),
                 );
@@ -485,7 +534,9 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  'Top ${data.percentile.toStringAsFixed(1)}% Nasional',
+                  data.totalParticipants > 0
+                      ? 'Top ${data.percentile.toStringAsFixed(1)}% Nasional'
+                      : 'Belum Ada Peserta',
                   style: GoogleFonts.poppins(
                     fontSize: 10.5,
                     fontWeight: FontWeight.bold,
@@ -519,7 +570,7 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                         textBaseline: TextBaseline.alphabetic,
                         children: [
                           Text(
-                            '#${data.userRank}',
+                            data.totalParticipants > 0 ? '#${data.userRank}' : '-',
                             style: GoogleFonts.poppins(
                               fontSize: 34,
                               fontWeight: FontWeight.w900,
@@ -529,7 +580,9 @@ class _TryoutLeaderboardSheetState extends State<TryoutLeaderboardSheet> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'dari ${data.totalParticipants} peserta',
+                            data.totalParticipants > 0
+                                ? 'dari ${data.totalParticipants} peserta'
+                                : 'Belum ada pengerjaan',
                             style: GoogleFonts.poppins(
                               fontSize: 12,
                               color: Colors.white.withValues(alpha: 0.85),

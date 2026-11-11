@@ -487,7 +487,7 @@ class StudentTryoutHistoryService {
 
   // ─── Leaderboard & Peringkat Nasional (Serverless & Zero-Cost) ──────────────
 
-  /// Mengambil data leaderboard nasional untuk paket tryout tertentu
+  /// Mengambil data leaderboard nasional untuk paket tryout tertentu (100% Data Real Firestore)
   Future<TryoutLeaderboardData> getNationalLeaderboard({
     required String token,
     required String kategori,
@@ -495,83 +495,152 @@ class StudentTryoutHistoryService {
     String? userName,
   }) async {
     final cleanToken = token.trim();
+    final upperToken = cleanToken.toUpperCase();
     final prefs = await SharedPreferences.getInstance();
     final currentName = userName ?? prefs.getString('student_name') ?? 'Siswa ExamGO';
+    final currentNis = prefs.getString('student_nis') ?? '';
     final deviceId = await LicenseService.instance.getDeviceId();
     final maskedCurrentName = maskName(currentName);
 
-    final entries = <TryoutLeaderboardEntry>[];
-    int totalCount = 0;
-    int userRank = 1;
+    // Map untuk deduplikasi peserta unik (key: deviceId / nis / nama)
+    final participantsMap = <String, TryoutLeaderboardEntry>{};
 
-    // 1. Coba baca dari Firestore jika tersedia
     final db = _db;
     if (db != null) {
-      try {
-        // Rekam / update skor user ke Firestore leaderboard
-        await db
-            .collection('tryout_leaderboards')
-            .doc(cleanToken)
-            .collection('rankings')
-            .doc(deviceId)
-            .set({
-          'device_id': deviceId,
-          'student_name': maskedCurrentName,
-          'score': userScore,
-          'kategori': kategori,
-          'updated_at': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+      // 1. Rekam / update skor user ke Firestore rankings jika memiliki skor valid
+      if (userScore > 0) {
+        try {
+          await db
+              .collection('tryout_leaderboards')
+              .doc(cleanToken)
+              .collection('rankings')
+              .doc(deviceId)
+              .set({
+            'device_id': deviceId,
+            'student_name': maskedCurrentName,
+            'score': userScore,
+            'kategori': kategori,
+            'updated_at': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        } catch (_) {}
+      }
 
-        final snap = await db
+      // 2. Ambil data peringkat dari tryout_leaderboards
+      try {
+        final snapRankings = await db
             .collection('tryout_leaderboards')
             .doc(cleanToken)
             .collection('rankings')
             .orderBy('score', descending: true)
-            .limit(50)
+            .limit(100)
             .get()
             .timeout(const Duration(milliseconds: 3500));
 
-        int rankIdx = 1;
-        for (final doc in snap.docs) {
+        for (final doc in snapRankings.docs) {
           final data = doc.data();
-          final isMe = doc.id == deviceId;
+          final devId = data['device_id']?.toString() ?? doc.id;
+          final isMe = devId == deviceId;
           final s = (data['score'] as num?)?.toInt() ?? 0;
-          if (isMe) userRank = rankIdx;
+          final sName = data['student_name']?.toString() ?? 'Peserta ExamGO';
+          final dedupeKey = devId.isNotEmpty ? devId : sName.toLowerCase();
+          final acc = (s.clamp(0, 1000) / (kategori.toUpperCase() == 'SNBT' ? 10 : (kategori.toUpperCase() == 'SKD' ? 5.5 : 1))).clamp(0.0, 100.0);
 
-          entries.add(
-            TryoutLeaderboardEntry(
-              rank: rankIdx,
-              name: data['student_name']?.toString() ?? 'Peserta ExamGO',
-              schoolOrCity: isMe ? 'Perangkat Ini' : 'Siswa Nasional',
-              score: s,
-              accuracy: (s.clamp(0, 1000) / (kategori.toUpperCase() == 'SNBT' ? 10 : (kategori.toUpperCase() == 'SKD' ? 5.5 : 1))).clamp(0.0, 100.0),
-              isCurrentUser: isMe,
-            ),
+          participantsMap[dedupeKey] = TryoutLeaderboardEntry(
+            rank: 0,
+            name: isMe ? maskedCurrentName : maskName(sName),
+            schoolOrCity: isMe ? 'Perangkat Ini' : 'Siswa Nasional',
+            score: s,
+            accuracy: acc,
+            isCurrentUser: isMe,
           );
-          rankIdx++;
         }
-        totalCount = entries.length;
+      } catch (_) {}
+
+      // 3. Ambil data real submissions dari jawaban_tryout
+      try {
+        final tokensToQuery = <String>{cleanToken, upperToken};
+        for (final t in tokensToQuery) {
+          final snapAnswers = await db
+              .collection('jawaban_tryout')
+              .where('token', isEqualTo: t)
+              .limit(100)
+              .get()
+              .timeout(const Duration(milliseconds: 3500));
+
+          for (final doc in snapAnswers.docs) {
+            final data = doc.data();
+            final docDevId = data['device_id']?.toString() ?? '';
+            final docNis = data['nis']?.toString() ?? '';
+            final rawName = data['nama_peserta']?.toString() ?? 'Peserta ExamGO';
+            final rawScore = (data['skor_akhir'] as num?)?.toInt() ?? 0;
+
+            final isMe = (docDevId.isNotEmpty && docDevId == deviceId) ||
+                (docNis.isNotEmpty && currentNis.isNotEmpty && docNis == currentNis);
+
+            final dedupeKey = docDevId.isNotEmpty
+                ? docDevId
+                : (docNis.isNotEmpty ? docNis : rawName.toLowerCase());
+
+            final acc = (rawScore.clamp(0, 1000) / (kategori.toUpperCase() == 'SNBT' ? 10 : (kategori.toUpperCase() == 'SKD' ? 5.5 : 1))).clamp(0.0, 100.0);
+
+            if (!participantsMap.containsKey(dedupeKey) ||
+                rawScore > participantsMap[dedupeKey]!.score) {
+              participantsMap[dedupeKey] = TryoutLeaderboardEntry(
+                rank: 0,
+                name: isMe ? maskedCurrentName : maskName(rawName),
+                schoolOrCity: isMe ? 'Perangkat Ini' : 'Siswa Nasional',
+                score: rawScore,
+                accuracy: acc,
+                isCurrentUser: isMe,
+              );
+            }
+          }
+        }
       } catch (_) {}
     }
 
-    // 2. Jika data Firestore masih sedikit (< 8 peserta), buat kohort nasional sintetis
-    // yang terkalibrasi secara matematis sesuai standar nasional (SNBT / SKD / UMUM)
-    if (entries.length < 8) {
-      entries.clear();
-      final cohort = _generateCalibratedNationalCohort(
-        kategori: kategori,
-        userScore: userScore,
-        userName: maskedCurrentName,
+    // 4. Pastikan current user dengan userScore masuk ke dalam list
+    final hasMe = participantsMap.values.any((e) => e.isCurrentUser);
+    if (!hasMe && userScore > 0) {
+      final acc = (userScore.clamp(0, 1000) / (kategori.toUpperCase() == 'SNBT' ? 10 : (kategori.toUpperCase() == 'SKD' ? 5.5 : 1))).clamp(0.0, 100.0);
+      participantsMap[deviceId] = TryoutLeaderboardEntry(
+        rank: 0,
+        name: maskedCurrentName,
+        schoolOrCity: 'Perangkat Ini',
+        score: userScore,
+        accuracy: acc,
+        isCurrentUser: true,
       );
-      entries.addAll(cohort.entries);
-      userRank = cohort.userRank;
-      totalCount = cohort.totalParticipants;
     }
 
-    totalCount = totalCount < entries.length ? entries.length : totalCount;
+    // 5. Urutkan secara descending berdasarkan skor riil
+    final sorted = participantsMap.values.toList()
+      ..sort((a, b) => b.score.compareTo(a.score));
+
+    final entries = <TryoutLeaderboardEntry>[];
+    int userRank = 1;
+    for (int i = 0; i < sorted.length; i++) {
+      final item = sorted[i];
+      final rank = i + 1;
+      if (item.isCurrentUser) {
+        userRank = rank;
+      }
+      entries.add(
+        TryoutLeaderboardEntry(
+          rank: rank,
+          name: item.name,
+          schoolOrCity: item.schoolOrCity,
+          score: item.score,
+          accuracy: item.accuracy,
+          isCurrentUser: item.isCurrentUser,
+        ),
+      );
+    }
+
+    final totalCount = entries.length;
     final percentile = totalCount > 1
         ? (((totalCount - userRank) / totalCount) * 100).clamp(1.0, 99.9)
-        : 95.0;
+        : (totalCount == 1 ? 100.0 : 0.0);
 
     final avgScore = entries.isNotEmpty
         ? (entries.map((e) => e.score).reduce((a, b) => a + b) / entries.length).round()
@@ -596,85 +665,6 @@ class StudentTryoutHistoryService {
       return '${parts[0].substring(0, 3)}***';
     }
     return '${parts[0]} ${parts[1][0]}.';
-  }
-
-  /// Menghasilkan distribusi kohort nasional terkalibrasi (Statistik Kurva Normal)
-  _CalibratedCohort _generateCalibratedNationalCohort({
-    required String kategori,
-    required int userScore,
-    required String userName,
-  }) {
-    final isSnbt = kategori.toUpperCase().contains('SNBT') || kategori.toUpperCase().contains('UTBK');
-    final isSkd = kategori.toUpperCase().contains('SKD') || kategori.toUpperCase().contains('CPNS');
-
-    final baseScores = isSnbt
-        ? [845, 820, 805, 788, 770, 752, 735, 715, 698, 680, 665, 650, 632, 610, 595, 575, 550, 520, 490, 460]
-        : (isSkd
-            ? [485, 468, 452, 440, 428, 415, 402, 395, 382, 370, 358, 345, 330, 318, 305, 290, 275, 260, 240, 220]
-            : [98, 95, 92, 88, 85, 82, 80, 78, 75, 72, 70, 68, 65, 62, 60, 58, 55, 50, 45, 40]);
-
-    final sampleNames = [
-      'Rizky A.', 'Nabila S.', 'Fathir M.', 'Putri W.', 'Dimas P.',
-      'Siti N.', 'Bagus H.', 'Aulia R.', 'Kevin T.', 'Indah K.',
-      'Rian D.', 'Dewi M.', 'Yoga F.', 'Farhan B.', 'Tiara Z.',
-      'Hafiz L.', 'Gita C.', 'Eko W.', 'Anisa D.', 'Doni S.'
-    ];
-
-    final cities = [
-      'Jakarta', 'Surabaya', 'Bandung', 'Yogyakarta', 'Semarang',
-      'Medan', 'Makassar', 'Malang', 'Palembang', 'Denpasar'
-    ];
-
-    final allItems = <Map<String, dynamic>>[];
-    for (int i = 0; i < baseScores.length; i++) {
-      allItems.add({
-        'name': sampleNames[i % sampleNames.length],
-        'schoolOrCity': cities[i % cities.length],
-        'score': baseScores[i],
-        'isMe': false,
-      });
-    }
-
-    // Sisipkan user ke dalam list
-    allItems.add({
-      'name': userName,
-      'schoolOrCity': 'Perangkat Ini',
-      'score': userScore,
-      'isMe': true,
-    });
-
-    // Urutkan descending berdasarkan score
-    allItems.sort((a, b) => (b['score'] as int).compareTo(a['score'] as int));
-
-    final entries = <TryoutLeaderboardEntry>[];
-    int userRank = 1;
-    for (int i = 0; i < allItems.length; i++) {
-      final item = allItems[i];
-      final rank = i + 1;
-      final isMe = item['isMe'] == true;
-      if (isMe) userRank = rank;
-
-      final s = item['score'] as int;
-      final acc = (s.clamp(0, 1000) / (isSnbt ? 10 : (isSkd ? 5.5 : 1))).clamp(0.0, 100.0);
-
-      entries.add(
-        TryoutLeaderboardEntry(
-          rank: rank,
-          name: item['name'] as String,
-          schoolOrCity: item['schoolOrCity'] as String,
-          score: s,
-          accuracy: acc,
-          isCurrentUser: isMe,
-        ),
-      );
-    }
-
-    final totalP = isSnbt ? 1850 : (isSkd ? 1240 : 650);
-    return _CalibratedCohort(
-      entries: entries,
-      userRank: userRank,
-      totalParticipants: totalP,
-    );
   }
 
   // ─── Target Passing Grade PTN / Formasi CPNS Tracker ────────────────────────
@@ -711,18 +701,6 @@ class StudentTryoutHistoryService {
       return {'name': 'Target Passing Grade Nasional', 'score': 75};
     }
   }
-}
-
-class _CalibratedCohort {
-  final List<TryoutLeaderboardEntry> entries;
-  final int userRank;
-  final int totalParticipants;
-
-  const _CalibratedCohort({
-    required this.entries,
-    required this.userRank,
-    required this.totalParticipants,
-  });
 }
 
 /// Data ringkasan leaderboard nasional
