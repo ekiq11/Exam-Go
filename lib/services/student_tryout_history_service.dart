@@ -370,6 +370,7 @@ class StudentTryoutHistoryService {
     DateTime? examEndTime,
     bool allowRetake = true,
     Map<String, dynamic>? subtestScores,
+    bool syncCloud = true,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -417,8 +418,12 @@ class StudentTryoutHistoryService {
       final encoded = current.map((e) => jsonEncode(e.toJson())).toList();
       await prefs.setStringList(_kStorageKey, encoded);
 
-      // Cadangkan otomatis ke cloud untuk pengguna Premium secara asinkron non-blocking
-      unawaited(backupAttemptToCloud(newItem));
+      // Cadangkan otomatis ke cloud untuk pengguna Premium
+      if (syncCloud) {
+        await backupAttemptToCloud(newItem);
+      } else {
+        unawaited(backupAttemptToCloud(newItem));
+      }
     } catch (_) {}
   }
 

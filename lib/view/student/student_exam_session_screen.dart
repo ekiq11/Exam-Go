@@ -1339,6 +1339,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         allowRetake:
             _package?.allowRetake ??
             (widget.initialSchedule?.allowRetake ?? false),
+        syncCloud: false,
       );
 
       // Bersihkan cache sesi ujian lokal
