@@ -1871,12 +1871,45 @@
 
             <div class="pt-2">
               <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">Tautan Toko
-                Lynk.id (Pembelian Token) <span class="text-red-500">*</span></label>
+                Lynk.id (Pembelian Token Global) <span class="text-red-500">*</span></label>
               <input type="url" id="set-lynkid-url"
                 class="w-full px-4 py-2.5 bg-gray-50/70 hover:bg-white focus:bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none text-sm font-mono text-purple-700 transition-all"
                 placeholder="https://lynk.id/examgo">
-              <span class="text-[11px] text-gray-400 mt-1 block">Semua tombol "Beli di Lynk.id" akan otomatis mengarah
-                ke tautan ini.</span>
+              <span class="text-[11px] text-gray-400 mt-1 block">Tautan default toko Lynk.id jika tautan paket spesifik di bawah tidak diisi.</span>
+            </div>
+
+            <!-- Opsi Tautan & Harga Spesifik Siswa & Guru -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 p-4 bg-gray-50/80 rounded-2xl border border-gray-200">
+              <div class="space-y-3">
+                <span class="text-xs font-bold text-emerald-800 uppercase tracking-wide block">🎓 Paket Siswa Premium</span>
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-700 uppercase mb-1">Harga Siswa di Landing Page</label>
+                  <input type="text" id="set-price-siswa"
+                    class="w-full px-3.5 py-2 bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500/20 text-xs font-bold text-gray-900"
+                    placeholder="Misal: Rp 25.000">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-700 uppercase mb-1">Tautan Lynk.id Siswa (Opsional)</label>
+                  <input type="url" id="set-lynkid-siswa"
+                    class="w-full px-3.5 py-2 bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500/20 text-xs font-mono text-emerald-700"
+                    placeholder="https://lynk.id/examgo (kosongkan jika sama)">
+                </div>
+              </div>
+              <div class="space-y-3">
+                <span class="text-xs font-bold text-amber-800 uppercase tracking-wide block">🛡️ Paket Guru & Proktor</span>
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-700 uppercase mb-1">Harga Guru di Landing Page</label>
+                  <input type="text" id="set-price-guru"
+                    class="w-full px-3.5 py-2 bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-500/20 text-xs font-bold text-gray-900"
+                    placeholder="Misal: Rp 35.000">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-700 uppercase mb-1">Tautan Lynk.id Guru (Opsional)</label>
+                  <input type="url" id="set-lynkid-guru"
+                    class="w-full px-3.5 py-2 bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-amber-500/20 text-xs font-mono text-amber-700"
+                    placeholder="https://lynk.id/examgo (kosongkan jika sama)">
+                </div>
+              </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
@@ -8823,6 +8856,10 @@
         if (document.getElementById('set-promo-original')) document.getElementById('set-promo-original').value = s.promo_price_original || '';
         if (document.getElementById('set-promo-discount')) document.getElementById('set-promo-discount').value = s.promo_price_discount || '';
         if (document.getElementById('set-promo-tag')) document.getElementById('set-promo-tag').value = s.promo_tag || '';
+        if (document.getElementById('set-price-siswa')) document.getElementById('set-price-siswa').value = s.price_siswa || 'Rp 25.000';
+        if (document.getElementById('set-lynkid-siswa')) document.getElementById('set-lynkid-siswa').value = s.lynkid_siswa_url || '';
+        if (document.getElementById('set-price-guru')) document.getElementById('set-price-guru').value = s.price_guru || 'Rp 35.000';
+        if (document.getElementById('set-lynkid-guru')) document.getElementById('set-lynkid-guru').value = s.lynkid_guru_url || '';
         if (document.getElementById('set-lynkid-url')) document.getElementById('set-lynkid-url').value = s.lynkid_url || 'https://lynk.id/examgo';
         if (document.getElementById('set-playstore-url')) document.getElementById('set-playstore-url').value = s.playstore_url || 'https://play.google.com/store/apps/details?id=com.kemenag.examgo&hl=id';
         if (document.getElementById('set-appstore-url')) document.getElementById('set-appstore-url').value = s.appstore_url || 'https://apps.apple.com/id/app/examgo/id6759708435?l=id';
@@ -8893,6 +8930,10 @@
         promo_price_original: getVal('set-promo-original'),
         promo_price_discount: getVal('set-promo-discount'),
         promo_tag: getVal('set-promo-tag'),
+        price_siswa: getVal('set-price-siswa') || 'Rp 25.000',
+        lynkid_siswa_url: getVal('set-lynkid-siswa'),
+        price_guru: getVal('set-price-guru') || 'Rp 35.000',
+        lynkid_guru_url: getVal('set-lynkid-guru'),
         lynkid_url: getVal('set-lynkid-url'),
         playstore_url: getVal('set-playstore-url'),
         appstore_url: getVal('set-appstore-url'),

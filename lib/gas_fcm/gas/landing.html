@@ -1114,7 +1114,7 @@
             <span class="text-xs font-bold text-brand-400 uppercase tracking-wider">UNTUK SISWA & PEJUANG KAMPUS</span>
             <div class="text-2xl font-bold text-white">Siswa Premium Lifetime</div>
             <div class="flex items-baseline gap-2">
-              <span class="text-4xl font-extrabold text-white">Rp 25.000</span>
+              <span id="plan-siswa-price" class="text-4xl font-extrabold text-white">Rp 25.000</span>
               <span class="text-xs text-slate-400 line-through">Rp 75.000</span>
               <span class="text-xs text-brand-400 font-bold">Sekali Bayar</span>
             </div>
@@ -1150,7 +1150,7 @@
             <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">UNTUK GURU, DOSEN & PROKTOR</span>
             <div class="text-2xl font-bold text-white">Guru & Proktor Premium</div>
             <div class="flex items-baseline gap-2">
-              <span class="text-4xl font-extrabold text-amber-300">Rp 35.000</span>
+              <span id="plan-guru-price" class="text-4xl font-extrabold text-amber-300">Rp 35.000</span>
               <span class="text-xs text-slate-400 line-through">Rp 150.000</span>
               <span class="text-xs text-emerald-400 font-bold">Sekali Bayar</span>
             </div>
@@ -1480,29 +1480,49 @@
           evSection.style.display = 'none';
         }
 
-        // 4. Update Lynk.id Links across all CTA buttons
+        // 4. Update Prices for Siswa & Guru
+        if (s.price_siswa) {
+          const el = document.getElementById('plan-siswa-price');
+          if (el) el.innerText = s.price_siswa;
+          const btn = document.getElementById('btn-plan-student');
+          if (btn) btn.innerText = 'Beli Siswa di lynk.id (' + s.price_siswa + ') ⚡';
+        }
+        if (s.price_guru) {
+          const el = document.getElementById('plan-guru-price');
+          if (el) el.innerText = s.price_guru;
+          const btn = document.getElementById('btn-plan-teacher');
+          if (btn) btn.innerText = 'Beli Lisensi Guru di lynk.id (' + s.price_guru + ') 🛡️';
+        }
+
+        // 5. Update Lynk.id Links across all CTA buttons
         const rawLynk = (s.lynkid_url || '').trim();
         const lynkTarget = (!rawLynk || rawLynk === 'https://lynk.id' || rawLynk === 'https://lynk.id/')
           ? 'https://lynk.id/examgo'
           : rawLynk;
+        const lynkSiswa = (s.lynkid_siswa_url && s.lynkid_siswa_url.trim()) ? s.lynkid_siswa_url.trim() : lynkTarget;
+        const lynkGuru = (s.lynkid_guru_url && s.lynkid_guru_url.trim()) ? s.lynkid_guru_url.trim() : lynkTarget;
 
-        const lynkButtons = [
+        const generalLynkButtons = [
           'btn-nav-lynkid',
-          'btn-hero-siswa-lynkid',
-          'btn-hero-guru-lynkid',
           'btn-promo-lynkid',
-          'btn-plan-student',
-          'btn-plan-teacher',
-          'btn-final-siswa',
-          'btn-final-guru',
           'btn-mobile-lynkid'
         ];
-        lynkButtons.forEach(function (id) {
+        generalLynkButtons.forEach(function (id) {
           const el = document.getElementById(id);
           if (el) el.href = lynkTarget;
         });
 
-        // 5. Update Play Store & App Store links
+        ['btn-hero-siswa-lynkid', 'btn-plan-student', 'btn-final-siswa'].forEach(function(id) {
+          const el = document.getElementById(id);
+          if (el) el.href = lynkSiswa;
+        });
+
+        ['btn-hero-guru-lynkid', 'btn-plan-teacher', 'btn-final-guru'].forEach(function(id) {
+          const el = document.getElementById(id);
+          if (el) el.href = lynkGuru;
+        });
+
+        // 6. Update Play Store & App Store links
         if (s.playstore_url) {
           const ps = document.getElementById('btn-hero-playstore');
           if (ps) ps.href = s.playstore_url;
@@ -1519,7 +1539,7 @@
         // Re-render math formulas if settings contained dynamic LaTeX
         renderAllMath();
 
-        // 6. Update WhatsApp links
+        // 7. Update WhatsApp links
         if (s.whatsapp_number) {
           const waNum = s.whatsapp_number.replace(/[^0-9]/g, '');
           const waMsg = encodeURIComponent(s.whatsapp_message || 'Halo Admin ExamGO, saya ingin membeli token tryout / konsultasi paket ujian.');
@@ -1533,18 +1553,19 @@
         }
       }
 
-      // Load dynamic settings: via /api/landing-settings jika di domain examgo.id, atau fetch langsung ke GAS
-      const settingsApiUrl = (window.location.hostname === 'examgo.id' || window.location.hostname.endsWith('.examgo.id'))
-        ? '/api/landing-settings'
-        : 'https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec?action=get_landing_settings';
+      // Selalu ambil live settings dari Google Apps Script Web App resmi (CORS-enabled) dengan cache-buster
+      const settingsApiUrl = 'https://script.google.com/macros/s/AKfycbyz4bm0GIgLkyGDLBE0u9yPsZnNB6OvObMszvyY-g6UxwlsByBnpnEchoHKrahoay2ZUA/exec?action=get_landing_settings&_t=' + Date.now();
 
       fetch(settingsApiUrl)
         .then(function (res) { return res.json(); })
         .then(function (json) {
-          if (json && json.settings) applyLandingSettings(json.settings);
+          if (json && json.settings) {
+            console.log('[ExamGO] Pengaturan landing page dari Admin berhasil dimuat:', json.settings);
+            applyLandingSettings(json.settings);
+          }
         })
-        .catch(function () {
-          // Fallback ke google.script.run jika di dalam GAS
+        .catch(function (err) {
+          console.warn('[ExamGO] Gagal memuat dynamic settings via fetch, mencoba google.script.run...', err);
           if (typeof google !== 'undefined' && google.script && google.script.run) {
             google.script.run
               .withSuccessHandler(applyLandingSettings)
