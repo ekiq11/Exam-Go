@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../constant/app_colors.dart';
 import '../../models/exam_question_model.dart';
 import '../../models/tryout_schedule_model.dart';
 import '../../services/exam_cache_service.dart';
@@ -49,7 +50,8 @@ class EventDashboardScreen extends StatefulWidget {
   State<EventDashboardScreen> createState() => _EventDashboardScreenState();
 }
 
-class _EventDashboardScreenState extends State<EventDashboardScreen> with SingleTickerProviderStateMixin {
+class _EventDashboardScreenState extends State<EventDashboardScreen>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _animCtrl;
   late final Animation<double> _fadeAnim;
 
@@ -65,12 +67,14 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
 
   List<_LeaderboardEntry> _leaderboard = [];
 
-  // Theme Palette (Emerald - Teal)
-  static const Color _kTealDeep = Color(0xFF004D40);
-  static const Color _kTealD = Color(0xFF00695C);
-  static const Color _kTeal = Color(0xFF00897B);
-  static const Color _kAccent = Color(0xFF64FFDA);
-  static const Color _kBg = Color(0xFFF4FBF9);
+  // Theme Palette — ExamGO Signature Forest & Emerald Green
+  static const Color _kGreenDeep = Color(0xFF1B5E20); // Deep Forest Green (AppBar & Card Headers)
+  static const Color _kGreenMid = AppColors.primaryGreen; // Color(0xFF2E7D32) ExamGO Primary Green
+  static const Color _kGreenLight = Color(0xFF388E3C); // Vibrant Emerald Green
+  static const Color _kAccent = Color(0xFFFDE047); // Golden Yellow (Trophy & Badges)
+  static const Color _kAccentGreen = Color(0xFF4ADE80); // Vibrant Green Accent
+  static const Color _kPaleGreen = AppColors.paleGreen; // Color(0xFFE8F5E9) Pale Green
+  static const Color _kBg = Color(0xFFF5F7F5); // ExamGO Soft Background
 
   String get _greet {
     final h = DateTime.now().hour;
@@ -83,7 +87,20 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
   String get _shortDate {
     final n = DateTime.now();
     const d = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-    const m = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const m = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
     return '${d[n.weekday - 1]}, ${n.day} ${m[n.month - 1]} ${n.year}';
   }
 
@@ -93,8 +110,18 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
       final p = raw.split('-');
       if (p.length == 3) {
         const bulan = [
-          'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+          'Januari',
+          'Februari',
+          'Maret',
+          'April',
+          'Mei',
+          'Juni',
+          'Juli',
+          'Agustus',
+          'September',
+          'Oktober',
+          'November',
+          'Desember',
         ];
         final mIdx = int.tryParse(p[1]) ?? 1;
         return '${p[2]} ${bulan[mIdx - 1]} ${p[0]}';
@@ -106,7 +133,10 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
   @override
   void initState() {
     super.initState();
-    _animCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
     _animCtrl.forward();
 
@@ -135,13 +165,17 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
 
     if (_studentName.isEmpty || _studentNis.isEmpty) {
       if (!mounted) return;
-      final identity = await PreExamChecklistDialog.show(context, 'Data Peserta Event');
+      final identity = await PreExamChecklistDialog.show(
+        context,
+        'Data Peserta Event',
+      );
       if (identity != null) {
         _studentName = identity['name'] ?? 'Peserta';
         _studentNis = identity['nis'] ?? '-';
       } else {
         _studentName = 'Peserta Event';
-        _studentNis = 'ID_${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+        _studentNis =
+            'ID_${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
       }
     }
   }
@@ -153,7 +187,10 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
     }
     final effectiveId = widget.eventId.trim();
     try {
-      final doc = await FirebaseFirestore.instance.collection('paket_tryout').doc(effectiveId).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('paket_tryout')
+          .doc(effectiveId)
+          .get();
       if (doc.exists) {
         _schedule = TryoutSchedule.fromMap(doc.id, doc.data() ?? {});
       }
@@ -168,7 +205,10 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
             .limit(1)
             .get();
         if (snap.docs.isNotEmpty) {
-          _schedule = TryoutSchedule.fromMap(snap.docs.first.id, snap.docs.first.data());
+          _schedule = TryoutSchedule.fromMap(
+            snap.docs.first.id,
+            snap.docs.first.data(),
+          );
         }
       } catch (_) {}
     }
@@ -176,10 +216,14 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
     // Fallback 2: cari dari daftar aktif lokal / GAS
     if (_schedule == null) {
       final all = await TryoutScheduleService.instance.getActiveSchedules();
-      final match = all.where((s) =>
-        s.paketId.toUpperCase() == effectiveId.toUpperCase() ||
-        (s.targetExamId != null && s.targetExamId!.toUpperCase() == effectiveId.toUpperCase())
-      ).firstOrNull;
+      final match = all
+          .where(
+            (s) =>
+                s.paketId.toUpperCase() == effectiveId.toUpperCase() ||
+                (s.targetExamId != null &&
+                    s.targetExamId!.toUpperCase() == effectiveId.toUpperCase()),
+          )
+          .firstOrNull;
       if (match != null) _schedule = match;
     }
 
@@ -198,11 +242,15 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
 
     // 1. Cek dari Riwayat Lokal Siswa
     final localList = await StudentTryoutHistoryService.instance.getHistory();
-    final localMatch = localList.where((h) =>
-      h.token == effectivePaketId ||
-      h.token == widget.eventId ||
-      (_schedule?.targetExamId != null && h.token == _schedule!.targetExamId)
-    ).firstOrNull;
+    final localMatch = localList
+        .where(
+          (h) =>
+              h.token == effectivePaketId ||
+              h.token == widget.eventId ||
+              (_schedule?.targetExamId != null &&
+                  h.token == _schedule!.targetExamId),
+        )
+        .firstOrNull;
 
     if (localMatch != null) {
       _sudahDikerjakan = true;
@@ -355,9 +403,8 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(
-        child: CircularProgressIndicator(color: _kTeal),
-      ),
+      builder: (_) =>
+          const Center(child: CircularProgressIndicator(color: _kGreenMid)),
     );
 
     try {
@@ -389,7 +436,8 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
             raw.forEach((k, v) => answers[k.toString()] = v.toString());
           }
           score = (data['skor_akhir'] as num?)?.toInt() ?? score;
-          statusKelulusan = data['status_kelulusan']?.toString() ?? statusKelulusan;
+          statusKelulusan =
+              data['status_kelulusan']?.toString() ?? statusKelulusan;
         }
       }
 
@@ -425,20 +473,24 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
   @override
   Widget build(BuildContext context) {
     final status = _checkScheduleStatus();
-    final canStart = (status == _EventScheduleStatus.open) && (!_sudahDikerjakan || (_schedule?.allowRetake ?? false));
+    final canStart =
+        (status == _EventScheduleStatus.open) &&
+        (!_sudahDikerjakan || (_schedule?.allowRetake ?? false));
 
     return Scaffold(
       backgroundColor: _kBg,
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: _kTeal))
+          ? const Center(child: CircularProgressIndicator(color: _kGreenMid))
           : FadeTransition(
               opacity: _fadeAnim,
               child: RefreshIndicator(
-                color: _kTeal,
+                color: _kGreenMid,
                 backgroundColor: Colors.white,
                 onRefresh: _loadAllData,
                 child: CustomScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
                   slivers: [
                     _buildHeroAppBar(),
                     SliverPadding(
@@ -468,14 +520,16 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
 
   Widget _buildHeroAppBar() {
     final sch = _schedule;
-    final initial = _studentName.isNotEmpty ? _studentName[0].toUpperCase() : 'P';
+    final initial = _studentName.isNotEmpty
+        ? _studentName[0].toUpperCase()
+        : 'P';
 
     return SliverAppBar(
       expandedHeight: 220,
       pinned: true,
       stretch: true,
       automaticallyImplyLeading: false,
-      backgroundColor: _kTealDeep,
+      backgroundColor: _kGreenDeep,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
@@ -483,7 +537,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
         background: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [_kTealDeep, _kTealD, _kTeal],
+              colors: [_kGreenDeep, _kGreenMid, _kGreenLight],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -552,11 +606,16 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.18),
+                              ),
                             ),
                             child: Text(
                               _shortDate,
@@ -581,7 +640,9 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: _kAccent.withValues(alpha: 0.25)),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.20),
+                          ),
                         ),
                         child: Row(
                           children: [
@@ -590,7 +651,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                               height: 40,
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [_kAccent, Color(0xFF00E5FF)],
+                                  colors: [_kAccent, _kAccentGreen],
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                 ),
@@ -616,10 +677,17 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                                       const SizedBox(width: 6),
                                       if (sch != null)
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 1,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withValues(alpha: 0.15),
-                                            borderRadius: BorderRadius.circular(6),
+                                            color: Colors.white.withValues(
+                                              alpha: 0.15,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
                                           ),
                                           child: Text(
                                             sch.jenisTest,
@@ -649,7 +717,9 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                             const SizedBox(width: 10),
                             CircleAvatar(
                               radius: 20,
-                              backgroundColor: Colors.white.withValues(alpha: 0.2),
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.2,
+                              ),
                               child: Text(
                                 initial,
                                 style: GoogleFonts.poppins(
@@ -677,7 +747,9 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
     final sch = _schedule;
     final statusColor = status == _EventScheduleStatus.open
         ? const Color(0xFF22C55E)
-        : (status == _EventScheduleStatus.belumMulai ? const Color(0xFFF59E0B) : const Color(0xFF64748B));
+        : (status == _EventScheduleStatus.belumMulai
+              ? const Color(0xFFF59E0B)
+              : const Color(0xFF64748B));
 
     final statusLabel = status == _EventScheduleStatus.open
         ? 'Berlangsung'
@@ -689,7 +761,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: _kTeal.withValues(alpha: 0.08),
+            color: _kGreenMid.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -700,12 +772,16 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
             decoration: const BoxDecoration(
-              gradient: LinearGradient(colors: [_kTealDeep, _kTeal]),
+              gradient: LinearGradient(colors: [_kGreenDeep, _kGreenMid]),
               borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.event_available_rounded, color: Colors.white, size: 18),
+                const Icon(
+                  Icons.event_available_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Jadwal Pelaksanaan Ujian',
@@ -717,7 +793,10 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor,
                     borderRadius: BorderRadius.circular(12),
@@ -743,7 +822,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                     icon: Icons.calendar_today_rounded,
                     label: 'Tanggal',
                     value: _fmtTanggal(sch?.tanggal ?? ''),
-                    color: _kTeal,
+                    color: _kGreenMid,
                   ),
                 ),
                 Container(width: 1, height: 36, color: const Color(0xFFE2E8F0)),
@@ -751,7 +830,9 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                   child: _buildColInfo(
                     icon: Icons.access_time_rounded,
                     label: 'Pukul',
-                    value: sch != null && sch.jamMulai.isNotEmpty ? '${sch.jamMulai} - ${sch.jamSelesai}' : 'Bebas',
+                    value: sch != null && sch.jamMulai.isNotEmpty
+                        ? '${sch.jamMulai} - ${sch.jamSelesai}'
+                        : 'Bebas',
                     color: const Color(0xFF3B82F6),
                   ),
                 ),
@@ -784,7 +865,10 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
         const SizedBox(height: 4),
         Text(
           label,
-          style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF64748B)),
+          style: GoogleFonts.poppins(
+            fontSize: 10,
+            color: const Color(0xFF64748B),
+          ),
         ),
         const SizedBox(height: 1),
         Text(
@@ -806,8 +890,12 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
     final sch = _schedule;
     final isBefore = status == _EventScheduleStatus.belumMulai;
     final color = isBefore ? const Color(0xFFF59E0B) : const Color(0xFF64748B);
-    final icon = isBefore ? Icons.hourglass_top_rounded : Icons.lock_clock_rounded;
-    final title = isBefore ? 'Ujian Belum Dimulai' : 'Waktu Ujian Telah Berakhir';
+    final icon = isBefore
+        ? Icons.hourglass_top_rounded
+        : Icons.lock_clock_rounded;
+    final title = isBefore
+        ? 'Ujian Belum Dimulai'
+        : 'Waktu Ujian Telah Berakhir';
     final sub = isBefore
         ? 'Ujian dibuka pada ${_fmtTanggal(sch?.tanggal ?? '')} pukul ${sch?.jamMulai ?? '08:00'}.'
         : 'Waktu pengerjaan telah berakhir. Silakan tinjau nilai & pembahasan di bawah.';
@@ -829,11 +917,18 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 12.5, color: color),
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.5,
+                    color: color,
+                  ),
                 ),
                 Text(
                   sub,
-                  style: GoogleFonts.poppins(fontSize: 11, color: color.withValues(alpha: 0.85)),
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: color.withValues(alpha: 0.85),
+                  ),
                 ),
               ],
             ),
@@ -844,14 +939,16 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
   }
 
   Widget _buildPesertaCard() {
-    final initial = _studentName.isNotEmpty ? _studentName[0].toUpperCase() : 'P';
+    final initial = _studentName.isNotEmpty
+        ? _studentName[0].toUpperCase()
+        : 'P';
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _kTeal.withValues(alpha: 0.12)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -864,10 +961,14 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
         children: [
           CircleAvatar(
             radius: 24,
-            backgroundColor: _kTeal.withValues(alpha: 0.15),
+            backgroundColor: _kPaleGreen,
             child: Text(
               initial,
-              style: GoogleFonts.poppins(color: _kTeal, fontWeight: FontWeight.bold, fontSize: 18),
+              style: GoogleFonts.poppins(
+                color: _kGreenMid,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -877,19 +978,30 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
               children: [
                 Text(
                   _studentName,
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14, color: const Color(0xFF0F172A)),
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: const Color(0xFF0F172A),
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   'NIS / ID: $_studentNis',
-                  style: GoogleFonts.poppins(fontSize: 11.5, color: const Color(0xFF64748B)),
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.5,
+                    color: const Color(0xFF64748B),
+                  ),
                 ),
                 if (widget.eventToken != null) ...[
                   const SizedBox(height: 2),
                   Text(
                     'Tiket: ${widget.eventToken}',
-                    style: GoogleFonts.poppins(fontSize: 10, color: _kTeal, fontWeight: FontWeight.w600),
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      color: _kGreenMid,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ],
@@ -904,7 +1016,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                   style: GoogleFonts.poppins(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
-                    color: _kTeal,
+                    color: _kGreenMid,
                   ),
                 ),
                 Text(
@@ -926,7 +1038,9 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
   Widget _buildActionButtons(bool canStart, _EventScheduleStatus status) {
     String label = 'Mulai Ujian Sekarang';
     if (_sudahDikerjakan) {
-      label = (_schedule?.allowRetake ?? false) ? 'Kerjakan Ulang Ujian' : 'Ujian Sudah Dikerjakan ✅';
+      label = (_schedule?.allowRetake ?? false)
+          ? 'Kerjakan Ulang Ujian'
+          : 'Ujian Sudah Dikerjakan ✅';
     } else if (status == _EventScheduleStatus.belumMulai) {
       label = 'Ujian Belum Dibuka';
     } else if (status == _EventScheduleStatus.sudahSelesai) {
@@ -942,7 +1056,9 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
           child: ElevatedButton.icon(
             onPressed: canStart ? _startExam : null,
             icon: Icon(
-              _sudahDikerjakan && !canStart ? Icons.check_circle_rounded : Icons.play_arrow_rounded,
+              _sudahDikerjakan && !canStart
+                  ? Icons.check_circle_rounded
+                  : Icons.play_arrow_rounded,
               color: Colors.white,
             ),
             label: Text(
@@ -954,9 +1070,13 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _kTeal,
-              disabledBackgroundColor: _sudahDikerjakan ? const Color(0xFF10B981) : Colors.grey.shade400,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              backgroundColor: _kGreenMid,
+              disabledBackgroundColor: _sudahDikerjakan
+                  ? const Color(0xFF10B981)
+                  : Colors.grey.shade400,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               elevation: canStart ? 4 : 0,
             ),
           ),
@@ -969,18 +1089,24 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
             height: 46,
             child: OutlinedButton.icon(
               onPressed: _openDiscussion,
-              icon: const Icon(Icons.menu_book_rounded, color: _kTeal, size: 18),
+              icon: const Icon(
+                Icons.menu_book_rounded,
+                color: _kGreenMid,
+                size: 18,
+              ),
               label: Text(
                 'Tinjau Jawaban & Pembahasan',
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
-                  color: _kTeal,
+                  color: _kGreenMid,
                 ),
               ),
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: _kTeal, width: 1.5),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                side: const BorderSide(color: _kGreenMid, width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
             ),
           ),
@@ -1015,7 +1141,11 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                   color: const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.emoji_events_rounded, color: Color(0xFFD97706), size: 20),
+                child: const Icon(
+                  Icons.emoji_events_rounded,
+                  color: Color(0xFFD97706),
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 10),
               Column(
@@ -1031,7 +1161,10 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                   ),
                   Text(
                     'Peringkat langsung peserta yang telah submit',
-                    style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF64748B)),
+                    style: GoogleFonts.poppins(
+                      fontSize: 10.5,
+                      color: const Color(0xFF64748B),
+                    ),
                   ),
                 ],
               ),
@@ -1044,15 +1177,26 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.military_tech_outlined, size: 40, color: Colors.grey.shade400),
+                    Icon(
+                      Icons.military_tech_outlined,
+                      size: 40,
+                      color: Colors.grey.shade400,
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       'Belum ada peserta yang mengumpulkan ujian.',
-                      style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade500),
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey.shade500,
+                      ),
                     ),
                     Text(
                       'Jadilah yang pertama di papan peringkat!',
-                      style: GoogleFonts.poppins(fontSize: 11, color: _kTeal, fontWeight: FontWeight.w600),
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: _kGreenMid,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -1063,7 +1207,8 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _leaderboard.length.clamp(0, 10),
-              separatorBuilder: (_, _) => const Divider(height: 14, color: Color(0xFFF1F5F9)),
+              separatorBuilder: (_, _) =>
+                  const Divider(height: 14, color: Color(0xFFF1F5F9)),
               itemBuilder: (context, index) {
                 final entry = _leaderboard[index];
                 final rank = index + 1;
@@ -1074,9 +1219,14 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                 if (rank == 3) badgeColor = const Color(0xFFB45309); // Bronze
 
                 return Container(
-                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 4,
+                    horizontal: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: entry.isMe ? _kTeal.withValues(alpha: 0.08) : Colors.transparent,
+                    color: entry.isMe
+                        ? _kPaleGreen
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -1084,7 +1234,11 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                       SizedBox(
                         width: 28,
                         child: badgeColor != null
-                            ? Icon(Icons.workspace_premium_rounded, color: badgeColor, size: 22)
+                            ? Icon(
+                                Icons.workspace_premium_rounded,
+                                color: badgeColor,
+                                size: 22,
+                              )
                             : Text(
                                 '#$rank',
                                 style: GoogleFonts.poppins(
@@ -1097,13 +1251,19 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                       const SizedBox(width: 8),
                       CircleAvatar(
                         radius: 14,
-                        backgroundColor: entry.isMe ? _kTeal : Colors.grey.shade200,
+                        backgroundColor: entry.isMe
+                            ? _kGreenMid
+                            : Colors.grey.shade200,
                         child: Text(
-                          entry.nama.isNotEmpty ? entry.nama[0].toUpperCase() : '?',
+                          entry.nama.isNotEmpty
+                              ? entry.nama[0].toUpperCase()
+                              : '?',
                           style: GoogleFonts.poppins(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: entry.isMe ? Colors.white : Colors.grey.shade700,
+                            color: entry.isMe
+                                ? Colors.white
+                                : Colors.grey.shade700,
                           ),
                         ),
                       ),
@@ -1116,15 +1276,22 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                               entry.nama + (entry.isMe ? ' (Kamu)' : ''),
                               style: GoogleFonts.poppins(
                                 fontSize: 12.5,
-                                fontWeight: entry.isMe ? FontWeight.bold : FontWeight.w600,
-                                color: entry.isMe ? _kTealDeep : const Color(0xFF1E293B),
+                                fontWeight: entry.isMe
+                                    ? FontWeight.bold
+                                    : FontWeight.w600,
+                                color: entry.isMe
+                                    ? _kGreenDeep
+                                    : const Color(0xFF1E293B),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
                               'NIS: ${entry.nis.length > 4 ? '${entry.nis.substring(0, 4)}***' : entry.nis}',
-                              style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF94A3B8)),
+                              style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                color: const Color(0xFF94A3B8),
+                              ),
                             ),
                           ],
                         ),
@@ -1134,7 +1301,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen> with Single
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
-                          color: entry.isMe ? _kTeal : const Color(0xFF0F172A),
+                          color: entry.isMe ? _kGreenMid : const Color(0xFF0F172A),
                         ),
                       ),
                     ],

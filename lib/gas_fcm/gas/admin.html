@@ -1420,10 +1420,21 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Target Soal / Paket
-                (Khusus Event)</label>
-              <input type="text" id="gen-token-target" placeholder="CONTOH: SNBT-001" disabled
-                class="w-full px-3.5 py-3 bg-slate-100/80 border border-slate-200 rounded-xl text-sm font-mono font-medium uppercase outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Target Soal / Paket (Khusus Event)</label>
+                <span id="gen-token-target-badge" class="hidden text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">ID Terpilih</span>
+              </div>
+              <div class="relative">
+                <select id="gen-token-target-select" onchange="onTargetPackageSelectChange()" disabled
+                  class="w-full px-3.5 py-3 bg-slate-100/80 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                  <option value="">-- Pilih Paket Tryout (ID Paket) --</option>
+                </select>
+                <!-- Hidden input untuk nilai ID paket murni yang dikirim ke backend -->
+                <input type="hidden" id="gen-token-target" value="">
+              </div>
+              <p id="gen-token-target-desc" class="text-[11px] text-slate-500 mt-1.5 hidden truncate">
+                <span class="font-bold text-slate-700">ID Terikat:</span> <code class="font-mono font-bold text-emerald-700" id="gen-token-target-id-display">-</code> <span class="text-slate-400">(ID dokumen ini yang mengikat token ke paket soal)</span>
+              </p>
             </div>
           </div>
 
@@ -4425,6 +4436,11 @@
       if (typeof onTokenTypeChange === 'function') onTokenTypeChange();
       loadLicenses();
       loadPartnerSchools();
+      if (!window.allTryoutData || window.allTryoutData.length === 0) {
+        if (typeof loadAdminPaketTryout === 'function') loadAdminPaketTryout();
+      } else if (typeof populateEventTargetPackages === 'function') {
+        populateEventTargetPackages();
+      }
     }
 
     function showLandingConfigView() {
@@ -4694,6 +4710,7 @@
           document.getElementById('stat-tryout-active').innerText = res.active || 0;
           document.getElementById('stat-tryout-inactive').innerText = res.inactive || 0;
           renderAdminPaketTable(allTryoutData);
+          if (typeof populateEventTargetPackages === 'function') populateEventTargetPackages();
         })
         .withFailureHandler(function (err) {
           showToast('Gagal memuat paket tryout: ' + err, 'error');
@@ -7477,10 +7494,92 @@
 
     let currentGenMode = 'batch';
 
+    function populateEventTargetPackages() {
+      const select = document.getElementById('gen-token-target-select');
+      const targetHidden = document.getElementById('gen-token-target');
+      if (!select) return;
+
+      const currentVal = targetHidden ? targetHidden.value : select.value;
+      select.innerHTML = '<option value="">-- Pilih Target Paket (ID Dokumen) --</option>';
+
+      if (window.allTryoutData && window.allTryoutData.length > 0) {
+        window.allTryoutData.forEach(function (pkg) {
+          const opt = document.createElement('option');
+          // KUNCI KRITIS: Value adalah ID PAKET MURNI (bukan nama paket)!
+          opt.value = pkg.paket_id;
+          const statusIcon = pkg.status === 'aktif' ? '🟢' : '⚪';
+          const kat = (pkg.jenis_test || 'UMUM').toUpperCase();
+          opt.textContent = `${statusIcon} [ID: ${pkg.paket_id}] ${pkg.nama_paket || 'Tanpa Nama'} (${kat})`;
+          opt.setAttribute('data-id', pkg.paket_id);
+          opt.setAttribute('data-name', pkg.nama_paket || '');
+          select.appendChild(opt);
+        });
+      }
+
+      // Opsi untuk input manual ID paket (jika paket baru atau custom)
+      const manualOpt = document.createElement('option');
+      manualOpt.value = '__MANUAL__';
+      manualOpt.textContent = '✍️ Masukkan ID Paket Kustom (Ketik Sendiri)...';
+      select.appendChild(manualOpt);
+
+      if (currentVal && currentVal !== '__MANUAL__') {
+        select.value = currentVal;
+        onTargetPackageSelectChange();
+      }
+    }
+
+    function onTargetPackageSelectChange() {
+      const select = document.getElementById('gen-token-target-select');
+      const targetHidden = document.getElementById('gen-token-target');
+      const badge = document.getElementById('gen-token-target-badge');
+      const desc = document.getElementById('gen-token-target-desc');
+      const idDisplay = document.getElementById('gen-token-target-id-display');
+      if (!select || !targetHidden) return;
+
+      let val = select.value;
+      if (val === '__MANUAL__') {
+        const manualId = prompt('Masukkan ID Paket Ujian / Event yang valid (CONTOH: SNBT-001):\n*PENTING: Masukkan ID Dokumen Paket, BUKAN nama paket!');
+        if (manualId && manualId.trim()) {
+          val = manualId.trim().toUpperCase();
+          let existing = Array.from(select.options).find(o => o.value === val);
+          if (!existing) {
+            const newOpt = document.createElement('option');
+            newOpt.value = val;
+            newOpt.textContent = `📌 [ID: ${val}] (Input Manual)`;
+            select.insertBefore(newOpt, select.lastElementChild);
+          }
+          select.value = val;
+        } else {
+          select.value = '';
+          val = '';
+        }
+      }
+
+      // Pastikan yang disimpan ke input hidden adalah ID paket murni!
+      targetHidden.value = val ? val.trim().toUpperCase() : '';
+
+      if (val) {
+        if (badge) {
+          badge.textContent = 'ID: ' + targetHidden.value;
+          badge.classList.remove('hidden');
+        }
+        if (desc && idDisplay) {
+          idDisplay.textContent = targetHidden.value;
+          desc.classList.remove('hidden');
+        }
+      } else {
+        if (badge) badge.classList.add('hidden');
+        if (desc) desc.classList.add('hidden');
+      }
+    }
+
     function onTokenTypeChange() {
       const typeEl = document.getElementById('gen-token-type');
       const hintEl = document.getElementById('gen-token-hint');
-      const targetInput = document.getElementById('gen-token-target');
+      const targetSelect = document.getElementById('gen-token-target-select');
+      const targetHidden = document.getElementById('gen-token-target');
+      const badge = document.getElementById('gen-token-target-badge');
+      const desc = document.getElementById('gen-token-target-desc');
       if (!typeEl) return;
 
       const type = typeEl.value;
@@ -7488,34 +7587,41 @@
         if (hintEl) {
           hintEl.innerText = '👨‍🏫 Format: GURU-XXXX-YYYY (Akses Mode Guru & Buat Soal Unlimited • Siap untuk Lynk.id)';
         }
-        if (targetInput) {
-          targetInput.value = '';
-          targetInput.disabled = true;
-          targetInput.placeholder = 'Tidak perlu (Khusus Guru)';
-          targetInput.classList.add('bg-slate-100/80', 'cursor-not-allowed', 'opacity-60');
-          targetInput.classList.remove('bg-white');
+        if (targetSelect) {
+          targetSelect.disabled = true;
+          targetSelect.value = '';
+          targetSelect.classList.add('bg-slate-100/80', 'cursor-not-allowed', 'opacity-60');
+          targetSelect.classList.remove('bg-white');
         }
+        if (targetHidden) targetHidden.value = '';
+        if (badge) badge.classList.add('hidden');
+        if (desc) desc.classList.add('hidden');
       } else if (type === 'EVENT') {
         if (hintEl) {
-          hintEl.innerText = '🎯 Format: EVENT-XXXX-YYYY (Tiket Ujian / Tryout Tertentu • Masukkan ID Ujian)';
+          hintEl.innerText = '🎯 Format: EVENT-XXXX-YYYY (Tiket Ujian / Tryout Tertentu • Terikat dengan ID Paket)';
         }
-        if (targetInput) {
-          targetInput.disabled = false;
-          targetInput.placeholder = 'Contoh: SNBT-001';
-          targetInput.classList.remove('bg-slate-100/80', 'cursor-not-allowed', 'opacity-60');
-          targetInput.classList.add('bg-white');
+        if (targetSelect) {
+          targetSelect.disabled = false;
+          targetSelect.classList.remove('bg-slate-100/80', 'cursor-not-allowed', 'opacity-60');
+          targetSelect.classList.add('bg-white');
+          populateEventTargetPackages();
+          if (!window.allTryoutData || window.allTryoutData.length === 0) {
+            if (typeof loadAdminPaketTryout === 'function') loadAdminPaketTryout();
+          }
         }
       } else {
         if (hintEl) {
           hintEl.innerText = '🎓 Format: SISWA-XXXX-YYYY (Akses Tryout Selamanya • Siap untuk Lynk.id)';
         }
-        if (targetInput) {
-          targetInput.value = '';
-          targetInput.disabled = true;
-          targetInput.placeholder = 'Tidak perlu (Siswa Lifetime)';
-          targetInput.classList.add('bg-slate-100/80', 'cursor-not-allowed', 'opacity-60');
-          targetInput.classList.remove('bg-white');
+        if (targetSelect) {
+          targetSelect.disabled = true;
+          targetSelect.value = '';
+          targetSelect.classList.add('bg-slate-100/80', 'cursor-not-allowed', 'opacity-60');
+          targetSelect.classList.remove('bg-white');
         }
+        if (targetHidden) targetHidden.value = '';
+        if (badge) badge.classList.add('hidden');
+        if (desc) desc.classList.add('hidden');
       }
     }
 
@@ -7892,8 +7998,22 @@
       const school = document.getElementById('gen-token-school').value;
       const count = document.getElementById('gen-token-count').value;
       const format = document.getElementById('gen-token-format') ? document.getElementById('gen-token-format').value : 'STANDARD';
-      const targetExam = (document.getElementById('gen-token-target').value || '').trim();
+      let targetExam = (document.getElementById('gen-token-target').value || '').trim();
       const btn = document.getElementById('btn-generate-tokens');
+
+      if (type === 'EVENT') {
+        if (!targetExam) {
+          showToast('Harap pilih Target Soal / Paket untuk Event (ID Paket wajib)!', 'warning');
+          return;
+        }
+        // Failsafe: Jika karena suatu hal yang dikirim masih nama paket, cari ID paketnya di allTryoutData
+        if (window.allTryoutData && window.allTryoutData.length > 0) {
+          const matchByName = window.allTryoutData.find(p => (p.nama_paket || '').trim().toLowerCase() === targetExam.toLowerCase());
+          if (matchByName) {
+            targetExam = matchByName.paket_id; // Paksa konversi ke ID paket murni!
+          }
+        }
+      }
 
       btn.disabled = true;
       btn.innerHTML = '<div class="loader inline-block w-4 h-4 mr-2"></div> Menghasilkan Token...';
