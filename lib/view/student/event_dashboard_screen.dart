@@ -8,8 +8,11 @@ import '../../constant/app_colors.dart';
 import '../../models/exam_question_model.dart';
 import '../../models/tryout_schedule_model.dart';
 import '../../services/exam_cache_service.dart';
+import '../../services/license_service.dart';
 import '../../services/student_tryout_history_service.dart';
+import '../../services/trusted_time_service.dart';
 import '../../services/tryout_schedule_service.dart';
+import '../../utils/indo_date_formatter.dart';
 import '../pre_exam_checklist.dart';
 import 'student_exam_session_screen.dart';
 import 'tryout_discussion_screen.dart';
@@ -56,6 +59,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
   late final Animation<double> _fadeAnim;
 
   bool _isLoading = true;
+  Duration _trustedOffset = Duration.zero;
   TryoutSchedule? _schedule;
   String _studentName = '';
   String _studentNis = '';
@@ -151,6 +155,10 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
 
   Future<void> _loadAllData() async {
     setState(() => _isLoading = true);
+    try {
+      final trustedNow = await TrustedTimeService.instance.getTrustedNow();
+      _trustedOffset = trustedNow.difference(DateTime.now());
+    } catch (_) {}
     await _loadStudentIdentity();
     await _loadSchedule();
     await _checkSubmissionStatus();
@@ -239,6 +247,15 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
 
   Future<void> _checkSubmissionStatus() async {
     final effectivePaketId = _schedule?.paketId ?? widget.eventId;
+    final deviceId = await LicenseService.instance.getDeviceId();
+    final prefs = await SharedPreferences.getInstance();
+
+    // 0. Cek flag lokal perangkat
+    if (prefs.getBool('event_completed_${effectivePaketId}_$deviceId') == true ||
+        (widget.eventId != effectivePaketId &&
+            prefs.getBool('event_completed_${widget.eventId}_$deviceId') == true)) {
+      _sudahDikerjakan = true;
+    }
 
     // 1. Cek dari Riwayat Lokal Siswa
     final localList = await StudentTryoutHistoryService.instance.getHistory();
@@ -258,7 +275,29 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
       _myHistory = localMatch;
     }
 
-    // 2. Verifikasi ke Firestore (jawaban_tryout)
+    // 2. Cek Firestore event_completions berdasarkan device_id
+    try {
+      var compDoc = await FirebaseFirestore.instance
+          .collection('event_completions')
+          .doc('${effectivePaketId}_$deviceId')
+          .get();
+      if (!compDoc.exists && effectivePaketId != widget.eventId) {
+        compDoc = await FirebaseFirestore.instance
+            .collection('event_completions')
+            .doc('${widget.eventId}_$deviceId')
+            .get();
+      }
+      if (compDoc.exists) {
+        _sudahDikerjakan = true;
+        await prefs.setBool('event_completed_${effectivePaketId}_$deviceId', true);
+        final data = compDoc.data();
+        if (data != null && data['skor_akhir'] != null) {
+          _myScore = (data['skor_akhir'] as num?)?.toInt() ?? _myScore;
+        }
+      }
+    } catch (_) {}
+
+    // 3. Verifikasi ke Firestore (jawaban_tryout) berdasarkan NIS
     if (_studentNis.isNotEmpty) {
       try {
         var doc = await FirebaseFirestore.instance
@@ -275,6 +314,25 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
           final data = doc.data()!;
           _sudahDikerjakan = true;
           _myScore = (data['skor_akhir'] as num?)?.toInt() ?? _myScore;
+          await prefs.setBool('event_completed_${effectivePaketId}_$deviceId', true);
+        }
+      } catch (_) {}
+    }
+
+    // 4. Cek Firestore (jawaban_tryout) berdasarkan device_id (mencegah ganti NIS di perangkat yang sama)
+    if (!_sudahDikerjakan && deviceId.isNotEmpty) {
+      try {
+        final snap = await FirebaseFirestore.instance
+            .collection('jawaban_tryout')
+            .where('token', isEqualTo: effectivePaketId)
+            .where('device_id', isEqualTo: deviceId)
+            .limit(1)
+            .get();
+        if (snap.docs.isNotEmpty) {
+          _sudahDikerjakan = true;
+          final data = snap.docs.first.data();
+          _myScore = (data['skor_akhir'] as num?)?.toInt() ?? _myScore;
+          await prefs.setBool('event_completed_${effectivePaketId}_$deviceId', true);
         }
       } catch (_) {}
     }
@@ -324,11 +382,19 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
       return _EventScheduleStatus.open;
     }
     try {
-      final now = DateTime.now();
-      final p = s.tanggal.split('-');
-      final year = int.parse(p[0]);
-      final month = int.parse(p[1]);
-      final day = int.parse(p[2]);
+      final now = DateTime.now().add(_trustedOffset);
+      final parsedDt = IndoDateFormatter.parse(s.tanggal);
+      int year, month, day;
+      if (parsedDt != null) {
+        year = parsedDt.year;
+        month = parsedDt.month;
+        day = parsedDt.day;
+      } else {
+        final p = s.tanggal.split('-');
+        year = int.parse(p[0]);
+        month = int.parse(p[1]);
+        day = int.parse(p[2]);
+      }
 
       final jamP = s.jamMulai.split(':');
       final startH = int.tryParse(jamP[0]) ?? 8;
@@ -352,6 +418,16 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
     final sch = _schedule;
     if (sch == null) return;
 
+    if (_sudahDikerjakan) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Event ini hanya dapat dikerjakan satu kali dan sudah diselesaikan.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     // Tampilkan verifikasi identitas & konfirmasi regulasi anti-curang
     final identity = await PreExamChecklistDialog.show(context, sch.namaPaket);
     if (identity == null) return;
@@ -371,6 +447,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
           studentName: _studentName,
           studentNis: _studentNis,
           isEvent: true,
+          initialSchedule: sch,
         ),
       ),
     );
@@ -382,6 +459,19 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
   }
 
   Future<void> _openDiscussion() async {
+    final status = _checkScheduleStatus();
+    if (status != _EventScheduleStatus.sudahSelesai &&
+        !(_schedule?.isLifetime ?? false)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Tinjau Jawaban & Pembahasan hanya dapat dibuka setelah waktu event selesai${_schedule != null && _schedule!.jamSelesai.isNotEmpty ? " (pukul ${_schedule!.jamSelesai})" : ""}.',
+          ),
+          backgroundColor: const Color(0xFFD97706),
+        ),
+      );
+      return;
+    }
     if (_myHistory != null) {
       Navigator.push(
         context,
@@ -474,8 +564,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
   Widget build(BuildContext context) {
     final status = _checkScheduleStatus();
     final canStart =
-        (status == _EventScheduleStatus.open) &&
-        (!_sudahDikerjakan || (_schedule?.allowRetake ?? false));
+        (status == _EventScheduleStatus.open) && !_sudahDikerjakan;
 
     return Scaffold(
       backgroundColor: _kBg,
@@ -753,7 +842,7 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
 
     final statusLabel = status == _EventScheduleStatus.open
         ? 'Berlangsung'
-        : (status == _EventScheduleStatus.belumMulai ? 'Segera' : 'Berakhir');
+        : (status == _EventScheduleStatus.belumMulai ? 'Segera' : 'Selesai');
 
     return Container(
       decoration: BoxDecoration(
@@ -894,8 +983,8 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
         ? Icons.hourglass_top_rounded
         : Icons.lock_clock_rounded;
     final title = isBefore
-        ? 'Ujian Belum Dimulai'
-        : 'Waktu Ujian Telah Berakhir';
+        ? 'Ujian Belum Dimulai (Segera)'
+        : 'Waktu Ujian Selesai';
     final sub = isBefore
         ? 'Ujian dibuka pada ${_fmtTanggal(sch?.tanggal ?? '')} pukul ${sch?.jamMulai ?? '08:00'}.'
         : 'Waktu pengerjaan telah berakhir. Silakan tinjau nilai & pembahasan di bawah.';
@@ -1038,27 +1127,31 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
   Widget _buildActionButtons(bool canStart, _EventScheduleStatus status) {
     String label = 'Mulai Ujian Sekarang';
     if (_sudahDikerjakan) {
-      label = (_schedule?.allowRetake ?? false)
-          ? 'Kerjakan Ulang Ujian'
-          : 'Ujian Sudah Dikerjakan ✅';
+      label = 'Ujian Sudah Dikerjakan ✅';
     } else if (status == _EventScheduleStatus.belumMulai) {
-      label = 'Ujian Belum Dibuka';
+      label = 'Ujian Belum Dibuka (Segera)';
     } else if (status == _EventScheduleStatus.sudahSelesai) {
       label = 'Waktu Ujian Selesai';
     }
 
+    final isEventEnded = status == _EventScheduleStatus.sudahSelesai;
+
     return Column(
       children: [
-        // Primary Button: Mulai Ujian
+        // Primary Button: Mulai Ujian (Non-aktif jika sudah dikerjakan)
         SizedBox(
           width: double.infinity,
           height: 50,
           child: ElevatedButton.icon(
             onPressed: canStart ? _startExam : null,
             icon: Icon(
-              _sudahDikerjakan && !canStart
+              _sudahDikerjakan
                   ? Icons.check_circle_rounded
-                  : Icons.play_arrow_rounded,
+                  : (status == _EventScheduleStatus.belumMulai
+                      ? Icons.hourglass_top_rounded
+                      : (status == _EventScheduleStatus.sudahSelesai
+                          ? Icons.lock_clock_rounded
+                          : Icons.play_arrow_rounded)),
               color: Colors.white,
             ),
             label: Text(
@@ -1072,8 +1165,9 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: _kGreenMid,
               disabledBackgroundColor: _sudahDikerjakan
-                  ? const Color(0xFF10B981)
-                  : Colors.grey.shade400,
+                  ? const Color(0xFF94A3B8)
+                  : const Color(0xFFCBD5E1),
+              disabledForegroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -1082,34 +1176,82 @@ class _EventDashboardScreenState extends State<EventDashboardScreen>
           ),
         ),
         if (_sudahDikerjakan) ...[
-          const SizedBox(height: 10),
-          // Secondary Button: Riwayat & Pembahasan
-          SizedBox(
-            width: double.infinity,
-            height: 46,
-            child: OutlinedButton.icon(
-              onPressed: _openDiscussion,
-              icon: const Icon(
-                Icons.menu_book_rounded,
-                color: _kGreenMid,
-                size: 18,
-              ),
-              label: Text(
-                'Tinjau Jawaban & Pembahasan',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: _kGreenMid,
+          const SizedBox(height: 12),
+          // Pembahasan: HANYA tampil/bisa diakses jika waktu Event Telah Lewat / Selesai
+          if (isEventEnded || (_schedule?.isLifetime ?? false)) ...[
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: _openDiscussion,
+                icon: const Icon(
+                  Icons.menu_book_rounded,
+                  color: Colors.white,
+                  size: 19,
                 ),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: _kGreenMid, width: 1.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                label: Text(
+                  'Tinjau Jawaban & Pembahasan',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13.5,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _kGreenDeep,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 2,
                 ),
               ),
             ),
-          ),
+          ] else ...[
+            // Jika waktu event masih berlangsung / belum mulai: Tampilkan keterangan terkunci
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFCBD5E1)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.lock_clock_rounded,
+                    color: Color(0xFF64748B),
+                    size: 22,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Pembahasan Terkunci',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF334155),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Tinjau Jawaban & Pembahasan hanya dapat diakses setelah waktu event selesai${_schedule != null && _schedule!.jamSelesai.isNotEmpty ? " (pukul ${_schedule!.jamSelesai})" : ""}.',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: const Color(0xFF64748B),
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ],
     );

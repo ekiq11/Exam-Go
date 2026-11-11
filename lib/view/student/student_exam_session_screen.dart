@@ -13,10 +13,12 @@ import '../../constant/security_service.dart';
 import '../../models/exam_question_model.dart';
 import '../../models/tryout_schedule_model.dart';
 import '../../services/exam_cache_service.dart';
+import '../../services/license_service.dart';
 import '../../services/monitoring_service.dart';
 import '../../services/national_exam_evaluator.dart';
 import '../../services/student_tryout_history_service.dart';
 import '../../services/trusted_time_service.dart';
+import '../../utils/indo_date_formatter.dart';
 import '../../utils/math_widget_factory.dart';
 import 'tryout_discussion_screen.dart';
 import 'tryout_schedule_screen.dart';
@@ -359,6 +361,55 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         final isFinishedOnServer = studentServerData?['status'] == 'FINISHED';
         final hasPriorAttempt = attempt != null || isFinishedOnServer;
 
+        // Khusus Event: Cek apakah ID Device ini sudah pernah menyelesaikan event ini!
+        if (widget.isEvent) {
+          final deviceId = await LicenseService.instance.getDeviceId();
+          final prefs = await SharedPreferences.getInstance();
+          bool deviceCompleted = prefs.getBool('event_completed_${tokenUpper}_$deviceId') ?? false;
+          if (!deviceCompleted) {
+            try {
+              final doc = await FirebaseFirestore.instance
+                  .collection('event_completions')
+                  .doc('${tokenUpper}_$deviceId')
+                  .get();
+              if (doc.exists) {
+                deviceCompleted = true;
+                await prefs.setBool('event_completed_${tokenUpper}_$deviceId', true);
+              }
+            } catch (_) {}
+          }
+          if (deviceCompleted) {
+            if (mounted) {
+              await showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (ctx) => AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  title: const Row(
+                    children: [
+                      Icon(Icons.block_rounded, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Event Sudah Dikerjakan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  content: const Text(
+                    'Event ini hanya dapat dikerjakan satu kali per perangkat. Perangkat Anda telah menyelesaikan sesi event ini.',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Tutup', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              );
+              if (mounted) Navigator.pop(context);
+            }
+            return;
+          }
+        }
+
         if (hasPriorAttempt) {
           // Cek izin ujian ulang dari guru di server & lokal
           bool retakePermitted = studentServerData?['allow_retake'] == true;
@@ -372,12 +423,24 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
           // Pembatasan 1x: untuk tryout guru/terkunci atau sesi yang sudah disubmit
           final isRestricted = (attempt != null && !attempt.allowRetake) ||
               widget.initialSchedule?.allowRetake == false ||
+              widget.isEvent ||
               isFinishedOnServer;
 
-          if (isRestricted && !retakePermitted) {
+          if (isRestricted && (!retakePermitted || widget.isEvent)) {
             // Periksa apakah waktu ujian sudah berakhir
+            DateTime? eventEnd;
+            if (widget.isEvent && widget.initialSchedule?.tanggal.isNotEmpty == true) {
+              final dt = IndoDateFormatter.parse(widget.initialSchedule!.tanggal);
+              if (dt != null) {
+                final jamP = widget.initialSchedule!.jamSelesai.split(':');
+                final h = int.tryParse(jamP[0]) ?? 23;
+                final m = jamP.length > 1 ? (int.tryParse(jamP[1]) ?? 59) : 59;
+                eventEnd = DateTime(dt.year, dt.month, dt.day, h, m);
+              }
+            }
+            final targetEndTime = eventEnd ?? attempt?.examEndTime;
             final isEnded = await TrustedTimeService.instance.isExamTimeEnded(
-              examEndTime: attempt?.examEndTime,
+              examEndTime: targetEndTime,
               submittedAt: attempt?.submittedAt ?? DateTime.now(),
               elapsedRealtimeMs: attempt?.elapsedRealtimeMs,
             );
@@ -412,7 +475,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                 // Waktu belum habis → tampilkan dialog kunci waktu lalu pop
                 await showExamTimeLockDialog(
                   context,
-                  endTime: attempt?.examEndTime ?? DateTime.now().add(const Duration(minutes: 60)),
+                  endTime: targetEndTime ?? DateTime.now().add(const Duration(minutes: 60)),
                   examTitle: attempt?.namaPaket.isNotEmpty == true ? attempt!.namaPaket : 'Ujian',
                 );
                 if (mounted) Navigator.pop(context);
@@ -1268,6 +1331,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
       final prefs = await SharedPreferences.getInstance();
       final studentEmail = prefs.getString('student_email') ?? '-';
       final studentWa = prefs.getString('student_whatsapp') ?? '-';
+      final deviceId = await LicenseService.instance.getDeviceId();
 
       final docRef = FirebaseFirestore.instance
           .collection('jawaban_tryout')
@@ -1277,6 +1341,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         'token': widget.token,
         'nama_peserta': widget.studentName,
         'nis': widget.studentNis,
+        'device_id': deviceId,
         'email': studentEmail,
         'no_wa': studentWa,
         'kategori': category,
@@ -1298,6 +1363,25 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         'submitted_at': FieldValue.serverTimestamp(),
         'auto_submitted': autoSubmit,
       });
+
+      // Catat device_id yang telah menyelesaikan event (mencegah pengerjaan ulang event)
+      if (widget.isEvent || _package?.kategori == 'EVENT' || widget.initialSchedule?.jenisTest == 'EVENT') {
+        unawaited(
+          FirebaseFirestore.instance
+              .collection('event_completions')
+              .doc('${widget.token}_$deviceId')
+              .set({
+                'token': widget.token,
+                'device_id': deviceId,
+                'nis': widget.studentNis,
+                'nama_peserta': widget.studentName,
+                'skor_akhir': evalResult.finalScore,
+                'submitted_at': FieldValue.serverTimestamp(),
+              }, SetOptions(merge: true))
+              .catchError((_) {}),
+        );
+        await prefs.setBool('event_completed_${widget.token}_$deviceId', true);
+      }
 
       // Update status monitoring ke FINISHED di background non-blocking
       unawaited(
@@ -1324,6 +1408,25 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
       );
       await prefs.remove('retake_allowed_${widget.token}_${widget.studentNis}');
 
+      // Hitung waktu resmi berakhirnya event jika ada
+      DateTime? officialEventEndTime;
+      if (widget.initialSchedule?.tanggal.isNotEmpty == true) {
+        final dt = IndoDateFormatter.parse(widget.initialSchedule!.tanggal);
+        if (dt != null) {
+          final jamP = widget.initialSchedule!.jamSelesai.split(':');
+          final h = int.tryParse(jamP[0]) ?? 23;
+          final m = jamP.length > 1 ? (int.tryParse(jamP[1]) ?? 59) : 59;
+          officialEventEndTime = DateTime(dt.year, dt.month, dt.day, h, m);
+        }
+      }
+
+      final effectiveExamEndTime = (widget.isEvent && officialEventEndTime != null)
+          ? officialEventEndTime
+          : (_packageEndTime ??
+              DateTime.now().add(
+                Duration(minutes: _package?.durasiMenit ?? 90),
+              ));
+
       // Simpan riwayat ujian & butir soal ke lokal agar bisa ditinjau di Pembahasan
       await StudentTryoutHistoryService.instance.saveAttempt(
         token: widget.token,
@@ -1332,13 +1435,11 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         result: evalResult,
         answers: _answers,
         questions: _allQuestions,
-        examEndTime: _packageEndTime ??
-            DateTime.now().add(
-              Duration(minutes: _package?.durasiMenit ?? 90),
-            ),
-        allowRetake:
-            _package?.allowRetake ??
-            (widget.initialSchedule?.allowRetake ?? false),
+        examEndTime: effectiveExamEndTime,
+        allowRetake: widget.isEvent
+            ? false
+            : (_package?.allowRetake ??
+                (widget.initialSchedule?.allowRetake ?? false)),
         syncCloud: false,
       );
 
@@ -1652,8 +1753,19 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
               // Tombol Aksi Harmonis ExamGO
               Builder(
                 builder: (context) {
-                  final isTimeEnded = _packageEndTime == null ||
-                      DateTime.now().isAfter(_packageEndTime!);
+                  DateTime? eventEndTime;
+                  if (widget.isEvent && widget.initialSchedule?.tanggal.isNotEmpty == true) {
+                    final dt = IndoDateFormatter.parse(widget.initialSchedule!.tanggal);
+                    if (dt != null) {
+                      final jamP = widget.initialSchedule!.jamSelesai.split(':');
+                      final h = int.tryParse(jamP[0]) ?? 23;
+                      final m = jamP.length > 1 ? (int.tryParse(jamP[1]) ?? 59) : 59;
+                      eventEndTime = DateTime(dt.year, dt.month, dt.day, h, m);
+                    }
+                  }
+                  final targetEndTime = eventEndTime ?? _packageEndTime;
+                  final isTimeEnded = targetEndTime == null ||
+                      DateTime.now().isAfter(targetEndTime);
                   return SizedBox(
                     width: double.infinity,
                     height: 48,
@@ -1661,13 +1773,13 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       onPressed: () async {
                         final isEnded =
                             await TrustedTimeService.instance.isExamTimeEnded(
-                          examEndTime: _packageEndTime,
+                          examEndTime: targetEndTime,
                         );
-                        if (!isEnded && _packageEndTime != null) {
+                        if (!isEnded && targetEndTime != null) {
                           if (!context.mounted) return;
                           showExamTimeLockDialog(
                             context,
-                            endTime: _packageEndTime!,
+                            endTime: targetEndTime,
                             examTitle: _package?.namaPaket,
                           );
                           return;
