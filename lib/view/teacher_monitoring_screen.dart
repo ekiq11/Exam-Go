@@ -20,6 +20,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/exam_pdf_exporter.dart';
+import '../utils/indo_date_formatter.dart';
 
 // ─── Konstanta Warna & Style ──────────────────────────────────────────────────
 const _kGreen = Color(0xFF2E7D32);
@@ -764,7 +765,7 @@ class _TeacherMonitoringListScreenState
     final monthName = monthNames[date.month - 1];
     final dateStr = '$dayName, ${date.day} $monthName ${date.year}';
     final timeStr =
-        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')} ${IndoDateFormatter.localZoneSuffix}';
 
     return Dismissible(
       key: Key(item['examId']!),
@@ -3541,8 +3542,8 @@ class _TeacherMonitoringDetailScreenState
                   ),
                 ],
 
-                // ── Tombol Izinkan Ujian Ulang (Jika Siswa Selesai) ──
-                if (status == 'FINISHED' || s['allow_retake'] == true) ...[
+                // ── Tombol Izinkan Ujian Ulang (Jika Siswa Selesai / Terkendala) ──
+                if (status == 'FINISHED' || status == 'BLOCKED' || status == 'OFFLINE' || s['allow_retake'] == true) ...[
                   const SizedBox(height: 12),
                   if (s['allow_retake'] == true)
                     Container(
@@ -4079,7 +4080,7 @@ class _StudentActivityLogScreenState extends State<StudentActivityLogScreen> {
     final h = dt.hour.toString().padLeft(2, '0');
     final m = dt.minute.toString().padLeft(2, '0');
     final s = dt.second.toString().padLeft(2, '0');
-    return '$h:$m:$s';
+    return '$h:$m:$s ${IndoDateFormatter.localZoneSuffix}';
   }
 
   String _formatDate(DateTime dt) {

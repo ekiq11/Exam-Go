@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -416,8 +417,8 @@ class StudentTryoutHistoryService {
       final encoded = current.map((e) => jsonEncode(e.toJson())).toList();
       await prefs.setStringList(_kStorageKey, encoded);
 
-      // Cadangkan otomatis ke cloud untuk pengguna Premium
-      await backupAttemptToCloud(newItem);
+      // Cadangkan otomatis ke cloud untuk pengguna Premium secara asinkron non-blocking
+      unawaited(backupAttemptToCloud(newItem));
     } catch (_) {}
   }
 
@@ -466,8 +467,9 @@ class StudentTryoutHistoryService {
 
   Future<StudentTryoutHistoryItem?> getLatestAttempt(String token) async {
     final list = await getHistory();
+    final upper = token.trim().toUpperCase();
     try {
-      return list.firstWhere((e) => e.token == token);
+      return list.firstWhere((e) => e.token.trim().toUpperCase() == upper);
     } catch (_) {
       return null;
     }

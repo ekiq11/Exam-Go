@@ -527,7 +527,9 @@ class _HomeScreenState extends State<HomeScreen>
           final pkgData = pkgDoc.data() ?? {};
           final isTeacherGen =
               pkgData['is_teacher_generated'] == true ||
-              pkgData['allow_retake'] == false;
+              pkgData['allow_retake'] == false ||
+              pkgData['guru_id'] != null ||
+              pkgData['creator_id'] != null;
 
           // ── Cek Pembatasan 1 Device / 1 Kali Pengerjaan (Soal Buatan Guru) ──
           if (isTeacherGen) {
@@ -546,6 +548,9 @@ class _HomeScreenState extends State<HomeScreen>
               );
               if (sData != null && sData['allow_retake'] == true) {
                 retakePermitted = true;
+              } else {
+                final prefs = await SharedPreferences.getInstance();
+                retakePermitted = prefs.getBool('retake_allowed_${tokenUpper}_$nis') ?? false;
               }
             }
 

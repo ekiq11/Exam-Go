@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../utils/indo_date_formatter.dart';
 
 /// Menampilkan modal dialog interaktif ketika siswa mencoba membuka Pembahasan & Kunci
 /// namun waktu ujian resmi belum berakhir.
@@ -16,7 +17,7 @@ Future<void> showExamTimeLockDialog(
 
   final hourStr = endTime.hour.toString().padLeft(2, '0');
   final minuteStr = endTime.minute.toString().padLeft(2, '0');
-  final formattedTime = '$hourStr:$minuteStr WIB';
+  final formattedTime = '$hourStr:$minuteStr ${IndoDateFormatter.localZoneSuffix}';
 
   return showDialog<void>(
     context: context,

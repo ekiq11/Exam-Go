@@ -95,6 +95,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   bool _isShieldActive = false;
   bool _isSplitScreenActive = false;
   StreamSubscription<DocumentSnapshot>? _statusListener;
+  Timer? _saveCacheDebounce;
 
   static const int _maxViolations = 3;
 
@@ -112,6 +113,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _tickerTimer?.cancel();
+    _saveCacheDebounce?.cancel();
     _statusListener?.cancel();
     _exitImmersiveMode();
     SecurityService.instance.disable(force: true);
@@ -339,6 +341,88 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     try {
       final tokenUpper = widget.token.trim().toUpperCase();
 
+      // ── DEFENSE-IN-DEPTH: Cek 1-Device / 1-Attempt langsung di layar ujian ──
+      if (!widget.isEvent) {
+        final attempt = await StudentTryoutHistoryService.instance.getLatestAttempt(tokenUpper);
+
+        // Cek juga ke server monitoring apakah siswa sudah pernah FINISHED
+        Map<String, dynamic>? studentServerData;
+        if (widget.studentNis.isNotEmpty) {
+          try {
+            studentServerData = await MonitoringService.instance.getStudentData(
+              tokenUpper,
+              widget.studentNis,
+            );
+          } catch (_) {}
+        }
+
+        final isFinishedOnServer = studentServerData?['status'] == 'FINISHED';
+        final hasPriorAttempt = attempt != null || isFinishedOnServer;
+
+        if (hasPriorAttempt) {
+          // Cek izin ujian ulang dari guru di server & lokal
+          bool retakePermitted = studentServerData?['allow_retake'] == true;
+          if (!retakePermitted && widget.studentNis.isNotEmpty) {
+            final prefs = await SharedPreferences.getInstance();
+            retakePermitted = prefs.getBool(
+              'retake_allowed_${tokenUpper}_${widget.studentNis}',
+            ) ?? false;
+          }
+
+          // Pembatasan 1x: untuk tryout guru/terkunci atau sesi yang sudah disubmit
+          final isRestricted = (attempt != null && !attempt.allowRetake) ||
+              widget.initialSchedule?.allowRetake == false ||
+              isFinishedOnServer;
+
+          if (isRestricted && !retakePermitted) {
+            // Periksa apakah waktu ujian sudah berakhir
+            final isEnded = await TrustedTimeService.instance.isExamTimeEnded(
+              examEndTime: attempt?.examEndTime,
+              submittedAt: attempt?.submittedAt ?? DateTime.now(),
+              elapsedRealtimeMs: attempt?.elapsedRealtimeMs,
+            );
+
+            if (mounted) {
+              if (isEnded) {
+                // Waktu habis → arahkan ke Pembahasan & Kunci
+                List<ExamQuestion> questions = attempt?.questions ?? [];
+                if (questions.isEmpty) {
+                  final cached = await ExamCacheService.instance.loadExam(tokenUpper);
+                  if (cached != null && cached.questions.isNotEmpty) {
+                    questions = cached.questions;
+                  }
+                }
+                if (!mounted) return;
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TryoutDiscussionScreen(
+                      title: attempt?.namaPaket.isNotEmpty == true ? attempt!.namaPaket : 'Pembahasan Ujian',
+                      kategori: attempt?.kategori.isNotEmpty == true ? attempt!.kategori : 'CBT Guru',
+                      questions: questions,
+                      studentAnswers: attempt?.jawaban ?? {},
+                      score: attempt?.finalScore ?? 0,
+                      statusKelulusan: attempt?.statusKelulusan ?? 'SELESAI',
+                      returnToHome: widget.returnToHome,
+                      token: tokenUpper,
+                    ),
+                  ),
+                );
+              } else {
+                // Waktu belum habis → tampilkan dialog kunci waktu lalu pop
+                await showExamTimeLockDialog(
+                  context,
+                  endTime: attempt?.examEndTime ?? DateTime.now().add(const Duration(minutes: 60)),
+                  examTitle: attempt?.namaPaket.isNotEmpty == true ? attempt!.namaPaket : 'Ujian',
+                );
+                if (mounted) Navigator.pop(context);
+              }
+            }
+            return;
+          }
+        }
+      }
+
       // Inisialisasi awal metadata paket jika dioper dari halaman jadwal / home
       if (widget.initialSchedule != null) {
         final sched = widget.initialSchedule!;
@@ -519,6 +603,13 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     await prefs.setStringList(raguKey, _raguRagu.toList());
     await prefs.setInt(stIdxKey, _currentSubtestIndex);
     await prefs.setInt(qIdxKey, _currentIndex);
+  }
+
+  void _debouncedSaveCache() {
+    _saveCacheDebounce?.cancel();
+    _saveCacheDebounce = Timer(const Duration(milliseconds: 500), () {
+      _saveSessionToLocalCache();
+    });
   }
 
   Future<void> _clearLocalCache() async {
@@ -925,7 +1016,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                           return InkWell(
                             onTap: () {
                               setState(() => _currentIndex = i);
-                              _saveSessionToLocalCache();
+                              _debouncedSaveCache();
                               Navigator.pop(ctx);
                             },
                             borderRadius: BorderRadius.circular(12),
@@ -1208,28 +1299,30 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         'auto_submitted': autoSubmit,
       });
 
-      // Update status monitoring ke FINISHED
-      await MonitoringService.instance.updateStudentStatus(
-        examId: widget.token,
-        nis: widget.studentNis,
-        name: widget.studentName,
-        status: 'FINISHED',
-        violations: _violations,
+      // Update status monitoring ke FINISHED di background non-blocking
+      unawaited(
+        MonitoringService.instance.updateStudentStatus(
+          examId: widget.token,
+          nis: widget.studentNis,
+          name: widget.studentName,
+          status: 'FINISHED',
+          violations: _violations,
+        ),
       );
 
-      // Kunci kembali izin ujian ulang di server agar pengerjaan berikutnya harus meminta izin guru lagi
-      try {
-        await FirebaseFirestore.instance
+      // Kunci kembali izin ujian ulang di server agar pengerjaan berikutnya harus meminta izin guru lagi (background non-blocking)
+      unawaited(
+        FirebaseFirestore.instance
             .collection('exam_sessions')
             .doc(widget.token)
             .collection('students')
             .doc(widget.studentNis)
             .set({
               'allow_retake': false,
-            }, SetOptions(merge: true));
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('retake_allowed_${widget.token}_${widget.studentNis}');
-      } catch (_) {}
+            }, SetOptions(merge: true))
+            .catchError((_) {}),
+      );
+      await prefs.remove('retake_allowed_${widget.token}_${widget.studentNis}');
 
       // Simpan riwayat ujian & butir soal ke lokal agar bisa ditinjau di Pembahasan
       await StudentTryoutHistoryService.instance.saveAttempt(
@@ -2234,7 +2327,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       selectedAns == 'A',
                       () {
                         setState(() => _answers[currentQ.soalId] = 'A');
-                        _saveSessionToLocalCache();
+                        _debouncedSaveCache();
                       },
                     ),
                     _buildOptionCard(
@@ -2244,7 +2337,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       selectedAns == 'B',
                       () {
                         setState(() => _answers[currentQ.soalId] = 'B');
-                        _saveSessionToLocalCache();
+                        _debouncedSaveCache();
                       },
                     ),
                     _buildOptionCard(
@@ -2254,7 +2347,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       selectedAns == 'C',
                       () {
                         setState(() => _answers[currentQ.soalId] = 'C');
-                        _saveSessionToLocalCache();
+                        _debouncedSaveCache();
                       },
                     ),
                     _buildOptionCard(
@@ -2264,7 +2357,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       selectedAns == 'D',
                       () {
                         setState(() => _answers[currentQ.soalId] = 'D');
-                        _saveSessionToLocalCache();
+                        _debouncedSaveCache();
                       },
                     ),
                     if (currentQ.opsiE.isNotEmpty || currentQ.gamE.isNotEmpty)
@@ -2275,7 +2368,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                         selectedAns == 'E',
                         () {
                           setState(() => _answers[currentQ.soalId] = 'E');
-                          _saveSessionToLocalCache();
+                          _debouncedSaveCache();
                         },
                       ),
 
@@ -2306,7 +2399,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     onTap: _currentIndex > 0
                         ? () {
                             setState(() => _currentIndex--);
-                            _saveSessionToLocalCache();
+                            _debouncedSaveCache();
                           }
                         : null,
                     borderRadius: BorderRadius.circular(14),
@@ -2347,7 +2440,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                             _raguRagu.add(currentQ.soalId);
                           }
                         });
-                        _saveSessionToLocalCache();
+                        _debouncedSaveCache();
                       },
                       borderRadius: BorderRadius.circular(14),
                       child: AnimatedContainer(
@@ -2414,7 +2507,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     InkWell(
                       onTap: () {
                         setState(() => _currentIndex++);
-                        _saveSessionToLocalCache();
+                        _debouncedSaveCache();
                       },
                       borderRadius: BorderRadius.circular(14),
                       child: Container(

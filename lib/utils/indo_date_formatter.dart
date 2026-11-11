@@ -58,20 +58,30 @@ class IndoDateFormatter {
     'dec': 12,
   };
 
-  /// Deteksi zona waktu dari teks atau default ke WITA (Makassar)
+  /// Suffix zona waktu berdasarkan offset device saat ini
+  static String get localZoneSuffix {
+    final offset = DateTime.now().timeZoneOffset.inHours;
+    if (offset == 7) return 'WIB';
+    if (offset == 8) return 'WITA';
+    if (offset == 9) return 'WIT';
+    return offset >= 0 ? 'GMT+$offset' : 'GMT$offset';
+  }
+
+  /// Deteksi zona waktu dari teks atau default ke zona lokal device
   static String detectTimeZone(String? rawString) {
-    if (rawString == null || rawString.isEmpty) return 'WITA';
+    if (rawString == null || rawString.isEmpty) return localZoneSuffix;
     final s = rawString.toUpperCase();
+    // Cek WITA terlebih dahulu agar substring 'WIT' dalam 'WITA' tidak salah cocok
+    if (s.contains('GMT+0800') || s.contains('WITA') || s.contains('MAKASSAR') || s.contains('INDONESIA TENGAH')) {
+      return 'WITA';
+    }
     if (s.contains('GMT+0700') || s.contains('WIB') || s.contains('JAKARTA')) {
       return 'WIB';
     }
     if (s.contains('GMT+0900') || s.contains('WIT') || s.contains('JAYAPURA')) {
       return 'WIT';
     }
-    if (s.contains('GMT+0800') || s.contains('WITA') || s.contains('MAKASSAR') || s.contains('INDONESIA TENGAH')) {
-      return 'WITA';
-    }
-    return 'WITA';
+    return localZoneSuffix;
   }
 
   /// Parsing berbagai format string tanggal menjadi DateTime
