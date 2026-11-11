@@ -497,8 +497,8 @@ class _TeacherMonitoringListScreenState
                   ),
                   title: Text(
                     widget.isLiveMode
-                        ? 'Live Monitoring Peserta'
-                        : 'Riwayat Ujian & Token Saya',
+                        ? 'Live Monitoring'
+                        : 'Riwayat & Token Ujian',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.poppins(
@@ -1075,7 +1075,7 @@ class _TeacherMonitoringListScreenState
                               color: Color(0xFF0F766E),
                             ),
                             label: Text(
-                              'Detail & QR',
+                              'Detail',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.poppins(
@@ -1170,7 +1170,7 @@ class _TeacherMonitoringListScreenState
                                 color: Colors.white,
                               ),
                               label: Text(
-                                'Pantau Live',
+                                'Monitor',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: GoogleFonts.poppins(
@@ -3543,7 +3543,10 @@ class _TeacherMonitoringDetailScreenState
                 ],
 
                 // ── Tombol Izinkan Ujian Ulang (Jika Siswa Selesai / Terkendala) ──
-                if (status == 'FINISHED' || status == 'BLOCKED' || status == 'OFFLINE' || s['allow_retake'] == true) ...[
+                if (status == 'FINISHED' ||
+                    status == 'BLOCKED' ||
+                    status == 'OFFLINE' ||
+                    s['allow_retake'] == true) ...[
                   const SizedBox(height: 12),
                   if (s['allow_retake'] == true)
                     Container(

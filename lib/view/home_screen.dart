@@ -16,6 +16,7 @@ import '../services/app_remote_config.dart';
 import '../services/popup_ad_service.dart';
 import 'widgets/popup_ad_dialog.dart';
 import 'widgets/examgo_dialog.dart';
+import 'widgets/examgo_loading_dialog.dart';
 import 'package:examgo/services/license_service.dart';
 import 'package:examgo/services/exam_session_service.dart';
 import 'package:examgo/services/monitoring_service.dart';
@@ -462,6 +463,12 @@ class _HomeScreenState extends State<HomeScreen>
     final name = identity['name'] ?? '';
     final nis = identity['nis'] ?? '';
 
+    final prepLoading = ExamGoLoadingDialog.show(
+      context,
+      title: 'Menyiapkan Lembar Ujian...',
+      message: 'Memeriksa status peserta & menyiapkan lembar soal...',
+    );
+
     // ── A. Sisipkan identitas ke URL ujian sebagai query parameter ──
     // Server ujian (Google Form / LMS) akan menerima ?peserta=Budi&nis=12345
     // sehingga rekap jawaban otomatis mencatat nama peserta.
@@ -480,12 +487,14 @@ class _HomeScreenState extends State<HomeScreen>
       );
       if (studentData != null) {
         if (studentData['status'] == 'BLOCKED') {
+          prepLoading.dismiss();
           if (mounted) _showViolationPopup();
           return;
         }
         final currentDeviceId = await MonitoringService.instance.getDeviceId();
         if (studentData['device_id'] != null &&
             studentData['device_id'] != currentDeviceId) {
+          prepLoading.dismiss();
           if (mounted) _showDeviceBlockedPopup();
           return;
         }
@@ -577,6 +586,7 @@ class _HomeScreenState extends State<HomeScreen>
 
               // Jika waktu ujian belum habis, kunci akses pembahasan demi integritas ujian
               if (!isTimeEnded && effectiveEndTime != null) {
+                prepLoading.dismiss();
                 if (!mounted) return;
                 await showExamTimeLockDialog(
                   context,
@@ -589,7 +599,10 @@ class _HomeScreenState extends State<HomeScreen>
               }
 
               // Jika waktu ujian sudah berakhir -> Alihkan ke Pembahasan & Kunci
-              if (!mounted) return;
+              if (!mounted) {
+                prepLoading.dismiss();
+                return;
+              }
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
@@ -603,6 +616,7 @@ class _HomeScreenState extends State<HomeScreen>
               );
 
               // Ambil butir soal dari cache atau unduh jika belum lengkap
+              prepLoading.update(message: 'Menyiapkan pembahasan & kunci jawaban...');
               List<ExamQuestion> questions = existingAttempt.questions;
               if (questions.isEmpty) {
                 final cached = await ExamCacheService.instance.loadExam(
@@ -617,6 +631,7 @@ class _HomeScreenState extends State<HomeScreen>
                 }
               }
 
+              prepLoading.dismiss();
               if (mounted) {
                 await Navigator.push(
                   context,
@@ -643,6 +658,7 @@ class _HomeScreenState extends State<HomeScreen>
             }
           }
 
+          prepLoading.dismiss();
           if (!mounted) return;
           await Navigator.push(
             context,
@@ -663,9 +679,12 @@ class _HomeScreenState extends State<HomeScreen>
           if (mounted) setState(() {});
           return;
         }
-      } catch (_) {}
+      } catch (_) {
+        prepLoading.dismiss();
+      }
     }
 
+    prepLoading.dismiss();
     // Arahkan ke WebView dengan URL yang sudah mengandung identitas
     if (!mounted) return;
     final result = await Navigator.push(
@@ -1429,23 +1448,6 @@ class _HomeScreenState extends State<HomeScreen>
   // FIX BUG-07+08: _formatDateTime dipindahkan ke _ClockWidget
   // sehingga hanya clock text yang rebuild setiap detik, bukan seluruh HomeScreen.
 
-  void _showLoading(String msg) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: Row(
-          children: [
-            const CircularProgressIndicator(color: AppColors.primaryGreen),
-            SizedBox(width: context.rs(16)),
-            Text(msg, style: GoogleFonts.poppins()),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ─── Build ────────────────────────────────────────────────────
 
   @override
@@ -2148,17 +2150,14 @@ class _HomeScreenState extends State<HomeScreen>
           builder: (ctx) => const ManualTokenInputDialog(),
         );
 
-        if (token == null || token.isEmpty) return;
+        if (token == null || token.isEmpty || !mounted) return;
 
-        // Cek Firebase untuk token ini
-        _showLoading('Mencari Token...');
-        bool loadingPopped = false;
-        void popLoading() {
-          if (!loadingPopped && mounted) {
-            loadingPopped = true;
-            Navigator.of(context).pop();
-          }
-        }
+        // Tampilkan loading indikator pencarian token profesional & terpadu
+        final searchLoading = ExamGoLoadingDialog.show(
+          context,
+          title: 'Mencari Token Ujian...',
+          message: 'Menghubungkan ke server CBT & memeriksa sesi...',
+        );
 
         try {
           // 1. Cek sesi ujian guru
@@ -2168,7 +2167,7 @@ class _HomeScreenState extends State<HomeScreen>
                 .doc(token)
                 .get();
             if (doc.exists) {
-              popLoading();
+              searchLoading.dismiss();
               final data = doc.data()!;
               final title = data['title'] ?? 'Ujian';
               final url = data['url'] ?? '';
@@ -2189,12 +2188,16 @@ class _HomeScreenState extends State<HomeScreen>
 
           // 2. Fallback 1: Cek dokumen paket_tryout native (Tryout / Ujian Khusus / Event)
           try {
+            searchLoading.update(
+              title: 'Mencari Paket Soal...',
+              message: 'Memeriksa bank soal tryout & jadwal event...',
+            );
             final pkgDoc = await FirebaseFirestore.instance
                 .collection('paket_tryout')
                 .doc(token)
                 .get();
             if (pkgDoc.exists) {
-              popLoading();
+              searchLoading.dismiss();
               final pData = pkgDoc.data() ?? {};
               final title = pData['nama_paket'] ?? 'Tryout';
               final isEventPkg =
@@ -2233,13 +2236,16 @@ class _HomeScreenState extends State<HomeScreen>
           } catch (_) {}
 
           // 3. Fallback 2: Cek apakah token adalah tiket Lynk.id / Event (via LicenseService dengan fallback dual-layer)
-          popLoading();
+          searchLoading.dismiss();
 
           final profile = await _promptUserProfileIfNeeded();
-          if (profile == null) return;
+          if (profile == null || !mounted) return;
 
-          _showLoading('Mengaktifkan Token...');
-          loadingPopped = false;
+          final actLoading = ExamGoLoadingDialog.show(
+            context,
+            title: 'Mengaktifkan Tiket / Voucher...',
+            message: 'Memverifikasi lisensi dengan server Lynk.id...',
+          );
 
           final actResult = await LicenseService.instance.activateToken(
             rawToken: token,
@@ -2249,7 +2255,7 @@ class _HomeScreenState extends State<HomeScreen>
             userWhatsapp: profile['whatsapp'],
           );
 
-          popLoading();
+          actLoading.dismiss();
 
           if (actResult.isSuccess ||
               actResult.message.contains('aktif kembali')) {
@@ -2304,7 +2310,7 @@ class _HomeScreenState extends State<HomeScreen>
             'Token ujian tidak valid atau sudah kadaluarsa.',
           );
         } catch (e) {
-          popLoading();
+          searchLoading.dismiss();
           _showError(
             'Gagal Mencari',
             'Terjadi kesalahan saat memverifikasi token: $e',

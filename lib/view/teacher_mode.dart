@@ -487,14 +487,19 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       final config = await PopupAdService.instance.getAdsConfig();
       if (!mounted) return;
       if (config.teacher.isValid) {
-        PopupAdDialog.show(context, ad: config.teacher, roleBadge: 'KHUSUS GURU');
+        PopupAdDialog.show(
+          context,
+          ad: config.teacher,
+          roleBadge: 'KHUSUS GURU',
+        );
       }
     } catch (_) {}
   }
 
   Future<void> _checkLicenseStatus() async {
     final premium = await LicenseService.instance.isTeacherPremium();
-    final remainingUploads = await LicenseService.instance.getRemainingTeacherUploads();
+    final remainingUploads = await LicenseService.instance
+        .getRemainingTeacherUploads();
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList('teacher_exam_history') ?? [];
     if (mounted) {
@@ -535,7 +540,10 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
@@ -567,7 +575,10 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFDE047).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
@@ -607,7 +618,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isLimitReached ? const Color(0xFFFCA5A5) : const Color(0xFFE2E8F0),
+          color: isLimitReached
+              ? const Color(0xFFFCA5A5)
+              : const Color(0xFFE2E8F0),
           width: 1.2,
         ),
         boxShadow: [
@@ -658,7 +671,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                   Icon(
                     Icons.qr_code_2_rounded,
                     size: 15,
-                    color: isLimitReached ? const Color(0xFFDC2626) : const Color(0xFF475569),
+                    color: isLimitReached
+                        ? const Color(0xFFDC2626)
+                        : const Color(0xFF475569),
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -668,7 +683,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
-                      color: isLimitReached ? const Color(0xFFDC2626) : const Color(0xFF1E293B),
+                      color: isLimitReached
+                          ? const Color(0xFFDC2626)
+                          : const Color(0xFF1E293B),
                     ),
                   ),
                 ],
@@ -683,7 +700,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               minHeight: 6,
               backgroundColor: const Color(0xFFF1F5F9),
               valueColor: AlwaysStoppedAnimation(
-                isLimitReached ? const Color(0xFFDC2626) : AppColors.primaryGreen,
+                isLimitReached
+                    ? const Color(0xFFDC2626)
+                    : AppColors.primaryGreen,
               ),
             ),
           ),
@@ -694,7 +713,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                 : 'Tersisa $remaining kuota pembuatan URL ujian aktif. Setiap membuat link/QR baru, kuota akan berkurang dari 5 hingga 0.',
             style: GoogleFonts.poppins(
               fontSize: 11,
-              color: isLimitReached ? const Color(0xFFB91C1C) : const Color(0xFF64748B),
+              color: isLimitReached
+                  ? const Color(0xFFB91C1C)
+                  : const Color(0xFF64748B),
               height: 1.45,
             ),
           ),
@@ -742,7 +763,10 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFF334155),
                   side: const BorderSide(color: Color(0xFFCBD5E1)),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -761,7 +785,10 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         leading: const AppBackButton.light(),
-        title: Text('Dashboard Guru', style: GoogleFonts.poppins()),
+        title: Text(
+          'Dashboard Guru',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: AppColors.primaryGreen,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -844,34 +871,40 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               subtitle: _isTeacherPremium
                   ? '⭐ Rekomendasi: Tempel Google Form / Upload DOCX'
                   : (_remainingTeacherUploads > 0
-                      ? '⭐ Tempel Google Form (Coba Gratis: Sisa $_remainingTeacherUploads x)'
-                      : 'Tempel Google Form / DOCX (Perlu Lisensi Premium)'),
+                        ? '⭐ Tempel Google Form (Coba Gratis: Sisa $_remainingTeacherUploads x)'
+                        : 'Tempel Google Form / DOCX (Perlu Lisensi Premium)'),
               trailing: _isTeacherPremium
                   ? null
                   : (_remainingTeacherUploads > 0
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFEF3C7),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: const Color(0xFFFCD34D)),
-                          ),
-                          child: Text(
-                            'Free $_remainingTeacherUploads x',
-                            style: GoogleFonts.poppins(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFFB45309),
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
                             ),
-                          ),
-                        )
-                      : const Icon(
-                          Icons.lock_rounded,
-                          size: 20,
-                          color: Color(0xFFD97706),
-                        )),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF3C7),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: const Color(0xFFFCD34D),
+                              ),
+                            ),
+                            child: Text(
+                              'Free $_remainingTeacherUploads x',
+                              style: GoogleFonts.poppins(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFFB45309),
+                              ),
+                            ),
+                          )
+                        : const Icon(
+                            Icons.lock_rounded,
+                            size: 20,
+                            color: Color(0xFFD97706),
+                          )),
               onTap: () async {
-                final canUpload = await LicenseService.instance.canTeacherUploadExam();
+                final canUpload = await LicenseService.instance
+                    .canTeacherUploadExam();
                 if (!context.mounted) return;
                 if (!canUpload) {
                   _showTeacherLicenseDialog(
@@ -894,7 +927,8 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               icon: Icons.token_rounded,
               color: const Color(0xFF0F766E),
               title: 'Riwayat Ujian & Token Saya',
-              subtitle: 'Kelola token ujian, lihat detail QR & bagikan kode ke siswa',
+              subtitle:
+                  'Kelola token ujian, lihat detail QR & bagikan kode ke siswa',
               trailing: FutureBuilder<List<String>>(
                 future: SharedPreferences.getInstance().then(
                   (p) => p.getStringList('teacher_exam_history') ?? [],
@@ -903,7 +937,10 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                   final count = snap.data?.length ?? 0;
                   if (count == 0) return const SizedBox.shrink();
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE6FFFA),
                       borderRadius: BorderRadius.circular(10),
@@ -924,7 +961,8 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const TeacherMonitoringListScreen(isLiveMode: false),
+                    builder: (_) =>
+                        const TeacherMonitoringListScreen(isLiveMode: false),
                   ),
                 );
                 if (mounted) _checkLicenseStatus();
@@ -949,12 +987,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               icon: Icons.radar_rounded,
               color: Colors.orange,
               title: 'Live Monitoring Peserta',
-              subtitle: 'Radar real-time pengawasan: pantau online, kecurangan & buka blokir',
+              subtitle:
+                  'Radar real-time pengawasan: pantau online, kecurangan & buka blokir',
               onTap: () async {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const TeacherMonitoringListScreen(isLiveMode: true),
+                    builder: (_) =>
+                        const TeacherMonitoringListScreen(isLiveMode: true),
                   ),
                 );
                 if (mounted) _checkLicenseStatus();
@@ -1017,7 +1057,8 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     final confirm = await ExamGoDialog.danger(
       context,
       title: 'Reset PIN Mode Guru?',
-      message: 'PIN akses saat ini akan dihapus. Anda harus membuat PIN 6-angka baru saat masuk berikutnya.',
+      message:
+          'PIN akses saat ini akan dihapus. Anda harus membuat PIN 6-angka baru saat masuk berikutnya.',
       confirmText: 'Reset PIN',
     );
     if (confirm != true) return;
