@@ -3,6 +3,7 @@ import 'package:examgo/models/tryout_schedule_model.dart';
 import 'package:examgo/models/exam_question_model.dart';
 import 'package:examgo/services/exam_cache_service.dart';
 import 'package:examgo/services/student_tryout_history_service.dart';
+import 'package:examgo/services/trusted_time_service.dart';
 import 'package:examgo/services/tryout_reminder_service.dart';
 import 'package:examgo/view/student/event_dashboard_screen.dart';
 import 'package:examgo/view/student/tryout_discussion_screen.dart';
@@ -555,16 +556,20 @@ class _HomeScreenState extends State<HomeScreen>
               DateTime? effectiveEndTime = existingAttempt.examEndTime;
               if (effectiveEndTime == null && pkgData['durasi_menit'] != null) {
                 final durasi = (pkgData['durasi_menit'] as num).toInt();
-                final tentativeEnd =
+                effectiveEndTime =
                     existingAttempt.submittedAt.add(Duration(minutes: durasi));
-                if (DateTime.now().isBefore(tentativeEnd)) {
-                  effectiveEndTime = tentativeEnd;
-                }
               }
 
+              // Verifikasi anti-cheat jam HP manual via TrustedTimeService
+              final isTimeEnded =
+                  await TrustedTimeService.instance.isExamTimeEnded(
+                examEndTime: effectiveEndTime,
+                submittedAt: existingAttempt.submittedAt,
+              );
+
               // Jika waktu ujian belum habis, kunci akses pembahasan demi integritas ujian
-              if (effectiveEndTime != null &&
-                  DateTime.now().isBefore(effectiveEndTime)) {
+              if (!isTimeEnded && effectiveEndTime != null) {
+                if (!mounted) return;
                 await showExamTimeLockDialog(
                   context,
                   endTime: effectiveEndTime,
@@ -576,6 +581,7 @@ class _HomeScreenState extends State<HomeScreen>
               }
 
               // Jika waktu ujian sudah berakhir -> Alihkan ke Pembahasan & Kunci
+              if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(

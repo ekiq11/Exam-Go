@@ -7,6 +7,7 @@ import 'package:examgo/models/tryout_schedule_model.dart';
 import 'package:examgo/services/exam_cache_service.dart';
 import 'package:examgo/services/license_service.dart';
 import 'package:examgo/services/student_tryout_history_service.dart';
+import 'package:examgo/services/trusted_time_service.dart';
 import 'package:examgo/services/tryout_schedule_service.dart';
 import 'package:examgo/utils/indo_date_formatter.dart';
 import 'package:examgo/utils/token_input_formatter.dart';
@@ -1529,18 +1530,25 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
 
   Future<void> _openDiscussion(StudentTryoutHistoryItem item) async {
     // Jika bukan tryout bebas (allowRetake == false) dan waktu ujian resmi belum selesai
-    if (!item.allowRetake && !item.isExamTimeEnded) {
-      if (!mounted) return;
-      await showExamTimeLockDialog(
-        context,
-        endTime: item.examEndTime ?? DateTime.now(),
-        examTitle: item.namaPaket,
+    if (!item.allowRetake) {
+      final isEnded = await TrustedTimeService.instance.isExamTimeEnded(
+        examEndTime: item.examEndTime,
+        submittedAt: item.submittedAt,
       );
-      return;
+      if (!isEnded) {
+        if (!mounted) return;
+        await showExamTimeLockDialog(
+          context,
+          endTime: item.examEndTime ?? DateTime.now(),
+          examTitle: item.namaPaket,
+        );
+        return;
+      }
     }
 
     var questions = item.questions;
     if (questions.isEmpty) {
+      if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,

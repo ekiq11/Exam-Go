@@ -240,6 +240,39 @@ class MonitoringService {
     } catch (_) {}
   }
 
+  /// Guru / Pengawas membuka blokir siswa yang melanggar ujian
+  Future<void> unblockStudent({
+    required String examId,
+    required String nis,
+  }) async {
+    try {
+      if (examId.isEmpty || nis.isEmpty) return;
+
+      final docRef = _db
+          .collection('exam_sessions')
+          .doc(examId)
+          .collection('students')
+          .doc(nis);
+
+      await docRef.set({
+        'status': 'ONLINE',
+        'violations': 0,
+        'is_blocked': false,
+        'unblocked_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      await logActivity(
+        examId: examId,
+        nis: nis,
+        activityType: 'INFO',
+        description: 'Pengawas membuka blokir ujian siswa dan mereset status pelanggaran.',
+      );
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('blocked_${examId}_$nis');
+    } catch (_) {}
+  }
+
   /// Guru / Pengawas mengizinkan siswa tertentu untuk mengerjakan ulang ujian
   Future<void> allowStudentRetake({
     required String examId,

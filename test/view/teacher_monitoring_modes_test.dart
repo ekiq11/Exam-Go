@@ -25,10 +25,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Memastikan AppBar menampilkan judul Riwayat Ujian & Token Saya
+      // Memastikan AppBar menampilkan judul Riwayat Ujian & Token Saya dan rata kiri
       expect(find.text('Riwayat Ujian & Token Saya'), findsOneWidget);
       expect(find.text('Katalog & Manajemen Token'), findsOneWidget);
       expect(find.text('1 Sesi'), findsOneWidget);
+
+      final sliverAppBar = tester.widget<SliverAppBar>(find.byType(SliverAppBar));
+      expect(sliverAppBar.centerTitle, isFalse);
 
       // Memastikan kartu token menampilkan aksi Detail & QR, Bagikan, dan Hapus
       expect(find.text('Detail & QR'), findsOneWidget);

@@ -16,6 +16,7 @@ import '../../services/exam_cache_service.dart';
 import '../../services/monitoring_service.dart';
 import '../../services/national_exam_evaluator.dart';
 import '../../services/student_tryout_history_service.dart';
+import '../../services/trusted_time_service.dart';
 import '../../utils/math_widget_factory.dart';
 import 'tryout_discussion_screen.dart';
 import 'tryout_schedule_screen.dart';
@@ -1563,8 +1564,13 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        if (!isTimeEnded) {
+                      onPressed: () async {
+                        final isEnded =
+                            await TrustedTimeService.instance.isExamTimeEnded(
+                          examEndTime: _packageEndTime,
+                        );
+                        if (!isEnded && _packageEndTime != null) {
+                          if (!context.mounted) return;
                           showExamTimeLockDialog(
                             context,
                             endTime: _packageEndTime!,
@@ -1572,6 +1578,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                           );
                           return;
                         }
+                        if (!context.mounted) return;
                         Navigator.pop(ctx);
                         Navigator.pushReplacement(
                           context,
@@ -2760,6 +2767,82 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                   height: 1.45,
                 ),
                 textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Memeriksa status izin dari pengawas...'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                    final data = await MonitoringService.instance.getStudentData(
+                      widget.token,
+                      widget.studentNis,
+                    );
+                    final status = data?['status']?.toString();
+                    final isBlockedInDb =
+                        data?['is_blocked'] == true || status == 'BLOCKED';
+                    if (!isBlockedInDb &&
+                        (status == 'ONLINE' ||
+                            status == 'ACTIVE' ||
+                            data?['unblocked_at'] != null)) {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.remove(
+                        'blocked_${widget.token}_${widget.studentNis}',
+                      );
+                      if (mounted) {
+                        setState(() {
+                          _isBlocked = false;
+                          _violations = 0;
+                        });
+                        _enterImmersiveMode();
+                        SecurityService.instance.reapply();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Blokir telah dibuka! Silakan lanjutkan ujian.',
+                            ),
+                            backgroundColor: AppColors.primaryGreen,
+                          ),
+                        );
+                      }
+                    } else {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Status masih diblokir. Harap hubungi Pengawas Ujian.',
+                            ),
+                            backgroundColor: Colors.black87,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(
+                    Icons.refresh_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  label: Text(
+                    'Periksa Status Blokir',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.white54, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),

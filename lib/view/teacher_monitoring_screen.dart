@@ -445,166 +445,172 @@ class _TeacherMonitoringListScreenState
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // ── Gradient SliverAppBar (Redesain Elegan & Anti-Overlap) ────
-          SliverAppBar(
-            expandedHeight: 165,
-            pinned: true,
-            stretch: true,
-            backgroundColor: _kGreen,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            leading: const AppBackButton.light(),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 14, top: 6, bottom: 6),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.25),
-                      width: 1,
-                    ),
-                  ),
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    icon: const Icon(
-                      Icons.refresh_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    tooltip: 'Segarkan Riwayat',
-                    onPressed: _loadHistory,
-                  ),
-                ),
-              ),
-            ],
-
-            flexibleSpace: FlexibleSpaceBar(
-              centerTitle: false,
-              titlePadding: const EdgeInsetsDirectional.only(
-                start: 64,
-                end: 64,
-                bottom: 16,
-              ),
-              title: Text(
-                widget.isLiveMode
-                    ? 'Live Monitoring Peserta'
-                    : 'Riwayat Ujian & Token Saya',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.poppins(
-                  fontSize: 15.5,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.2,
-                  color: Colors.white,
-                ),
-              ),
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Background gradient
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color(0xFF1B5E20),
-                          Color(0xFF2E7D32),
-                          Color(0xFF388E3C),
-                        ],
+          // ── Gradient SliverAppBar (Rata Kiri Semua & Modern) ────
+          SliverLayoutBuilder(
+            builder: (context, constraints) {
+              final isCollapsed = constraints.scrollOffset > 80;
+              return SliverAppBar(
+                expandedHeight: 180,
+                pinned: true,
+                stretch: true,
+                backgroundColor: _kGreen,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                leading: const AppBackButton.light(),
+                centerTitle: false,
+                actions: [
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(right: 14, top: 6, bottom: 6),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.25),
+                          width: 1,
+                        ),
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(
+                          Icons.refresh_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        tooltip: 'Segarkan Riwayat',
+                        onPressed: _loadHistory,
                       ),
                     ),
                   ),
-
-                  // Dekorasi geometris
-                  Positioned(
-                    top: -40,
-                    right: -30,
-                    child: _buildDecorCircle(size: 170, alpha: 0.06),
+                ],
+                flexibleSpace: FlexibleSpaceBar(
+                  centerTitle: false,
+                  titlePadding: EdgeInsetsDirectional.only(
+                    start: isCollapsed ? 64 : 20,
+                    end: 64,
+                    bottom: 16,
                   ),
-                  Positioned(
-                    bottom: -30,
-                    left: -20,
-                    child: _buildDecorCircle(size: 130, alpha: 0.04),
+                  title: Text(
+                    widget.isLiveMode
+                        ? 'Live Monitoring Peserta'
+                        : 'Riwayat Ujian & Token Saya',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      fontSize: isCollapsed ? 15.5 : 17,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                      color: Colors.white,
+                    ),
                   ),
-
-                  // Badge subtitle (kiri bawah, tidak bertabrakan dengan tombol refresh)
-                  Positioned(
-                    left: 20,
-                    right: 20,
-                    bottom: 48,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: _buildBadge(
-                            backgroundAlpha: 0.16,
-                            backgroundColor: Colors.black,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  widget.isLiveMode
-                                      ? Icons.sensors_rounded
-                                      : Icons.token_rounded,
-                                  size: 13,
-                                  color: widget.isLiveMode
-                                      ? Colors.amberAccent
-                                      : Colors.white70,
-                                ),
-                                const SizedBox(width: 6),
-                                Flexible(
-                                  child: Text(
-                                    widget.isLiveMode
-                                        ? 'Radar Pengawasan Real-Time'
-                                        : 'Katalog & Manajemen Token',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.white.withValues(
-                                        alpha: 0.9,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildBadge(
-                          backgroundAlpha: 0.16,
-                          backgroundColor: Colors.white,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.inventory_2_outlined,
-                                size: 13,
-                                color: Colors.white70,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${_history.length} Sesi',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Background gradient
+                      const DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF1B5E20),
+                              Color(0xFF2E7D32),
+                              Color(0xFF388E3C),
                             ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+
+                      // Dekorasi geometris
+                      Positioned(
+                        top: -40,
+                        right: -30,
+                        child: _buildDecorCircle(size: 170, alpha: 0.06),
+                      ),
+                      Positioned(
+                        bottom: -30,
+                        left: -20,
+                        child: _buildDecorCircle(size: 130, alpha: 0.04),
+                      ),
+
+                      // Badge subtitle rata kiri di bawah
+                      Positioned(
+                        left: 20,
+                        right: 20,
+                        bottom: 52,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: _buildBadge(
+                                backgroundAlpha: 0.16,
+                                backgroundColor: Colors.black,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      widget.isLiveMode
+                                          ? Icons.sensors_rounded
+                                          : Icons.token_rounded,
+                                      size: 13,
+                                      color: widget.isLiveMode
+                                          ? Colors.amberAccent
+                                          : Colors.white70,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        widget.isLiveMode
+                                            ? 'Radar Pengawasan Real-Time'
+                                            : 'Katalog & Manajemen Token',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.white.withValues(
+                                            alpha: 0.9,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _buildBadge(
+                              backgroundAlpha: 0.16,
+                              backgroundColor: Colors.white,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.inventory_2_outlined,
+                                    size: 13,
+                                    color: Colors.white70,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '${_history.length} Sesi',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
 
           // ── Live Proctoring Header Banner (Jika mode Live Monitoring) ──
@@ -1046,120 +1052,179 @@ class _TeacherMonitoringListScreenState
                   ),
                   const SizedBox(height: 10),
                   const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                  const SizedBox(height: 6),
-                  // Quick Actions Bar
+                  const SizedBox(height: 12),
+                  // Quick Actions Bar (Redesain Modern, Elegan & Profesional)
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      TextButton.icon(
-                        onPressed: () => _showTokenDetailDialog(item),
-                        icon: const Icon(
-                          Icons.qr_code_2_rounded,
-                          size: 15,
-                          color: Color(0xFF0F766E),
-                        ),
-                        label: Text(
-                          'Detail & QR',
-                          style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0F766E),
+                      // Tombol Detail & QR
+                      Expanded(
+                        child: SizedBox(
+                          height: 38,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              _showTokenDetailDialog(item);
+                            },
+                            icon: const Icon(
+                              Icons.qr_code_2_rounded,
+                              size: 16,
+                              color: Color(0xFF0F766E),
+                            ),
+                            label: Text(
+                              'Detail & QR',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF0F766E),
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: const Color(0xFFF0FDF4),
+                              side: const BorderSide(
+                                color: Color(0xFFBBF7D0),
+                                width: 1,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                            ),
                           ),
-                        ),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 3,
-                          ),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
-                      TextButton.icon(
-                        onPressed: () => _shareExamInfo(item),
-                        icon: const Icon(
-                          Icons.share_rounded,
-                          size: 14,
-                          color: Color(0xFF2563EB),
-                        ),
-                        label: Text(
-                          'Bagikan',
-                          style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF2563EB),
+                      const SizedBox(width: 8),
+
+                      // Tombol Bagikan
+                      Expanded(
+                        child: SizedBox(
+                          height: 38,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              _shareExamInfo(item);
+                            },
+                            icon: const Icon(
+                              Icons.share_rounded,
+                              size: 15,
+                              color: Color(0xFF2563EB),
+                            ),
+                            label: Text(
+                              'Bagikan',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF2563EB),
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: const Color(0xFFEFF6FF),
+                              side: const BorderSide(
+                                color: Color(0xFFBFDBFE),
+                                width: 1,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                            ),
                           ),
-                        ),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 3,
-                          ),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
-                      if (widget.isLiveMode) ...[
-                        ElevatedButton.icon(
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => TeacherMonitoringDetailScreen(
-                                examId: item['examId']!,
-                                title: item['title']!,
-                                url: item['url'],
+                      const SizedBox(width: 8),
+
+                      // Tombol Hapus (Mode Riwayat) / Pantau Live (Mode Live)
+                      if (widget.isLiveMode)
+                        Expanded(
+                          child: SizedBox(
+                            height: 38,
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                HapticFeedback.lightImpact();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        TeacherMonitoringDetailScreen(
+                                      examId: item['examId']!,
+                                      title: item['title']!,
+                                      url: item['url'],
+                                    ),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(
+                                Icons.monitor_heart_rounded,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                              label: Text(
+                                'Pantau Live',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _kGreen,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8),
                               ),
                             ),
                           ),
-                          icon: const Icon(
-                            Icons.monitor_heart_rounded,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                          label: Text(
-                            'Pantau Live',
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
+                        )
+                      else
+                        Expanded(
+                          child: SizedBox(
+                            height: 38,
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                HapticFeedback.lightImpact();
+                                _confirmDelete(item);
+                              },
+                              icon: Icon(
+                                Icons.delete_outline_rounded,
+                                size: 16,
+                                color: Colors.red.shade600,
+                              ),
+                              label: Text(
+                                'Hapus',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.red.shade600,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                backgroundColor: const Color(0xFFFEF2F2),
+                                side: BorderSide(
+                                  color: Colors.red.shade200,
+                                  width: 1,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8),
+                              ),
                             ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            elevation: 0,
-                            backgroundColor: _kGreen,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 3,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
                         ),
-                      ] else ...[
-                        TextButton.icon(
-                          onPressed: () => _confirmDelete(item),
-                          icon: Icon(
-                            Icons.delete_outline_rounded,
-                            size: 15,
-                            color: Colors.red.shade600,
-                          ),
-                          label: Text(
-                            'Hapus',
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.red.shade600,
-                            ),
-                          ),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 3,
-                            ),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ],
@@ -1372,12 +1437,14 @@ class _TeacherMonitoringDetailScreenState
                       backgroundColor: _kGreen,
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      centerTitle: true,
+                      centerTitle: false,
                       title: AnimatedOpacity(
                         duration: const Duration(milliseconds: 200),
                         opacity: isCollapsed ? 1.0 : 0.0,
                         child: Text(
                           widget.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -3106,7 +3173,8 @@ class _TeacherMonitoringDetailScreenState
         statusLabel = 'Offline';
     }
 
-    final isBlocked = status == 'BLOCKED';
+    final isBlocked =
+        status == 'BLOCKED' || violations >= 3 || s['is_blocked'] == true;
     final hasViolation = violations > 0;
 
     // Last ping string
@@ -3393,19 +3461,76 @@ class _TeacherMonitoringDetailScreenState
                   ),
                 ),
 
-                // ── Unblock Button ─────────────────────────
+                // ── Tombol Buka Blokir Siswa (Jika Siswa Terblokir / Melanggar) ──
                 if (isBlocked) ...[
                   const SizedBox(height: 12),
-                  SlideToUnblock(
-                    onAction: () => _showUnblockConfirmation(
-                      context,
-                      widget.examId,
-                      nis,
-                      name,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF2F2),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFFECDD3)),
                     ),
-                    text: 'Geser untuk Buka Akses',
-                    backgroundColor: Colors.red.shade50,
-                    sliderColor: Colors.red.shade600,
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.block_rounded,
+                              size: 18,
+                              color: Color(0xFFDC2626),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Siswa terblokir ($violations pelanggaran anti-curang).',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11.5,
+                                  color: const Color(0xFF991B1B),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 40,
+                          child: ElevatedButton.icon(
+                            onPressed: () => _showUnblockConfirmation(
+                              context,
+                              widget.examId,
+                              nis,
+                              name,
+                              onSuccess: () => setState(() {}),
+                            ),
+                            icon: const Icon(
+                              Icons.lock_open_rounded,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                            label: Text(
+                              'Buka Blokir Siswa',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFDC2626),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
 
@@ -3574,12 +3699,14 @@ class _StudentActivityLogScreenState extends State<StudentActivityLogScreen> {
                 backgroundColor: const Color(0xFF2E7D32),
                 foregroundColor: Colors.white,
                 elevation: 0,
-                centerTitle: true,
+                centerTitle: false,
                 title: AnimatedOpacity(
                   duration: const Duration(milliseconds: 200),
                   opacity: isCollapsed ? 1.0 : 0.0,
                   child: Text(
                     widget.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -4319,18 +4446,12 @@ Future<void> _showUnblockConfirmation(
   if (confirmed != true) return;
   if (!context.mounted) return;
 
-  MonitoringService.instance.setStudentStatusByTeacher(
+  await MonitoringService.instance.unblockStudent(
     examId: examId,
     nis: nis,
-    status: 'ACTIVE',
-    violations: 0,
   );
-  MonitoringService.instance.logActivity(
-    examId: examId,
-    nis: nis,
-    activityType: 'INFO',
-    description: 'Pengawas membuka akses siswa',
-  );
+
+  if (!context.mounted) return;
 
   ScaffoldMessenger.of(context).clearSnackBars();
   ScaffoldMessenger.of(context).showSnackBar(
@@ -4339,7 +4460,12 @@ Future<void> _showUnblockConfirmation(
         children: [
           const Icon(Icons.lock_open_rounded, color: Colors.white, size: 18),
           const SizedBox(width: 10),
-          Text('Akses $name berhasil dibuka', style: GoogleFonts.poppins()),
+          Expanded(
+            child: Text(
+              'Blokir akun $name berhasil dibuka! Siswa dapat melanjutkan ujian.',
+              style: GoogleFonts.poppins(),
+            ),
+          ),
         ],
       ),
       backgroundColor: _kGreenL,
