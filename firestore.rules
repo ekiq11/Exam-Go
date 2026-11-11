@@ -5,39 +5,76 @@ service cloud.firestore {
     match /exam_sessions/{document=**} {
       allow read, write: if true;
     }
-    
-    // Paket Tryout, Subtest & Butir Soal (Native ExamGO)
-    match /paket_tryout/{document=**} {
-      allow read, write: if true;
+
+    // Paket Tryout, Subtest & Butir Soal (Cegah penghapusan dari client publik; Admin WebGAS via Service Account tetap penuh)
+    match /paket_tryout/{docId} {
+      allow read, create, update: if true;
+      allow delete: if false;
     }
-    match /subtest/{document=**} {
-      allow read, write: if true;
+    match /subtest/{docId} {
+      allow read, create, update: if true;
+      allow delete: if false;
     }
-    match /tryout_soal/{document=**} {
-      allow read, write: if true;
+    match /tryout_soal/{docId} {
+      allow read, create, update: if true;
+      allow delete: if false;
     }
 
-    // Jawaban & Rekap Nilai Siswa
-    match /jawaban_tryout/{document=**} {
-      allow read, write: if true;
+    // Jawaban, Riwayat, Leaderboard & Penyelesaian Event Siswa
+    match /jawaban_tryout/{docId} {
+      allow read, create, update: if true;
+      allow delete: if false;
     }
-    
-    // Token Lisensi Lynk.id (Guru & Siswa) & Sekolah Mitra
-    match /license_tokens/{document=**} {
-      allow read, write: if true;
+    match /student_tryout_history/{docId} {
+      allow read, create, update: if true;
+      allow delete: if false;
     }
-    match /partner_schools/{document=**} {
-      allow read, write: if true;
+    match /tryout_leaderboards/{document=**} {
+      allow read, create, update: if true;
+      allow delete: if false;
+    }
+    match /event_completions/{docId} {
+      allow read, create, update: if true;
+      allow delete: if false;
     }
 
-    // Pengaturan Aplikasi & Landing Page
-    match /app_settings/{document=**} {
-      allow read, write: if true;
+    // Token Lisensi Lynk.id: Blokir list/dump semua token, pembuatan token palsu, dan pembajakan 1-device lock
+    match /license_tokens/{tokenId} {
+      allow get: if true;
+      allow list, create, delete: if false;
+      allow update: if request.resource.data.type == resource.data.type &&
+        (resource.data.is_group_voucher == true ||
+         resource.data.is_used != true ||
+         resource.data.device_id == null ||
+         resource.data.device_id == "" ||
+         request.resource.data.device_id == resource.data.device_id);
+
+      match /activated_devices/{deviceId} {
+        allow get, create, update: if true;
+        allow list, delete: if false;
+      }
     }
-    
-    // Riwayat Kuota & Data Perangkat Siswa/Guru
-    match /devices/{document=**} {
-      allow read, write: if true;
+
+    match /premium_activations/{tokenId} {
+      allow get, create, update: if true;
+      allow list, delete: if false;
+    }
+
+    match /partner_schools/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Pengaturan Aplikasi & Landing Page: Hanya baca dari client, tulis hanya via Service Account Admin WebGAS
+    match /app_settings/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Data Perangkat Siswa/Guru: Blokir list/dump seluruh perangkat
+    match /devices/{deviceId} {
+      allow get, create, update: if true;
+      allow list, delete: if false;
     }
   }
 }

@@ -2,12 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:examgo/services/monitoring_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
   late MonitoringService monitoringService;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     fakeFirestore = FakeFirebaseFirestore();
     monitoringService = MonitoringService.createForTest(fakeFirestore);
   });
@@ -208,6 +210,29 @@ void main() {
           .get();
       expect(snap.data()!['status'], 'ACTIVE');
       expect(snap.data()!['violations'], 0);
+    });
+
+    test('updateStudentStatus increments student_count only once per student', () async {
+      await monitoringService.updateStudentStatus(
+        examId: 'exam_count_1',
+        nis: '2001',
+        name: 'Citra',
+        status: 'ONLINE',
+        violations: 0,
+      );
+      await monitoringService.updateStudentStatus(
+        examId: 'exam_count_1',
+        nis: '2001',
+        name: 'Citra',
+        status: 'ONLINE',
+        violations: 0,
+      );
+
+      final sessionDoc = await fakeFirestore
+          .collection('exam_sessions')
+          .doc('exam_count_1')
+          .get();
+      expect(sessionDoc.data()?['student_count'], 1);
     });
   });
 }

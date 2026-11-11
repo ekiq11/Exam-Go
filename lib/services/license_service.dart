@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io' show Platform;
-import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:examgo/constant/app_config.dart';
@@ -635,57 +634,6 @@ class LicenseService {
       }
     } catch (_) {}
     return false;
-  }
-
-  // ─── GENERATOR BATCH TOKEN (Untuk Pemilik Aplikasi) ───────────────
-
-  /// Membuat daftar kode acak dan menyimpannya ke Firestore koleksi `license_tokens`
-  /// Digunakan oleh pemilik aplikasi untuk mengunggah serial number ke Lynk.id
-  Future<List<String>> generateTokensBatch({
-    required String type, // 'TEACHER_PREMIUM' atau 'STUDENT_LIFETIME'
-    required int count,
-  }) async {
-    final List<String> generated = [];
-    final prefix = type == 'TEACHER_PREMIUM' ? 'GURU' : 'SISWA';
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    final random = Random.secure();
-
-    final db = _db;
-    if (db == null) throw Exception('Koneksi database Firestore tidak tersedia.');
-
-    WriteBatch batch = db.batch();
-    int batchCount = 0;
-
-    for (int i = 0; i < count; i++) {
-      String segment1 = List.generate(4, (_) => chars[random.nextInt(chars.length)]).join();
-      String segment2 = List.generate(4, (_) => chars[random.nextInt(chars.length)]).join();
-      String code = '$prefix-$segment1-$segment2';
-
-      generated.add(code);
-
-      final docRef = db.collection('license_tokens').doc(code);
-      batch.set(docRef, {
-        'token': code,
-        'type': type,
-        'is_used': false,
-        'device_id': null,
-        'used_by_email': null,
-        'created_at': FieldValue.serverTimestamp(),
-      });
-
-      batchCount++;
-      if (batchCount >= 400) {
-        await batch.commit();
-        batch = db.batch();
-        batchCount = 0;
-      }
-    }
-
-    if (batchCount > 0) {
-      await batch.commit();
-    }
-
-    return generated;
   }
 
   /// Menghapus seluruh data lokal akun, lisensi, dan riwayat pada perangkat (Apple Guideline 5.1.1)

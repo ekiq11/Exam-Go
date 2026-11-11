@@ -5,9 +5,9 @@ class AppConfig {
 
   static const String appName = 'ExamGO';
 
-  // Sync dengan pubspec.yaml: version: 8.0.0+44
+  // Sync dengan pubspec.yaml: version: 8.0.0+46
   static const String appVersion = '8.0.0';
-  static const int appBuildNumber = 44;
+  static const int appBuildNumber = 46;
   static const int qrFormatVersion = 1;
 
   /// Secret key for HMAC-SHA256 QR signing.
@@ -64,11 +64,11 @@ class AppConfig {
   /// Dapat di-override saat build dengan: --dart-define=LYNK_ID_TEACHER_URL=...
   static const String lynkIdTeacherUrl = String.fromEnvironment(
     'LYNK_ID_TEACHER_URL',
-    defaultValue: 'https://lynk.id',
+    defaultValue: 'https://lynk.id/examgo',
   );
 
   static const String lynkIdStudentUrl = String.fromEnvironment(
     'LYNK_ID_STUDENT_URL',
-    defaultValue: 'https://lynk.id',
+    defaultValue: 'https://lynk.id/examgo',
   );
 }

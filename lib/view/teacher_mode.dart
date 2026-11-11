@@ -209,6 +209,7 @@ class _TeacherPinScreenState extends State<_TeacherPinScreen> {
         badge: true,
         sound: true,
       );
+      // ignore: deprecated_member_use
       final token = await FirebaseMessaging.instance.getToken();
       if (token == null) return;
       await http

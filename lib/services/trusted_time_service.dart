@@ -30,6 +30,9 @@ class TrustedTimeService {
   /// Apakah waktu sudah pernah disinkronkan dengan server resmi
   bool get isSynced => _isSynced;
 
+  /// Waktu sinkron saat ini menggunakan offset server terakhir (kebal perubahan jam lokal setelah sync)
+  DateTime get trustedNowSync => DateTime.now().add(_serverOffset);
+
   /// Mengambil elapsed realtime perangkat keras (dalam milidetik)
   /// Nilai ini dihitung oleh CPU hardware sejak boot, kebal terhadap manipulasi jam sistem.
   Future<int?> getElapsedRealtime() async {

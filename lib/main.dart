@@ -263,6 +263,7 @@ void main() async {
   // Token bisa berubah kapan saja (factory reset, clear data, dll).
   // Listener ini memastikan GAS selalu punya token terbaru tanpa guru
   // harus buka Teacher Mode ulang.
+  // ignore: deprecated_member_use
   FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
     // FIX FCM-5: Mencegah HP Siswa menimpa token Guru.
     // Hanya device yang pernah masuk ke Mode Guru (punya PIN) yang boleh daftar.
@@ -377,3 +378,4 @@ class _NoGlowScrollBehavior extends ScrollBehavior {
       // BouncingScrollPhysics di semua platform agar konsisten
       const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
 }
+

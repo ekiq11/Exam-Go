@@ -49,12 +49,17 @@ class MonitoringService {
         'last_ping': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      // Catat bahwa sesi ini memiliki siswa aktif (hemat kuota, update atomic tanpa re-read)
-      if (status == 'ONLINE') {
-        sessionRef.update({
-          'student_count': FieldValue.increment(1),
-          'last_student_join': FieldValue.serverTimestamp(),
-        }).catchError((_) {});
+      // Catat sesi memiliki siswa aktif hanya sekali per siswa agar student_count tidak membengkak saat reconnect
+      if (status == 'ONLINE' || status == 'ACTIVE') {
+        final prefs = await SharedPreferences.getInstance();
+        final joinedKey = 'joined_${examId}_$nis';
+        if (prefs.getBool(joinedKey) != true) {
+          await prefs.setBool(joinedKey, true);
+          sessionRef.set({
+            'student_count': FieldValue.increment(1),
+            'last_student_join': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true)).catchError((_) {});
+        }
       }
     } catch (e) {
       // Abaikan error jaringan saat ujian agar tidak mengganggu siswa

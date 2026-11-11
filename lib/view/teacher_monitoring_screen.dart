@@ -1317,6 +1317,7 @@ class _TeacherMonitoringDetailScreenState
   Future<void> _registerTokenForThisExam() async {
     if (AppConfig.gasUrl.isEmpty || AppConfig.gasApiKey.isEmpty) return;
     try {
+      // ignore: deprecated_member_use
       final token = await FirebaseMessaging.instance.getToken();
       if (token == null) return;
       await http

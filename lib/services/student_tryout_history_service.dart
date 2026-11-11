@@ -55,13 +55,13 @@ class StudentTryoutHistoryItem {
   /// Apakah waktu ujian resmi sudah habis sehingga pembahasan & kunci boleh dibuka
   bool get isExamTimeEnded {
     if (examEndTime == null) return true;
-    return DateTime.now().isAfter(examEndTime!);
+    return TrustedTimeService.instance.trustedNowSync.isAfter(examEndTime!);
   }
 
   /// Sisa waktu sebelum kunci & pembahasan dibuka (dalam menit/detik)
   Duration? get remainingExamDuration {
     if (examEndTime == null) return null;
-    final diff = examEndTime!.difference(DateTime.now());
+    final diff = examEndTime!.difference(TrustedTimeService.instance.trustedNowSync);
     return diff.isNegative ? Duration.zero : diff;
   }
 
@@ -439,12 +439,14 @@ class StudentTryoutHistoryService {
   /// Ambil data subtest_scores riwayat ujian langsung dari Firestore jika di cache lokal belum ada
   Future<Map<String, dynamic>?> fetchSubtestScoresFromFirestore(String token, {String? nis}) async {
     try {
-      final db = FirebaseFirestore.instance;
+      final db = _db ?? FirebaseFirestore.instance;
+      final prefs = await SharedPreferences.getInstance();
+      final effectiveNis = (nis != null && nis.isNotEmpty) ? nis : (prefs.getString('student_nis') ?? '');
       // 1. Coba cari dengan doc ID spesifik (${nis}_${token})
-      if (nis != null && nis.isNotEmpty) {
+      if (effectiveNis.isNotEmpty) {
         final doc = await db
             .collection('jawaban_tryout')
-            .doc('${nis}_$token')
+            .doc('${effectiveNis}_$token')
             .get()
             .timeout(const Duration(milliseconds: 3500));
         if (doc.exists && doc.data()?['subtest_scores'] is Map) {
@@ -452,17 +454,19 @@ class StudentTryoutHistoryService {
         }
       }
 
-      // 2. Query berdasarkan token paket ujian
+      // 2. Query berdasarkan device_id perangkat saat ini agar tidak mengambil nilai siswa lain
+      final deviceId = await LicenseService.instance.getDeviceId();
       final query = await db
           .collection('jawaban_tryout')
-          .where('token', isEqualTo: token)
-          .limit(1)
+          .where('device_id', isEqualTo: deviceId)
+          .limit(20)
           .get()
           .timeout(const Duration(milliseconds: 3500));
 
-      if (query.docs.isNotEmpty) {
-        final data = query.docs.first.data();
-        if (data['subtest_scores'] is Map) {
+      for (final doc in query.docs) {
+        final data = doc.data();
+        if (data['token']?.toString().toUpperCase() == token.trim().toUpperCase() &&
+            data['subtest_scores'] is Map) {
           return Map<String, dynamic>.from(data['subtest_scores'] as Map);
         }
       }
