@@ -17,6 +17,7 @@ import '../services/popup_ad_service.dart';
 import 'widgets/popup_ad_dialog.dart';
 import 'widgets/examgo_dialog.dart';
 import 'widgets/examgo_loading_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:examgo/services/license_service.dart';
 import 'package:examgo/services/exam_session_service.dart';
 import 'package:examgo/services/monitoring_service.dart';
@@ -1009,6 +1010,70 @@ class _HomeScreenState extends State<HomeScreen>
               },
             ),
             const SizedBox(height: 14),
+
+            // Tautan Kebijakan Privasi (Wajib untuk Google Play & Apple App Store)
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () async {
+                  final uri = Uri.parse('https://examgo.id/privacy');
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.privacy_tip_outlined,
+                        color: Color(0xFF475569),
+                        size: 22,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Kebijakan Privasi (Privacy Policy)',
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF1E293B),
+                              ),
+                            ),
+                            Text(
+                              'Lihat transparansi perlindungan & pemrosesan data',
+                              style: GoogleFonts.poppins(
+                                fontSize: 10.5,
+                                color: const Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.open_in_new_rounded,
+                        color: Color(0xFF64748B),
+                        size: 18,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+
             Material(
               color: Colors.transparent,
               child: InkWell(

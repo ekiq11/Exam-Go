@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -485,33 +486,47 @@ class _PremiumTokenDialogState extends State<PremiumTokenDialog> {
 
                       const SizedBox(height: 10),
 
-                      // Tombol Beli di Lynk.id
-                      SizedBox(
-                        width: double.infinity,
-                        height: 42,
-                        child: OutlinedButton.icon(
-                          onPressed: () => LicenseService.instance.openLynkIdPage(userType: widget.userType),
-                          icon: const Icon(
-                            Icons.shopping_bag_outlined,
-                            size: 17,
-                            color: AppColors.primaryGreen,
-                          ),
-                          label: Text(
-                            'Belum Punya Kode? Beli di Lynk.id',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                      // Tombol Beli di Lynk.id (Hanya Android/Web, disembunyikan di iOS sesuai Apple Guideline 3.1.1)
+                      if (!Platform.isIOS) ...[
+                        SizedBox(
+                          width: double.infinity,
+                          height: 42,
+                          child: OutlinedButton.icon(
+                            onPressed: () => LicenseService.instance.openLynkIdPage(userType: widget.userType),
+                            icon: const Icon(
+                              Icons.shopping_bag_outlined,
+                              size: 17,
                               color: AppColors.primaryGreen,
                             ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                              color: AppColors.primaryGreen,
+                            label: Text(
+                              'Belum Punya Kode? Beli di Lynk.id',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primaryGreen,
+                              ),
                             ),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                color: AppColors.primaryGreen,
+                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
                           ),
                         ),
-                      ),
+                      ] else ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          child: Text(
+                            'Kode token lisensi disediakan oleh institusi sekolah atau panitia ujian Anda.',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              color: const Color(0xFF64748B),
+                            ),
+                          ),
+                        ),
+                      ],
 
                       const SizedBox(height: 4),
                       Center(
