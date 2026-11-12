@@ -1521,7 +1521,7 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
       },
       {
         'id': ExamCategory.skd,
-        'title': 'SKD Kedinasan',
+        'title': 'SKD CPNS',
         'subtitle': '3 Subtest (TWK, TIU, TKP)',
         'badge': 'CPNS / Ikdin',
         'icon': Icons.military_tech_rounded,
@@ -1549,7 +1549,7 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
       },
       {
         'id': ExamCategory.umum,
-        'title': 'Ujian Umum',
+        'title': 'UJIAN UMUMewwww-ollll',
         'subtitle': 'Ulangan Harian, UTS, & UAS',
         'badge': 'Fleksibel',
         'icon': Icons.assignment_rounded,
@@ -2949,12 +2949,12 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                   _isLoading
                       ? 'Sedang Memproses (${(_loadingProgress * 100).toInt()}%)...'
                       : _currentStep == 0
-                      ? 'Lanjut: Atur Subtest (${_subtests.length})'
+                      ? 'Lanjut Atur Subtest (${_subtests.length})'
                       : _currentStep == 1
-                      ? 'Lanjut: Unggah & Konversi Soal'
+                      ? 'Lanjut Konversi Soal'
                       : canPreview
                       ? 'Pratinjau Soal (${_currentPackage!.totalSoal} Soal)'
-                      : 'Pilih & Validasi Dokumen Soal',
+                      : 'Lanjut Validasi Soal',
                   style: GoogleFonts.poppins(
                     fontSize: 13.5,
                     fontWeight: FontWeight.bold,
