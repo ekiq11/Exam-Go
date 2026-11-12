@@ -76,6 +76,15 @@ class LicenseService {
       } else if (Platform.isIOS) {
         final info = await _deviceInfo.iosInfo;
         _cachedDeviceId = info.identifierForVendor ?? 'ios_unknown';
+      } else if (Platform.isWindows) {
+        final info = await _deviceInfo.windowsInfo;
+        _cachedDeviceId = info.deviceId.isNotEmpty ? info.deviceId : 'windows_unknown';
+      } else if (Platform.isMacOS) {
+        final info = await _deviceInfo.macOsInfo;
+        _cachedDeviceId = info.systemGUID ?? 'macos_unknown';
+      } else if (Platform.isLinux) {
+        final info = await _deviceInfo.linuxInfo;
+        _cachedDeviceId = info.machineId ?? 'linux_unknown';
       } else {
         _cachedDeviceId = 'generic_device';
       }
@@ -83,6 +92,15 @@ class LicenseService {
       _cachedDeviceId = 'fallback_device';
     }
     return _cachedDeviceId!;
+  }
+
+  /// Mengecek apakah perangkat saat ini bertipe Laptop/Desktop atau Mobile (Android/iOS)
+  bool isLaptopOrDesktopDevice() {
+    if (kIsWeb) return true;
+    try {
+      if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) return true;
+    } catch (_) {}
+    return false;
   }
 
   // ─── SISI SISWA (Freemium 5x & Lifetime) ─────────────────────────
@@ -462,73 +480,136 @@ class LicenseService {
         );
       }
 
-      // Jika sudah pernah dipakai pada perangkat yang sama → Reactivate
-      if (isUsed && usedByDevice == currentDeviceId) {
-        await _applyActivationLocally(expectedType);
-        return ActivationResult.success('Lisensi pada perangkat ini telah aktif kembali.');
-      }
+      // ── ATURAN MULTI-PERANGKAT: 1 TOKEN = 1 HP (Android/iOS) + 1 LAPTOP ──
+      final isLaptop = isLaptopOrDesktopDevice();
+      final mobileDeviceId = data['mobile_device_id']?.toString() ??
+          (!isLaptop && data['device_id'] != null ? data['device_id']?.toString() : null);
+      final laptopDeviceId = data['laptop_device_id']?.toString() ??
+          (isLaptop && data['device_id'] != null ? data['device_id']?.toString() : null);
 
-      // Jika sudah pernah dipakai di perangkat lain
-      if (isUsed) {
-        return ActivationResult.failure(
-          'Kode lisensi ini sudah pernah digunakan pada perangkat lain. Setiap kode hanya berlaku untuk 1 perangkat.',
+      if (isLaptop) {
+        // Cek jika laptop ini sudah pernah aktif sebelumnya
+        if (laptopDeviceId == currentDeviceId || data['device_id'] == currentDeviceId) {
+          await _applyActivationLocally(expectedType);
+          return ActivationResult.success('Lisensi pada Laptop ini telah aktif kembali.');
+        }
+
+        // Cek jika slot laptop sudah dipakai oleh laptop lain
+        if (laptopDeviceId != null && laptopDeviceId.isNotEmpty && laptopDeviceId != currentDeviceId) {
+          return ActivationResult.failure(
+            'Kode lisensi ini sudah aktif pada 1 Laptop lain. Aturan: 1 Token berlaku untuk 1 HP (Android/iOS) + 1 Laptop.',
+          );
+        }
+
+        // Daftarkan laptop ini
+        final now = FieldValue.serverTimestamp();
+        await docRef.update({
+          'is_used': true,
+          'laptop_device_id': currentDeviceId,
+          'user_name': userName ?? data['user_name'] ?? 'User Premium',
+          'used_by_email': userEmail ?? data['used_by_email'] ?? 'buyer_email',
+          'user_whatsapp': userWhatsapp ?? data['user_whatsapp'] ?? '-',
+          'laptop_activated_at': now,
+          if (data['activated_at'] == null) 'activated_at': now,
+        });
+
+        await db.collection('devices').doc(currentDeviceId).set({
+          deviceField: true,
+          'device_type': 'laptop',
+          'last_token_activated': token,
+          'user_name': userName,
+          'user_email': userEmail,
+          'user_whatsapp': userWhatsapp,
+          'activated_at': now,
+        }, SetOptions(merge: true));
+
+        final prefs = await SharedPreferences.getInstance();
+        if (userName != null && userName.isNotEmpty) await prefs.setString('student_name', userName);
+        if (userEmail != null && userEmail.isNotEmpty) await prefs.setString('student_email', userEmail);
+        if (userWhatsapp != null && userWhatsapp.isNotEmpty) await prefs.setString('student_whatsapp', userWhatsapp);
+
+        await _applyActivationLocally(expectedType);
+        final targetExam = data['target_exam_id']?.toString() ?? data['target_package_id']?.toString();
+
+        await db.collection('premium_activations').doc(token).set({
+          'token': token,
+          'type': tokenType,
+          'user_name': userName ?? data['user_name'] ?? 'User Premium',
+          'user_email': userEmail ?? data['used_by_email'] ?? '-',
+          'user_whatsapp': userWhatsapp ?? data['user_whatsapp'] ?? '-',
+          'device_id': currentDeviceId,
+          'device_type': 'laptop',
+          'target_exam_id': targetExam,
+          'school': data['school'] ?? 'UMUM',
+          'activated_at': now,
+        }, SetOptions(merge: true));
+
+        return ActivationResult.success(
+          'Lisensi berhasil diaktifkan pada Laptop! (Token ini juga dapat dipakai di 1 HP Android/iOS).',
+          targetExam,
+        );
+      } else {
+        // Perangkat Mobile (Android / iOS)
+        if (mobileDeviceId == currentDeviceId || data['device_id'] == currentDeviceId) {
+          await _applyActivationLocally(expectedType);
+          return ActivationResult.success('Lisensi pada HP ini telah aktif kembali.');
+        }
+
+        if (mobileDeviceId != null && mobileDeviceId.isNotEmpty && mobileDeviceId != currentDeviceId) {
+          return ActivationResult.failure(
+            'Kode lisensi ini sudah aktif pada 1 HP lain. Aturan: 1 Token berlaku untuk 1 HP (Android/iOS) + 1 Laptop.',
+          );
+        }
+
+        // Daftarkan HP ini
+        final now = FieldValue.serverTimestamp();
+        await docRef.update({
+          'is_used': true,
+          'mobile_device_id': currentDeviceId,
+          'device_id': currentDeviceId, // kompatibilitas ke belakang
+          'user_name': userName ?? data['user_name'] ?? 'User Premium',
+          'used_by_email': userEmail ?? data['used_by_email'] ?? 'buyer_email',
+          'user_whatsapp': userWhatsapp ?? data['user_whatsapp'] ?? '-',
+          'mobile_activated_at': now,
+          if (data['activated_at'] == null) 'activated_at': now,
+        });
+
+        await db.collection('devices').doc(currentDeviceId).set({
+          deviceField: true,
+          'device_type': 'mobile',
+          'last_token_activated': token,
+          'user_name': userName,
+          'user_email': userEmail,
+          'user_whatsapp': userWhatsapp,
+          'activated_at': now,
+        }, SetOptions(merge: true));
+
+        final prefs = await SharedPreferences.getInstance();
+        if (userName != null && userName.isNotEmpty) await prefs.setString('student_name', userName);
+        if (userEmail != null && userEmail.isNotEmpty) await prefs.setString('student_email', userEmail);
+        if (userWhatsapp != null && userWhatsapp.isNotEmpty) await prefs.setString('student_whatsapp', userWhatsapp);
+
+        await _applyActivationLocally(expectedType);
+        final targetExam = data['target_exam_id']?.toString() ?? data['target_package_id']?.toString();
+
+        await db.collection('premium_activations').doc(token).set({
+          'token': token,
+          'type': tokenType,
+          'user_name': userName ?? data['user_name'] ?? 'User Premium',
+          'user_email': userEmail ?? data['used_by_email'] ?? '-',
+          'user_whatsapp': userWhatsapp ?? data['user_whatsapp'] ?? '-',
+          'device_id': currentDeviceId,
+          'device_type': 'mobile',
+          'target_exam_id': targetExam,
+          'school': data['school'] ?? 'UMUM',
+          'activated_at': now,
+        }, SetOptions(merge: true));
+
+        return ActivationResult.success(
+          'Lisensi berhasil diaktifkan pada HP! (Token ini juga dapat dipakai di 1 Laptop/PC).',
+          targetExam,
         );
       }
-
-      // Aktivasi token baru: Kunci ke perangkat ini
-      final now = FieldValue.serverTimestamp();
-      await docRef.update({
-        'is_used': true,
-        'device_id': currentDeviceId,
-        'user_name': userName ?? 'User Premium',
-        'used_by_email': userEmail ?? 'buyer_email',
-        'user_whatsapp': userWhatsapp ?? '-',
-        'activated_at': now,
-      });
-
-      // Update data device di Firestore
-      await db.collection('devices').doc(currentDeviceId).set({
-        deviceField: true,
-        'last_token_activated': token,
-        'user_name': userName,
-        'user_email': userEmail,
-        'user_whatsapp': userWhatsapp,
-        'activated_at': now,
-      }, SetOptions(merge: true));
-
-      final targetExam = data['target_exam_id']?.toString() ??
-          data['target_package_id']?.toString();
-
-      // Catat ke premium_activations untuk dashboard monitoring admin
-      await db.collection('premium_activations').doc(token).set({
-        'token': token,
-        'type': tokenType,
-        'user_name': userName ?? 'User Premium',
-        'user_email': userEmail ?? '-',
-        'user_whatsapp': userWhatsapp ?? '-',
-        'device_id': currentDeviceId,
-        'target_exam_id': targetExam,
-        'school': data['school'] ?? 'UMUM',
-        'activated_at': now,
-      }, SetOptions(merge: true));
-
-      final prefs = await SharedPreferences.getInstance();
-      if (userName != null && userName.isNotEmpty) {
-        await prefs.setString('student_name', userName);
-      }
-      if (userEmail != null && userEmail.isNotEmpty) {
-        await prefs.setString('student_email', userEmail);
-      }
-      if (userWhatsapp != null && userWhatsapp.isNotEmpty) {
-        await prefs.setString('student_whatsapp', userWhatsapp);
-      }
-
-      // Simpan status lokal
-      await _applyActivationLocally(expectedType);
-      final label = expectedType == 'TEACHER_PREMIUM'
-          ? 'Lisensi Guru Premium Aktif!'
-          : 'Akses Siswa Selamanya Aktif!';
-      return ActivationResult.success(label, targetExam);
     } catch (e) {
       // 2. Fallback otomatis ke GAS Server Backend jika direct Firestore gagal (misal Security Rules / Network)
       try {
@@ -559,12 +640,15 @@ class LicenseService {
     if (gasUrl.isEmpty || apiKey.isEmpty) return null;
 
     final deviceId = await getDeviceId();
+    final isLaptop = isLaptopOrDesktopDevice();
     final body = jsonEncode({
       'apiKey': apiKey,
       'action': 'verifyLicense',
       'token': token,
       'userType': userType,
       'deviceId': deviceId,
+      'isLaptop': isLaptop,
+      'deviceType': isLaptop ? 'laptop' : 'mobile',
       'userEmail': userEmail ?? 'buyer_email',
       'userName': userName ?? 'User',
       'userWhatsapp': userWhatsapp ?? '-',

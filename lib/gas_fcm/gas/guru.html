@@ -380,6 +380,11 @@
   <script>
     // State Aplikasi
     let _teacherToken = localStorage.getItem('examgo_guru_token') || '';
+    let _laptopDeviceId = localStorage.getItem('examgo_laptop_id') || '';
+    if (!_laptopDeviceId) {
+      _laptopDeviceId = 'LAPTOP-' + Math.random().toString(36).substring(2, 9).toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
+      localStorage.setItem('examgo_laptop_id', _laptopDeviceId);
+    }
     let _extractedQuestions = [];
     let _currentSourceTab = 'docx';
     let _publishedData = null;
@@ -961,6 +966,7 @@
         const payload = {
           action: 'create_teacher_exam',
           teacher_token: _teacherToken,
+          laptop_id: _laptopDeviceId,
           token: token,
           title: title,
           duration: duration,

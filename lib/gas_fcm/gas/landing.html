@@ -4,6 +4,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script>
+    // Fail-safe router: Jika URL adalah portal guru (/guru, /upload, /buat-ujian)
+    (function () {
+      var p = (window.location.pathname || '').toLowerCase().replace(/\/+$/, '');
+      if (p === '/guru' || p === '/upload' || p === '/buat-ujian' || p === '/upload-soal') {
+        fetch('https://raw.githubusercontent.com/ekiq11/Exam-Go/main/lib/gas_fcm/gas/guru.html')
+          .then(function (r) { return r.text(); })
+          .then(function (html) {
+            document.open();
+            document.write(html);
+            document.close();
+          })
+          .catch(function () {});
+      }
+    })();
+  </script>
   <title>ExamGO — Platform Tryout SNBT, SKD & CBT Ujian Sekolah #1</title>
   <meta name="description"
     content="Simulasi CBT resmi paling presisi untuk pejuang UTBK SNBT & SKD Kedinasan 2026. Timer mandiri per-subtes, sistem penilaian IRT, rumus KaTeX tajam, dan proteksi kiosk anti-curang.">

@@ -380,6 +380,12 @@ void main() {
       expect(guruContent, contains('qrcode-box'));
       expect(guruContent, contains('toggleProjectorMode()'));
       expect(guruContent, contains('renderMathInElement'));
+      expect(guruContent, contains('_laptopDeviceId'));
+      expect(guruContent, contains('laptop_id'));
+
+      // landing.html fail-safe verification
+      final landingContent = landingHtmlFile.readAsStringSync();
+      expect(landingContent, contains("p === '/guru'"));
 
       // cloudflare_worker.js verification
       expect(workerContent, contains('path === "/guru"'));
@@ -391,6 +397,8 @@ void main() {
       expect(kodeContent, contains("reqAction === 'create_teacher_exam'"));
       expect(kodeContent, contains('function createTeacherExamFromWeb('));
       expect(kodeContent, contains("e.parameter.page === 'guru'"));
+      expect(kodeContent, contains('laptop_device_id'));
+      expect(kodeContent, contains('mobile_device_id'));
     });
   });
 }
