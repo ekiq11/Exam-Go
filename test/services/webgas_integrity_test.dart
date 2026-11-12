@@ -138,7 +138,7 @@ void main() {
       expect(content, contains('ExamGO'));
       expect(content, contains('hero-title-text'));
       expect(content, contains('hero-subtitle-text'));
-      expect(content, contains('btn-hero-lynkid'));
+      expect(content, anyOf(contains('btn-hero-lynkid'), contains('btn-hero-siswa-lynkid')));
       expect(content, isNot(contains('github.com/ekiq11/Exam-Go/releases')));
 
       // Official Store download links check (Verified Store Downloads)
@@ -168,8 +168,8 @@ void main() {
       // Value props & Pricing
       expect(content, contains('100% Kiosk Mode Terkunci'));
       expect(content, contains('Penalaran Umum (TPS)'));
-      expect(content, contains('Single Event Tryout'));
-      expect(content, contains('All-Access Bundle'));
+      expect(content, contains('Siswa Premium Lifetime'));
+      expect(content, contains('Guru & Proktor Premium'));
       expect(content, contains('FAQ'));
 
       // Hidden Admin Portal check (must not be visible to students/public)

@@ -36,24 +36,24 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Memastikan AppBar menampilkan judul Riwayat Ujian & Token Saya dan rata kiri
-      expect(find.text('Riwayat Ujian & Token Saya'), findsOneWidget);
+      // Memastikan AppBar menampilkan judul Riwayat & Token Ujian dan rata kiri
+      expect(find.text('Riwayat & Token Ujian'), findsOneWidget);
       expect(find.text('Katalog & Manajemen Token'), findsOneWidget);
       expect(find.text('1 Sesi'), findsOneWidget);
 
       final sliverAppBar = tester.widget<SliverAppBar>(find.byType(SliverAppBar));
       expect(sliverAppBar.centerTitle, isFalse);
 
-      // Memastikan kartu token menampilkan aksi Detail & QR, Bagikan, dan Hapus
-      expect(find.text('Detail & QR'), findsOneWidget);
+      // Memastikan kartu token menampilkan aksi Detail, Bagikan, dan Hapus
+      expect(find.text('Detail'), findsOneWidget);
       expect(find.text('Bagikan'), findsOneWidget);
       expect(find.text('Hapus'), findsOneWidget);
 
-      // Memastikan TIDAK ADA tombol Pantau Live pada Riwayat Token
-      expect(find.text('Pantau Live'), findsNothing);
+      // Memastikan TIDAK ADA tombol Monitor pada Riwayat Token
+      expect(find.text('Monitor'), findsNothing);
     });
 
-    testWidgets('Live Monitoring Peserta (isLiveMode: true) renders live proctoring with Pantau Live button', (tester) async {
+    testWidgets('Live Monitoring (isLiveMode: true) renders live proctoring with Monitor button', (tester) async {
       tester.view.physicalSize = const Size(800, 1400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
@@ -68,14 +68,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Memastikan AppBar menampilkan judul Live Monitoring Peserta
-      expect(find.text('Live Monitoring Peserta'), findsOneWidget);
+      // Memastikan AppBar menampilkan judul Live Monitoring
+      expect(find.text('Live Monitoring'), findsOneWidget);
       expect(find.text('Radar Pengawasan Real-Time'), findsOneWidget);
       expect(find.text('1 Sesi'), findsOneWidget);
 
-      // Memastikan ada tombol Pantau Live pada mode Live Monitoring
-      expect(find.text('Pantau Live'), findsOneWidget);
-      expect(find.text('Detail & QR'), findsOneWidget);
+      // Memastikan ada tombol Monitor pada mode Live Monitoring
+      expect(find.text('Monitor'), findsOneWidget);
+      expect(find.text('Detail'), findsOneWidget);
       expect(find.text('Bagikan'), findsOneWidget);
     });
   });
