@@ -2431,7 +2431,7 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                   color: AppColors.primaryGreen,
                 ),
                 label: Text(
-                  'Panduan Lengkap',
+                  'Panduan',
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,

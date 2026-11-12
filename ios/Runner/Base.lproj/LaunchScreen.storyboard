@@ -17,10 +17,10 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <imageView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleAspectFit" image="LaunchImage" translatesAutoresizingMaskIntoConstraints="NO" id="YRO-k0-Ey4">
-                                <rect key="frame" x="127.5" y="323.5" width="120" height="120"/>
+                                <rect key="frame" x="112.5" y="308.5" width="150" height="150"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="120" id="iconWidth"/>
-                                    <constraint firstAttribute="height" constant="120" id="iconHeight"/>
+                                    <constraint firstAttribute="width" constant="150" id="iconWidth"/>
+                                    <constraint firstAttribute="height" constant="150" id="iconHeight"/>
                                 </constraints>
                             </imageView>
                         </subviews>

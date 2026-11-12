@@ -43,6 +43,21 @@ void main() {
       expect(item.isPassed, isTrue);
       expect(item.allowRetake, isTrue);
     });
+
+    test('Pagination slices schedules 5 items per scroll page', () {
+      const pageSize = 5;
+      final totalItems = List.generate(12, (i) => 'TRYOUT-${i + 1}');
+      var visibleCount = pageSize.clamp(0, totalItems.length);
+      expect(visibleCount, equals(5));
+
+      // Scroll page 2 -> 10 items
+      visibleCount = (visibleCount + pageSize).clamp(0, totalItems.length);
+      expect(visibleCount, equals(10));
+
+      // Scroll page 3 -> clamped to 12 items
+      visibleCount = (visibleCount + pageSize).clamp(0, totalItems.length);
+      expect(visibleCount, equals(12));
+    });
   });
 }
 

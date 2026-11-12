@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Native splash screen background with proportional 120dp center icon -->
+<!-- Modern proportional native splash screen using ExamGO green graduation cap logo -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/splash_background" />
 
     <item
-        android:width="120dp"
-        android:height="120dp"
-        android:gravity="center">
-        <bitmap
-            android:gravity="fill"
-            android:src="@mipmap/ic_launcher" />
-    </item>
+        android:width="288dp"
+        android:height="288dp"
+        android:gravity="center"
+        android:drawable="@drawable/splash_logo" />
 </layer-list>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Dark theme native splash screen background (non-green) -->
-    <color name="splash_background">#121212</color>
+    <!-- Consistent clean white native splash screen background for high contrast with green ExamGO logo -->
+    <color name="splash_background">#FFFFFF</color>
 </resources>

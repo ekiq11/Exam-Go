@@ -41,6 +41,9 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
   bool _isSyncing = false;
   List<TryoutSchedule> _allSchedules = [];
   List<StudentTryoutHistoryItem> _historyList = [];
+  static const int _kPageSize = 5;
+  int _visibleCatalogCount = _kPageSize;
+  int _visibleHistoryCount = _kPageSize;
   Set<String> _cachedPaketIds = {};
   Set<String> _seenTryoutIds = {};
   String _selectedCategory = 'Semua';
@@ -536,7 +539,10 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                         : const Color(0xFFE2E8F0),
                   ),
                 ),
-                onSelected: (_) => setState(() => _selectedCategory = cat),
+                onSelected: (_) => setState(() {
+                  _selectedCategory = cat;
+                  _visibleCatalogCount = _kPageSize;
+                }),
               );
             },
           ),
@@ -590,66 +596,121 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
                       ),
 
                     Expanded(
-                      child: RefreshIndicator(
-                        color: AppColors.primaryGreen,
-                        onRefresh: _loadData,
-                        child: _filteredSchedules.isEmpty
-                            ? _buildEmptyCatalogState()
-                            : ListView.builder(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  12,
-                                  16,
-                                  32,
-                                ),
-                                itemCount: _filteredSchedules.length,
-                                itemBuilder: (context, index) {
-                                  final item = _filteredSchedules[index];
-                                  final isCached =
-                                      _cachedPaketIds.contains(
-                                        item.paketId.toUpperCase(),
-                                      ) ||
-                                      _cachedPaketIds.contains(item.paketId);
-                                  final history = _findHistoryForSchedule(item);
-                                  final isAttempted = history != null;
-                                  final isNew =
-                                      !isAttempted &&
-                                      (!_seenTryoutIds.contains(item.paketId) ||
-                                          _isFreshSchedule(item));
-                                  return TryoutCardWidget(
-                                    schedule: item,
-                                    isCached: isCached,
-                                    isAttempted: isAttempted,
-                                    historyItem: history,
-                                    isNew: isNew,
-                                    onTap: () async {
-                                      if (item.jenisTest == 'EVENT') {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                EventDashboardScreen(
-                                                  eventId: item.paketId,
-                                                  initialSchedule: item,
-                                                ),
-                                          ),
-                                        );
-                                      } else {
-                                        final shouldStart =
-                                            await TryoutDetailSheet.show(
-                                              context,
-                                              item,
-                                              isCached: isCached,
-                                            );
-                                        if (shouldStart == true &&
-                                            context.mounted) {
-                                          _startTryout(item);
+                      child: Builder(
+                        builder: (context) {
+                          final filtered = _filteredSchedules;
+                          final visibleCount = _visibleCatalogCount.clamp(
+                            0,
+                            filtered.length,
+                          );
+                          final hasMore = visibleCount < filtered.length;
+
+                          return NotificationListener<ScrollNotification>(
+                            onNotification: (scrollInfo) {
+                              if (hasMore &&
+                                  scrollInfo.metrics.pixels >=
+                                      scrollInfo.metrics.maxScrollExtent - 100) {
+                                setState(() {
+                                  _visibleCatalogCount =
+                                      (_visibleCatalogCount + _kPageSize).clamp(
+                                        0,
+                                        filtered.length,
+                                      );
+                                });
+                              }
+                              return false;
+                            },
+                            child: RefreshIndicator(
+                              color: AppColors.primaryGreen,
+                              onRefresh: () async {
+                                setState(
+                                  () => _visibleCatalogCount = _kPageSize,
+                                );
+                                await _loadData();
+                              },
+                              child: filtered.isEmpty
+                                  ? _buildEmptyCatalogState()
+                                  : ListView.builder(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        16,
+                                        12,
+                                        16,
+                                        32,
+                                      ),
+                                      itemCount:
+                                          visibleCount + (hasMore ? 1 : 0),
+                                      itemBuilder: (context, index) {
+                                        if (index == visibleCount) {
+                                          return _buildLoadMoreFooter(
+                                            shown: visibleCount,
+                                            total: filtered.length,
+                                            label: 'paket tryout',
+                                            onTap: () => setState(() {
+                                              _visibleCatalogCount =
+                                                  (_visibleCatalogCount +
+                                                          _kPageSize)
+                                                      .clamp(
+                                                        0,
+                                                        filtered.length,
+                                                      );
+                                            }),
+                                          );
                                         }
-                                      }
-                                    },
-                                  );
-                                },
-                              ),
+                                        final item = filtered[index];
+                                        final isCached =
+                                            _cachedPaketIds.contains(
+                                              item.paketId.toUpperCase(),
+                                            ) ||
+                                            _cachedPaketIds.contains(
+                                              item.paketId,
+                                            );
+                                        final history = _findHistoryForSchedule(
+                                          item,
+                                        );
+                                        final isAttempted = history != null;
+                                        final isNew =
+                                            !isAttempted &&
+                                            (!_seenTryoutIds.contains(
+                                                  item.paketId,
+                                                ) ||
+                                                _isFreshSchedule(item));
+                                        return TryoutCardWidget(
+                                          schedule: item,
+                                          isCached: isCached,
+                                          isAttempted: isAttempted,
+                                          historyItem: history,
+                                          isNew: isNew,
+                                          onTap: () async {
+                                            if (item.jenisTest == 'EVENT') {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      EventDashboardScreen(
+                                                        eventId: item.paketId,
+                                                        initialSchedule: item,
+                                                      ),
+                                                ),
+                                              );
+                                            } else {
+                                              final shouldStart =
+                                                  await TryoutDetailSheet.show(
+                                                    context,
+                                                    item,
+                                                    isCached: isCached,
+                                                  );
+                                              if (shouldStart == true &&
+                                                  context.mounted) {
+                                                _startTryout(item);
+                                              }
+                                            }
+                                          },
+                                        );
+                                      },
+                                    ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -902,38 +963,119 @@ class _TryoutScheduleScreenState extends State<TryoutScheduleScreen>
         .reduce((a, b) => a > b ? a : b);
     final totalLulus = _historyList.where((e) => e.isPassed).length;
 
-    return RefreshIndicator(
-      color: AppColors.primaryGreen,
-      onRefresh: _loadHistory,
-      child: ListView.builder(
-        padding: const EdgeInsets.only(bottom: 32),
-        itemCount:
-            _historyList.length +
-            2, // +1 untuk header stats, +1 untuk Spider Chart kumulatif
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return _buildHistoryHeaderStats(
-              totalUjian: totalUjian,
-              avgScore: avgScore,
-              highestScore: highestScore,
-              totalLulus: totalLulus,
-            );
-          }
-          if (index == 1) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-              child: TryoutSpiderChartWidget(
-                title: 'Radar Kompetensi Siswa',
-                subtitle:
-                    'Pemetaan penguasaan materi dari seluruh riwayat tryout',
-                subScores: TryoutSubScore.fromCumulativeHistory(_historyList),
-              ),
-            );
-          }
+    final visibleHistory = _visibleHistoryCount.clamp(0, _historyList.length);
+    final hasMoreHistory = visibleHistory < _historyList.length;
 
-          final item = _historyList[index - 2];
-          return _buildHistoryCard(item);
+    return NotificationListener<ScrollNotification>(
+      onNotification: (scrollInfo) {
+        if (hasMoreHistory &&
+            scrollInfo.metrics.pixels >=
+                scrollInfo.metrics.maxScrollExtent - 100) {
+          setState(() {
+            _visibleHistoryCount = (_visibleHistoryCount + _kPageSize).clamp(
+              0,
+              _historyList.length,
+            );
+          });
+        }
+        return false;
+      },
+      child: RefreshIndicator(
+        color: AppColors.primaryGreen,
+        onRefresh: () async {
+          setState(() => _visibleHistoryCount = _kPageSize);
+          await _loadHistory();
         },
+        child: ListView.builder(
+          padding: const EdgeInsets.only(bottom: 32),
+          itemCount:
+              visibleHistory +
+              2 +
+              (hasMoreHistory ? 1 : 0), // +1 header stats, +1 Spider Chart
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return _buildHistoryHeaderStats(
+                totalUjian: totalUjian,
+                avgScore: avgScore,
+                highestScore: highestScore,
+                totalLulus: totalLulus,
+              );
+            }
+            if (index == 1) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+                child: TryoutSpiderChartWidget(
+                  title: 'Radar Kompetensi Siswa',
+                  subtitle:
+                      'Pemetaan penguasaan materi dari seluruh riwayat tryout',
+                  subScores: TryoutSubScore.fromCumulativeHistory(_historyList),
+                ),
+              );
+            }
+            if (index == visibleHistory + 2) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                child: _buildLoadMoreFooter(
+                  shown: visibleHistory,
+                  total: _historyList.length,
+                  label: 'riwayat tryout',
+                  onTap: () => setState(() {
+                    _visibleHistoryCount = (_visibleHistoryCount + _kPageSize)
+                        .clamp(0, _historyList.length);
+                  }),
+                ),
+              );
+            }
+
+            final item = _historyList[index - 2];
+            return _buildHistoryCard(item);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadMoreFooter({
+    required int shown,
+    required int total,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final remaining = (total - shown).clamp(1, _kPageSize);
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, bottom: 12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFCBD5E1)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.expand_more_rounded,
+                size: 18,
+                color: AppColors.primaryGreen,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  'Menampilkan $shown dari $total $label • Muat $remaining lagi',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primaryGreen,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
