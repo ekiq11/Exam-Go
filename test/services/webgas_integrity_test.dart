@@ -356,5 +356,41 @@ void main() {
       expect(workerContent, contains('/webhook'));
       expect(workerContent, contains('redirect: "follow"'));
     });
+
+    test('guru.html, worker routes, and Kode.js create_teacher_exam are properly wired', () {
+      final guruHtmlFile = File('lib/gas_fcm/gas/guru.html');
+      final workerFile = File('lib/gas_fcm/cloudflare_worker.js');
+      final kodeFile = File('lib/gas_fcm/gas/Kode.js');
+
+      expect(guruHtmlFile.existsSync(), isTrue);
+      expect(workerFile.existsSync(), isTrue);
+      expect(kodeFile.existsSync(), isTrue);
+
+      final guruContent = guruHtmlFile.readAsStringSync();
+      final workerContent = workerFile.readAsStringSync();
+      final kodeContent = kodeFile.readAsStringSync();
+
+      // guru.html verification
+      expect(guruContent, contains('ExamGO Guru'));
+      expect(guruContent, contains('input-auth-token'));
+      expect(guruContent, contains('file-docx-input'));
+      expect(guruContent, contains('gform-url-input'));
+      expect(guruContent, contains('btn-publish-exam'));
+      expect(guruContent, contains('modal-published'));
+      expect(guruContent, contains('qrcode-box'));
+      expect(guruContent, contains('toggleProjectorMode()'));
+      expect(guruContent, contains('renderMathInElement'));
+
+      // cloudflare_worker.js verification
+      expect(workerContent, contains('path === "/guru"'));
+      expect(workerContent, contains('path === "/api/proxy-gform"'));
+      expect(workerContent, contains('path === "/api/teacher-exam"'));
+      expect(workerContent, contains('GITHUB_GURU_PAGE_URL'));
+
+      // Kode.js verification
+      expect(kodeContent, contains("reqAction === 'create_teacher_exam'"));
+      expect(kodeContent, contains('function createTeacherExamFromWeb('));
+      expect(kodeContent, contains("e.parameter.page === 'guru'"));
+    });
   });
 }

@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ExamGO Guru — Portal Pembuat Soal & CBT Kelas</title>
+  <meta name="description"
+    content="Portal mandiri bagi Guru dan Proktor untuk membuat soal ujian CBT anti-curang ExamGO langsung dari laptop/PC via Word (.docx) atau Google Form.">
+  <link rel="icon" type="image/png"
+    href="https://raw.githubusercontent.com/ekiq11/Exam-Go/main/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png">
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- KaTeX CSS & JS for LaTeX Math Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Mammoth.js for Word (.docx) & JSZip -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <!-- QRCode.js for generating QR Codes -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+              950: '#022c22',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .math-tex {
+      display: inline-block;
+      vertical-align: middle;
+      font-size: 1.05em;
+    }
+    .dragover {
+      border-color: #10b981 !important;
+      background-color: rgba(16, 185, 129, 0.08) !important;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- ── Top Navigation Bar ────────────────────────────────────────────── -->
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="https://examgo.id" class="flex items-center gap-2 group">
+          <img src="https://raw.githubusercontent.com/ekiq11/Exam-Go/main/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
+            alt="ExamGO Logo" class="w-9 h-9 rounded-xl shadow-md group-hover:scale-105 transition-transform">
+          <div>
+            <span class="text-lg font-black tracking-tight text-white flex items-center gap-1">
+              ExamGO <span class="text-xs px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">GURU</span>
+            </span>
+            <span class="text-[10px] text-slate-400 block -mt-1">Portal Pembuat Soal CBT</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Teacher Token Bar -->
+      <div id="teacher-token-badge-container" class="flex items-center gap-2">
+        <div id="token-status-box" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-slate-400">Lisensi:</span>
+          <span id="active-teacher-token" class="font-mono font-bold text-brand-300">GURU-****</span>
+          <button onclick="promptChangeToken()" class="text-[11px] text-slate-400 hover:text-white underline ml-1">Ganti</button>
+        </div>
+        <a href="https://wa.me/6289693652230" target="_blank"
+          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors">
+          <span>💬 Bantuan</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main Content Container ────────────────────────────────────────── -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
+
+    <!-- Hero / Header Title -->
+    <div class="mb-8 text-center sm:text-left sm:flex sm:items-center sm:justify-between">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2">
+          <span>Buat Ujian CBT Anti-Curang</span>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">Laptop & PC</span>
+        </h1>
+        <p class="text-sm text-slate-400 mt-1">
+          Unggah soal langsung dari dokumen Word atau link Google Form. Rumus matematika otomatis terkonversi ke KaTeX.
+        </p>
+      </div>
+      <div class="mt-4 sm:mt-0 flex justify-center">
+        <button onclick="downloadDocxTemplate()"
+          class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold transition-all shadow-sm">
+          <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          </svg>
+          <span>Unduh Template Word (.docx)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Step 1: Informasi & Pengaturan Sesi Ujian ───────────────────── -->
+    <section class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 sm:p-6 mb-8 shadow-xl">
+      <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-800">
+        <span class="w-6 h-6 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs font-extrabold">1</span>
+        <h2 class="text-base font-bold text-white">Pengaturan Sesi Ujian</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Judul Ujian -->
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">Judul / Mata Pelajaran Ujian *</label>
+          <input type="text" id="exam-title" placeholder="Contoh: Penilaian Harian Matematika Wajib X-A"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm text-white placeholder-slate-500 outline-none transition-colors">
+        </div>
+
+        <!-- Durasi Menit -->
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">Durasi Pengerjaan *</label>
+          <div class="relative">
+            <input type="number" id="exam-duration" value="90" min="5" max="360"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm text-white outline-none transition-colors pr-14">
+            <span class="absolute right-3.5 top-2.5 text-xs font-semibold text-slate-400">Menit</span>
+          </div>
+        </div>
+
+        <!-- Token Ujian -->
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5 flex items-center justify-between">
+            <span>Kode / Token Ujian *</span>
+            <button type="button" onclick="randomizeToken()" class="text-[10px] text-brand-400 hover:underline">Acak</button>
+          </label>
+          <input type="text" id="exam-token" maxlength="12" placeholder="Contoh: MTK10A"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-mono font-bold text-sm text-amber-300 uppercase outline-none tracking-wider transition-colors">
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Step 2: Pilihan Sumber Soal (Word vs Google Form) ───────────── -->
+    <section class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 sm:p-6 mb-8 shadow-xl">
+      <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-800">
+        <span class="w-6 h-6 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs font-extrabold">2</span>
+        <h2 class="text-base font-bold text-white">Pilih Sumber Dokumen Soal</h2>
+      </div>
+
+      <!-- Tab Buttons -->
+      <div class="flex rounded-xl bg-slate-950 p-1 border border-slate-800 mb-6 max-w-md">
+        <button id="tab-btn-docx" onclick="switchSourceTab('docx')"
+          class="flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-brand-600 text-white shadow-md">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <span>Dokumen Word (.docx)</span>
+        </button>
+        <button id="tab-btn-gform" onclick="switchSourceTab('gform')"
+          class="flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white">
+          <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+          </svg>
+          <span>⭐ Google Form Kuis</span>
+        </button>
+      </div>
+
+      <!-- Panel 1: Upload DOCX -->
+      <div id="panel-docx" class="space-y-4">
+        <div id="dropzone"
+          class="border-2 border-dashed border-slate-700 hover:border-brand-500 rounded-2xl p-8 sm:p-12 text-center transition-all bg-slate-950/60 cursor-pointer">
+          <input type="file" id="file-docx-input" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" onchange="handleDocxSelected(event)">
+          <div class="w-14 h-14 mx-auto rounded-2xl bg-brand-500/10 border border-brand-500/20 text-brand-400 flex items-center justify-center mb-3">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+          </div>
+          <h3 class="text-sm font-bold text-white mb-1">Tarik & Lepas File Word (.docx) ke Sini</h3>
+          <p class="text-xs text-slate-400 mb-4">Atau klik untuk memilih file dari komputer Anda (Format baku .docx Office Word)</p>
+          <button type="button" onclick="document.getElementById('file-docx-input').click()"
+            class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-lg shadow-brand-500/20 transition-all inline-flex items-center gap-1.5">
+            <span>Pilih File Word (.docx)</span>
+          </button>
+        </div>
+
+        <div class="text-[11px] text-slate-400 flex items-start gap-2 bg-slate-950/40 p-3 rounded-xl border border-slate-800">
+          <span class="text-brand-400 font-bold">ℹ️ Info Format:</span>
+          <span>Nomor soal berurutan (<code>1.</code>, <code>2.</code>), pilihan jawaban (<code>A.</code>, <code>B.</code>, <code>C.</code>, <code>D.</code>, <code>E.</code>), kunci jawaban (<code>Kunci: A</code>). Rumus Word Equation Editor otomatis dikonversi ke KaTeX LaTeX.</span>
+        </div>
+      </div>
+
+      <!-- Panel 2: Google Form URL -->
+      <div id="panel-gform" class="hidden space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">Tautan / Link Google Form Publik</label>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input type="url" id="gform-url-input" placeholder="https://docs.google.com/forms/d/e/.../viewform"
+              class="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm text-white placeholder-slate-500 outline-none transition-colors">
+            <button type="button" onclick="fetchAndParseGoogleForm()" id="btn-fetch-gform"
+              class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-bold text-xs shadow-lg shadow-brand-500/20 transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+              <span>Ambil & Ekstrak Soal</span>
+              <span>⚡</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-400 flex items-start gap-2 bg-slate-950/40 p-3 rounded-xl border border-slate-800">
+          <span class="text-amber-400 font-bold">💡 Tips:</span>
+          <span>Pastikan Google Form disetel <b>Publik</b> (tidak dibatasi hanya untuk akun internal organisasi/sekolah tertentu) agar server dapat mengekstrak pertanyaan, gambar, dan pilihan jawaban secara instan.</span>
+        </div>
+      </div>
+
+      <!-- Loading Bar -->
+      <div id="parse-loading" class="hidden mt-4 p-4 rounded-xl bg-slate-950 border border-slate-800 text-center">
+        <div class="inline-block w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+        <div id="parse-loading-text" class="text-xs font-semibold text-slate-300">Memproses dokumen soal & rumus matematika...</div>
+      </div>
+    </section>
+
+    <!-- ── Step 3: Pratinjau Butir Soal (Live Preview & KaTeX) ─────────── -->
+    <section id="preview-section" class="hidden bg-slate-900/70 border border-slate-800 rounded-2xl p-5 sm:p-6 mb-8 shadow-xl">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs font-extrabold">3</span>
+          <h2 class="text-base font-bold text-white">Pratinjau Butir Soal</h2>
+          <span id="question-count-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">0 Soal</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="renderAllMath()" class="text-xs px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-semibold transition-colors">
+            📐 Render Rumus KaTeX
+          </button>
+          <button type="button" onclick="clearExtractedQuestions()" class="text-xs px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-semibold transition-colors">
+            Hapus Semua
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Answer Keys Helper -->
+      <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-slate-300">⚡ Setel Kunci Jawaban Cepat:</span>
+          <span class="text-[10px] text-slate-400">Klik huruf untuk mengatur kunci nomor tersebut</span>
+        </div>
+        <div id="quick-keys-container" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Question Cards List -->
+      <div id="questions-list" class="space-y-4">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Bottom Action: Publish Button -->
+      <div class="mt-8 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="text-xs text-slate-400 text-center sm:text-left">
+          <span>Siswa dapat mengerjakan soal ini langsung di HP menggunakan aplikasi ExamGO dengan Mode Kiosk terkunci.</span>
+        </div>
+        <button type="button" id="btn-publish-exam" onclick="publishExamToFirestore()"
+          class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-brand-600 via-emerald-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white font-extrabold text-sm shadow-xl shadow-brand-500/30 transition-all flex items-center justify-center gap-2 active:scale-95">
+          <span>🚀 Terbitkan Ujian & Buat Token/QR</span>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Modal: Autentikasi Lisensi Guru (Pertama Kali Buka) ───────────── -->
+  <div id="modal-auth" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="text-center">
+        <div class="w-12 h-12 rounded-2xl bg-brand-500/20 text-brand-400 border border-brand-500/30 flex items-center justify-center mx-auto mb-3">
+          <span class="text-xl">🛡️</span>
+        </div>
+        <h3 class="text-lg font-extrabold text-white">Portal Guru & Proktor ExamGO</h3>
+        <p class="text-xs text-slate-400 mt-1">Masukkan Token Lisensi Guru Anda untuk mulai mengunggah soal ujian dari laptop/PC.</p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-300 mb-1">Token Lisensi Guru *</label>
+        <input type="text" id="input-auth-token" placeholder="Contoh: GURU-XXXX-XXXX"
+          class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 font-mono font-bold text-sm text-brand-300 tracking-wider text-center uppercase outline-none focus:border-brand-500">
+        <div id="auth-error-msg" class="text-rose-400 text-xs mt-1.5 hidden text-center"></div>
+      </div>
+
+      <div class="space-y-2">
+        <button type="button" onclick="submitTeacherToken()"
+          class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-lg transition-colors">
+          Masuk ke Portal Guru
+        </button>
+        <div class="text-center text-[11px] text-slate-400 pt-1">
+          Belum punya lisensi guru? <a href="https://lynk.id/examgo" target="_blank" class="text-brand-400 hover:underline font-bold">Beli di lynk.id/examgo</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal: Hasil Terbit & Mode Proyektor ────────────────────────── -->
+  <div id="modal-published" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border-2 border-brand-500/60 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl text-center space-y-6">
+      <div>
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold mb-2">
+          <span>✨ UJIAN BERHASIL DITERBITKAN</span>
+        </div>
+        <h3 id="published-exam-title" class="text-xl sm:text-2xl font-black text-white">Matematika Wajib X</h3>
+        <p class="text-xs text-slate-400 mt-1">Minta siswa membuka aplikasi ExamGO di HP dan masukkan token berikut:</p>
+      </div>
+
+      <!-- Token Big Box -->
+      <div class="p-4 rounded-2xl bg-slate-950 border-2 border-dashed border-brand-500/80">
+        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">KODE TOKEN UJIAN</div>
+        <div id="published-exam-token" class="text-3xl sm:text-4xl font-black font-mono text-emerald-300 tracking-widest user-select-all py-1">
+          MTK10A
+        </div>
+        <button type="button" onclick="copyPublishedToken()" class="mt-2 text-xs font-bold text-brand-400 hover:underline inline-flex items-center gap-1">
+          <span id="copy-token-feedback">📋 Salin Kode Token</span>
+        </button>
+      </div>
+
+      <!-- QR Code Display -->
+      <div class="flex flex-col items-center">
+        <div class="bg-white p-3.5 rounded-2xl shadow-xl inline-block" id="qrcode-box"></div>
+        <span class="text-[11px] text-slate-400 mt-2">Atau scan langsung QR Code di atas menggunakan aplikasi ExamGO</span>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+        <button type="button" onclick="toggleProjectorMode()"
+          class="py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow-lg transition-all flex items-center justify-center gap-1.5">
+          <span>📺 Mode Proyektor Layar</span>
+        </button>
+        <button type="button" onclick="closePublishedModal()"
+          class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 transition-all">
+          <span>Tutup / Buat Ujian Lain</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Footer ────────────────────────────────────────────────────────── -->
+  <footer class="mt-auto border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <span>ExamGO © 2026 — Platform CBT Ujian Sekolah & Tryout Nasional Anti-Curang</span>
+      <div class="flex items-center gap-4">
+        <a href="https://examgo.id/privacy" class="hover:text-slate-300 transition-colors">Kebijakan Privasi</a>
+        <a href="https://examgo.id" class="hover:text-slate-300 transition-colors">Beranda</a>
+        <a href="https://wa.me/6289693652230" target="_blank" class="text-brand-400 hover:underline">WhatsApp Admin</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ── Client-side Core Logic (Parsers, KaTeX, Firestore) ───────────── -->
+  <script>
+    // State Aplikasi
+    let _teacherToken = localStorage.getItem('examgo_guru_token') || '';
+    let _extractedQuestions = [];
+    let _currentSourceTab = 'docx';
+    let _publishedData = null;
+
+    // Inisialisasi saat halaman selesai dimuat
+    document.addEventListener('DOMContentLoaded', function () {
+      randomizeToken();
+      checkAuth();
+      setupDropzone();
+    });
+
+    // ── 1. Manajemen Token Guru ─────────────────────────────────────────
+    function checkAuth() {
+      if (!_teacherToken || _teacherToken.trim().length < 4) {
+        document.getElementById('modal-auth').classList.remove('hidden');
+      } else {
+        document.getElementById('modal-auth').classList.add('hidden');
+        document.getElementById('token-status-box').classList.remove('hidden');
+        const masked = _teacherToken.length > 8 ? (_teacherToken.substring(0, 4) + '-****') : _teacherToken;
+        document.getElementById('active-teacher-token').innerText = masked;
+      }
+    }
+
+    function submitTeacherToken() {
+      const val = document.getElementById('input-auth-token').value.trim().toUpperCase();
+      const errEl = document.getElementById('auth-error-msg');
+      if (!val || val.length < 5) {
+        errEl.innerText = 'Harap masukkan kode token lisensi guru yang valid.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      _teacherToken = val;
+      localStorage.setItem('examgo_guru_token', val);
+      errEl.classList.add('hidden');
+      checkAuth();
+    }
+
+    function promptChangeToken() {
+      const current = _teacherToken || '';
+      const newToken = prompt('Masukkan Kode Lisensi Guru Baru:', current);
+      if (newToken && newToken.trim().length > 4) {
+        _teacherToken = newToken.trim().toUpperCase();
+        localStorage.setItem('examgo_guru_token', _teacherToken);
+        checkAuth();
+      }
+    }
+
+    function randomizeToken() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let res = '';
+      for (let i = 0; i < 6; i++) {
+        res += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      document.getElementById('exam-token').value = res;
+    }
+
+    // ── 2. Tab Sumber Soal (DOCX vs Google Form) ────────────────────────
+    function switchSourceTab(tab) {
+      _currentSourceTab = tab;
+      const btnDocx = document.getElementById('tab-btn-docx');
+      const btnGForm = document.getElementById('tab-btn-gform');
+      const panelDocx = document.getElementById('panel-docx');
+      const panelGForm = document.getElementById('panel-gform');
+
+      if (tab === 'docx') {
+        btnDocx.className = 'flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-brand-600 text-white shadow-md';
+        btnGForm.className = 'flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white';
+        panelDocx.classList.remove('hidden');
+        panelGForm.classList.add('hidden');
+      } else {
+        btnGForm.className = 'flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-brand-600 text-white shadow-md';
+        btnDocx.className = 'flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white';
+        panelGForm.classList.remove('hidden');
+        panelDocx.classList.add('hidden');
+      }
+    }
+
+    // ── 3. Dropzone & File Input Handler ────────────────────────────────
+    function setupDropzone() {
+      const dz = document.getElementById('dropzone');
+      ['dragenter', 'dragover'].forEach(name => {
+        dz.addEventListener(name, (e) => { e.preventDefault(); dz.classList.add('dragover'); }, false);
+      });
+      ['dragleave', 'drop'].forEach(name => {
+        dz.addEventListener(name, (e) => { e.preventDefault(); dz.classList.remove('dragover'); }, false);
+      });
+      dz.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files.length > 0) {
+          processDocxFile(files[0]);
+        }
+      });
+      dz.addEventListener('click', () => {
+        document.getElementById('file-docx-input').click();
+      });
+    }
+
+    function handleDocxSelected(event) {
+      const file = event.target.files && event.target.files[0];
+      if (file) processDocxFile(file);
+    }
+
+    // ── 4. OMML Math to LaTeX & DOCX Parsing ────────────────────────────
+    async function extractAndConvertOMML(arrayBuffer) {
+      if (typeof JSZip === 'undefined') return arrayBuffer;
+      try {
+        const zip = await JSZip.loadAsync(arrayBuffer);
+        const docXmlFile = zip.file("word/document.xml");
+        if (!docXmlFile) return arrayBuffer;
+
+        let xmlStr = await docXmlFile.async("string");
+        if (!xmlStr.includes('<m:oMath')) return arrayBuffer;
+
+        function parseNode(node) {
+          if (!node) return '';
+          let tex = '';
+          function getChild(n, tagName) {
+            if (!n || !n.childNodes) return null;
+            for (let i = 0; i < n.childNodes.length; i++) {
+              let cname = n.childNodes[i].nodeName.replace(/^.*:/, 'm:');
+              if (cname === tagName) return n.childNodes[i];
+            }
+            return null;
+          }
+
+          for (let i = 0; i < node.childNodes.length; i++) {
+            let child = node.childNodes[i];
+            let name = child.nodeName.replace(/^.*:/, 'm:');
+            if (name === 'm:r') {
+              tex += parseNode(child);
+            } else if (name === 'm:t') {
+              tex += child.textContent;
+            } else if (name === 'm:f') {
+              let num = parseNode(getChild(child, 'm:num'));
+              let den = parseNode(getChild(child, 'm:den'));
+              tex += '\\frac{' + num + '}{' + den + '}';
+            } else if (name === 'm:rad') {
+              let deg = parseNode(getChild(child, 'm:deg'));
+              let e = parseNode(getChild(child, 'm:e'));
+              tex += deg ? ('\\sqrt[' + deg + ']{' + e + '}') : ('\\sqrt{' + e + '}');
+            } else if (name === 'm:sSup') {
+              let e = parseNode(getChild(child, 'm:e'));
+              let sup = parseNode(getChild(child, 'm:sup'));
+              tex += e + '^{' + sup + '}';
+            } else if (name === 'm:sSub') {
+              let e = parseNode(getChild(child, 'm:e'));
+              let sub = parseNode(getChild(child, 'm:sub'));
+              tex += e + '_{' + sub + '}';
+            } else if (name === 'm:sSubSup') {
+              let e = parseNode(getChild(child, 'm:e'));
+              let sub = parseNode(getChild(child, 'm:sub'));
+              let sup = parseNode(getChild(child, 'm:sup'));
+              tex += e + '_{' + sub + '}^{' + sup + '}';
+            } else if (name === 'm:d') {
+              let e = parseNode(getChild(child, 'm:e'));
+              tex += '\\left(' + e + '\\right)';
+            } else if (child.childNodes && child.childNodes.length > 0) {
+              tex += parseNode(child);
+            }
+          }
+          return tex;
+        }
+
+        xmlStr = xmlStr.replace(/<m:oMath(>|\s[^>]*>)[\s\S]*?<\/m:oMath>/g, function (match) {
+          try {
+            const parser = new DOMParser();
+            const dummyDoc = parser.parseFromString('<root xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math">' + match + '</root>', "application/xml");
+            const oMath = dummyDoc.firstChild.firstChild;
+            let latex = parseNode(oMath);
+            latex = latex.replace(/−/g, '-').replace(/×/g, '\\times ').replace(/÷/g, '\\div ').replace(/≤/g, '\\le ').replace(/≥/g, '\\ge ').replace(/≠/g, '\\ne ').replace(/±/g, '\\pm ');
+            latex = String(latex).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return '<w:r><w:t xml:space="preserve">$' + latex + '$</w:t></w:r>';
+          } catch (e) {
+            return match;
+          }
+        });
+
+        xmlStr = xmlStr.replace(/<m:oMathPara[^>]*>/g, '').replace(/<\/m:oMathPara>/g, '');
+        zip.file("word/document.xml", xmlStr);
+        return await zip.generateAsync({ type: "arraybuffer" });
+      } catch (e) {
+        return arrayBuffer;
+      }
+    }
+
+    function convertMathToLatex(str) {
+      if (!str) return '';
+      let s = String(str);
+      if (s.includes('$')) {
+        s = s.replace(/\$\$([\s\S]*?)\$\$/g, (m, p1) => '$' + p1.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&') + '$');
+        s = s.replace(/\$([^\$\n]+)\$/g, (m, p1) => '$' + p1.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&') + '$');
+      }
+      s = s.replace(/\u221A(\d+)/g, '\\sqrt{$1}')
+        .replace(/√\(([^)]+)\)/g, '\\sqrt{$1}')
+        .replace(/√([0-9a-zA-Z]+)/g, '\\sqrt{$1}')
+        .replace(/([a-zA-Z0-9\)])²|([a-zA-Z0-9\)])\^2/g, '$1^{2}')
+        .replace(/([a-zA-Z0-9\)])³|([a-zA-Z0-9\)])\^3/g, '$1^{3}')
+        .replace(/\u2264/g, '\\le ')
+        .replace(/\u2265/g, '\\ge ')
+        .replace(/\u2260/g, '\\ne ')
+        .replace(/\u00B1/g, '\\pm ')
+        .replace(/\u00D7/g, '\\times ')
+        .replace(/\u00F7/g, '\\div ')
+        .replace(/([a-zA-Z0-9\)])\^(\d+)/g, '$1^{$2}')
+        .replace(/(\d+)\/(\d+)/g, '\\frac{$1}{$2}');
+      return s;
+    }
+
+    async function processDocxFile(file) {
+      if (!file.name.toLowerCase().endsWith('.docx')) {
+        alert('File harus berformat Microsoft Word (.docx)');
+        return;
+      }
+
+      setLoading(true, 'Mengekstrak teks & rumus Word (.docx)...');
+      try {
+        let arrayBuffer = await file.arrayBuffer();
+        arrayBuffer = await extractAndConvertOMML(arrayBuffer);
+
+        const mammothResult = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+        const html = mammothResult.value;
+
+        const questions = parseDocxHtmlToQuestions(html);
+        if (!questions || questions.length === 0) {
+          alert('Format soal tidak terdeteksi. Pastikan ada butir soal bernomor (contoh: 1. Soal...) dan opsi A, B, C, D.');
+          setLoading(false);
+          return;
+        }
+
+        // Auto-fill title jika kosong
+        const titleInput = document.getElementById('exam-title');
+        if (!titleInput.value.trim()) {
+          const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, ' ');
+          titleInput.value = cleanName;
+        }
+
+        _extractedQuestions = questions;
+        renderQuestionsPreview();
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        alert('Gagal memproses file Word: ' + err.message);
+        setLoading(false);
+      }
+    }
+
+    function parseDocxHtmlToQuestions(html) {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = html;
+
+      let questions = [];
+      let currentQ = null;
+      let currentOpt = null;
+
+      const pTags = tempDiv.querySelectorAll('p, tr, li, h1, h2, h3, h4');
+      pTags.forEach(p => {
+        let text = p.innerText || p.textContent || '';
+        text = text.trim();
+        if (!text) return;
+        text = convertMathToLatex(text);
+
+        // Cek apakah baris ini nomor soal baru (misal: "1.", "1)", "Soal 1.")
+        const qMatch = text.match(/^(?:Soal\s*)?(\d+)[.)]\s*([\s\S]*)/i);
+        if (qMatch) {
+          if (currentQ) questions.push(currentQ);
+          currentQ = {
+            id: questions.length + 1,
+            nomor: parseInt(qMatch[1]) || (questions.length + 1),
+            pertanyaan: qMatch[2] || '',
+            opsi_a: '', opsi_b: '', opsi_c: '', opsi_d: '', opsi_e: '',
+            kunci: 'A',
+            pembahasan: '',
+            gambar: ''
+          };
+          currentOpt = null;
+
+          // Periksa gambar di dalam p ini
+          const img = p.querySelector('img');
+          if (img && img.src) currentQ.gambar = img.src;
+          return;
+        }
+
+        if (!currentQ) return;
+
+        // Cek opsi A, B, C, D, E
+        const optMatch = text.match(/^([A-Ea-e])[.)]\s*([\s\S]*)/);
+        if (optMatch) {
+          currentOpt = optMatch[1].toLowerCase();
+          currentQ['opsi_' + currentOpt] = optMatch[2].trim();
+          return;
+        }
+
+        // Cek kunci jawaban (Kunci: A)
+        const keyMatch = text.match(/(?:Kunci|Jawaban|Ans)\s*[:=]\s*([A-Ea-e])/i);
+        if (keyMatch) {
+          currentQ.kunci = keyMatch[1].toUpperCase();
+          return;
+        }
+
+        // Cek pembahasan
+        const pembMatch = text.match(/(?:Pembahasan|Solusi)\s*[:=]\s*([\s\S]*)/i);
+        if (pembMatch) {
+          currentQ.pembahasan = pembMatch[1].trim();
+          currentOpt = 'pembahasan';
+          return;
+        }
+
+        // Jika baris lanjutan
+        if (currentOpt && currentOpt !== 'pembahasan') {
+          currentQ['opsi_' + currentOpt] += '\n' + text;
+        } else if (currentOpt === 'pembahasan') {
+          currentQ.pembahasan += '\n' + text;
+        } else {
+          currentQ.pertanyaan += '\n' + text;
+        }
+      });
+
+      if (currentQ) questions.push(currentQ);
+      return questions;
+    }
+
+    // ── 5. Google Form Fetch & Parsing ──────────────────────────────────
+    async function fetchAndParseGoogleForm() {
+      const urlInput = document.getElementById('gform-url-input').value.trim();
+      if (!urlInput) {
+        alert('Harap masukkan tautan Google Form.');
+        return;
+      }
+
+      setLoading(true, 'Menghubungkan & mengekstrak soal dari Google Form...');
+      try {
+        let cleanUrl = urlInput;
+        if (cleanUrl.includes('/edit')) cleanUrl = cleanUrl.replace('/edit', '/viewform');
+
+        // Panggil endpoint proxy server-side untuk menghindari blokir CORS
+        const proxyUrl = '/api/proxy-gform?url=' + encodeURIComponent(cleanUrl);
+        const resp = await fetch(proxyUrl);
+        if (!resp.ok) {
+          throw new Error('Server merespon dengan status ' + resp.status + '. Pastikan Google Form publik.');
+        }
+
+        const html = await resp.text();
+        const questions = parseGFormHtml(html);
+        if (!questions || questions.length === 0) {
+          throw new Error('Tidak ada soal pilihan ganda yang ditemukan pada Google Form ini.');
+        }
+
+        _extractedQuestions = questions;
+        renderQuestionsPreview();
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        alert('Gagal mengambil Google Form: ' + err.message + '\n\nPastikan form terbuka untuk publik (tidak dibatasi akun organisasi).');
+        setLoading(false);
+      }
+    }
+
+    function parseGFormHtml(html) {
+      const regex = /var\s+FB_PUBLIC_LOAD_DATA_\s*=\s*(.+?);\s*<\/script>/s;
+      const match = regex.exec(html);
+      if (!match) return null;
+
+      let jsonData;
+      try {
+        jsonData = JSON.parse(match[1]);
+      } catch (e) {
+        return null;
+      }
+
+      if (!jsonData || !Array.isArray(jsonData) || !jsonData[1] || !Array.isArray(jsonData[1])) return null;
+
+      const formInfo = jsonData[1];
+      const formTitle = formInfo[8] || formInfo[0] || 'Ujian Google Form';
+      const titleInput = document.getElementById('exam-title');
+      if (!titleInput.value.trim()) titleInput.value = formTitle;
+
+      const itemsList = formInfo[1] || [];
+      const questions = [];
+
+      itemsList.forEach((item, idx) => {
+        if (!Array.isArray(item) || item.length < 4) return;
+        const itemType = item[3];
+        // Hanya ambil pilihan ganda (tipe 2) atau dropdown (tipe 3)
+        if (itemType !== 2 && itemType !== 3 && itemType !== 4) return;
+
+        const qTitle = convertMathToLatex(item[1] || '');
+        const qDesc = convertMathToLatex(item[2] || '');
+        const fullQ = qDesc ? (qTitle + '\n' + qDesc) : qTitle;
+
+        const rawOpts = item[4];
+        if (!rawOpts || !Array.isArray(rawOpts) || !rawOpts[0] || !Array.isArray(rawOpts[0][1])) return;
+
+        const optionsArray = rawOpts[0][1];
+        let qObj = {
+          id: questions.length + 1,
+          nomor: questions.length + 1,
+          pertanyaan: fullQ,
+          opsi_a: '', opsi_b: '', opsi_c: '', opsi_d: '', opsi_e: '',
+          kunci: 'A',
+          pembahasan: '',
+          gambar: ''
+        };
+
+        const optChars = ['a', 'b', 'c', 'd', 'e'];
+        optionsArray.slice(0, 5).forEach((opt, optIdx) => {
+          if (Array.isArray(opt) && opt[0]) {
+            qObj['opsi_' + optChars[optIdx]] = convertMathToLatex(opt[0]);
+          }
+        });
+
+        // Deteksi gambar di item jika ada
+        if (item[6] && Array.isArray(item[6]) && item[6][0]) {
+          qObj.gambar = item[6][0];
+        }
+
+        questions.push(qObj);
+      });
+
+      return questions;
+    }
+
+    // ── 6. Rendering Preview & KaTeX ────────────────────────────────────
+    function renderQuestionsPreview() {
+      const container = document.getElementById('questions-list');
+      const badge = document.getElementById('question-count-badge');
+      const previewSec = document.getElementById('preview-section');
+      const quickKeysBox = document.getElementById('quick-keys-container');
+
+      if (!_extractedQuestions || _extractedQuestions.length === 0) {
+        previewSec.classList.add('hidden');
+        return;
+      }
+
+      previewSec.classList.remove('hidden');
+      badge.innerText = _extractedQuestions.length + ' Butir Soal';
+
+      // Render Bar Kunci Cepat
+      let quickKeysHtml = '';
+      _extractedQuestions.forEach((q, idx) => {
+        quickKeysHtml += `
+          <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800 text-xs">
+            <span class="font-bold text-slate-400 w-5">#${idx + 1}</span>
+            <select onchange="setQuestionKey(${idx}, this.value)" class="bg-slate-950 font-bold text-brand-300 rounded px-1.5 py-0.5 border border-slate-700 outline-none text-xs">
+              <option value="A" ${q.kunci === 'A' ? 'selected' : ''}>A</option>
+              <option value="B" ${q.kunci === 'B' ? 'selected' : ''}>B</option>
+              <option value="C" ${q.kunci === 'C' ? 'selected' : ''}>C</option>
+              <option value="D" ${q.kunci === 'D' ? 'selected' : ''}>D</option>
+              <option value="E" ${q.kunci === 'E' ? 'selected' : ''}>E</option>
+            </select>
+          </div>
+        `;
+      });
+      quickKeysBox.innerHTML = quickKeysHtml;
+
+      // Render Kartu Soal
+      let listHtml = '';
+      _extractedQuestions.forEach((q, idx) => {
+        listHtml += `
+          <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 sm:p-5 transition-all hover:border-slate-700">
+            <div class="flex items-start justify-between gap-3 mb-2">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-brand-500/20 text-brand-300 flex items-center justify-center font-bold text-xs">${idx + 1}</span>
+                <span class="text-xs font-semibold text-slate-400">Pilihan Ganda</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-400">Kunci:</span>
+                <select onchange="setQuestionKey(${idx}, this.value)" class="bg-slate-900 font-extrabold text-amber-300 rounded-lg px-2.5 py-1 border border-slate-700 outline-none text-xs">
+                  <option value="A" ${q.kunci === 'A' ? 'selected' : ''}>A</option>
+                  <option value="B" ${q.kunci === 'B' ? 'selected' : ''}>B</option>
+                  <option value="C" ${q.kunci === 'C' ? 'selected' : ''}>C</option>
+                  <option value="D" ${q.kunci === 'D' ? 'selected' : ''}>D</option>
+                  <option value="E" ${q.kunci === 'E' ? 'selected' : ''}>E</option>
+                </select>
+                <button type="button" onclick="deleteQuestion(${idx})" class="text-slate-500 hover:text-rose-400 text-xs px-2 py-1 rounded">✕</button>
+              </div>
+            </div>
+
+            <!-- Pertanyaan -->
+            <div class="text-sm text-slate-100 font-medium whitespace-pre-wrap leading-relaxed mb-3 katex-render">${escapeHtml(q.pertanyaan)}</div>
+
+            ${q.gambar ? `<div class="mb-3"><img src="${q.gambar}" class="max-h-60 rounded-xl border border-slate-800 object-contain"></div>` : ''}
+
+            <!-- Opsi Pilihan A - E -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              ${['a', 'b', 'c', 'd', 'e'].map(opt => {
+                const optText = q['opsi_' + opt];
+                if (!optText) return '';
+                const isKey = (q.kunci || '').toUpperCase() === opt.toUpperCase();
+                return `
+                  <div class="p-2.5 rounded-xl border ${isKey ? 'bg-brand-500/10 border-brand-500/40 text-brand-200' : 'bg-slate-900/60 border-slate-800 text-slate-300'} flex items-start gap-2">
+                    <span class="font-bold uppercase ${isKey ? 'text-brand-400' : 'text-slate-500'}">${opt}.</span>
+                    <span class="whitespace-pre-wrap katex-render">${escapeHtml(optText)}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            ${q.pembahasan ? `
+              <div class="mt-3 pt-2.5 border-t border-slate-900 text-xs text-slate-400 flex items-start gap-2">
+                <span class="font-bold text-brand-400 shrink-0">Pembahasan:</span>
+                <span class="whitespace-pre-wrap katex-render">${escapeHtml(q.pembahasan)}</span>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+
+      container.innerHTML = listHtml;
+      renderAllMath();
+    }
+
+    function setQuestionKey(idx, val) {
+      if (_extractedQuestions[idx]) {
+        _extractedQuestions[idx].kunci = val;
+        renderQuestionsPreview();
+      }
+    }
+
+    function deleteQuestion(idx) {
+      if (confirm('Hapus butir soal #' + (idx + 1) + '?')) {
+        _extractedQuestions.splice(idx, 1);
+        renderQuestionsPreview();
+      }
+    }
+
+    function clearExtractedQuestions() {
+      if (confirm('Hapus semua soal yang telah diekstrak?')) {
+        _extractedQuestions = [];
+        renderQuestionsPreview();
+      }
+    }
+
+    function renderAllMath() {
+      if (typeof renderMathInElement === 'function') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '\\[', right: '\\]', display: true }
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    // ── 7. Publish Exam to Firestore via API ────────────────────────────
+    async function publishExamToFirestore() {
+      if (!_teacherToken) {
+        checkAuth();
+        return;
+      }
+
+      const title = document.getElementById('exam-title').value.trim();
+      const duration = parseInt(document.getElementById('exam-duration').value) || 90;
+      const token = document.getElementById('exam-token').value.trim().toUpperCase().replace(/[^A-Za-z0-9]/g, '');
+
+      if (!title) {
+        alert('Harap masukkan judul ujian.');
+        document.getElementById('exam-title').focus();
+        return;
+      }
+      if (!token || token.length < 3) {
+        alert('Kode token ujian minimal 3 karakter huruf/angka.');
+        document.getElementById('exam-token').focus();
+        return;
+      }
+      if (!_extractedQuestions || _extractedQuestions.length === 0) {
+        alert('Belum ada butir soal yang diunggah. Unggah file Word atau tautan Google Form terlebih dahulu.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-publish-exam');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span><span>Menerbitkan ke Cloud Firestore...</span>';
+
+      try {
+        const payload = {
+          action: 'create_teacher_exam',
+          teacher_token: _teacherToken,
+          token: token,
+          title: title,
+          duration: duration,
+          category: 'UMUM',
+          questions: _extractedQuestions.map((q, i) => ({
+            id: i + 1,
+            nomor: i + 1,
+            pertanyaan: q.pertanyaan,
+            opsi_a: q.opsi_a,
+            opsi_b: q.opsi_b,
+            opsi_c: q.opsi_c,
+            opsi_d: q.opsi_d,
+            opsi_e: q.opsi_e,
+            kunci: q.kunci || 'A',
+            pembahasan: q.pembahasan || '',
+            gambar: q.gambar || ''
+          }))
+        };
+
+        const resp = await fetch('/api/teacher-exam', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const res = await resp.json();
+        if (res.status === 'success') {
+          _publishedData = {
+            token: token,
+            title: title,
+            qrPayload: 'EXAMGO_TRYOUT://' + token
+          };
+          showPublishedModal();
+        } else {
+          throw new Error(res.message || 'Gagal menerbitkan paket ujian.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Terjadi kesalahan saat menerbitkan ujian: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🚀 Terbitkan Ujian & Buat Token/QR</span>';
+      }
+    }
+
+    function showPublishedModal() {
+      if (!_publishedData) return;
+      document.getElementById('published-exam-title').innerText = _publishedData.title;
+      document.getElementById('published-exam-token').innerText = _publishedData.token;
+
+      // Generate QR Code
+      const qrBox = document.getElementById('qrcode-box');
+      qrBox.innerHTML = '';
+      if (typeof QRCode !== 'undefined') {
+        new QRCode(qrBox, {
+          text: _publishedData.qrPayload,
+          width: 180,
+          height: 180,
+          colorDark: '#047857',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      }
+
+      document.getElementById('modal-published').classList.remove('hidden');
+    }
+
+    function closePublishedModal() {
+      document.getElementById('modal-published').classList.add('hidden');
+      randomizeToken();
+    }
+
+    function copyPublishedToken() {
+      if (!_publishedData) return;
+      navigator.clipboard.writeText(_publishedData.token).then(() => {
+        const feedback = document.getElementById('copy-token-feedback');
+        feedback.innerText = '✅ Berhasil Disalin!';
+        setTimeout(() => feedback.innerText = '📋 Salin Kode Token', 2000);
+      });
+    }
+
+    function toggleProjectorMode() {
+      const modal = document.getElementById('modal-published');
+      if (!document.fullscreenElement) {
+        modal.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    function downloadDocxTemplate() {
+      window.open('https://examgo.id/template-soal-examgo.docx', '_blank');
+    }
+
+    function setLoading(isLoading, text) {
+      const box = document.getElementById('parse-loading');
+      const txt = document.getElementById('parse-loading-text');
+      if (isLoading) {
+        txt.innerText = text || 'Memproses...';
+        box.classList.remove('hidden');
+      } else {
+        box.classList.add('hidden');
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+  </script>
+</body>
+
+</html>
+

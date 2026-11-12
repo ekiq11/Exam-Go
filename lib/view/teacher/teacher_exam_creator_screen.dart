@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../constant/app_colors.dart';
 import '../../models/exam_question_model.dart';
@@ -1076,6 +1078,7 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (_hasLoadedLicense) _buildTeacherLicenseBanner(),
+                    _buildWebPortalHintBanner(),
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 250),
                       transitionBuilder: (child, animation) {
@@ -1176,6 +1179,109 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWebPortalHintBanner() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FDF4),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFBBF7D0)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFDCFCE7),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.laptop_chromebook_rounded,
+              color: Color(0xFF16A34A),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Buat Soal Lebih Cepat di Laptop / PC',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF15803D),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Buka examgo.id/guru di browser laptop Bapak/Ibu untuk drag & drop berkas Word (.docx) atau impor tautan Google Form dengan rumus matematika KaTeX otomatis.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: const Color(0xFF166534),
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                InkWell(
+                  onTap: () async {
+                    final uri = Uri.parse('https://examgo.id/guru');
+                    try {
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        return;
+                      }
+                    } catch (_) {}
+                    await Clipboard.setData(const ClipboardData(text: 'https://examgo.id/guru'));
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Tautan https://examgo.id/guru telah disalin!',
+                            style: GoogleFonts.poppins(fontSize: 12),
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: const Color(0xFF16A34A),
+                        ),
+                      );
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(6),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Buka examgo.id/guru',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF16A34A),
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.open_in_new_rounded,
+                          size: 13,
+                          color: Color(0xFF16A34A),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
