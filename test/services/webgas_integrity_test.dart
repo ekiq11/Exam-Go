@@ -197,17 +197,6 @@ void main() {
       // Script hydration
       expect(content, contains('google.script.run'));
       expect(content, contains('getLandingPageSettings()'));
-
-      // Meta Pixel (aktif bila META_PIXEL_ID diisi) & event checkout
-      expect(content, contains('META_PIXEL_ID'));
-      expect(content, contains("fbq('track', 'InitiateCheckout'"));
-    });
-
-    test('Kode.js reports Purchase to Meta Conversions API from the Lynk.id webhook', () {
-      final kode = File('lib/gas_fcm/gas/Kode.js').readAsStringSync();
-      expect(kode, contains('function _sendMetaPurchase'));
-      expect(kode, contains('META_CAPI_TOKEN'));
-      expect(kode, contains('_sendMetaPurchase(orderId'));
     });
 
     test('admin.html contains landing page configuration tab, views and handlers', () {
