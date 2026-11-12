@@ -1549,8 +1549,8 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
       },
       {
         'id': ExamCategory.umum,
-        'title': 'UJIAN UMUMewwww-ollll',
-        'subtitle': 'Ulangan Harian, UTS, & UAS',
+        'title': 'UJIAN UMUM',
+        'subtitle': 'UTS, UAS, Ulangan Harian',
         'badge': 'Fleksibel',
         'icon': Icons.assignment_rounded,
       },
