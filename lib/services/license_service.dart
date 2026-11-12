@@ -609,6 +609,11 @@ class LicenseService {
   /// Buka halaman pembelian Lynk.id di browser
   /// Otomatis memprioritaskan tautan dinamis dari Firestore / WebGAS jika sudah diatur
   Future<bool> openLynkIdPage({required String userType}) async {
+    if (Platform.isIOS) {
+      // Kepatuhan Apple Guideline 3.1.1: Dilarang mengarahkan pengguna iOS ke pembayaran eksternal
+      return false;
+    }
+
     String urlString = userType == 'TEACHER_PREMIUM'
         ? AppConfig.lynkIdTeacherUrl
         : AppConfig.lynkIdStudentUrl;

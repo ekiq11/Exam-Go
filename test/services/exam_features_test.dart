@@ -255,15 +255,15 @@ void main() {
       expect(pkg.subtests.length, equals(2));
       expect(pkg.totalSoal, equals(4));
 
-      // Verifikasi Subtest 1
+      // Verifikasi Subtest 1 (Pengetahuan Umum biasa tanpa rumus/LaTeX rumit)
       final st1 = pkg.subtests[0];
-      expect(st1.judul, equals('Penalaran Matematika'));
+      expect(st1.judul, equals('Pengetahuan Umum'));
       expect(st1.durasiMenit, equals(30));
       expect(st1.soalList.length, equals(2));
-      expect(st1.soalList[0].kunci, equals('B'));
-      expect(st1.soalList[0].pertanyaan, contains('x^{2}'));
-      expect(st1.soalList[1].kunci, equals('A'));
-      expect(st1.soalList[1].pertanyaan, contains(r'\sqrt{3}'));
+      expect(st1.soalList[0].kunci, equals('A'));
+      expect(st1.soalList[0].pertanyaan, contains('Ibu kota negara Indonesia'));
+      expect(st1.soalList[1].kunci, equals('C'));
+      expect(st1.soalList[1].pertanyaan, contains('dasar negara Indonesia'));
 
       // Verifikasi Subtest 2
       final st2 = pkg.subtests[1];
@@ -271,7 +271,7 @@ void main() {
       expect(st2.durasiMenit, equals(25));
       expect(st2.soalList.length, equals(2));
       expect(st2.soalList[0].kunci, equals('B'));
-      expect(st2.soalList[1].kunci, equals('A'));
+      expect(st2.soalList[1].kunci, equals('B'));
     });
 
     test('Menghasilkan template dengan kustomisasi judul dan kategori', () async {

@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 import 'dart:convert';
+import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/constant/app_config.dart';
@@ -723,53 +724,57 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => LicenseService.instance.openLynkIdPage(
-                    userType: 'TEACHER_PREMIUM',
+              if (!Platform.isIOS) ...[
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => LicenseService.instance.openLynkIdPage(
+                      userType: 'TEACHER_PREMIUM',
+                    ),
+                    icon: const Icon(Icons.workspace_premium_rounded, size: 16),
+                    label: Text(
+                      'Upgrade Premium 👑',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1B5E20),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
                   ),
-                  icon: const Icon(Icons.workspace_premium_rounded, size: 16),
+                ),
+                const SizedBox(width: 10),
+              ],
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _showTeacherLicenseDialog(
+                    context,
+                    onActivated: _checkLicenseStatus,
+                  ),
+                  icon: const Icon(Icons.vpn_key_outlined, size: 15),
                   label: Text(
-                    'Upgrade Premium 👑',
+                    'Aktivasi Token Lisensi',
                     style: GoogleFonts.poppins(
                       fontSize: 11.5,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1B5E20),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF1B5E20),
+                    side: const BorderSide(color: Color(0xFF1B5E20)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              OutlinedButton.icon(
-                onPressed: () => _showTeacherLicenseDialog(
-                  context,
-                  onActivated: _checkLicenseStatus,
-                ),
-                icon: const Icon(Icons.vpn_key_outlined, size: 15),
-                label: Text(
-                  'Aktivasi',
-                  style: GoogleFonts.poppins(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF334155),
-                  side: const BorderSide(color: Color(0xFFCBD5E1)),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),

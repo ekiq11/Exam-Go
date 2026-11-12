@@ -24,30 +24,30 @@ class _DocxFormatGuideScreenState extends State<DocxFormatGuideScreen> {
   bool _isDownloading = false;
 
   static const String _sampleDocumentText = '''[JUDUL: Try Out Mandiri 2026]
-[KATEGORI: SNBT]
+[KATEGORI: UMUM]
 [JENIS_WAKTU: per_subtest]
 [DURASI: 90]
 
-[SUBTEST: Penalaran Matematika]
+[SUBTEST: Pengetahuan Umum]
 [DURASI_SUBTEST: 30]
 
-1. Jika x² + 2x - 15 = 0 untuk x > 0, maka nilai dari 2x + 1 adalah...
-A. 5
-B. 7
-C. 9
-D. 11
-E. 13
-KUNCI: B
-PEMBAHASAN: Faktorisasi (x + 5)(x - 3) = 0. Karena x > 0, maka x = 3. Nilai 2(3) + 1 = 7.
+1. Ibu kota negara Indonesia yang baru dan berlokasi di Provinsi Kalimantan Timur adalah...
+A. Nusantara
+B. Balikpapan
+C. Samarinda
+D. Banjarmasin
+E. Pontianak
+KUNCI: A
+PEMBAHASAN: Berdasarkan undang-undang pemindahan ibu kota negara, Nusantara (IKN) berlokasi di Kalimantan Timur.
 
-2. Diketahui segitiga siku-siku dengan panjang sisi tegak 6 cm dan 8 cm. Panjang sisi miringnya adalah...
-A. 9 cm
-B. 10 cm
-C. 12 cm
-D. 14 cm
-E. 15 cm
-KUNCI: B
-PEMBAHASAN: Menggunakan teorema Pythagoras: c = √(6² + 8²) = √(36 + 64) = √100 = 10 cm.
+2. Lambang negara Indonesia adalah Burung Garuda, sedangkan dasar negara Indonesia adalah...
+A. UUD 1945
+B. Bhinneka Tunggal Ika
+C. Pancasila
+D. Proklamasi
+E. Sumpah Pemuda
+KUNCI: C
+PEMBAHASAN: Dasar falsafah dan ideologi negara Republik Indonesia adalah Pancasila.
 
 [SUBTEST: Literasi Bahasa Indonesia]
 [DURASI_SUBTEST: 25]

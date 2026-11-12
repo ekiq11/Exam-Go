@@ -6,7 +6,7 @@ void main() {
   group('Version 8.0.0 Verification', () {
     test('AppConfig has version 8.0.0 and synchronized build number', () {
       expect(AppConfig.appVersion, equals('8.0.0'));
-      expect(AppConfig.appBuildNumber, equals(44));
+      expect(AppConfig.appBuildNumber, equals(46));
     });
   });
 
