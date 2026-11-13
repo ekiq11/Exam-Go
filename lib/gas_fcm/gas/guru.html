@@ -9,6 +9,7 @@
     content="Portal mandiri bagi Guru dan Proktor untuk membuat soal ujian CBT anti-curang ExamGO langsung dari laptop/PC via Word (.docx) atau Google Form.">
   <link rel="icon" type="image/png"
     href="https://raw.githubusercontent.com/ekiq11/Exam-Go/main/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png">
+  <meta name="referrer" content="no-referrer">
 
   <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -68,21 +69,31 @@
       background-color: rgba(16, 185, 129, 0.08) !important;
     }
 
-    /* ── Light Mode Styles ────────────────────────────────────────────── */
+    /* ── Light Mode Styles (High Contrast & Clear Typography) ────────── */
     .theme-light {
       color-scheme: light;
     }
     .theme-light body {
-      background-color: #f8fafc !important;
-      color: #1e293b !important;
+      background-color: #f8fafc !important; /* slate-50 */
+      color: #0f172a !important; /* slate-900 */
     }
     .theme-light header {
-      background-color: rgba(255, 255, 255, 0.96) !important;
+      background-color: rgba(255, 255, 255, 0.97) !important;
       border-color: #e2e8f0 !important;
       box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
     }
     .theme-light header span.text-white {
       color: #0f172a !important;
+    }
+    /* Buttons in Header */
+    .theme-light a[href*="wa.me"] {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+      font-weight: 700 !important;
+    }
+    .theme-light a[href*="wa.me"]:hover {
+      background-color: #e2e8f0 !important;
     }
     .theme-light #token-status-box {
       background-color: #f1f5f9 !important;
@@ -92,20 +103,37 @@
     .theme-light #active-teacher-token {
       color: #047857 !important;
     }
+    /* Headings & Texts */
     .theme-light main h1, .theme-light main h2, .theme-light main h3 {
       color: #0f172a !important;
     }
-    .theme-light main p, .theme-light main label {
+    .theme-light main p {
       color: #475569 !important;
     }
+    .theme-light label {
+      color: #1e293b !important;
+      font-weight: 700 !important;
+    }
+    /* Unduh template button */
+    .theme-light button[onclick="downloadDocxTemplate()"] {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+    }
+    .theme-light button[onclick="downloadDocxTemplate()"]:hover {
+      background-color: #f8fafc !important;
+    }
+    /* Sections & Cards */
     .theme-light section {
       background-color: #ffffff !important;
       border-color: #e2e8f0 !important;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.04) !important;
     }
     .theme-light section > div.border-b {
       border-color: #f1f5f9 !important;
     }
+    /* Inputs & Selects */
     .theme-light input[type="text"],
     .theme-light input[type="number"],
     .theme-light input[type="url"],
@@ -120,7 +148,32 @@
     .theme-light #exam-token {
       color: #b45309 !important;
       background-color: #fffbeb !important;
+      border-color: #fcd34d !important;
     }
+    /* Tab Switcher in Step 2 */
+    .theme-light #tab-btn-docx.text-slate-400,
+    .theme-light #tab-btn-gform.text-slate-400 {
+      color: #475569 !important;
+    }
+    .theme-light #tab-btn-docx.text-slate-400:hover,
+    .theme-light #tab-btn-gform.text-slate-400:hover {
+      color: #0f172a !important;
+    }
+    .theme-light div.rounded-xl.bg-slate-950.p-1 {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+    }
+    /* Muat Contoh Soal Button */
+    .theme-light button[onclick="loadSampleTestQuestions()"] {
+      background: #ecfdf5 !important;
+      border-color: #6ee7b7 !important;
+      color: #065f46 !important;
+      font-weight: 800 !important;
+    }
+    .theme-light button[onclick="loadSampleTestQuestions()"]:hover {
+      background: #d1fae5 !important;
+    }
+    /* Dropzone */
     .theme-light #dropzone {
       background-color: #f8fafc !important;
       border-color: #cbd5e1 !important;
@@ -128,33 +181,119 @@
     .theme-light #dropzone h3 {
       color: #0f172a !important;
     }
-    .theme-light .bg-slate-950,
-    .theme-light .bg-slate-950\/80,
-    .theme-light .bg-slate-950\/70,
-    .theme-light .bg-slate-950\/60,
-    .theme-light .bg-slate-950\/40 {
+    .theme-light #dropzone p {
+      color: #64748b !important;
+    }
+    /* Info Tips Boxes */
+    .theme-light div.text-\[11px\].bg-slate-950\/40 {
+      background-color: #f8fafc !important;
+      border-color: #e2e8f0 !important;
+      color: #475569 !important;
+    }
+    .theme-light div.text-\[11px\] code {
+      background-color: #e2e8f0 !important;
+      color: #0f172a !important;
+      padding: 1px 4px !important;
+      border-radius: 4px !important;
+    }
+    /* Step 3: Action Buttons */
+    .theme-light button[onclick="renderAllMath()"] {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+      font-weight: 700 !important;
+    }
+    .theme-light button[onclick="renderAllMath()"]:hover {
+      background-color: #e2e8f0 !important;
+    }
+    .theme-light button[onclick="clearExtractedQuestions()"] {
+      background-color: #fff1f2 !important;
+      border-color: #fecdd3 !important;
+      color: #e11d48 !important;
+      font-weight: 700 !important;
+    }
+    .theme-light button[onclick="clearExtractedQuestions()"]:hover {
+      background-color: #ffe4e6 !important;
+    }
+    /* Quick Keys Container */
+    .theme-light div.bg-slate-950\/80 {
       background-color: #f8fafc !important;
       border-color: #e2e8f0 !important;
     }
-    .theme-light .bg-slate-900,
-    .theme-light .bg-slate-900\/80,
-    .theme-light .bg-slate-900\/70,
-    .theme-light .bg-slate-900\/60 {
+    .theme-light div.bg-slate-950\/80 span.text-slate-300 {
+      color: #0f172a !important;
+      font-weight: 700 !important;
+    }
+    .theme-light div.bg-slate-950\/80 span.text-slate-400 {
+      color: #64748b !important;
+    }
+    .theme-light #quick-keys-container > div {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05) !important;
+    }
+    .theme-light #quick-keys-container span.text-slate-400 {
+      color: #334155 !important;
+    }
+    .theme-light #quick-keys-container select {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #047857 !important;
+      font-weight: 800 !important;
+    }
+    /* Question Cards List */
+    .theme-light #questions-list > div {
       background-color: #ffffff !important;
       border-color: #e2e8f0 !important;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03) !important;
     }
-    .theme-light .border-slate-800,
-    .theme-light .border-slate-700 {
-      border-color: #e2e8f0 !important;
+    .theme-light #questions-list > div:hover {
+      border-color: #cbd5e1 !important;
     }
-    .theme-light .text-slate-100,
-    .theme-light .text-slate-200 {
+    .theme-light #questions-list select {
+      background-color: #fffbeb !important;
+      border-color: #fcd34d !important;
+      color: #b45309 !important;
+      font-weight: 800 !important;
+    }
+    .theme-light #questions-list div.katex-render {
+      color: #0f172a !important;
+      font-weight: 600 !important;
+    }
+    .theme-light .katex {
       color: #0f172a !important;
     }
-    .theme-light .text-slate-300,
-    .theme-light .text-slate-400 {
-      color: #475569 !important;
+    /* Options A-E in Question Cards */
+    .theme-light #questions-list div.grid > div.bg-slate-900\/60 {
+      background-color: #f8fafc !important;
+      border-color: #e2e8f0 !important;
+      color: #1e293b !important;
     }
+    .theme-light #questions-list div.grid > div.bg-slate-900\/60:hover {
+      background-color: #f1f5f9 !important;
+    }
+    .theme-light #questions-list div.grid > div.bg-brand-500\/10 {
+      background-color: #ecfdf5 !important;
+      border-color: #6ee7b7 !important;
+      color: #064e3b !important;
+    }
+    .theme-light #questions-list div.grid span.text-slate-500 {
+      color: #475569 !important;
+      font-weight: 700 !important;
+    }
+    .theme-light #questions-list div.grid span.text-brand-400 {
+      color: #047857 !important;
+      font-weight: 800 !important;
+    }
+    /* Pembahasan box */
+    .theme-light #questions-list div.border-slate-900 {
+      border-color: #e2e8f0 !important;
+      color: #334155 !important;
+    }
+    .theme-light #questions-list span.text-brand-400.shrink-0 {
+      color: #047857 !important;
+    }
+    /* Modals & Footer */
     .theme-light #modal-auth > div,
     .theme-light #modal-published > div {
       background-color: #ffffff !important;
@@ -165,9 +304,6 @@
       background-color: #ffffff !important;
       border-color: #e2e8f0 !important;
       color: #64748b !important;
-    }
-    .theme-light .katex {
-      color: #0f172a !important;
     }
     .theme-light table {
       background-color: #ffffff !important;
@@ -1082,19 +1218,25 @@
     function normalizeGoogleImageUrl(url) {
       if (!url) return '';
       let s = String(url).trim();
-      const driveMatch = s.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=)|docs\.google\.com\/file\/d\/)([a-zA-Z0-9_-]+)/);
+      if (s.startsWith('//')) s = 'https:' + s;
+
+      // Google Drive link (view, open, uc) -> direct high-res CDN thumbnail
+      const driveMatch = s.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?.*id=)|docs\.google\.com\/file\/d\/)([a-zA-Z0-9_-]+)/);
       if (driveMatch) {
-        return 'https://lh3.googleusercontent.com/d/' + driveMatch[1];
+        return 'https://drive.google.com/thumbnail?id=' + driveMatch[1] + '&sz=w1000';
       }
       return s;
     }
 
-    function extractImageUrl(obj, blobMap) {
+    function findImageUrlDeep(obj, blobMap) {
       if (!obj) return '';
       if (typeof obj === 'string') {
         let s = obj.trim();
+        if (s.startsWith('//')) s = 'https:' + s;
         if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('data:image/')) {
-          return normalizeGoogleImageUrl(s);
+          if (s.includes('googleusercontent.com') || s.includes('forms-images') || s.includes('drive.google.com') || s.match(/\.(png|jpe?g|webp|gif|svg)/i)) {
+            return normalizeGoogleImageUrl(s);
+          }
         }
         if (blobMap && blobMap[s]) {
           return normalizeGoogleImageUrl(blobMap[s]);
@@ -1103,16 +1245,51 @@
       }
       if (Array.isArray(obj)) {
         for (let el of obj) {
-          let found = extractImageUrl(el, blobMap);
+          let found = findImageUrlDeep(el, blobMap);
           if (found) return found;
         }
       } else if (typeof obj === 'object') {
         for (let key in obj) {
-          let found = extractImageUrl(obj[key], blobMap);
+          let found = findImageUrlDeep(obj[key], blobMap);
           if (found) return found;
         }
       }
       return '';
+    }
+
+    function extractImagesFromGFormDom(html) {
+      const images = [];
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const divs = doc.querySelectorAll('[role="listitem"], .freebirdFormviewerComponentsQuestionBaseRoot, .Qr7Oae, .m77dfd');
+        divs.forEach((div) => {
+          const img = div.querySelector('img.exportItemImage, .freebirdFormviewerComponentsQuestionBaseImageContainer img, img[src*="googleusercontent"], img[src*="forms-images-rt"], img[src*="drive.google.com"], img');
+          if (img) {
+            let src = img.getAttribute('src') || img.getAttribute('data-src') || '';
+            if (src && !src.startsWith('data:image/gif') && src.length > 15) {
+              images.push(normalizeGoogleImageUrl(src));
+            } else {
+              images.push('');
+            }
+          } else {
+            images.push('');
+          }
+        });
+      } catch (e) {
+        console.warn('DOM parser error on gform:', e);
+      }
+      return images;
+    }
+
+    function handleImageError(img) {
+      if (img.dataset.hasFailed) return;
+      img.dataset.hasFailed = 'true';
+      const src = img.src || '';
+      const match = src.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?.*id=|thumbnail\?id=)|lh3\.googleusercontent\.com\/d\/)([a-zA-Z0-9_-]+)/);
+      if (match) {
+        img.src = 'https://drive.google.com/uc?export=view&id=' + match[1];
+      }
     }
 
     function parseGFormHtml(html) {
@@ -1130,6 +1307,7 @@
       if (!jsonData || !Array.isArray(jsonData) || !jsonData[1] || !Array.isArray(jsonData[1])) return null;
 
       const blobMap = extractBlobMap(html);
+      const domImages = extractImagesFromGFormDom(html);
       const formInfo = jsonData[1];
       const formTitle = formInfo[8] || formInfo[0] || 'Ujian Google Form';
       const titleInput = document.getElementById('exam-title');
@@ -1145,7 +1323,7 @@
 
         // 1. Item Gambar Standalone (itemType === 9)
         if (itemType === 9) {
-          lastStandaloneImage = extractImageUrl(item, blobMap);
+          lastStandaloneImage = findImageUrlDeep(item, blobMap);
           return;
         }
 
@@ -1153,7 +1331,7 @@
         if (itemType === 7) {
           const gridTitle = convertMathToLatex(item[1] || '');
           const gridDesc = convertMathToLatex(item[2] || '');
-          const gridImg = extractImageUrl(item[6], blobMap) || lastStandaloneImage;
+          const gridImg = findImageUrlDeep(item[6], blobMap) || findImageUrlDeep(item[8], blobMap) || (domImages && domImages[idx]) || lastStandaloneImage;
           lastStandaloneImage = '';
 
           if (Array.isArray(item[4])) {
@@ -1199,11 +1377,8 @@
         if (!rawOpts || !Array.isArray(rawOpts) || !rawOpts[0] || !Array.isArray(rawOpts[0][1])) return;
 
         const optionsArray = rawOpts[0][1];
-        let itemImg = extractImageUrl(item[6], blobMap) || extractImageUrl(item[8], blobMap);
-        if (!itemImg && lastStandaloneImage) {
-          itemImg = lastStandaloneImage;
-          lastStandaloneImage = '';
-        }
+        let itemImg = findImageUrlDeep(item[6], blobMap) || findImageUrlDeep(item[8], blobMap) || findImageUrlDeep(item[5], blobMap) || (domImages && domImages[idx]) || lastStandaloneImage;
+        lastStandaloneImage = '';
 
         let qObj = {
           id: questions.length + 1,
@@ -1221,7 +1396,7 @@
         optionsArray.slice(0, 5).forEach((opt, optIdx) => {
           if (Array.isArray(opt) && opt[0] !== undefined) {
             qObj['opsi_' + optChars[optIdx]] = convertMathToLatex(opt[0] || '');
-            const optImg = extractImageUrl(opt, blobMap);
+            const optImg = findImageUrlDeep(opt, blobMap);
             if (optImg) {
               qObj['gam_' + optChars[optIdx]] = optImg;
             }
@@ -1357,7 +1532,7 @@
             <div class="text-sm text-slate-100 font-medium whitespace-pre-wrap leading-relaxed mb-3 katex-render">${renderContentSafely(formattedPertanyaan)}</div>
 
             <!-- Gambar Soal Utama (jika ada) -->
-            ${q.gambar ? `<div class="mb-3"><img src="${q.gambar}" alt="Gambar Soal ${idx + 1}" class="max-h-72 rounded-xl border border-slate-800 object-contain shadow-md bg-slate-900/50"></div>` : ''}
+            ${q.gambar ? `<div class="mb-3"><img src="${q.gambar}" alt="Gambar Soal ${idx + 1}" referrerpolicy="no-referrer" loading="lazy" onerror="handleImageError(this)" class="max-h-72 rounded-xl border border-slate-800 object-contain shadow-md bg-slate-900/50"></div>` : ''}
 
             <!-- Tabel Data Soal (jika ada) -->
             ${q.tabel ? `<div class="mb-3">${q.tabel}</div>` : ''}
@@ -1375,7 +1550,7 @@
                       <span class="font-bold uppercase ${isKey ? 'text-brand-400' : 'text-slate-500'}">${opt}.</span>
                       <span class="whitespace-pre-wrap katex-render">${renderContentSafely(optText)}</span>
                     </div>
-                    ${optGam ? `<img src="${optGam}" alt="Gambar Opsi ${opt.toUpperCase()}" class="max-h-24 rounded-lg border border-slate-800 object-contain bg-slate-950/40 mt-1">` : ''}
+                    ${optGam ? `<img src="${optGam}" alt="Gambar Opsi ${opt.toUpperCase()}" referrerpolicy="no-referrer" loading="lazy" onerror="handleImageError(this)" class="max-h-24 rounded-lg border border-slate-800 object-contain bg-slate-950/40 mt-1">` : ''}
                   </div>
                 `;
               }).join('')}
@@ -1432,7 +1607,8 @@
 
     // ── Fungsi Muat Contoh Soal Lengkap (Rumus KaTeX, Gambar, Tabel, Paragraf) ─
     function loadSampleTestQuestions() {
-      const sampleWaveSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240" width="100%" height="240"><rect width="100%" height="100%" fill="%230f172a" rx="12"/><line x1="40" y1="120" x2="560" y2="120" stroke="%23475569" stroke-width="2"/><line x1="60" y1="20" x2="60" y2="220" stroke="%23475569" stroke-width="2"/><text x="540" y="110" fill="%2394a3b8" font-size="12" font-family="sans-serif">s (m)</text><text x="70" y="35" fill="%2394a3b8" font-size="12" font-family="sans-serif">y (cm)</text><path d="M 60 120 Q 100 40, 140 120 T 220 120 T 300 120 T 380 120 T 460 120 T 540 120" fill="none" stroke="%2310b981" stroke-width="3"/><circle cx="60" cy="120" r="5" fill="%23f59e0b"/><text x="50" y="145" fill="%23fbbf24" font-weight="bold" font-size="14">A</text><circle cx="540" cy="120" r="5" fill="%23f59e0b"/><text x="535" y="145" fill="%23fbbf24" font-weight="bold" font-size="14">B</text><line x1="60" y1="190" x2="540" y2="190" stroke="%2338bdf8" stroke-width="1.5" stroke-dasharray="4"/><text x="270" y="210" fill="%2338bdf8" font-weight="bold" font-size="13" text-anchor="middle">Jarak A ke B = 12 meter (t = 1,5 s)</text><line x1="100" y1="40" x2="100" y2="120" stroke="%23f43f5e" stroke-width="1.5" stroke-dasharray="3"/><text x="110" y="85" fill="%23f43f5e" font-size="12">A = 10 cm</text></svg>';
+      const rawWaveSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240" width="100%" height="240"><rect width="100%" height="100%" fill="#0f172a" rx="12"/><line x1="40" y1="120" x2="560" y2="120" stroke="#475569" stroke-width="2"/><line x1="60" y1="20" x2="60" y2="220" stroke="#475569" stroke-width="2"/><text x="540" y="110" fill="#94a3b8" font-size="12" font-family="sans-serif">s (m)</text><text x="70" y="35" fill="#94a3b8" font-size="12" font-family="sans-serif">y (cm)</text><path d="M 60 120 Q 100 40, 140 120 T 220 120 T 300 120 T 380 120 T 460 120 T 540 120" fill="none" stroke="#10b981" stroke-width="3"/><circle cx="60" cy="120" r="5" fill="#f59e0b"/><text x="50" y="145" fill="#fbbf24" font-weight="bold" font-size="14">A</text><circle cx="540" cy="120" r="5" fill="#f59e0b"/><text x="535" y="145" fill="#fbbf24" font-weight="bold" font-size="14">B</text><line x1="60" y1="190" x2="540" y2="190" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4"/><text x="270" y="210" fill="#38bdf8" font-weight="bold" font-size="13" text-anchor="middle">Jarak A ke B = 12 meter (t = 1,5 s)</text><line x1="100" y1="40" x2="100" y2="120" stroke="#f43f5e" stroke-width="1.5" stroke-dasharray="3"/><text x="110" y="85" fill="#f43f5e" font-size="12">A = 10 cm</text></svg>';
+      const sampleWaveSvg = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(rawWaveSvg)));
 
       const sampleTableHtml = '<div class="overflow-x-auto my-3"><table class="min-w-full text-xs text-left border-collapse border border-slate-700 bg-slate-900/90 rounded-xl overflow-hidden shadow-lg"><thead class="bg-slate-800 text-slate-200 border-b border-slate-700 font-bold"><tr><th class="px-3.5 py-2.5 border-r border-slate-700">No</th><th class="px-3.5 py-2.5 border-r border-slate-700">Nama Barang Komoditas</th><th class="px-3.5 py-2.5 border-r border-slate-700">Harga Satuan (Rp)</th><th class="px-3.5 py-2.5">Volume Terjual</th></tr></thead><tbody class="divide-y divide-slate-800 text-slate-300"><tr class="hover:bg-slate-800/40"><td class="px-3.5 py-2 border-r border-slate-800 font-mono">1</td><td class="px-3.5 py-2 border-r border-slate-800 font-semibold">Beras Premium Ramos</td><td class="px-3.5 py-2 border-r border-slate-800">Rp 14.000 / kg</td><td class="px-3.5 py-2 font-mono">250 kg</td></tr><tr class="hover:bg-slate-800/40"><td class="px-3.5 py-2 border-r border-slate-800 font-mono">2</td><td class="px-3.5 py-2 border-r border-slate-800 font-semibold">Minyak Goreng Sawit</td><td class="px-3.5 py-2 border-r border-slate-800">Rp 16.000 / liter</td><td class="px-3.5 py-2 font-mono">150 liter</td></tr><tr class="hover:bg-slate-800/40"><td class="px-3.5 py-2 border-r border-slate-800 font-mono">3</td><td class="px-3.5 py-2 border-r border-slate-800 font-semibold">Gula Pasir Kristal</td><td class="px-3.5 py-2 border-r border-slate-800">Rp 17.500 / kg</td><td class="px-3.5 py-2 font-mono">100 kg</td></tr><tr class="hover:bg-slate-800/40"><td class="px-3.5 py-2 border-r border-slate-800 font-mono">4</td><td class="px-3.5 py-2 border-r border-slate-800 font-semibold">Tepung Terigu Segitiga</td><td class="px-3.5 py-2 border-r border-slate-800">Rp 11.000 / kg</td><td class="px-3.5 py-2 font-mono">80 kg</td></tr></tbody></table></div>';
 
