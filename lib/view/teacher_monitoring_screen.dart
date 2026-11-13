@@ -123,6 +123,11 @@ class _TeacherMonitoringListScreenState
   }
 
   Future<void> _loadHistory() async {
+    // Sinkronisasi otomatis dari cloud (termasuk soal yang dibuat dari WebGAS / laptop)
+    try {
+      await MonitoringService.instance.syncTeacherExamHistory();
+    } catch (_) {}
+
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList('teacher_exam_history') ?? [];
 
@@ -308,6 +313,48 @@ class _TeacherMonitoringListScreenState
                 ),
               ),
               const SizedBox(height: 18),
+
+              // Tombol Pantau Ujian Live
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TeacherMonitoringDetailScreen(
+                          examId: token,
+                          title: title,
+                          url: url,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.radar_rounded,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    'Pantau Ujian Live (Radar Pengawasan)',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD97706),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 11),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
 
               // Action Buttons Row
               Row(

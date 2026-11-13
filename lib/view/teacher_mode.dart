@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:examgo/constant/app_colors.dart';
 import 'package:examgo/constant/app_config.dart';
 import 'package:examgo/services/license_service.dart';
+import 'package:examgo/services/monitoring_service.dart';
 import 'package:examgo/services/popup_ad_service.dart';
 import 'package:examgo/services/qr_generator.dart';
 import 'package:examgo/view/widgets/popup_ad_dialog.dart';
@@ -502,6 +503,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     final premium = await LicenseService.instance.isTeacherPremium();
     final remainingUploads = await LicenseService.instance
         .getRemainingTeacherUploads();
+    try {
+      await MonitoringService.instance.syncTeacherExamHistory();
+    } catch (_) {}
     final prefs = await SharedPreferences.getInstance();
     final list = prefs.getStringList('teacher_exam_history') ?? [];
     if (mounted) {

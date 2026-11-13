@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart' as fwfh;
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
@@ -286,10 +287,13 @@ class MathHtmlFormatter {
     return url;
   }
 
-  /// Membangun widget gambar soal yang andal dan kompatibel:
-  /// - Mendukung Data URI Base64 (data:image/...)
+  /// Cache in-memory untuk decoded Base64 bytes agar tidak re-decode setiap detik saat timer ujian tick (mencegah kedip/flicker)
+  static final Map<String, Uint8List> _base64BytesCache = {};
+
+  /// Membangun widget gambar soal yang andal, anti-flicker (bebas kedip), dan kompatibel:
+  /// - Mendukung Data URI Base64 (data:image/...) dengan in-memory cache & gapless playback
   /// - Mendukung Google Drive, Google Forms, dan CDN eksternal via CachedNetworkImage
-  /// - Fallback mulus ke Image.network jika terjadi error
+  /// - Zero-flicker: tidak re-load saat timer ujian berdetik tiap detik
   static Widget buildQuestionImage(
     String rawUrl, {
     double? height,
@@ -304,11 +308,21 @@ class MathHtmlFormatter {
 
     if (cleanUrl.startsWith('data:image/')) {
       try {
-        final commaIdx = cleanUrl.indexOf(',');
-        final b64 = commaIdx != -1 ? cleanUrl.substring(commaIdx + 1) : cleanUrl;
-        final bytes = base64Decode(b64);
+        Uint8List? bytes = _base64BytesCache[cleanUrl];
+        if (bytes == null) {
+          final commaIdx = cleanUrl.indexOf(',');
+          final b64 = commaIdx != -1 ? cleanUrl.substring(commaIdx + 1) : cleanUrl;
+          bytes = base64Decode(b64);
+          if (_base64BytesCache.length > 100) {
+            _base64BytesCache.remove(_base64BytesCache.keys.first);
+          }
+          _base64BytesCache[cleanUrl] = bytes;
+        }
+
         imgWidget = Image.memory(
           bytes,
+          key: ValueKey('b64_${cleanUrl.hashCode}'),
+          gaplessPlayback: true,
           height: height,
           width: width,
           fit: fit,
@@ -320,8 +334,13 @@ class MathHtmlFormatter {
     } else {
       final processedUrl = convertDriveUrl(cleanUrl);
       imgWidget = CachedNetworkImage(
+        key: ValueKey('cni_${processedUrl.hashCode}'),
         imageUrl: processedUrl,
+        cacheKey: processedUrl,
         httpHeaders: networkImageHeaders,
+        useOldImageOnUrlChange: true,
+        fadeInDuration: Duration.zero,
+        fadeOutDuration: Duration.zero,
         height: height,
         width: width,
         fit: fit,
@@ -329,20 +348,12 @@ class MathHtmlFormatter {
           height: height ?? 140,
           width: width ?? double.infinity,
           color: const Color(0xFFF1F5F9),
-          child: const Center(
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Color(0xFF10B981),
-              ),
-            ),
-          ),
         ),
         errorWidget: (context, url, error) => Image.network(
           processedUrl,
+          key: ValueKey('fallback_${processedUrl.hashCode}'),
           headers: networkImageHeaders,
+          gaplessPlayback: true,
           height: height,
           width: width,
           fit: fit,

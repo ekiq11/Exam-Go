@@ -1470,14 +1470,16 @@
       const rawTarget = img.dataset.rawSrc || img.getAttribute('src') || '';
       if (!rawTarget || rawTarget.startsWith('data:image/')) {
         img.dataset.hasFailed = 'true';
+        img.onerror = null;
         return;
       }
 
-      img.classList.add('animate-pulse');
+      img.style.opacity = '0.7';
       const dataUri = await resolveImageToBase64(rawTarget);
-      img.classList.remove('animate-pulse');
+      img.style.opacity = '1';
 
       if (dataUri) {
+        img.onerror = null;
         img.src = dataUri;
         img.dataset.hasFailed = '';
         img.dataset.isResolving = '';
@@ -1490,6 +1492,7 @@
         }
       } else {
         img.dataset.hasFailed = 'true';
+        img.onerror = null;
         img.alt = '⚠️ Gambar tidak dapat dimuat';
         img.classList.add('opacity-40');
       }
@@ -2328,6 +2331,12 @@
             title: title,
             qrPayload: qrPayload
           };
+          saveToLocalExamHistory({
+            token: token,
+            title: title,
+            timestamp: Date.now(),
+            qrPayload: qrPayload
+          });
           showPublishedModal();
         } else {
           throw new Error(res.message || 'Gagal menerbitkan paket ujian.');
@@ -2366,6 +2375,16 @@
     function closePublishedModal() {
       document.getElementById('modal-published').classList.add('hidden');
       randomizeToken();
+    }
+
+    function saveToLocalExamHistory(item) {
+      try {
+        let list = JSON.parse(localStorage.getItem('examgo_teacher_published_history') || '[]');
+        list = list.filter(x => x.token !== item.token);
+        list.unshift(item);
+        if (list.length > 50) list = list.slice(0, 50);
+        localStorage.setItem('examgo_teacher_published_history', JSON.stringify(list));
+      } catch (e) {}
     }
 
     function copyPublishedToken() {

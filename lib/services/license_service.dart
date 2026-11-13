@@ -42,6 +42,7 @@ class LicenseService {
   static const String _kStudentAttemptsKey = 'license_student_exam_count';
   static const String _kTeacherPremiumKey = 'license_teacher_is_premium';
   static const String _kTeacherUploadsKey = 'license_teacher_upload_count';
+  static const String _kTeacherLicenseTokenKey = 'teacher_license_token';
 
   FirebaseFirestore? _firestore;
 
@@ -178,12 +179,49 @@ class LicenseService {
         final doc = await db.collection('devices').doc(deviceId).get();
         if (doc.exists && (doc.data()?['is_teacher_premium'] == true)) {
           await prefs.setBool(_kTeacherPremiumKey, true);
+          final lastToken = doc.data()?['last_token_activated'] as String?;
+          if (lastToken != null && lastToken.isNotEmpty) {
+            await prefs.setString(_kTeacherLicenseTokenKey, lastToken.trim().toUpperCase());
+          }
           return true;
         }
       } catch (_) {}
     }
 
     return false;
+  }
+
+  /// Mengambil token lisensi guru yang sedang aktif di perangkat ini
+  Future<String?> getTeacherLicenseToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString(_kTeacherLicenseTokenKey);
+    if (token != null && token.isNotEmpty) return token;
+
+    final db = _db;
+    if (db != null) {
+      try {
+        final deviceId = await getDeviceId();
+        final doc = await db.collection('devices').doc(deviceId).get();
+        final devToken = doc.data()?['last_token_activated'] as String?;
+        if (devToken != null && devToken.isNotEmpty) {
+          token = devToken.trim().toUpperCase();
+          await prefs.setString(_kTeacherLicenseTokenKey, token);
+          return token;
+        }
+
+        final snap = await db
+            .collection('license_tokens')
+            .where('mobile_device_id', isEqualTo: deviceId)
+            .limit(1)
+            .get();
+        if (snap.docs.isNotEmpty) {
+          token = snap.docs.first.id.trim().toUpperCase();
+          await prefs.setString(_kTeacherLicenseTokenKey, token);
+          return token;
+        }
+      } catch (_) {}
+    }
+    return null;
   }
 
   /// Sisa kuota coba gratis buat & upload soal untuk guru (maksimal 3x)

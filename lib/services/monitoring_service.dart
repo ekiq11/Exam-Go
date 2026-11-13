@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
+import 'qr_payload.dart';
+import 'license_service.dart';
 
 class MonitoringService {
   static final MonitoringService instance = MonitoringService._();
@@ -313,22 +315,113 @@ class MonitoringService {
     required String examId,
     required String title,
     required String url,
+    String? teacherToken,
   }) async {
     try {
       final expiresAt = Timestamp.fromDate(
         DateTime.now().add(const Duration(days: 10)),
       );
+      final token = teacherToken ?? await LicenseService.instance.getTeacherLicenseToken();
       await _db.collection('exam_sessions').doc(examId).set({
         'title': title,
         'url': url,
         'created_at': FieldValue.serverTimestamp(),
         'student_count': 0,
+        if (token != null && token.isNotEmpty) 'teacher_token': token,
         // Field ini dibaca oleh Firestore TTL policy untuk auto-delete setelah 10 hari
         'expires_at': expiresAt,
       }, SetOptions(merge: true));
     } catch (e) {
       // Abaikan error
     }
+  }
+
+  /// Sinkronisasi otomatis riwayat sesi ujian & token guru dari Cloud Firestore
+  /// Mengambil semua ujian yang pernah diterbitkan oleh guru ini (baik lewat WebGAS maupun aplikasi mobile)
+  Future<List<String>> syncTeacherExamHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final localList = prefs.getStringList('teacher_exam_history') ?? [];
+
+    final Map<String, String> examMap = {};
+    for (final item in localList) {
+      final parts = item.split('|');
+      if (parts.isNotEmpty && parts[0].isNotEmpty) {
+        examMap[parts[0]] = item;
+      }
+    }
+
+    try {
+      final teacherToken = await LicenseService.instance.getTeacherLicenseToken();
+      if (teacherToken != null && teacherToken.isNotEmpty) {
+        // 1. Ambil dari koleksi exam_sessions
+        final sessionSnap = await _db
+            .collection('exam_sessions')
+            .where('teacher_token', isEqualTo: teacherToken)
+            .get();
+
+        for (final doc in sessionSnap.docs) {
+          final data = doc.data();
+          final examId = doc.id;
+          final title = (data['title'] as String?) ?? 'Ujian CBT';
+          final url = (data['url'] as String?) ?? 'EXAMGO_TRYOUT://$examId';
+          final qrPayload = (data['qr_payload'] as String?) ??
+              QRPayloadService.generate(url, title: title);
+          int ts = 0;
+          final createdAt = data['created_at'];
+          if (createdAt is Timestamp) {
+            ts = createdAt.millisecondsSinceEpoch;
+          } else if (createdAt is String) {
+            ts = DateTime.tryParse(createdAt)?.millisecondsSinceEpoch ?? 0;
+          }
+          if (ts == 0) ts = DateTime.now().millisecondsSinceEpoch;
+
+          if (!examMap.containsKey(examId)) {
+            examMap[examId] = '$examId|$title|$ts|$url|$qrPayload';
+          }
+        }
+
+        // 2. Ambil dari koleksi paket_tryout
+        final pkgSnap = await _db
+            .collection('paket_tryout')
+            .where('teacher_token', isEqualTo: teacherToken)
+            .get();
+
+        for (final doc in pkgSnap.docs) {
+          final data = doc.data();
+          final examId = doc.id;
+          final title = (data['nama_paket'] as String?) ?? 'Ujian CBT';
+          final url = 'EXAMGO_TRYOUT://$examId';
+          final qrPayload = QRPayloadService.generate(url, title: title);
+          int ts = 0;
+          final createdAt = data['created_at'];
+          if (createdAt is Timestamp) {
+            ts = createdAt.millisecondsSinceEpoch;
+          } else if (createdAt is String) {
+            ts = DateTime.tryParse(createdAt)?.millisecondsSinceEpoch ?? 0;
+          }
+          if (ts == 0) ts = DateTime.now().millisecondsSinceEpoch;
+
+          if (!examMap.containsKey(examId)) {
+            examMap[examId] = '$examId|$title|$ts|$url|$qrPayload';
+          }
+        }
+      }
+    } catch (_) {}
+
+    // Urutkan berdasarkan timestamp descending (terbaru di atas)
+    final mergedList = examMap.values.toList()
+      ..sort((a, b) {
+        final ptsA = a.split('|');
+        final ptsB = b.split('|');
+        final tsA = ptsA.length > 2 ? int.tryParse(ptsA[2]) ?? 0 : 0;
+        final tsB = ptsB.length > 2 ? int.tryParse(ptsB[2]) ?? 0 : 0;
+        return tsB.compareTo(tsA);
+      });
+
+    if (mergedList.length != localList.length) {
+      await prefs.setStringList('teacher_exam_history', mergedList);
+    }
+    return mergedList;
   }
 
   /// Memeriksa dan otomatis menghapus sesi ujian jika umur >= 10 hari dan siswanya 0
