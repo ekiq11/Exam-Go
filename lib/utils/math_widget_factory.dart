@@ -250,6 +250,13 @@ class MathHtmlFormatter {
         return param;
       }
     }
+    if (url.startsWith('https://images.weserv.nl/?url=')) {
+      final param = url.replaceFirst('https://images.weserv.nl/?url=', '');
+      try {
+        final decoded = Uri.decodeComponent(param);
+        if (decoded.startsWith('http')) return decoded;
+      } catch (_) {}
+    }
     if (url.startsWith('/')) {
       return 'https://examgo.id$url';
     }

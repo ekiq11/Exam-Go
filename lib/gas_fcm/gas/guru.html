@@ -94,14 +94,25 @@
     .theme-light #btn-theme-toggle:hover {
       background-color: #e2e8f0 !important;
     }
+    .theme-light header a,
+    .theme-light header a[href*="wa.me"],
     .theme-light a[href*="wa.me"] {
       background-color: #f1f5f9 !important;
       border-color: #cbd5e1 !important;
       color: #0f172a !important;
       font-weight: 700 !important;
     }
+    .theme-light header a:hover,
     .theme-light a[href*="wa.me"]:hover {
       background-color: #e2e8f0 !important;
+    }
+    .theme-light a[href*="edit?usp=sharing"] {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    .theme-light a[href*="edit?usp=sharing"]:hover {
+      background-color: #f1f5f9 !important;
     }
     .theme-light #token-status-box {
       background-color: #f1f5f9 !important;
@@ -1380,12 +1391,35 @@
       if (s.startsWith('data:image/')) return s;
       const converted = convertDriveUrl(s);
       if (converted.startsWith('http://') || converted.startsWith('https://')) {
-        const prefix = (window.location && window.location.origin && window.location.origin.includes('examgo.id'))
-          ? '/api/proxy-image?url='
-          : 'https://examgo.id/api/proxy-image?url=';
-        return prefix + encodeURIComponent(converted);
+        // Gunakan images.weserv.nl sebagai global CDN image proxy anti-CORS & NotSameSite
+        return 'https://images.weserv.nl/?url=' + encodeURIComponent(converted);
       }
       return converted;
+    }
+
+    function convertImgToCanvasBase64(img, qIdx, field) {
+      if (!img || img.dataset.convertedB64 === 'true') return;
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        if (canvas.width <= 0 || canvas.height <= 0) return;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const dataUri = canvas.toDataURL('image/jpeg', 0.85);
+        if (dataUri && dataUri.startsWith('data:image/')) {
+          img.dataset.convertedB64 = 'true';
+          if (typeof qIdx === 'number' && _extractedQuestions[qIdx]) {
+            if (field === 'main') {
+              _extractedQuestions[qIdx].gambar = dataUri;
+            } else if (field && field.startsWith('gam_')) {
+              _extractedQuestions[qIdx][field] = dataUri;
+            }
+          }
+        }
+      } catch (_) {
+        // Tainted canvas fallback ignored safely
+      }
     }
 
     async function generateSignedQrPayload(url, title, token) {
@@ -1466,8 +1500,18 @@
 
     async function handleImageError(img, qIdx, field) {
       if (img.dataset.isResolving || img.dataset.hasFailed) return;
+      const rawTarget = img.dataset.rawSrc || '';
+
+      // 1. Jika proxy weserv gagal, coba fallback ke direct link Google Drive
+      if (!img.dataset.triedDirect && rawTarget && !rawTarget.startsWith('data:')) {
+        img.dataset.triedDirect = 'true';
+        img.removeAttribute('crossorigin');
+        img.src = convertDriveUrl(rawTarget);
+        return;
+      }
+
+      // 2. Jika direct juga gagal, panggil resolver server-side
       img.dataset.isResolving = 'true';
-      const rawTarget = img.dataset.rawSrc || img.getAttribute('src') || '';
       if (!rawTarget || rawTarget.startsWith('data:image/')) {
         img.dataset.hasFailed = 'true';
         img.onerror = null;
@@ -1955,7 +1999,9 @@
             ${proxiedMainImg ? `
               <div class="mb-3">
                 <img id="q-img-${actualIdx}" src="${proxiedMainImg}" data-raw-src="${q.gambar || ''}" alt="Gambar Soal ${actualIdx + 1}"
-                  referrerpolicy="no-referrer" loading="lazy" onerror="handleImageError(this, ${actualIdx}, 'main')"
+                  crossorigin="anonymous" referrerpolicy="no-referrer" loading="lazy"
+                  onload="convertImgToCanvasBase64(this, ${actualIdx}, 'main')"
+                  onerror="handleImageError(this, ${actualIdx}, 'main')"
                   class="max-h-72 rounded-xl border border-slate-800 object-contain shadow-md bg-slate-900/50">
               </div>` : ''}
 
@@ -1975,7 +2021,7 @@
                       <span class="opt-letter font-bold uppercase ${isKey ? 'text-brand-400' : 'text-slate-500'}">${opt}.</span>
                       <span class="whitespace-pre-wrap katex-render">${renderContentSafely(optText)}</span>
                     </div>
-                    ${optGam ? `<img id="q-opt-img-${actualIdx}-${opt}" src="${optGam}" data-raw-src="${q['gam_' + opt] || ''}" alt="Gambar Opsi ${opt.toUpperCase()}" referrerpolicy="no-referrer" loading="lazy" onerror="handleImageError(this, ${actualIdx}, 'gam_${opt}')" class="max-h-24 rounded-lg border border-slate-800 object-contain bg-slate-950/40 mt-1">` : ''}
+                    ${optGam ? `<img id="q-opt-img-${actualIdx}-${opt}" src="${optGam}" data-raw-src="${q['gam_' + opt] || ''}" alt="Gambar Opsi ${opt.toUpperCase()}" crossorigin="anonymous" referrerpolicy="no-referrer" loading="lazy" onload="convertImgToCanvasBase64(this, ${actualIdx}, 'gam_${opt}')" onerror="handleImageError(this, ${actualIdx}, 'gam_${opt}')" class="max-h-24 rounded-lg border border-slate-800 object-contain bg-slate-950/40 mt-1">` : ''}
                   </div>
                 `;
               }).join('')}
