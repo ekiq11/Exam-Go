@@ -173,21 +173,27 @@
         <h2 class="text-base font-bold text-white">Pilih Sumber Dokumen Soal</h2>
       </div>
 
-      <!-- Tab Buttons -->
-      <div class="flex rounded-xl bg-slate-950 p-1 border border-slate-800 mb-6 max-w-md">
-        <button id="tab-btn-docx" onclick="switchSourceTab('docx')"
-          class="flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-brand-600 text-white shadow-md">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-          </svg>
-          <span>Dokumen Word (.docx)</span>
-        </button>
-        <button id="tab-btn-gform" onclick="switchSourceTab('gform')"
-          class="flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white">
-          <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-          </svg>
-          <span>⭐ Google Form Kuis</span>
+      <!-- Tab Buttons & Quick Action -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <div class="flex rounded-xl bg-slate-950 p-1 border border-slate-800 w-full sm:max-w-md">
+          <button id="tab-btn-docx" onclick="switchSourceTab('docx')"
+            class="flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 bg-brand-600 text-white shadow-md">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span>Dokumen Word (.docx)</span>
+          </button>
+          <button id="tab-btn-gform" onclick="switchSourceTab('gform')"
+            class="flex-1 py-2 px-4 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white">
+            <svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+            </svg>
+            <span>⭐ Google Form Kuis</span>
+          </button>
+        </div>
+        <button type="button" onclick="loadSampleTestQuestions()"
+          class="text-xs px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 hover:from-emerald-500/20 hover:to-teal-500/20 text-emerald-300 border border-emerald-500/30 font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm">
+          <span>✨</span><span>Muat Contoh Soal (Gambar, Tabel, Rumus)</span>
         </button>
       </div>
 
@@ -571,6 +577,50 @@
       }
     }
 
+    // Pembungkus otomatis rumus matematika ke dalam delimiter KaTeX ($...$)
+    function autoWrapMathExpressions(text) {
+      if (!text) return '';
+      let str = String(text);
+
+      // Jangan bungkus ulang bagian yang sudah diapit oleh $, $$, \( \), atau tag HTML
+      const pattern = /(<[^>]+>|\$\$[\s\S]*?\$\$|\$[^\$\n]+\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\))/g;
+      let lastEnd = 0;
+      let sb = '';
+      let match;
+
+      while ((match = pattern.exec(str)) !== null) {
+        if (match.index > lastEnd) {
+          sb += _wrapMathSegment(str.substring(lastEnd, match.index));
+        }
+        sb += match[0];
+        lastEnd = pattern.lastIndex;
+      }
+      if (lastEnd < str.length) {
+        sb += _wrapMathSegment(str.substring(lastEnd));
+      }
+      return sb;
+    }
+
+    function _wrapMathSegment(seg) {
+      if (!seg || !seg.trim()) return seg;
+      let s = seg;
+
+      // 1. Tangkap persamaan / pertidaksamaan: contoh "x^{2} - 9 = 0", "2x + 3 = 7", "x \ge 4"
+      s = s.replace(/(?:^|(?<=[\s,;:(\[]))([a-zA-Z0-9\(\)\{\}\^\_\+\-\*\/\\]+(?:\s*[+\-*\/]\s*[a-zA-Z0-9\(\)\{\}\^\_\+\-\*\/\\]+)*\s*(?:=|\\ge|\\le|>|<|\\ne|\\approx|\u2264|\u2265|\u2260)\s*[a-zA-Z0-9\(\)\{\}\^\_\+\-\*\/\\]+(?:\s*[+\-*\/]\s*[a-zA-Z0-9\(\)\{\}\^\_\+\-\*\/\\]+)*)(?=[\s,;:?!.)\]]|$)/g, '$$$1$$');
+
+      // 2. Tangkap ekspresi aritmatika yang memuat operator LaTeX (\times, \div, \pm, \frac, \sqrt, \cdot, \pi, \sim, \rightarrow):
+      // Contoh: "15 + 25\times 2", "5 \times 10^{3}", "\frac{1}{2} + 3"
+      s = s.replace(/(?:^|(?<=[\s,;:(\[]))([a-zA-Z0-9\(\)\{\}\^\_\+\-\*\/\\]*(?:\\times|\\div|\\pm|\\frac|\\sqrt|\\cdot|\\alpha|\\beta|\\pi|\\theta|\\sim|\\rightarrow)[a-zA-Z0-9\(\)\{\}\^\_\+\-\*\/\s\\]*?[a-zA-Z0-9\)\}\]])(?=[\s,;:?!.)\]]|$)/g, '$$$1$$');
+
+      // 3. Tangkap variabel berpangkat / bersubskrip yang berdiri sendiri: contoh x^{2}, y_{1}, 10^{5}
+      s = s.replace(/(?:^|(?<=[\s,;:(\[]))([a-zA-Z0-9]+(?:\^\{[^{}]+\}|_\{[^{}]+\}))(?=[\s,;:?!.)\]]|$)/g, '$$$1$$');
+
+      // 4. Bersihkan double dollar bertetangga ($...$ $...$)
+      s = s.replace(/\$([^\$\n]+)\$\s*\$([^\$\n]+)\$/g, '$$$1 $2$$');
+
+      return s;
+    }
+
     function convertMathToLatex(str) {
       if (!str) return '';
       let s = String(str);
@@ -578,9 +628,11 @@
         s = s.replace(/\$\$([\s\S]*?)\$\$/g, (m, p1) => '$' + p1.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&') + '$');
         s = s.replace(/\$([^\$\n]+)\$/g, (m, p1) => '$' + p1.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&') + '$');
       }
+
       s = s.replace(/\u221A(\d+)/g, '\\sqrt{$1}')
         .replace(/√\(([^)]+)\)/g, '\\sqrt{$1}')
         .replace(/√([0-9a-zA-Z]+)/g, '\\sqrt{$1}')
+        .replace(/\bakar\s+([0-9a-zA-Z]+)\b/gi, '\\sqrt{$1}')
         .replace(/([a-zA-Z0-9\)])²|([a-zA-Z0-9\)])\^2/g, '$1^{2}')
         .replace(/([a-zA-Z0-9\)])³|([a-zA-Z0-9\)])\^3/g, '$1^{3}')
         .replace(/\u2264/g, '\\le ')
@@ -591,7 +643,14 @@
         .replace(/\u00F7/g, '\\div ')
         .replace(/([a-zA-Z0-9\)])\^(\d+)/g, '$1^{$2}')
         .replace(/(\d+)\/(\d+)/g, '\\frac{$1}{$2}');
-      return s;
+
+      const supers = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁺': '+', '⁻': '-', 'ⁿ': 'n', 'ˣ': 'x', 'ʸ': 'y' };
+      for (let k in supers) s = s.replaceAll(k, '^{' + supers[k] + '}');
+
+      const subs = { '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9', '₊': '+', '₋': '-', 'ₐ': 'a', 'ₑ': 'e', 'ₒ': 'o', 'ₓ': 'x' };
+      for (let k in subs) s = s.replaceAll(k, '_{' + subs[k] + '}');
+
+      return autoWrapMathExpressions(s);
     }
 
     async function processDocxFile(file) {
@@ -600,12 +659,23 @@
         return;
       }
 
-      setLoading(true, 'Mengekstrak teks & rumus Word (.docx)...');
+      setLoading(true, 'Mengekstrak teks, rumus & gambar Word (.docx)...');
       try {
         let arrayBuffer = await file.arrayBuffer();
         arrayBuffer = await extractAndConvertOMML(arrayBuffer);
 
-        const mammothResult = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+        // Konversi gambar Word (.docx) secara langsung ke inline Base64 data URL
+        const mammothOptions = {
+          convertImage: mammoth.images.imgElement(function (image) {
+            return image.read("base64").then(function (imageBuffer) {
+              return {
+                src: "data:" + image.contentType + ";base64," + imageBuffer
+              };
+            });
+          })
+        };
+
+        const mammothResult = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer }, mammothOptions);
         const html = mammothResult.value;
 
         const questions = parseDocxHtmlToQuestions(html);
@@ -632,6 +702,26 @@
       }
     }
 
+    function formatWordTableToHtml(tableEl) {
+      if (!tableEl) return '';
+      const rows = tableEl.querySelectorAll('tr');
+      if (rows.length === 0) return '';
+
+      let html = '<div class="overflow-x-auto my-3"><table class="min-w-full text-xs text-left border-collapse border border-slate-700 bg-slate-900/90 rounded-lg overflow-hidden">';
+      rows.forEach((tr, rIdx) => {
+        html += '<tr class="' + (rIdx === 0 ? 'bg-slate-800 text-slate-200 font-bold border-b border-slate-700' : 'border-b border-slate-800/80 hover:bg-slate-800/40 text-slate-300') + '">';
+        const cells = tr.querySelectorAll('th, td');
+        cells.forEach(td => {
+          const cellText = convertMathToLatex(td.innerText || td.textContent || '');
+          const tag = rIdx === 0 ? 'th' : 'td';
+          html += `<${tag} class="px-3 py-2 border-r border-slate-700/60 last:border-r-0">${cellText}</${tag}>`;
+        });
+        html += '</tr>';
+      });
+      html += '</table></div>';
+      return html;
+    }
+
     function parseDocxHtmlToQuestions(html) {
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = html;
@@ -640,11 +730,39 @@
       let currentQ = null;
       let currentOpt = null;
 
-      const pTags = tempDiv.querySelectorAll('p, tr, li, h1, h2, h3, h4');
-      pTags.forEach(p => {
-        let text = p.innerText || p.textContent || '';
-        text = text.trim();
-        if (!text) return;
+      // Iterasi seluruh elemen termasuk tabel, gambar, paragraf, heading
+      const elements = tempDiv.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, table, hr');
+      elements.forEach(el => {
+        const tag = el.tagName.toLowerCase();
+
+        // 1. Tangani Tabel dari Word
+        if (tag === 'table') {
+          if (currentQ) {
+            const tblHtml = formatWordTableToHtml(el);
+            if (tblHtml) {
+              currentQ.tabel = currentQ.tabel ? (currentQ.tabel + '\n' + tblHtml) : tblHtml;
+            }
+          }
+          return;
+        }
+
+        // 2. Tangani Gambar
+        const img = el.querySelector('img');
+        const imgSrc = img ? img.src : (tag === 'img' ? el.src : '');
+
+        let rawText = el.innerText || el.textContent || '';
+        let text = rawText.trim();
+
+        // Jika ada gambar di dalam elemen ini
+        if (imgSrc && currentQ) {
+          if (currentOpt && ['a', 'b', 'c', 'd', 'e'].includes(currentOpt)) {
+            if (!currentQ['gam_' + currentOpt]) currentQ['gam_' + currentOpt] = imgSrc;
+          } else if (!currentQ.gambar) {
+            currentQ.gambar = imgSrc;
+          }
+        }
+
+        if (!text) return; // Jika elemen kosong (misal paragraf gambar kosong), lanjut
         text = convertMathToLatex(text);
 
         // Cek apakah baris ini nomor soal baru (misal: "1.", "1)", "Soal 1.")
@@ -656,15 +774,13 @@
             nomor: parseInt(qMatch[1]) || (questions.length + 1),
             pertanyaan: qMatch[2] || '',
             opsi_a: '', opsi_b: '', opsi_c: '', opsi_d: '', opsi_e: '',
+            gam_a: '', gam_b: '', gam_c: '', gam_d: '', gam_e: '',
             kunci: 'A',
             pembahasan: '',
-            gambar: ''
+            gambar: imgSrc || '',
+            tabel: ''
           };
           currentOpt = null;
-
-          // Periksa gambar di dalam p ini
-          const img = p.querySelector('img');
-          if (img && img.src) currentQ.gambar = img.src;
           return;
         }
 
@@ -675,6 +791,9 @@
         if (optMatch) {
           currentOpt = optMatch[1].toLowerCase();
           currentQ['opsi_' + currentOpt] = optMatch[2].trim();
+          if (imgSrc && !currentQ['gam_' + currentOpt]) {
+            currentQ['gam_' + currentOpt] = imgSrc;
+          }
           return;
         }
 
@@ -693,7 +812,7 @@
           return;
         }
 
-        // Jika baris lanjutan
+        // Baris lanjutan teks soal / paragraf wacana
         if (currentOpt && currentOpt !== 'pembahasan') {
           currentQ['opsi_' + currentOpt] += '\n' + text;
         } else if (currentOpt === 'pembahasan') {
@@ -743,6 +862,54 @@
       }
     }
 
+    function extractBlobMap(html) {
+      const map = {};
+      const regex1 = /data-id=["'](s-blob-[^"']+)["'][^>]*?src=["'](https?:\/\/[^"']+)["']/g;
+      let m;
+      while ((m = regex1.exec(html)) !== null) map[m[1]] = m[2];
+      const regex2 = /src=["'](https?:\/\/[^"']+)["'][^>]*?data-id=["'](s-blob-[^"']+)["']/g;
+      while ((m = regex2.exec(html)) !== null) map[m[2]] = m[1];
+      const regex3 = /\["(s-blob-[^"]+)",\s*\["(https?:\/\/[^"]+)"/g;
+      while ((m = regex3.exec(html)) !== null) map[m[1]] = m[2];
+      return map;
+    }
+
+    function normalizeGoogleImageUrl(url) {
+      if (!url) return '';
+      let s = String(url).trim();
+      const driveMatch = s.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=)|docs\.google\.com\/file\/d\/)([a-zA-Z0-9_-]+)/);
+      if (driveMatch) {
+        return 'https://lh3.googleusercontent.com/d/' + driveMatch[1];
+      }
+      return s;
+    }
+
+    function extractImageUrl(obj, blobMap) {
+      if (!obj) return '';
+      if (typeof obj === 'string') {
+        let s = obj.trim();
+        if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('data:image/')) {
+          return normalizeGoogleImageUrl(s);
+        }
+        if (blobMap && blobMap[s]) {
+          return normalizeGoogleImageUrl(blobMap[s]);
+        }
+        return '';
+      }
+      if (Array.isArray(obj)) {
+        for (let el of obj) {
+          let found = extractImageUrl(el, blobMap);
+          if (found) return found;
+        }
+      } else if (typeof obj === 'object') {
+        for (let key in obj) {
+          let found = extractImageUrl(obj[key], blobMap);
+          if (found) return found;
+        }
+      }
+      return '';
+    }
+
     function parseGFormHtml(html) {
       const regex = /var\s+FB_PUBLIC_LOAD_DATA_\s*=\s*(.+?);\s*<\/script>/s;
       const match = regex.exec(html);
@@ -757,6 +924,7 @@
 
       if (!jsonData || !Array.isArray(jsonData) || !jsonData[1] || !Array.isArray(jsonData[1])) return null;
 
+      const blobMap = extractBlobMap(html);
       const formInfo = jsonData[1];
       const formTitle = formInfo[8] || formInfo[0] || 'Ujian Google Form';
       const titleInput = document.getElementById('exam-title');
@@ -764,11 +932,58 @@
 
       const itemsList = formInfo[1] || [];
       const questions = [];
+      let lastStandaloneImage = '';
 
       itemsList.forEach((item, idx) => {
         if (!Array.isArray(item) || item.length < 4) return;
         const itemType = item[3];
-        // Hanya ambil pilihan ganda (tipe 2) atau dropdown (tipe 3)
+
+        // 1. Item Gambar Standalone (itemType === 9)
+        if (itemType === 9) {
+          lastStandaloneImage = extractImageUrl(item, blobMap);
+          return;
+        }
+
+        // 2. Kisi Pilihan Ganda / Grid (itemType === 7)
+        if (itemType === 7) {
+          const gridTitle = convertMathToLatex(item[1] || '');
+          const gridDesc = convertMathToLatex(item[2] || '');
+          const gridImg = extractImageUrl(item[6], blobMap) || lastStandaloneImage;
+          lastStandaloneImage = '';
+
+          if (Array.isArray(item[4])) {
+            const gridRows = item[4];
+            gridRows.forEach(row => {
+              if (!Array.isArray(row) || !row[0]) return;
+              const rowQuestion = convertMathToLatex(row[0] || '');
+              const fullQuestion = gridTitle + (gridDesc ? ('\n' + gridDesc) : '') + '\n' + rowQuestion;
+
+              let qObj = {
+                id: questions.length + 1,
+                nomor: questions.length + 1,
+                pertanyaan: fullQuestion,
+                opsi_a: '', opsi_b: '', opsi_c: '', opsi_d: '', opsi_e: '',
+                gam_a: '', gam_b: '', gam_c: '', gam_d: '', gam_e: '',
+                kunci: 'A',
+                pembahasan: '',
+                gambar: gridImg,
+                tabel: ''
+              };
+
+              const colList = row[1] || (gridRows[0] && gridRows[0][1]) || [];
+              const optChars = ['a', 'b', 'c', 'd', 'e'];
+              colList.slice(0, 5).forEach((col, cIdx) => {
+                const colText = Array.isArray(col) ? col[0] : col;
+                qObj['opsi_' + optChars[cIdx]] = convertMathToLatex(colText || ('Opsi ' + (cIdx + 1)));
+              });
+
+              questions.push(qObj);
+            });
+          }
+          return;
+        }
+
+        // 3. Pilihan Ganda (tipe 2), Dropdown (tipe 3), Kotak Centang (tipe 4)
         if (itemType !== 2 && itemType !== 3 && itemType !== 4) return;
 
         const qTitle = convertMathToLatex(item[1] || '');
@@ -779,27 +994,34 @@
         if (!rawOpts || !Array.isArray(rawOpts) || !rawOpts[0] || !Array.isArray(rawOpts[0][1])) return;
 
         const optionsArray = rawOpts[0][1];
+        let itemImg = extractImageUrl(item[6], blobMap) || extractImageUrl(item[8], blobMap);
+        if (!itemImg && lastStandaloneImage) {
+          itemImg = lastStandaloneImage;
+          lastStandaloneImage = '';
+        }
+
         let qObj = {
           id: questions.length + 1,
           nomor: questions.length + 1,
           pertanyaan: fullQ,
           opsi_a: '', opsi_b: '', opsi_c: '', opsi_d: '', opsi_e: '',
+          gam_a: '', gam_b: '', gam_c: '', gam_d: '', gam_e: '',
           kunci: 'A',
           pembahasan: '',
-          gambar: ''
+          gambar: itemImg || '',
+          tabel: ''
         };
 
         const optChars = ['a', 'b', 'c', 'd', 'e'];
         optionsArray.slice(0, 5).forEach((opt, optIdx) => {
-          if (Array.isArray(opt) && opt[0]) {
-            qObj['opsi_' + optChars[optIdx]] = convertMathToLatex(opt[0]);
+          if (Array.isArray(opt) && opt[0] !== undefined) {
+            qObj['opsi_' + optChars[optIdx]] = convertMathToLatex(opt[0] || '');
+            const optImg = extractImageUrl(opt, blobMap);
+            if (optImg) {
+              qObj['gam_' + optChars[optIdx]] = optImg;
+            }
           }
         });
-
-        // Deteksi gambar di item jika ada
-        if (item[6] && Array.isArray(item[6]) && item[6][0]) {
-          qObj.gambar = item[6][0];
-        }
 
         questions.push(qObj);
       });
@@ -808,6 +1030,67 @@
     }
 
     // ── 6. Rendering Preview & KaTeX ────────────────────────────────────
+    function formatMarkdownAndTables(text) {
+      if (!text) return '';
+      let s = String(text);
+
+      // Konversi tabel format Markdown (| kolom 1 | kolom 2 |) jika ada
+      if (s.includes('|') && s.includes('---')) {
+        const lines = s.split('\n');
+        let inTable = false;
+        let tableLines = [];
+        let otherLines = [];
+
+        lines.forEach(line => {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+            inTable = true;
+            tableLines.push(trimmed);
+          } else {
+            if (inTable && tableLines.length > 0) {
+              otherLines.push(convertMarkdownTableLinesToHtml(tableLines));
+              tableLines = [];
+              inTable = false;
+            }
+            otherLines.push(line);
+          }
+        });
+        if (inTable && tableLines.length > 0) {
+          otherLines.push(convertMarkdownTableLinesToHtml(tableLines));
+        }
+        s = otherLines.join('\n');
+      }
+      return s;
+    }
+
+    function convertMarkdownTableLinesToHtml(lines) {
+      if (!lines || lines.length < 2) return lines.join('\n');
+      let html = '<div class="overflow-x-auto my-3"><table class="min-w-full text-xs text-left border-collapse border border-slate-700 bg-slate-900/90 rounded-lg overflow-hidden">';
+
+      lines.forEach((line, idx) => {
+        if (line.match(/^\|(?:\s*:?-+:?\s*\|)+$/)) return;
+        const cells = line.split('|').slice(1, -1).map(c => c.trim());
+        const isHeader = (idx === 0);
+        html += '<tr class="' + (isHeader ? 'bg-slate-800 text-slate-200 font-bold border-b border-slate-700' : 'border-b border-slate-800/80 hover:bg-slate-800/40 text-slate-300') + '">';
+        cells.forEach(cell => {
+          const tag = isHeader ? 'th' : 'td';
+          html += `<${tag} class="px-3 py-2 border-r border-slate-700/60 last:border-r-0">${convertMathToLatex(cell)}</${tag}>`;
+        });
+        html += '</tr>';
+      });
+
+      html += '</table></div>';
+      return html;
+    }
+
+    function renderContentSafely(content) {
+      if (!content) return '';
+      if (content.includes('<table') || content.includes('<div') || content.includes('<svg') || content.includes('data:image')) {
+        return content;
+      }
+      return escapeHtml(content);
+    }
+
     function renderQuestionsPreview() {
       const container = document.getElementById('questions-list');
       const badge = document.getElementById('question-count-badge');
@@ -843,6 +1126,8 @@
       // Render Kartu Soal
       let listHtml = '';
       _extractedQuestions.forEach((q, idx) => {
+        const formattedPertanyaan = formatMarkdownAndTables(q.pertanyaan);
+
         listHtml += `
           <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 sm:p-5 transition-all hover:border-slate-700">
             <div class="flex items-start justify-between gap-3 mb-2">
@@ -864,20 +1149,28 @@
             </div>
 
             <!-- Pertanyaan -->
-            <div class="text-sm text-slate-100 font-medium whitespace-pre-wrap leading-relaxed mb-3 katex-render">${escapeHtml(q.pertanyaan)}</div>
+            <div class="text-sm text-slate-100 font-medium whitespace-pre-wrap leading-relaxed mb-3 katex-render">${renderContentSafely(formattedPertanyaan)}</div>
 
-            ${q.gambar ? `<div class="mb-3"><img src="${q.gambar}" class="max-h-60 rounded-xl border border-slate-800 object-contain"></div>` : ''}
+            <!-- Gambar Soal Utama (jika ada) -->
+            ${q.gambar ? `<div class="mb-3"><img src="${q.gambar}" alt="Gambar Soal ${idx + 1}" class="max-h-72 rounded-xl border border-slate-800 object-contain shadow-md bg-slate-900/50"></div>` : ''}
+
+            <!-- Tabel Data Soal (jika ada) -->
+            ${q.tabel ? `<div class="mb-3">${q.tabel}</div>` : ''}
 
             <!-- Opsi Pilihan A - E -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               ${['a', 'b', 'c', 'd', 'e'].map(opt => {
                 const optText = q['opsi_' + opt];
-                if (!optText) return '';
+                const optGam = q['gam_' + opt];
+                if (!optText && !optGam) return '';
                 const isKey = (q.kunci || '').toUpperCase() === opt.toUpperCase();
                 return `
-                  <div class="p-2.5 rounded-xl border ${isKey ? 'bg-brand-500/10 border-brand-500/40 text-brand-200' : 'bg-slate-900/60 border-slate-800 text-slate-300'} flex items-start gap-2">
-                    <span class="font-bold uppercase ${isKey ? 'text-brand-400' : 'text-slate-500'}">${opt}.</span>
-                    <span class="whitespace-pre-wrap katex-render">${escapeHtml(optText)}</span>
+                  <div class="p-2.5 rounded-xl border ${isKey ? 'bg-brand-500/10 border-brand-500/40 text-brand-200' : 'bg-slate-900/60 border-slate-800 text-slate-300'} flex flex-col gap-1.5">
+                    <div class="flex items-start gap-2">
+                      <span class="font-bold uppercase ${isKey ? 'text-brand-400' : 'text-slate-500'}">${opt}.</span>
+                      <span class="whitespace-pre-wrap katex-render">${renderContentSafely(optText)}</span>
+                    </div>
+                    ${optGam ? `<img src="${optGam}" alt="Gambar Opsi ${opt.toUpperCase()}" class="max-h-24 rounded-lg border border-slate-800 object-contain bg-slate-950/40 mt-1">` : ''}
                   </div>
                 `;
               }).join('')}
@@ -886,7 +1179,7 @@
             ${q.pembahasan ? `
               <div class="mt-3 pt-2.5 border-t border-slate-900 text-xs text-slate-400 flex items-start gap-2">
                 <span class="font-bold text-brand-400 shrink-0">Pembahasan:</span>
-                <span class="whitespace-pre-wrap katex-render">${escapeHtml(q.pembahasan)}</span>
+                <span class="whitespace-pre-wrap katex-render">${renderContentSafely(q.pembahasan)}</span>
               </div>
             ` : ''}
           </div>
@@ -930,6 +1223,99 @@
           throwOnError: false
         });
       }
+    }
+
+    // ── Fungsi Muat Contoh Soal Lengkap (Rumus KaTeX, Gambar, Tabel, Paragraf) ─
+    function loadSampleTestQuestions() {
+      const sampleWaveSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240" width="100%" height="240"><rect width="100%" height="100%" fill="%230f172a" rx="12"/><line x1="40" y1="120" x2="560" y2="120" stroke="%23475569" stroke-width="2"/><line x1="60" y1="20" x2="60" y2="220" stroke="%23475569" stroke-width="2"/><text x="540" y="110" fill="%2394a3b8" font-size="12" font-family="sans-serif">s (m)</text><text x="70" y="35" fill="%2394a3b8" font-size="12" font-family="sans-serif">y (cm)</text><path d="M 60 120 Q 100 40, 140 120 T 220 120 T 300 120 T 380 120 T 460 120 T 540 120" fill="none" stroke="%2310b981" stroke-width="3"/><circle cx="60" cy="120" r="5" fill="%23f59e0b"/><text x="50" y="145" fill="%23fbbf24" font-weight="bold" font-size="14">A</text><circle cx="540" cy="120" r="5" fill="%23f59e0b"/><text x="535" y="145" fill="%23fbbf24" font-weight="bold" font-size="14">B</text><line x1="60" y1="190" x2="540" y2="190" stroke="%2338bdf8" stroke-width="1.5" stroke-dasharray="4"/><text x="270" y="210" fill="%2338bdf8" font-weight="bold" font-size="13" text-anchor="middle">Jarak A ke B = 12 meter (t = 1,5 s)</text><line x1="100" y1="40" x2="100" y2="120" stroke="%23f43f5e" stroke-width="1.5" stroke-dasharray="3"/><text x="110" y="85" fill="%23f43f5e" font-size="12">A = 10 cm</text></svg>';
+
+      const sampleTableHtml = '<div class="overflow-x-auto my-3"><table class="min-w-full text-xs text-left border-collapse border border-slate-700 bg-slate-900/90 rounded-xl overflow-hidden shadow-lg"><thead class="bg-slate-800 text-slate-200 border-b border-slate-700 font-bold"><tr><th class="px-3.5 py-2.5 border-r border-slate-700">No</th><th class="px-3.5 py-2.5 border-r border-slate-700">Nama Barang Komoditas</th><th class="px-3.5 py-2.5 border-r border-slate-700">Harga Satuan (Rp)</th><th class="px-3.5 py-2.5">Volume Terjual</th></tr></thead><tbody class="divide-y divide-slate-800 text-slate-300"><tr class="hover:bg-slate-800/40"><td class="px-3.5 py-2 border-r border-slate-800 font-mono">1</td><td class="px-3.5 py-2 border-r border-slate-800 font-semibold">Beras Premium Ramos</td><td class="px-3.5 py-2 border-r border-slate-800">Rp 14.000 / kg</td><td class="px-3.5 py-2 font-mono">250 kg</td></tr><tr class="hover:bg-slate-800/40"><td class="px-3.5 py-2 border-r border-slate-800 font-mono">2</td><td class="px-3.5 py-2 border-r border-slate-800 font-semibold">Minyak Goreng Sawit</td><td class="px-3.5 py-2 border-r border-slate-800">Rp 16.000 / liter</td><td class="px-3.5 py-2 font-mono">150 liter</td></tr><tr class="hover:bg-slate-800/40"><td class="px-3.5 py-2 border-r border-slate-800 font-mono">3</td><td class="px-3.5 py-2 border-r border-slate-800 font-semibold">Gula Pasir Kristal</td><td class="px-3.5 py-2 border-r border-slate-800">Rp 17.500 / kg</td><td class="px-3.5 py-2 font-mono">100 kg</td></tr><tr class="hover:bg-slate-800/40"><td class="px-3.5 py-2 border-r border-slate-800 font-mono">4</td><td class="px-3.5 py-2 border-r border-slate-800 font-semibold">Tepung Terigu Segitiga</td><td class="px-3.5 py-2 border-r border-slate-800">Rp 11.000 / kg</td><td class="px-3.5 py-2 font-mono">80 kg</td></tr></tbody></table></div>';
+
+      _extractedQuestions = [
+        {
+          id: 1,
+          nomor: 1,
+          pertanyaan: 'Tentukan himpunan penyelesaian dari persamaan kuadrat: $x^{2} - 5x + 6 = 0$, serta berapakah nilai dari $\\frac{a}{b} = \\sqrt{16} \\times 2$?',
+          opsi_a: '$x = 2$ atau $x = 3$, dan $\\frac{a}{b} = 8$',
+          opsi_b: '$x = -2$ atau $x = -3$, dan $\\frac{a}{b} = 4$',
+          opsi_c: '$x = 1$ atau $x = 6$, dan $\\frac{a}{b} = 8$',
+          opsi_d: '$x = 2$ atau $x = 4$, dan $\\frac{a}{b} = 16$',
+          opsi_e: '$x = 3$ atau $x = 5$, dan $\\frac{a}{b} = 2$',
+          gam_a: '', gam_b: '', gam_c: '', gam_d: '', gam_e: '',
+          kunci: 'A',
+          pembahasan: 'Faktorkan: $(x - 2)(x - 3) = 0 \\Rightarrow x = 2$ atau $x = 3$. Untuk rumus pecahan akar: $\\sqrt{16} \\times 2 = 4 \\times 2 = 8$. Maka jawaban yang benar adalah A.',
+          gambar: '',
+          tabel: ''
+        },
+        {
+          id: 2,
+          nomor: 2,
+          pertanyaan: 'Perhatikan grafik gelombang transversal di bawah ini. Gelombang merambat dari titik A ke titik B dengan jarak 12 meter dalam selang waktu 1,5 sekon.\n\nBerapakah cepat rambat gelombang ($v$) dan frekuensi gelombang ($f$) tersebut?',
+          opsi_a: '$v = 8\\text{ m/s}$ dan $f = 2\\text{ Hz}$',
+          opsi_b: '$v = 6\\text{ m/s}$ dan $f = 1,5\\text{ Hz}$',
+          opsi_c: '$v = 12\\text{ m/s}$ dan $f = 3\\text{ Hz}$',
+          opsi_d: '$v = 4\\text{ m/s}$ dan $f = 1\\text{ Hz}$',
+          opsi_e: '$v = 10\\text{ m/s}$ dan $f = 2,5\\text{ Hz}$',
+          gam_a: '', gam_b: '', gam_c: '', gam_d: '', gam_e: '',
+          kunci: 'A',
+          pembahasan: 'Cepat rambat gelombang: $v = \\frac{s}{t} = \\frac{12}{1,5} = 8\\text{ m/s}$. Jumlah gelombang penuh dari A ke B adalah $n = 3$, sehingga frekuensi $f = \\frac{n}{t} = \\frac{3}{1,5} = 2\\text{ Hz}$.',
+          gambar: sampleWaveSvg,
+          tabel: ''
+        },
+        {
+          id: 3,
+          nomor: 3,
+          pertanyaan: 'Berdasarkan tabel rekapitulasi penjualan sembako Koperasi Sekolah berikut ini, berapakah total pendapatan dari penjualan Beras Premium dan Minyak Goreng Sawit?',
+          opsi_a: 'Rp 5.900.000',
+          opsi_b: 'Rp 6.200.000',
+          opsi_c: 'Rp 5.500.000',
+          opsi_d: 'Rp 4.800.000',
+          opsi_e: 'Rp 7.100.000',
+          gam_a: '', gam_b: '', gam_c: '', gam_d: '', gam_e: '',
+          kunci: 'A',
+          pembahasan: 'Pendapatan Beras = $250 \\times 14.000 = \\text{Rp } 3.500.000$. Pendapatan Minyak = $150 \\times 16.000 = \\text{Rp } 2.400.000$. Total = $\\text{Rp } 3.500.000 + 2.400.000 = \\text{Rp } 5.900.000$.',
+          gambar: '',
+          tabel: sampleTableHtml
+        },
+        {
+          id: 4,
+          nomor: 4,
+          pertanyaan: 'Bacalah wacana berikut dengan saksama!\n\nPemanfaatan Computer-Based Testing (CBT) di lingkungan sekolah modern telah mentransformasi pola evaluasi belajar secara fundamental. Selain memangkas waktu koreksi lembar jawaban ratusan siswa hingga nol menit, integrasi sistem pemantauan layar ujian secara waktu-nyata (real-time) terbukti efektif menekan angka kecurangan akademik, seperti membuka mesin pencari atau bertukar jawaban melalui pesan instan.\n\nNamun, keberhasilan implementasi CBT tidak semata-mata bergantung pada kecanggihan aplikasi, melainkan juga pada kesiapan infrastruktur digital dan literasi teknologi para pendidik. Guru dituntut mampu menyusun instrumen penilaian berstandar HOTS (Higher Order Thinking Skills) yang kompatibel dengan format digital, termasuk penyajian stimulus berupa tabel grafik interaktif dan notasi rumus matematika.\n\nGagasan utama yang terdapat pada paragraf kedua wacana di atas adalah...',
+          opsi_a: 'Faktor penentu keberhasilan implementasi CBT dan kesiapan kompetensi guru',
+          opsi_b: 'Keuntungan ekonomis ujian berbasis komputer dibandingkan kertas',
+          opsi_c: 'Teknik pemantauan layar siswa secara real-time untuk mencegah kecurangan',
+          opsi_d: 'Penyusunan instrumen soal HOTS khusus mata pelajaran eksakta',
+          opsi_e: 'Transformasi digital di lingkungan sekolah menengah pertama dan atas',
+          gam_a: '', gam_b: '', gam_c: '', gam_d: '', gam_e: '',
+          kunci: 'A',
+          pembahasan: 'Paragraf kedua secara eksplisit menegaskan bahwa keberhasilan CBT tidak hanya bergantung pada aplikasi, melainkan juga faktor kesiapan infrastruktur dan literasi guru.',
+          gambar: '',
+          tabel: ''
+        },
+        {
+          id: 5,
+          nomor: 5,
+          pertanyaan: 'Diberikan dua buah premis logika sebagai berikut:\n\nPremis 1: Jika guru mengaktifkan Mode Kiosk ExamGO ($p$), maka siswa tidak dapat membuka Google ($q$).\nPremis 2: Siswa membuka Google ($\\sim q$).\n\nBerdasarkan prinsip penarikan kesimpulan Modus Tollens, kesimpulan yang valid adalah...',
+          opsi_a: 'Guru tidak mengaktifkan Mode Kiosk ExamGO ($\\sim p$)',
+          opsi_b: 'Siswa mengerjakan ujian dengan jujur',
+          opsi_c: 'Guru mengaktifkan Mode Kiosk ExamGO ($p$)',
+          opsi_d: 'Siswa terkena diskualifikasi ujian',
+          opsi_e: 'Mode Kiosk ExamGO sedang mengalami gangguan server',
+          gam_a: '', gam_b: '', gam_c: '', gam_d: '', gam_e: '',
+          kunci: 'A',
+          pembahasan: 'Modus Tollens: $[(p \\rightarrow q) \\land \\sim q] \\Rightarrow \\sim p$. Karena anteseden bernilai salah, kesimpulannya adalah "Guru tidak mengaktifkan Mode Kiosk ExamGO".',
+          gambar: '',
+          tabel: ''
+        }
+      ];
+
+      const titleInput = document.getElementById('exam-title');
+      if (!titleInput.value.trim() || titleInput.value === 'Ujian Google Form') {
+        titleInput.value = 'Simulasi Ujian Lengkap CBT ExamGO (Rumus, Gambar & Tabel)';
+      }
+
+      renderQuestionsPreview();
+      alert('✨ 5 Contoh Soal Lengkap (Rumus KaTeX, Gambar Gelombang, Tabel Ekonomi, Wacana Paragraf & Logika) berhasil dimuat!');
     }
 
     // ── 7. Publish Exam to Firestore via API ────────────────────────────
@@ -980,9 +1366,15 @@
             opsi_c: q.opsi_c,
             opsi_d: q.opsi_d,
             opsi_e: q.opsi_e,
+            gam_a: q.gam_a || '',
+            gam_b: q.gam_b || '',
+            gam_c: q.gam_c || '',
+            gam_d: q.gam_d || '',
+            gam_e: q.gam_e || '',
             kunci: q.kunci || 'A',
             pembahasan: q.pembahasan || '',
-            gambar: q.gambar || ''
+            gambar: q.gambar || '',
+            tabel: q.tabel || ''
           }))
         };
 
