@@ -361,6 +361,45 @@
       border-color: #cbd5e1 !important;
       color: #0f172a !important;
     }
+    .theme-light #modal-published #published-modal-card {
+      background-color: #ffffff !important;
+      border-color: #a7f3d0 !important;
+      color: #0f172a !important;
+      box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.15) !important;
+    }
+    .theme-light #modal-published #published-exam-title {
+      color: #0f172a !important;
+    }
+    .theme-light #modal-published p,
+    .theme-light #modal-published span.text-slate-400 {
+      color: #475569 !important;
+    }
+    .theme-light #modal-published #token-display-box {
+      background-color: #f0fdf4 !important;
+      border-color: #34d399 !important;
+    }
+    .theme-light #modal-published #token-display-box .token-label {
+      color: #065f46 !important;
+    }
+    .theme-light #modal-published #published-exam-token {
+      color: #047857 !important;
+    }
+    .theme-light #modal-published #btn-copy-token {
+      background-color: #059669 !important;
+      border-color: #047857 !important;
+      color: #ffffff !important;
+    }
+    .theme-light #modal-published #btn-copy-token:hover {
+      background-color: #047857 !important;
+    }
+    .theme-light #modal-published #btn-close-published {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #334155 !important;
+    }
+    .theme-light #modal-published #btn-close-published:hover {
+      background-color: #e2e8f0 !important;
+    }
     .theme-light footer {
       background-color: #ffffff !important;
       border-color: #e2e8f0 !important;
@@ -676,41 +715,42 @@
   </div>
 
   <!-- ── Modal: Hasil Terbit & Mode Proyektor ────────────────────────── -->
-  <div id="modal-published" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border-2 border-brand-500/60 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl text-center space-y-6">
+  <div id="modal-published" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div id="published-modal-card" class="bg-slate-900 border-2 border-emerald-500/50 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl text-center space-y-5 transition-all">
       <div>
-        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold mb-2">
-          <span>✨ UJIAN BERHASIL DITERBITKAN</span>
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold mb-2.5">
+          <span>✨ UJIAN AKTIF & SIAP DILAKSANAKAN</span>
         </div>
-        <h3 id="published-exam-title" class="text-xl sm:text-2xl font-black text-white">Matematika Wajib X</h3>
-        <p class="text-xs text-slate-400 mt-1">Minta siswa membuka aplikasi ExamGO di HP dan masukkan token berikut:</p>
+        <h3 id="published-exam-title" class="text-xl sm:text-2xl font-black text-white tracking-tight">Matematika Wajib X</h3>
+        <p class="text-xs text-slate-400 mt-1 font-medium">Buka aplikasi <strong class="text-emerald-400 font-bold">ExamGO</strong> di HP siswa lalu masukkan token atau scan QR Code berikut:</p>
       </div>
 
       <!-- Token Big Box -->
-      <div class="p-4 rounded-2xl bg-slate-950 border-2 border-dashed border-brand-500/80">
-        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">KODE TOKEN UJIAN</div>
+      <div id="token-display-box" class="p-4 rounded-2xl bg-slate-950/80 border-2 border-dashed border-emerald-500/60 shadow-inner">
+        <div class="token-label text-[11px] font-extrabold text-slate-400 uppercase tracking-widest mb-0.5">KODE TOKEN UJIAN</div>
         <div id="published-exam-token" class="text-3xl sm:text-4xl font-black font-mono text-emerald-300 tracking-widest user-select-all py-1">
           MTK10A
         </div>
-        <button type="button" onclick="copyPublishedToken()" class="mt-2 text-xs font-bold text-brand-400 hover:underline inline-flex items-center gap-1">
+        <button type="button" id="btn-copy-token" onclick="copyPublishedToken()"
+          class="mt-2.5 px-4 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 inline-flex items-center gap-1.5 shadow-sm transition-all active:scale-95">
           <span id="copy-token-feedback">📋 Salin Kode Token</span>
         </button>
       </div>
 
       <!-- QR Code Display -->
       <div class="flex flex-col items-center">
-        <div class="bg-white p-3.5 rounded-2xl shadow-xl inline-block" id="qrcode-box"></div>
-        <span class="text-[11px] text-slate-400 mt-2">Atau scan langsung QR Code di atas menggunakan aplikasi ExamGO</span>
+        <div class="bg-white p-3.5 rounded-2xl shadow-xl inline-block border border-slate-200" id="qrcode-box"></div>
+        <span class="text-[11px] text-slate-400 mt-2 font-medium">Scan langsung QR Code di atas menggunakan Scanner di aplikasi ExamGO</span>
       </div>
 
       <!-- Action Buttons -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
         <button type="button" onclick="toggleProjectorMode()"
-          class="py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow-lg transition-all flex items-center justify-center gap-1.5">
-          <span>📺 Mode Proyektor Layar</span>
+          class="py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs shadow-lg transition-all flex items-center justify-center gap-1.5 active:scale-95">
+          <span>📺 Mode Layar Proyektor</span>
         </button>
-        <button type="button" onclick="closePublishedModal()"
-          class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 transition-all">
+        <button type="button" id="btn-close-published" onclick="closePublishedModal()"
+          class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 transition-all active:scale-95">
           <span>Tutup / Buat Ujian Lain</span>
         </button>
       </div>
@@ -1338,7 +1378,54 @@
       if (!url) return '';
       let s = String(url).trim();
       if (s.startsWith('data:image/')) return s;
-      return convertDriveUrl(s);
+      const converted = convertDriveUrl(s);
+      if (converted.startsWith('http://') || converted.startsWith('https://')) {
+        const prefix = (window.location && window.location.origin && window.location.origin.includes('examgo.id'))
+          ? '/api/proxy-image?url='
+          : 'https://examgo.id/api/proxy-image?url=';
+        return prefix + encodeURIComponent(converted);
+      }
+      return converted;
+    }
+
+    async function generateSignedQrPayload(url, title, token) {
+      const secret = 'ExamGO_S3cr3t_K3y_2024_#K3m3n4g_P3nd1d1k4n_N4s10n4l';
+      const ts = Math.floor(Date.now() / 1000);
+      const nonce = token || Math.random().toString(36).substring(2, 8);
+      const dataObj = {
+        v: 1,
+        url: url,
+        title: title || '',
+        ts: ts,
+        nonce: nonce
+      };
+      const dataStr = JSON.stringify(dataObj);
+      try {
+        const enc = new TextEncoder();
+        const key = await window.crypto.subtle.importKey(
+          'raw',
+          enc.encode(secret),
+          { name: 'HMAC', hash: 'SHA-256' },
+          false,
+          ['sign']
+        );
+        const signature = await window.crypto.subtle.sign('HMAC', key, enc.encode(dataStr));
+        const sigHex = Array.from(new Uint8Array(signature))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+        return JSON.stringify({
+          app: 'EXAMGO',
+          data: dataStr,
+          sig: sigHex
+        });
+      } catch (e) {
+        console.warn('Web Crypto sign error:', e);
+        return JSON.stringify({
+          app: 'EXAMGO',
+          data: dataStr,
+          sig: ''
+        });
+      }
     }
 
     function normalizeGoogleImageUrl(url) {
@@ -2232,10 +2319,14 @@
 
         const res = await resp.json();
         if (res.status === 'success') {
+          let qrPayload = res.qr_payload;
+          if (!qrPayload) {
+            qrPayload = await generateSignedQrPayload('EXAMGO_TRYOUT://' + token, title, token);
+          }
           _publishedData = {
             token: token,
             title: title,
-            qrPayload: 'EXAMGO_TRYOUT://' + token
+            qrPayload: qrPayload
           };
           showPublishedModal();
         } else {
@@ -2255,17 +2346,17 @@
       document.getElementById('published-exam-title').innerText = _publishedData.title;
       document.getElementById('published-exam-token').innerText = _publishedData.token;
 
-      // Generate QR Code
+      // Generate QR Code dengan kontras tinggi (Hitam pekat di atas putih bersih untuk kamera HP)
       const qrBox = document.getElementById('qrcode-box');
       qrBox.innerHTML = '';
       if (typeof QRCode !== 'undefined') {
         new QRCode(qrBox, {
           text: _publishedData.qrPayload,
-          width: 180,
-          height: 180,
-          colorDark: '#047857',
+          width: 200,
+          height: 200,
+          colorDark: '#000000',
           colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.H
+          correctLevel: QRCode.CorrectLevel.M
         });
       }
 

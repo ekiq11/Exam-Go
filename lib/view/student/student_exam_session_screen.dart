@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
@@ -2071,7 +2070,6 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     }
 
     final currentQ = activeQuestions[_currentIndex];
-    final driveImg = MathHtmlFormatter.convertDriveUrl(currentQ.gambar);
     final selectedAns = _answers[currentQ.soalId];
     final isRagu = _raguRagu.contains(currentQ.soalId);
     final isWarningTimer = _remainingSeconds < 300; // < 5 menit
@@ -2391,29 +2389,11 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                           ],
 
                           // Gambar Soal jika ada
-                          if (driveImg.isNotEmpty) ...[
+                          if (currentQ.gambar.isNotEmpty) ...[
                             const SizedBox(height: 14),
-                            ClipRRect(
+                            MathHtmlFormatter.buildQuestionImage(
+                              currentQ.gambar,
                               borderRadius: BorderRadius.circular(12),
-                              child: CachedNetworkImage(
-                                imageUrl: driveImg,
-                                httpHeaders:
-                                    MathHtmlFormatter.networkImageHeaders,
-                                width: double.infinity,
-                                fit: BoxFit.contain,
-                                placeholder: (context, url) => Container(
-                                  height: 140,
-                                  color: const Color(0xFFF1F5F9),
-                                  child: const Center(
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors.primaryGreen,
-                                    ),
-                                  ),
-                                ),
-                                errorWidget: (context, url, error) =>
-                                    const SizedBox.shrink(),
-                              ),
                             ),
                           ],
                         ],
@@ -2903,16 +2883,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     ),
                   if (img.isNotEmpty) ...[
                     if (text.isNotEmpty) const SizedBox(height: 6),
-                    ClipRRect(
+                    MathHtmlFormatter.buildQuestionImage(
+                      img,
+                      height: 110,
                       borderRadius: BorderRadius.circular(8),
-                      child: CachedNetworkImage(
-                        imageUrl: MathHtmlFormatter.convertDriveUrl(img),
-                        httpHeaders: MathHtmlFormatter.networkImageHeaders,
-                        height: 110,
-                        fit: BoxFit.contain,
-                        errorWidget: (context, error, stackTrace) =>
-                            const SizedBox.shrink(),
-                      ),
                     ),
                   ],
                 ],

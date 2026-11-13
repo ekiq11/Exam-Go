@@ -64,5 +64,31 @@ void main() {
       final parsed = QRPayloadService.validate(payload);
       expect(parsed, isNull);
     });
+
+    test('validates external payload matching WebGAS/Kode.js format', () {
+      final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      final dataObj = {
+        'v': 1,
+        'url': 'EXAMGO_TRYOUT://7HLN84',
+        'title': 'Ujian Matematika',
+        'ts': now,
+        'nonce': '7HLN84',
+      };
+      final dataStr = jsonEncode(dataObj);
+      final hmac = Hmac(sha256, utf8.encode('ExamGO_S3cr3t_K3y_2024_#K3m3n4g_P3nd1d1k4n_N4s10n4l'));
+      final sigHex = hmac.convert(utf8.encode(dataStr)).toString();
+
+      final envelope = jsonEncode({
+        'app': 'EXAMGO',
+        'data': dataStr,
+        'sig': sigHex,
+      });
+
+      final parsed = QRPayloadService.validate(envelope);
+      expect(parsed, isNotNull);
+      expect(parsed!.url, 'EXAMGO_TRYOUT://7HLN84');
+      expect(parsed.title, 'Ujian Matematika');
+      expect(parsed.nonce, '7HLN84');
+    });
   });
 }

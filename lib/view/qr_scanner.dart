@@ -292,6 +292,21 @@ class _QRScannerScreenState extends State<QRScannerScreen>
         return;
       }
     } catch (_) {}
+
+    // Dukungan langsung untuk format ExamGO tanpa amplop HMAC (misal QR lama atau QR plain token)
+    final trimmed = raw.trim();
+    if (trimmed.startsWith('EXAMGO_TRYOUT://') || trimmed.startsWith('EXAMGO_EVENT://')) {
+      final token = trimmed.contains('://') ? trimmed.split('://').last.trim() : trimmed;
+      _popResult(ScanResult(url: trimmed, title: 'Ujian $token', examId: token));
+      return;
+    }
+    // Plain token ujian (4-12 karakter alfanumerik)
+    final tokenRegex = RegExp(r'^[A-Za-z0-9_-]{4,12}$');
+    if (tokenRegex.hasMatch(trimmed) && !trimmed.contains('.')) {
+      _popResult(ScanResult(url: 'EXAMGO_TRYOUT://$trimmed', title: 'Ujian $trimmed', examId: trimmed));
+      return;
+    }
+
     if (raw.startsWith('http://') || raw.startsWith('https://')) {
       _showPlainUrlDialog(raw);
       return;

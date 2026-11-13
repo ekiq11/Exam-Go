@@ -1241,15 +1241,9 @@ class _TryoutDiscussionScreenState extends State<TryoutDiscussionScreen> {
 
               if (q.gambar.isNotEmpty) ...[
                 const SizedBox(height: 10),
-                ClipRRect(
+                MathHtmlFormatter.buildQuestionImage(
+                  q.gambar,
                   borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    MathHtmlFormatter.convertDriveUrl(q.gambar),
-                    headers: MathHtmlFormatter.networkImageHeaders,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const SizedBox.shrink(),
-                  ),
                 ),
               ],
             ],

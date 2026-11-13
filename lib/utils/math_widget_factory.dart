@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart' as fwfh;
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../services/math_latex_converter.dart';
 
@@ -231,12 +233,25 @@ class MathHtmlFormatter {
     'User-Agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+    'Referer': 'https://docs.google.com/',
   };
 
-  /// Menormalisasi link Google Drive ke CDN resmi Google (lh3.googleusercontent.com)
+  /// Menormalisasi link Google Drive / Google Form ke CDN resmi Google (lh3.googleusercontent.com)
   /// agar bebas dari blokir CORS, anti-hotlinking, dan cookie browser.
   static String convertDriveUrl(String url) {
     if (url.isEmpty) return url;
+    if (url.startsWith('data:image/')) return url;
+    if (url.startsWith('/api/proxy-image?url=')) {
+      final param = url.replaceFirst('/api/proxy-image?url=', '');
+      try {
+        return Uri.decodeComponent(param);
+      } catch (_) {
+        return param;
+      }
+    }
+    if (url.startsWith('/')) {
+      return 'https://examgo.id$url';
+    }
     if (url.contains('googleusercontent.com')) return url;
 
     // Bare File ID (misal: 1mM7PTjpZKQnHCQX14BdQiOcoqVRdMlZJ)
@@ -269,6 +284,80 @@ class MathHtmlFormatter {
     }
 
     return url;
+  }
+
+  /// Membangun widget gambar soal yang andal dan kompatibel:
+  /// - Mendukung Data URI Base64 (data:image/...)
+  /// - Mendukung Google Drive, Google Forms, dan CDN eksternal via CachedNetworkImage
+  /// - Fallback mulus ke Image.network jika terjadi error
+  static Widget buildQuestionImage(
+    String rawUrl, {
+    double? height,
+    double? width,
+    BoxFit fit = BoxFit.contain,
+    BorderRadius? borderRadius,
+  }) {
+    final cleanUrl = rawUrl.trim();
+    if (cleanUrl.isEmpty) return const SizedBox.shrink();
+
+    Widget imgWidget;
+
+    if (cleanUrl.startsWith('data:image/')) {
+      try {
+        final commaIdx = cleanUrl.indexOf(',');
+        final b64 = commaIdx != -1 ? cleanUrl.substring(commaIdx + 1) : cleanUrl;
+        final bytes = base64Decode(b64);
+        imgWidget = Image.memory(
+          bytes,
+          height: height,
+          width: width,
+          fit: fit,
+          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+        );
+      } catch (_) {
+        return const SizedBox.shrink();
+      }
+    } else {
+      final processedUrl = convertDriveUrl(cleanUrl);
+      imgWidget = CachedNetworkImage(
+        imageUrl: processedUrl,
+        httpHeaders: networkImageHeaders,
+        height: height,
+        width: width,
+        fit: fit,
+        placeholder: (context, url) => Container(
+          height: height ?? 140,
+          width: width ?? double.infinity,
+          color: const Color(0xFFF1F5F9),
+          child: const Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Color(0xFF10B981),
+              ),
+            ),
+          ),
+        ),
+        errorWidget: (context, url, error) => Image.network(
+          processedUrl,
+          headers: networkImageHeaders,
+          height: height,
+          width: width,
+          fit: fit,
+          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+        ),
+      );
+    }
+
+    if (borderRadius != null && borderRadius != BorderRadius.zero) {
+      return ClipRRect(
+        borderRadius: borderRadius,
+        child: imgWidget,
+      );
+    }
+    return imgWidget;
   }
 }
 
