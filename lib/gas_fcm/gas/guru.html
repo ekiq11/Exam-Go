@@ -86,6 +86,14 @@
       color: #0f172a !important;
     }
     /* Buttons in Header */
+    .theme-light #btn-theme-toggle {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    .theme-light #btn-theme-toggle:hover {
+      background-color: #e2e8f0 !important;
+    }
     .theme-light a[href*="wa.me"] {
       background-color: #f1f5f9 !important;
       border-color: #cbd5e1 !important;
@@ -102,6 +110,29 @@
     }
     .theme-light #active-teacher-token {
       color: #047857 !important;
+    }
+    /* Pagination in Light Mode */
+    .theme-light .preview-pagination-bar {
+      background-color: #f8fafc !important;
+      border-color: #e2e8f0 !important;
+      color: #475569 !important;
+    }
+    .theme-light .preview-pagination-bar span.text-white {
+      color: #0f172a !important;
+    }
+    .theme-light .preview-page-btn {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    .theme-light .preview-page-btn:hover {
+      background-color: #f1f5f9 !important;
+    }
+    .theme-light .preview-page-btn.active,
+    .theme-light button.preview-page-btn.bg-brand-600 {
+      background-color: #10b981 !important;
+      border-color: #059669 !important;
+      color: #ffffff !important;
     }
     /* Headings & Texts */
     .theme-light main h1, .theme-light main h2, .theme-light main h3 {
@@ -318,37 +349,37 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-brand-500 selection:text-white">
 
   <!-- ── Top Navigation Bar ────────────────────────────────────────────── -->
-  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3">
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 transition-colors duration-200">
+    <div class="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
         <a href="https://examgo.id" class="flex items-center gap-2 group">
           <img src="https://raw.githubusercontent.com/ekiq11/Exam-Go/main/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
-            alt="ExamGO Logo" class="w-9 h-9 rounded-xl shadow-md group-hover:scale-105 transition-transform">
+            alt="ExamGO Logo" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl shadow-md group-hover:scale-105 transition-transform shrink-0">
           <div>
-            <span class="text-lg font-black tracking-tight text-white flex items-center gap-1">
-              ExamGO <span class="text-xs px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">GURU</span>
+            <span class="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-1">
+              ExamGO <span class="text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">GURU</span>
             </span>
-            <span class="text-[10px] text-slate-400 block -mt-1">Portal Pembuat Soal CBT</span>
+            <span class="text-[9px] sm:text-[10px] text-slate-400 hidden sm:block -mt-1">Portal Pembuat Soal CBT</span>
           </div>
         </a>
       </div>
 
       <!-- Teacher Token Bar & Theme Toggle -->
-      <div id="teacher-token-badge-container" class="flex items-center gap-2">
-        <div id="token-status-box" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs">
+      <div id="teacher-token-badge-container" class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div id="token-status-box" class="hidden items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-[11px] sm:text-xs shrink-0">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span class="text-slate-400">Lisensi:</span>
+          <span class="text-slate-400 hidden md:inline">Lisensi:</span>
           <span id="active-teacher-token" class="font-mono font-bold text-brand-300">GURU-****</span>
-          <button onclick="promptChangeToken()" class="text-[11px] text-slate-400 hover:text-white underline ml-1">Ganti</button>
+          <button onclick="promptChangeToken()" class="text-[10px] sm:text-[11px] text-slate-400 hover:text-white underline ml-0.5">Ganti</button>
         </div>
         <button type="button" id="btn-theme-toggle" onclick="toggleTheme()"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700" title="Ganti Mode Terang / Gelap">
+          class="inline-flex items-center justify-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all shadow-sm bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700 shrink-0" title="Ganti Mode Terang / Gelap">
           <span id="theme-icon">☀️</span>
           <span id="theme-label" class="hidden sm:inline">Terang</span>
         </button>
         <a href="https://wa.me/6289693652230" target="_blank"
-          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors">
-          <span>💬 Bantuan</span>
+          class="inline-flex items-center justify-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] sm:text-xs font-semibold border border-slate-700 transition-colors shrink-0">
+          <span>💬</span><span class="hidden sm:inline">Bantuan</span>
         </a>
       </div>
     </div>
@@ -519,18 +550,28 @@
       </div>
 
       <!-- Quick Answer Keys Helper -->
-      <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 mb-6">
+      <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 mb-5">
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs font-bold text-slate-300">⚡ Setel Kunci Jawaban Cepat:</span>
-          <span class="text-[10px] text-slate-400">Klik huruf untuk mengatur kunci nomor tersebut</span>
+          <span class="text-[10px] text-slate-400">Klik nomor untuk lompat ke halaman soal tersebut</span>
         </div>
         <div id="quick-keys-container" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1">
           <!-- Populated by JS -->
         </div>
       </div>
 
+      <!-- Pagination Top Bar -->
+      <div id="preview-pagination-top" class="preview-pagination-bar mb-4 p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
+        <!-- Populated by JS -->
+      </div>
+
       <!-- Question Cards List -->
       <div id="questions-list" class="space-y-4">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Pagination Bottom Bar -->
+      <div id="preview-pagination-bottom" class="preview-pagination-bar mt-5 p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
         <!-- Populated by JS -->
       </div>
 
@@ -677,22 +718,24 @@
         if (isLight) {
           iconEl.innerText = '🌙';
           labelEl.innerText = 'Gelap';
-          btnEl.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300';
+          btnEl.className = 'inline-flex items-center justify-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all shadow-sm bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shrink-0';
         } else {
           iconEl.innerText = '☀️';
           labelEl.innerText = 'Terang';
-          btnEl.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700';
+          btnEl.className = 'inline-flex items-center justify-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl border text-[11px] sm:text-xs font-bold transition-all shadow-sm bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700 shrink-0';
         }
       }
     }
 
     // ── 1. Manajemen Token Guru & Sinkronisasi Perangkat ─────────────────
     function checkAuth() {
+      const box = document.getElementById('token-status-box');
       if (!_teacherToken || _teacherToken.trim().length < 4) {
         document.getElementById('modal-auth').classList.remove('hidden');
+        if (box) { box.classList.add('hidden'); box.classList.remove('flex'); }
       } else {
         document.getElementById('modal-auth').classList.add('hidden');
-        document.getElementById('token-status-box').classList.remove('hidden');
+        if (box) { box.classList.remove('hidden'); box.classList.add('flex'); }
         const masked = _teacherToken.length > 8 ? (_teacherToken.substring(0, 4) + '-****') : _teacherToken;
         document.getElementById('active-teacher-token').innerText = masked;
         // Pastikan token & laptop ini langsung tersinkron ke database Firestore admin
@@ -732,7 +775,8 @@
           _teacherToken = val;
           localStorage.setItem('examgo_guru_token', val);
           document.getElementById('modal-auth').classList.add('hidden');
-          document.getElementById('token-status-box').classList.remove('hidden');
+          const box = document.getElementById('token-status-box');
+          if (box) { box.classList.remove('hidden'); box.classList.add('flex'); }
           const masked = _teacherToken.length > 8 ? (_teacherToken.substring(0, 4) + '-****') : _teacherToken;
           document.getElementById('active-teacher-token').innerText = masked;
         } else {
@@ -744,7 +788,8 @@
         _teacherToken = val;
         localStorage.setItem('examgo_guru_token', val);
         document.getElementById('modal-auth').classList.add('hidden');
-        document.getElementById('token-status-box').classList.remove('hidden');
+        const box = document.getElementById('token-status-box');
+        if (box) { box.classList.remove('hidden'); box.classList.add('flex'); }
         const masked = _teacherToken.length > 8 ? (_teacherToken.substring(0, 4) + '-****') : _teacherToken;
         document.getElementById('active-teacher-token').innerText = masked;
       } finally {
@@ -1034,6 +1079,7 @@
         }
 
         _extractedQuestions = questions;
+        _previewCurrentPage = 1;
         renderQuestionsPreview();
         setLoading(false);
       } catch (err) {
@@ -1194,6 +1240,7 @@
         }
 
         _extractedQuestions = questions;
+        _previewCurrentPage = 1;
         renderQuestionsPreview();
         setLoading(false);
       } catch (err) {
@@ -1215,17 +1262,29 @@
       return map;
     }
 
-    function normalizeGoogleImageUrl(url) {
+    function wrapProxiedImageUrl(url) {
       if (!url) return '';
       let s = String(url).trim();
+      if (s.startsWith('data:image/')) return s; // Base64 inline dari Word mammoth
+      if (s.includes('/api/proxy-image?url=')) return s; // Sudah diproksi
       if (s.startsWith('//')) s = 'https:' + s;
 
       // Google Drive link (view, open, uc) -> direct high-res CDN thumbnail
       const driveMatch = s.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?.*id=)|docs\.google\.com\/file\/d\/)([a-zA-Z0-9_-]+)/);
       if (driveMatch) {
-        return 'https://drive.google.com/thumbnail?id=' + driveMatch[1] + '&sz=w1000';
+        s = 'https://drive.google.com/thumbnail?id=' + driveMatch[1] + '&sz=w1000';
       }
-      return s;
+
+      // Proksikan via Cloudflare Worker untuk menghilangkan header Cross-Origin-Resource-Policy: same-site
+      const proxyBase = (window.location && window.location.origin && window.location.origin.includes('examgo.id'))
+        ? '/api/proxy-image?url='
+        : 'https://examgo.id/api/proxy-image?url=';
+      return proxyBase + encodeURIComponent(s);
+    }
+
+    function normalizeGoogleImageUrl(url) {
+      if (!url) return '';
+      return wrapProxiedImageUrl(url);
     }
 
     function findImageUrlDeep(obj, blobMap) {
@@ -1283,12 +1342,20 @@
     }
 
     function handleImageError(img) {
-      if (img.dataset.hasFailed) return;
+      if (img.dataset.hasFailed) {
+        img.alt = '⚠️ Gambar tidak dapat dimuat';
+        img.classList.add('opacity-40');
+        return;
+      }
       img.dataset.hasFailed = 'true';
       const src = img.src || '';
-      const match = src.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?.*id=|thumbnail\?id=)|lh3\.googleusercontent\.com\/d\/)([a-zA-Z0-9_-]+)/);
+      if (!src.includes('/api/proxy-image?url=')) {
+        img.src = wrapProxiedImageUrl(src);
+        return;
+      }
+      const match = src.match(/(?:id=|%3D)([a-zA-Z0-9_-]{20,})/);
       if (match) {
-        img.src = 'https://drive.google.com/uc?export=view&id=' + match[1];
+        img.src = wrapProxiedImageUrl('https://drive.google.com/uc?export=view&id=' + match[1]);
       }
     }
 
@@ -1471,11 +1538,48 @@
       return escapeHtml(content);
     }
 
+    let _previewCurrentPage = 1;
+    let _previewPageSize = 5;
+
+    function setPreviewPage(p) {
+      const totalPages = Math.ceil((_extractedQuestions || []).length / _previewPageSize) || 1;
+      if (p < 1) p = 1;
+      if (p > totalPages) p = totalPages;
+      _previewCurrentPage = p;
+      renderQuestionsPreview();
+      const sec = document.getElementById('preview-section');
+      if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function setPreviewPageSize(sz) {
+      _previewPageSize = parseInt(sz) || 5;
+      _previewCurrentPage = 1;
+      renderQuestionsPreview();
+    }
+
+    function jumpToQuestion(idx) {
+      const targetPage = Math.floor(idx / _previewPageSize) + 1;
+      if (_previewCurrentPage !== targetPage) {
+        _previewCurrentPage = targetPage;
+        renderQuestionsPreview();
+      }
+      setTimeout(() => {
+        const card = document.getElementById('q-card-' + idx);
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          card.classList.add('ring-2', 'ring-brand-500');
+          setTimeout(() => card.classList.remove('ring-2', 'ring-brand-500'), 1500);
+        }
+      }, 100);
+    }
+
     function renderQuestionsPreview() {
       const container = document.getElementById('questions-list');
       const badge = document.getElementById('question-count-badge');
       const previewSec = document.getElementById('preview-section');
       const quickKeysBox = document.getElementById('quick-keys-container');
+      const paginationTop = document.getElementById('preview-pagination-top');
+      const paginationBottom = document.getElementById('preview-pagination-bottom');
 
       if (!_extractedQuestions || _extractedQuestions.length === 0) {
         previewSec.classList.add('hidden');
@@ -1485,13 +1589,23 @@
       previewSec.classList.remove('hidden');
       badge.innerText = _extractedQuestions.length + ' Butir Soal';
 
-      // Render Bar Kunci Cepat
+      const totalQuestions = _extractedQuestions.length;
+      const totalPages = Math.ceil(totalQuestions / _previewPageSize) || 1;
+      if (_previewCurrentPage > totalPages) _previewCurrentPage = totalPages;
+      if (_previewCurrentPage < 1) _previewCurrentPage = 1;
+
+      const startIndex = (_previewCurrentPage - 1) * _previewPageSize;
+      const endIndex = Math.min(startIndex + _previewPageSize, totalQuestions);
+      const pageQuestions = _extractedQuestions.slice(startIndex, endIndex);
+
+      // Render Bar Kunci Cepat dengan indikator nomor yang aktif di halaman ini
       let quickKeysHtml = '';
       _extractedQuestions.forEach((q, idx) => {
+        const isCurrentPage = idx >= startIndex && idx < endIndex;
         quickKeysHtml += `
-          <div class="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800 text-xs">
-            <span class="font-bold text-slate-400 w-5">#${idx + 1}</span>
-            <select onchange="setQuestionKey(${idx}, this.value)" class="bg-slate-950 font-bold text-brand-300 rounded px-1.5 py-0.5 border border-slate-700 outline-none text-xs">
+          <div class="flex items-center gap-1 ${isCurrentPage ? 'bg-brand-950/80 border-brand-500/60 ring-1 ring-brand-500/30' : 'bg-slate-900 border-slate-800'} px-2 py-1 rounded-lg border text-xs transition-all">
+            <button type="button" onclick="jumpToQuestion(${idx})" class="font-bold ${isCurrentPage ? 'text-brand-300' : 'text-slate-400'} hover:text-white w-5 text-left" title="Klik untuk lompat ke halaman soal #${idx + 1}">#${idx + 1}</button>
+            <select onchange="setQuestionKey(${idx}, this.value)" class="bg-slate-950 font-bold text-brand-300 rounded px-1.5 py-0.5 border border-slate-700 outline-none text-xs cursor-pointer">
               <option value="A" ${q.kunci === 'A' ? 'selected' : ''}>A</option>
               <option value="B" ${q.kunci === 'B' ? 'selected' : ''}>B</option>
               <option value="C" ${q.kunci === 'C' ? 'selected' : ''}>C</option>
@@ -1503,28 +1617,100 @@
       });
       quickKeysBox.innerHTML = quickKeysHtml;
 
-      // Render Kartu Soal
+      // Render Pagination Bar Component
+      function renderPaginationControls() {
+        if (totalPages <= 1 && totalQuestions <= 5) {
+          return `
+            <div class="flex items-center justify-between w-full text-xs text-slate-400">
+              <span>Menampilkan total <strong>${totalQuestions} Soal</strong></span>
+              <div class="flex items-center gap-1">
+                <span>Per hal:</span>
+                <select onchange="setPreviewPageSize(this.value)" class="bg-slate-900 text-slate-200 border border-slate-700 rounded-lg px-2 py-0.5 text-xs outline-none">
+                  <option value="5" ${_previewPageSize === 5 ? 'selected' : ''}>5</option>
+                  <option value="10" ${_previewPageSize === 10 ? 'selected' : ''}>10</option>
+                  <option value="20" ${_previewPageSize === 20 ? 'selected' : ''}>20</option>
+                  <option value="9999" ${_previewPageSize >= 9999 ? 'selected' : ''}>Semua</option>
+                </select>
+              </div>
+            </div>
+          `;
+        }
+
+        let pagePills = '';
+        let startP = Math.max(1, _previewCurrentPage - 2);
+        let endP = Math.min(totalPages, _previewCurrentPage + 2);
+
+        if (startP > 1) {
+          pagePills += `<button type="button" onclick="setPreviewPage(1)" class="preview-page-btn px-2.5 py-1 rounded-lg border text-xs font-bold bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 transition-colors">1</button>`;
+          if (startP > 2) pagePills += `<span class="text-slate-600 px-1 text-xs">...</span>`;
+        }
+
+        for (let p = startP; p <= endP; p++) {
+          const isActive = p === _previewCurrentPage;
+          pagePills += `
+            <button type="button" onclick="setPreviewPage(${p})" class="preview-page-btn px-2.5 py-1 rounded-lg border text-xs font-bold transition-colors ${isActive ? 'bg-brand-600 text-white border-brand-500 shadow-sm' : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800'}">${p}</button>
+          `;
+        }
+
+        if (endP < totalPages) {
+          if (endP < totalPages - 1) pagePills += `<span class="text-slate-600 px-1 text-xs">...</span>`;
+          pagePills += `<button type="button" onclick="setPreviewPage(${totalPages})" class="preview-page-btn px-2.5 py-1 rounded-lg border text-xs font-bold bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 transition-colors">${totalPages}</button>`;
+        }
+
+        return `
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
+            <div class="text-xs text-slate-400 text-center sm:text-left">
+              Menampilkan <span class="font-bold text-white">${startIndex + 1} - ${endIndex}</span> dari <span class="font-bold text-brand-300">${totalQuestions} Soal</span> (Halaman <span class="font-bold text-white">${_previewCurrentPage}</span>/${totalPages})
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+              <div class="flex items-center gap-1 mr-1 text-xs text-slate-400">
+                <span class="hidden xs:inline">Per hal:</span>
+                <select onchange="setPreviewPageSize(this.value)" class="bg-slate-900 text-slate-200 border border-slate-700 rounded-lg px-2 py-1 text-xs outline-none">
+                  <option value="5" ${_previewPageSize === 5 ? 'selected' : ''}>5</option>
+                  <option value="10" ${_previewPageSize === 10 ? 'selected' : ''}>10</option>
+                  <option value="20" ${_previewPageSize === 20 ? 'selected' : ''}>20</option>
+                  <option value="9999" ${_previewPageSize >= 9999 ? 'selected' : ''}>Semua</option>
+                </select>
+              </div>
+              <button type="button" onclick="setPreviewPage(${_previewCurrentPage - 1})" ${_previewCurrentPage <= 1 ? 'disabled class="opacity-40 cursor-not-allowed preview-page-btn px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900 text-slate-500 text-xs font-semibold"' : 'class="preview-page-btn px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold transition-colors"'}>
+                « Prev
+              </button>
+              <div class="flex items-center gap-1">${pagePills}</div>
+              <button type="button" onclick="setPreviewPage(${_previewCurrentPage + 1})" ${_previewCurrentPage >= totalPages ? 'disabled class="opacity-40 cursor-not-allowed preview-page-btn px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900 text-slate-500 text-xs font-semibold"' : 'class="preview-page-btn px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold transition-colors"'}>
+                Next »
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (paginationTop) paginationTop.innerHTML = renderPaginationControls();
+      if (paginationBottom) paginationBottom.innerHTML = renderPaginationControls();
+
+      // Render Kartu Soal untuk halaman aktif saja
       let listHtml = '';
-      _extractedQuestions.forEach((q, idx) => {
+      pageQuestions.forEach((q, pIdx) => {
+        const actualIdx = startIndex + pIdx;
         const formattedPertanyaan = formatMarkdownAndTables(q.pertanyaan);
+        const proxiedMainImg = wrapProxiedImageUrl(q.gambar);
 
         listHtml += `
-          <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 sm:p-5 transition-all hover:border-slate-700">
+          <div id="q-card-${actualIdx}" class="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 sm:p-5 transition-all hover:border-slate-700">
             <div class="flex items-start justify-between gap-3 mb-2">
               <div class="flex items-center gap-2">
-                <span class="w-7 h-7 rounded-lg bg-brand-500/20 text-brand-300 flex items-center justify-center font-bold text-xs">${idx + 1}</span>
+                <span class="w-7 h-7 rounded-lg bg-brand-500/20 text-brand-300 flex items-center justify-center font-bold text-xs">${actualIdx + 1}</span>
                 <span class="text-xs font-semibold text-slate-400">Pilihan Ganda</span>
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-xs text-slate-400">Kunci:</span>
-                <select onchange="setQuestionKey(${idx}, this.value)" class="bg-slate-900 font-extrabold text-amber-300 rounded-lg px-2.5 py-1 border border-slate-700 outline-none text-xs">
+                <select onchange="setQuestionKey(${actualIdx}, this.value)" class="bg-slate-900 font-extrabold text-amber-300 rounded-lg px-2.5 py-1 border border-slate-700 outline-none text-xs">
                   <option value="A" ${q.kunci === 'A' ? 'selected' : ''}>A</option>
                   <option value="B" ${q.kunci === 'B' ? 'selected' : ''}>B</option>
                   <option value="C" ${q.kunci === 'C' ? 'selected' : ''}>C</option>
                   <option value="D" ${q.kunci === 'D' ? 'selected' : ''}>D</option>
                   <option value="E" ${q.kunci === 'E' ? 'selected' : ''}>E</option>
                 </select>
-                <button type="button" onclick="deleteQuestion(${idx})" class="text-slate-500 hover:text-rose-400 text-xs px-2 py-1 rounded">✕</button>
+                <button type="button" onclick="deleteQuestion(${actualIdx})" class="text-slate-500 hover:text-rose-400 text-xs px-2 py-1 rounded" title="Hapus soal ini">✕</button>
               </div>
             </div>
 
@@ -1532,7 +1718,7 @@
             <div class="text-sm text-slate-100 font-medium whitespace-pre-wrap leading-relaxed mb-3 katex-render">${renderContentSafely(formattedPertanyaan)}</div>
 
             <!-- Gambar Soal Utama (jika ada) -->
-            ${q.gambar ? `<div class="mb-3"><img src="${q.gambar}" alt="Gambar Soal ${idx + 1}" referrerpolicy="no-referrer" loading="lazy" onerror="handleImageError(this)" class="max-h-72 rounded-xl border border-slate-800 object-contain shadow-md bg-slate-900/50"></div>` : ''}
+            ${proxiedMainImg ? `<div class="mb-3"><img src="${proxiedMainImg}" alt="Gambar Soal ${actualIdx + 1}" referrerpolicy="no-referrer" loading="lazy" onerror="handleImageError(this)" class="max-h-72 rounded-xl border border-slate-800 object-contain shadow-md bg-slate-900/50"></div>` : ''}
 
             <!-- Tabel Data Soal (jika ada) -->
             ${q.tabel ? `<div class="mb-3">${q.tabel}</div>` : ''}
@@ -1541,7 +1727,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               ${['a', 'b', 'c', 'd', 'e'].map(opt => {
                 const optText = q['opsi_' + opt];
-                const optGam = q['gam_' + opt];
+                const optGam = wrapProxiedImageUrl(q['gam_' + opt]);
                 if (!optText && !optGam) return '';
                 const isKey = (q.kunci || '').toUpperCase() === opt.toUpperCase();
                 return `
@@ -1580,6 +1766,8 @@
     function deleteQuestion(idx) {
       if (confirm('Hapus butir soal #' + (idx + 1) + '?')) {
         _extractedQuestions.splice(idx, 1);
+        const totalPages = Math.ceil(_extractedQuestions.length / _previewPageSize) || 1;
+        if (_previewCurrentPage > totalPages) _previewCurrentPage = totalPages;
         renderQuestionsPreview();
       }
     }
@@ -1587,6 +1775,7 @@
     function clearExtractedQuestions() {
       if (confirm('Hapus semua soal yang telah diekstrak?')) {
         _extractedQuestions = [];
+        _previewCurrentPage = 1;
         renderQuestionsPreview();
       }
     }
@@ -1695,6 +1884,7 @@
         titleInput.value = 'Simulasi Ujian Lengkap CBT ExamGO (Rumus, Gambar & Tabel)';
       }
 
+      _previewCurrentPage = 1;
       renderQuestionsPreview();
       alert('✨ 5 Contoh Soal Lengkap (Rumus KaTeX, Gambar Gelombang, Tabel Ekonomi, Wacana Paragraf & Logika) berhasil dimuat!');
     }
@@ -1831,7 +2021,25 @@
     }
 
     function downloadDocxTemplate() {
-      window.open('https://examgo.id/template-soal-examgo.docx', '_blank');
+      try {
+        const b64 = "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";
+        const binary = atob(b64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const blob = new Blob([bytes.buffer], {
+          type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "template-soal-examgo.docx";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (err) {
+        window.open('/template-soal-examgo.docx', '_blank');
+      }
     }
 
     function setLoading(isLoading, text) {

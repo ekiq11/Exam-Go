@@ -382,6 +382,10 @@ void main() {
       expect(guruContent, contains('renderMathInElement'));
       expect(guruContent, contains('_laptopDeviceId'));
       expect(guruContent, contains('laptop_id'));
+      expect(guruContent, contains('wrapProxiedImageUrl'));
+      expect(guruContent, contains('preview-pagination-top'));
+      expect(guruContent, contains('preview-pagination-bottom'));
+      expect(guruContent, contains('setPreviewPage'));
 
       // landing.html fail-safe verification
       final landingContent = landingHtmlFile.readAsStringSync();
@@ -390,6 +394,8 @@ void main() {
       // cloudflare_worker.js verification
       expect(workerContent, contains('path === "/guru"'));
       expect(workerContent, contains('path === "/api/proxy-gform"'));
+      expect(workerContent, contains('path === "/api/proxy-image"'));
+      expect(workerContent, contains('path === "/template-soal-examgo.docx"'));
       expect(workerContent, contains('path === "/api/teacher-exam"'));
       expect(workerContent, contains('GITHUB_GURU_PAGE_URL'));
 
