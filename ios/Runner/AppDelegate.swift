@@ -226,7 +226,7 @@ class KioskChannelHandler {
         case "stopLockTask":
             // Setara: stopLockTask() di MainActivity.kt
             delegate.disableKiosk()
-            result(nil)
+            result(true)
 
         case "isKioskModeActive":
             result(delegate.isKioskActive)
@@ -293,14 +293,14 @@ class KioskChannelHandler {
         switch call.method {
         case "startLockTask":
             delegate.enableKiosk()
-            result("lock_started")
+            result(true)
 
         case "stopLockTask":
             delegate.disableKiosk()
-            result("lock_stopped")
+            result(true)
 
         case "bringToForeground":
-            result("brought_to_front")
+            result(true)
 
         case "isLockTaskActive":
             result(delegate.isKioskActive)

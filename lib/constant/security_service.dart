@@ -149,6 +149,8 @@ class SecurityService {
       } else if (_isIOS) {
         if (_nativeLockActive || force) await _tryNativeUnlock();
         await _restoreIOSUI();
+      } else {
+        if (_nativeLockActive || force) await _tryNativeUnlock();
       }
       await _restoreOrientation();
       print('✅ SecurityService: disabled');
