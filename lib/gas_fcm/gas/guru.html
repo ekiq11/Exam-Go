@@ -67,6 +67,115 @@
       border-color: #10b981 !important;
       background-color: rgba(16, 185, 129, 0.08) !important;
     }
+
+    /* ── Light Mode Styles ────────────────────────────────────────────── */
+    .theme-light {
+      color-scheme: light;
+    }
+    .theme-light body {
+      background-color: #f8fafc !important;
+      color: #1e293b !important;
+    }
+    .theme-light header {
+      background-color: rgba(255, 255, 255, 0.96) !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+    }
+    .theme-light header span.text-white {
+      color: #0f172a !important;
+    }
+    .theme-light #token-status-box {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #334155 !important;
+    }
+    .theme-light #active-teacher-token {
+      color: #047857 !important;
+    }
+    .theme-light main h1, .theme-light main h2, .theme-light main h3 {
+      color: #0f172a !important;
+    }
+    .theme-light main p, .theme-light main label {
+      color: #475569 !important;
+    }
+    .theme-light section {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+    }
+    .theme-light section > div.border-b {
+      border-color: #f1f5f9 !important;
+    }
+    .theme-light input[type="text"],
+    .theme-light input[type="number"],
+    .theme-light input[type="url"],
+    .theme-light select {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    .theme-light input::placeholder {
+      color: #94a3b8 !important;
+    }
+    .theme-light #exam-token {
+      color: #b45309 !important;
+      background-color: #fffbeb !important;
+    }
+    .theme-light #dropzone {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+    }
+    .theme-light #dropzone h3 {
+      color: #0f172a !important;
+    }
+    .theme-light .bg-slate-950,
+    .theme-light .bg-slate-950\/80,
+    .theme-light .bg-slate-950\/70,
+    .theme-light .bg-slate-950\/60,
+    .theme-light .bg-slate-950\/40 {
+      background-color: #f8fafc !important;
+      border-color: #e2e8f0 !important;
+    }
+    .theme-light .bg-slate-900,
+    .theme-light .bg-slate-900\/80,
+    .theme-light .bg-slate-900\/70,
+    .theme-light .bg-slate-900\/60 {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+    }
+    .theme-light .border-slate-800,
+    .theme-light .border-slate-700 {
+      border-color: #e2e8f0 !important;
+    }
+    .theme-light .text-slate-100,
+    .theme-light .text-slate-200 {
+      color: #0f172a !important;
+    }
+    .theme-light .text-slate-300,
+    .theme-light .text-slate-400 {
+      color: #475569 !important;
+    }
+    .theme-light #modal-auth > div,
+    .theme-light #modal-published > div {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    .theme-light footer {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      color: #64748b !important;
+    }
+    .theme-light .katex {
+      color: #0f172a !important;
+    }
+    .theme-light table {
+      background-color: #ffffff !important;
+    }
+    .theme-light tr.bg-slate-800 {
+      background-color: #f1f5f9 !important;
+      color: #0f172a !important;
+    }
   </style>
 </head>
 
@@ -88,7 +197,7 @@
         </a>
       </div>
 
-      <!-- Teacher Token Bar -->
+      <!-- Teacher Token Bar & Theme Toggle -->
       <div id="teacher-token-badge-container" class="flex items-center gap-2">
         <div id="token-status-box" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -96,6 +205,11 @@
           <span id="active-teacher-token" class="font-mono font-bold text-brand-300">GURU-****</span>
           <button onclick="promptChangeToken()" class="text-[11px] text-slate-400 hover:text-white underline ml-1">Ganti</button>
         </div>
+        <button type="button" id="btn-theme-toggle" onclick="toggleTheme()"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700" title="Ganti Mode Terang / Gelap">
+          <span id="theme-icon">☀️</span>
+          <span id="theme-label" class="hidden sm:inline">Terang</span>
+        </button>
         <a href="https://wa.me/6289693652230" target="_blank"
           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors">
           <span>💬 Bantuan</span>
@@ -317,9 +431,9 @@
       </div>
 
       <div class="space-y-2">
-        <button type="button" onclick="submitTeacherToken()"
-          class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-lg transition-colors">
-          Masuk ke Portal Guru
+        <button type="button" id="btn-submit-token" onclick="submitTeacherToken()"
+          class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-lg transition-colors flex items-center justify-center gap-2">
+          <span>Masuk ke Portal Guru</span>
         </button>
         <div class="text-center text-[11px] text-slate-400 pt-1">
           Belum punya lisensi guru? <a href="https://lynk.id/examgo" target="_blank" class="text-brand-400 hover:underline font-bold">Beli di lynk.id/examgo</a>
@@ -397,12 +511,46 @@
 
     // Inisialisasi saat halaman selesai dimuat
     document.addEventListener('DOMContentLoaded', function () {
+      initTheme();
       randomizeToken();
       checkAuth();
       setupDropzone();
     });
 
-    // ── 1. Manajemen Token Guru ─────────────────────────────────────────
+    // ── 0. Tema Tampilan (Light & Dark Mode) ─────────────────────────────
+    function initTheme() {
+      const saved = localStorage.getItem('examgo_guru_theme') || 'light';
+      applyTheme(saved);
+    }
+
+    function toggleTheme() {
+      const isLight = document.documentElement.classList.contains('theme-light');
+      applyTheme(isLight ? 'dark' : 'light');
+    }
+
+    function applyTheme(theme) {
+      const isLight = theme === 'light';
+      document.documentElement.classList.toggle('theme-light', isLight);
+      localStorage.setItem('examgo_guru_theme', theme);
+
+      const iconEl = document.getElementById('theme-icon');
+      const labelEl = document.getElementById('theme-label');
+      const btnEl = document.getElementById('btn-theme-toggle');
+
+      if (iconEl && labelEl && btnEl) {
+        if (isLight) {
+          iconEl.innerText = '🌙';
+          labelEl.innerText = 'Gelap';
+          btnEl.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300';
+        } else {
+          iconEl.innerText = '☀️';
+          labelEl.innerText = 'Terang';
+          btnEl.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700';
+        }
+      }
+    }
+
+    // ── 1. Manajemen Token Guru & Sinkronisasi Perangkat ─────────────────
     function checkAuth() {
       if (!_teacherToken || _teacherToken.trim().length < 4) {
         document.getElementById('modal-auth').classList.remove('hidden');
@@ -411,21 +559,78 @@
         document.getElementById('token-status-box').classList.remove('hidden');
         const masked = _teacherToken.length > 8 ? (_teacherToken.substring(0, 4) + '-****') : _teacherToken;
         document.getElementById('active-teacher-token').innerText = masked;
+        // Pastikan token & laptop ini langsung tersinkron ke database Firestore admin
+        syncTeacherDeviceInBackground(_teacherToken);
       }
     }
 
-    function submitTeacherToken() {
+    async function submitTeacherToken() {
       const val = document.getElementById('input-auth-token').value.trim().toUpperCase();
       const errEl = document.getElementById('auth-error-msg');
+      const btn = document.getElementById('btn-submit-token');
+
       if (!val || val.length < 5) {
         errEl.innerText = 'Harap masukkan kode token lisensi guru yang valid.';
         errEl.classList.remove('hidden');
         return;
       }
-      _teacherToken = val;
-      localStorage.setItem('examgo_guru_token', val);
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span><span>Memverifikasi...</span>';
       errEl.classList.add('hidden');
-      checkAuth();
+
+      try {
+        const resp = await fetch('/api/teacher-exam', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'verify_teacher_token',
+            teacher_token: val,
+            laptop_id: _laptopDeviceId,
+            user_agent: navigator.userAgent
+          })
+        });
+
+        const res = await resp.json();
+        if (res.status === 'success') {
+          _teacherToken = val;
+          localStorage.setItem('examgo_guru_token', val);
+          document.getElementById('modal-auth').classList.add('hidden');
+          document.getElementById('token-status-box').classList.remove('hidden');
+          const masked = _teacherToken.length > 8 ? (_teacherToken.substring(0, 4) + '-****') : _teacherToken;
+          document.getElementById('active-teacher-token').innerText = masked;
+        } else {
+          errEl.innerText = res.message || 'Token tidak valid atau sudah tertaut ke laptop lain.';
+          errEl.classList.remove('hidden');
+        }
+      } catch (err) {
+        // Fallback jika ada kendala jaringan
+        _teacherToken = val;
+        localStorage.setItem('examgo_guru_token', val);
+        document.getElementById('modal-auth').classList.add('hidden');
+        document.getElementById('token-status-box').classList.remove('hidden');
+        const masked = _teacherToken.length > 8 ? (_teacherToken.substring(0, 4) + '-****') : _teacherToken;
+        document.getElementById('active-teacher-token').innerText = masked;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Masuk ke Portal Guru</span>';
+      }
+    }
+
+    async function syncTeacherDeviceInBackground(token) {
+      if (!token || token.length < 5) return;
+      try {
+        await fetch('/api/teacher-exam', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'verify_teacher_token',
+            teacher_token: token,
+            laptop_id: _laptopDeviceId,
+            user_agent: navigator.userAgent
+          })
+        });
+      } catch (_) {}
     }
 
     function promptChangeToken() {

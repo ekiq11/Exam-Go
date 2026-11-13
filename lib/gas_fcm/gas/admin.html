@@ -7302,7 +7302,11 @@
                  <div class="text-[11px] font-mono text-emerald-700 font-semibold flex items-center gap-1 whitespace-nowrap">
                    ${(item.userWhatsapp && item.userWhatsapp !== '-') ? '<span>📱 WA:</span> ' + escapeHtml(item.userWhatsapp) : ''}
                  </div>
-                 <div class="text-[10px] text-gray-400 font-mono truncate max-w-[200px]" title="${escapeHtml(item.email || item.deviceId || '')}">${(item.email && item.email !== '-') ? escapeHtml(item.email) : (item.deviceId && item.deviceId !== '-' ? escapeHtml(item.deviceId) : '')}</div>
+                 <div class="text-[10px] text-gray-600 font-mono space-y-0.5">
+                   ${item.mobileDeviceId && item.mobileDeviceId !== '-' ? `<div class="truncate max-w-[210px] text-emerald-700 font-semibold" title="HP: ${escapeHtml(item.mobileDeviceId)}"><span class="font-bold">📱 HP:</span> ${escapeHtml(item.mobileDeviceId)}</div>` : ''}
+                   ${item.laptopDeviceId && item.laptopDeviceId !== '-' ? `<div class="truncate max-w-[210px] text-blue-700 font-semibold" title="Laptop: ${escapeHtml(item.laptopDeviceId)}"><span class="font-bold">💻 Laptop:</span> ${escapeHtml(item.laptopDeviceId)}</div>` : ''}
+                   ${(!item.mobileDeviceId || item.mobileDeviceId === '-') && (!item.laptopDeviceId || item.laptopDeviceId === '-') && item.deviceId && item.deviceId !== '-' ? `<div class="truncate max-w-[210px] text-gray-500 font-mono">${escapeHtml(item.deviceId)}</div>` : ''}
+                 </div>
                </div>`
             : '<span class="text-gray-400 text-xs whitespace-nowrap">Belum diaktivasi</span>');
 
