@@ -764,16 +764,21 @@ class LicenseService {
   }
 
   /// Menghapus seluruh data lokal akun, lisensi, dan riwayat pada perangkat (Apple Guideline 5.1.1)
+  /// serta mereset status perangkat di Cloud Firestore kembali menjadi FREE murni.
   Future<void> clearAllUserAccountData() async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kStudentPremiumKey, false);
+    await prefs.setBool(_kTeacherPremiumKey, false);
     await prefs.remove(_kStudentPremiumKey);
     await prefs.remove(_kTeacherPremiumKey);
     await prefs.remove(_kStudentAttemptsKey);
     await prefs.remove(_kTeacherUploadsKey);
+    await prefs.remove(_kTeacherLicenseTokenKey);
     await prefs.remove('last_token_activated');
     await prefs.remove('active_event_token');
     await prefs.remove('active_event_id');
     await prefs.remove('student_tryout_history');
+    await prefs.remove('student_tryout_history_list');
     await prefs.remove('student_name');
     await prefs.remove('student_email');
     await prefs.remove('student_whatsapp');
@@ -781,5 +786,44 @@ class LicenseService {
     await prefs.remove('teacher_pin_hash');
     await prefs.remove('biometric_auth_enabled');
     await prefs.remove('examgo_onboarding_completed');
+
+    await StudentTryoutHistoryService.instance.clearHistory();
+
+    final db = _db;
+    if (db != null) {
+      try {
+        final deviceId = await getDeviceId();
+        // 1. Reset status perangkat di Cloud Firestore ke FREE
+        await db.collection('devices').doc(deviceId).set({
+          'is_student_premium': false,
+          'is_teacher_premium': false,
+          'last_token_activated': null,
+          'deleted_at': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+
+        // 2. Putuskan tautan lisensi perangkat ini agar tidak terikat lagi
+        final studentTokens = await db
+            .collection('license_tokens')
+            .where('device_id', isEqualTo: deviceId)
+            .get();
+        for (final doc in studentTokens.docs) {
+          await doc.reference.update({
+            'device_id': null,
+            'is_activated': false,
+          });
+        }
+
+        final teacherTokens = await db
+            .collection('license_tokens')
+            .where('mobile_device_id', isEqualTo: deviceId)
+            .get();
+        for (final doc in teacherTokens.docs) {
+          await doc.reference.update({
+            'mobile_device_id': null,
+            'is_activated': false,
+          });
+        }
+      } catch (_) {}
+    }
   }
 }

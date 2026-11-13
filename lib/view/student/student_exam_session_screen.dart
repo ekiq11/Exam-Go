@@ -85,6 +85,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   // ─── Wall-Clock Timer State ───────────────────────────────────
   DateTime? _subtestEndTime;
   DateTime? _packageEndTime;
+  DateTime? _effectiveExamEndTime;
   int _remainingSeconds = 0;
   Timer? _tickerTimer;
 
@@ -1419,12 +1420,13 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         }
       }
 
-      final effectiveExamEndTime = (widget.isEvent && officialEventEndTime != null)
+      _effectiveExamEndTime = (widget.isEvent && officialEventEndTime != null)
           ? officialEventEndTime
           : (_packageEndTime ??
               DateTime.now().add(
                 Duration(minutes: _package?.durasiMenit ?? 90),
               ));
+      final effectiveExamEndTime = _effectiveExamEndTime!;
 
       // Simpan riwayat ujian & butir soal ke lokal agar bisa ditinjau di Pembahasan
       await StudentTryoutHistoryService.instance.saveAttempt(
@@ -1762,7 +1764,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       eventEndTime = DateTime(dt.year, dt.month, dt.day, h, m);
                     }
                   }
-                  final targetEndTime = eventEndTime ?? _packageEndTime;
+                  final targetEndTime = eventEndTime ?? _effectiveExamEndTime ?? _packageEndTime;
                   final isTimeEnded = targetEndTime == null ||
                       DateTime.now().isAfter(targetEndTime);
                   return SizedBox(

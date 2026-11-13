@@ -228,6 +228,15 @@ class StudentTryoutHistoryService {
     }
   }
 
+  /// Menghapus seluruh riwayat pengerjaan tryout dari penyimpanan lokal perangkat
+  Future<void> clearHistory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_kStorageKey);
+      await prefs.remove('student_tryout_history');
+    } catch (_) {}
+  }
+
   /// Sinkronisasi background otomatis saat data lokal kosong
   void _syncCloudHistoryInBackground() {
     if (_isRestoring) return;
