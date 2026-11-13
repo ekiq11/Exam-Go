@@ -2416,11 +2416,11 @@ class _EventTokenDialogState extends State<_EventTokenDialog> {
           _errorMessage = res.message;
         });
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Gagal memproses token: $e';
+          _errorMessage = 'Gagal memproses token. Pastikan koneksi internet stabil dan periksa kembali kode Anda.';
         });
       }
     }

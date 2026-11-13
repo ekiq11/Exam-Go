@@ -406,5 +406,30 @@ void main() {
       expect(kodeContent, contains('laptop_device_id'));
       expect(kodeContent, contains('mobile_device_id'));
     });
+
+    test('guru.html & Kode.js support multi-subtest, category selection & clean error sanitization', () {
+      final guruHtmlFile = File('lib/gas_fcm/gas/guru.html');
+      final kodeJsFile = File('lib/gas_fcm/gas/Kode.js');
+      final guruContent = guruHtmlFile.readAsStringSync();
+      final kodeContent = kodeJsFile.readAsStringSync();
+
+      // UI Subtest & Kategori elements
+      expect(guruContent, contains('id="exam-category"'));
+      expect(guruContent, contains('id="exam-time-mode"'));
+      expect(guruContent, contains('id="subtest-manager-section"'));
+      expect(guruContent, contains('function addSubtest('));
+      expect(guruContent, contains('function removeSubtest('));
+      expect(guruContent, contains('function onExamCategoryChanged('));
+
+      // Auto-detection tags from DOCX
+      expect(guruContent, contains('SUBTEST|BABAK|SECTION'));
+      expect(guruContent, contains('DURASI_SUBTEST|DURASI_BABAK'));
+      expect(guruContent, contains('KATEGORI|CATEGORY'));
+
+      // Clean error sanitization in guru.html & Kode.js
+      expect(guruContent, contains('Kode lisensi guru tidak valid atau tidak terdaftar'));
+      expect(kodeContent, contains('subtests_meta'));
+      expect(kodeContent, contains('data.jenis_waktu'));
+    });
   });
 }

@@ -26,7 +26,27 @@ class ActivationResult {
       ActivationResult(isSuccess: true, message: message, targetExamId: targetExamId);
 
   factory ActivationResult.failure(String message) =>
-      ActivationResult(isSuccess: false, message: message);
+      ActivationResult(isSuccess: false, message: _sanitizeErrorMessage(message));
+
+  static String _sanitizeErrorMessage(String msg) {
+    final lower = msg.toLowerCase();
+    if (lower.contains('permission') ||
+        lower.contains('firebase') ||
+        lower.contains('firestore') ||
+        lower.contains('http') ||
+        lower.contains('exception') ||
+        lower.contains('denied') ||
+        lower.contains('unauthorized') ||
+        lower.contains('status code') ||
+        lower.contains('error:') ||
+        lower.contains('stack trace') ||
+        lower.contains('socketexception') ||
+        lower.contains('handshake') ||
+        lower.contains('timeout')) {
+      return 'Kode lisensi tidak valid, tidak terdaftar, atau koneksi terputus. Silakan periksa kembali kode lisensi Anda atau hubungi Admin ExamGO.';
+    }
+    return msg;
+  }
 }
 
 /// Service manajemen lisensi & kuota freemium ExamGO
@@ -661,7 +681,9 @@ class LicenseService {
         if (gasResult != null) return gasResult;
       } catch (_) {}
 
-      return ActivationResult.failure('Terjadi kesalahan saat memverifikasi lisensi: $e');
+      return ActivationResult.failure(
+        'Kode lisensi tidak valid, tidak terdaftar, atau koneksi terputus. Silakan periksa kembali kode Anda atau hubungi Admin ExamGO.',
+      );
     }
   }
 

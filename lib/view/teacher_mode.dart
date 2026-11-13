@@ -736,7 +736,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     ),
                     icon: const Icon(Icons.workspace_premium_rounded, size: 16),
                     label: Text(
-                      'Upgrade Premium 👑',
+                      'Premium 👑',
                       style: GoogleFonts.poppins(
                         fontSize: 11.5,
                         fontWeight: FontWeight.bold,
@@ -763,7 +763,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                   ),
                   icon: const Icon(Icons.vpn_key_outlined, size: 15),
                   label: Text(
-                    'Aktivasi Token Lisensi',
+                    'Aktivasi Token',
                     style: GoogleFonts.poppins(
                       fontSize: 11.5,
                       fontWeight: FontWeight.bold,

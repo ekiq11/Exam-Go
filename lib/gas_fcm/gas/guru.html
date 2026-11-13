@@ -514,14 +514,16 @@
             class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm text-white placeholder-slate-500 outline-none transition-colors">
         </div>
 
-        <!-- Durasi Menit -->
+        <!-- Kategori Ujian -->
         <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1.5">Durasi Pengerjaan *</label>
-          <div class="relative">
-            <input type="number" id="exam-duration" value="90" min="5" max="360"
-              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm text-white outline-none transition-colors pr-14">
-            <span class="absolute right-3.5 top-2.5 text-xs font-semibold text-slate-400">Menit</span>
-          </div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">Kategori Ujian *</label>
+          <select id="exam-category" onchange="onExamCategoryChanged()"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm text-white outline-none transition-colors font-medium">
+            <option value="UMUM" selected>📚 CBT Umum / Ujian Sekolah</option>
+            <option value="SNBT">🎓 SNBT / UTBK Seleksi PTN</option>
+            <option value="SKD">🏛️ SKD / Kedinasan / CPNS</option>
+            <option value="MADRASAH">🕌 Asesmen Madrasah / Keagamaan</option>
+          </select>
         </div>
 
         <!-- Token Ujian -->
@@ -532,6 +534,58 @@
           </label>
           <input type="text" id="exam-token" maxlength="12" placeholder="Contoh: MTK10A"
             class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-mono font-bold text-sm text-amber-300 uppercase outline-none tracking-wider transition-colors">
+        </div>
+
+        <!-- Sistem Waktu Ujian -->
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">Sistem Waktu Pengerjaan *</label>
+          <select id="exam-time-mode" onchange="onTimeModeChanged()"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm text-white outline-none transition-colors font-medium">
+            <option value="per_paket" selected>⏱️ 1 Paket Utuh (Semua soal dikerjakan dalam 1 durasi waktu)</option>
+            <option value="per_subtest">📑 Multi-Subtest (Durasi & waktu terpisah tiap babak subtest)</option>
+          </select>
+        </div>
+
+        <!-- Total Durasi Pengerjaan -->
+        <div id="wrapper-global-duration" class="sm:col-span-2">
+          <label class="block text-xs font-bold text-slate-300 mb-1.5 flex items-center justify-between">
+            <span id="label-exam-duration">Durasi Pengerjaan *</span>
+            <span id="badge-auto-calc" class="hidden text-[10px] font-bold text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-full border border-brand-500/20">Auto (Akumulasi Subtest)</span>
+          </label>
+          <div class="relative">
+            <input type="number" id="exam-duration" value="90" min="5" max="480" oninput="onGlobalDurationInput()"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm text-white outline-none transition-colors pr-14">
+            <span class="absolute right-3.5 top-2.5 text-xs font-semibold text-slate-400">Menit</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Bagian Pengaturan Subtest / Babak Soal ───────────────────── -->
+      <div id="subtest-manager-section" class="mt-5 pt-4 border-t border-slate-800">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-xs font-extrabold text-white tracking-wide uppercase">Pengaturan Subtest / Babak Ujian</h3>
+              <span id="subtest-summary-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-brand-500/10 text-brand-400 border border-brand-500/20">
+                1 Subtest • 90 Menit
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-0.5">
+              Guru dapat bebas menambah, mengubah nama subtest, dan mengatur durasi per babak. Butir soal dari file DOCX atau Google Form dapat otomatis terbagi ke masing-masing subtest.
+            </p>
+          </div>
+          <button type="button" onclick="addSubtest()"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-600/20 hover:bg-brand-600/30 text-brand-300 border border-brand-500/30 text-xs font-bold transition-all shadow-sm shrink-0">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span>+ Tambah Subtest</span>
+          </button>
+        </div>
+
+        <!-- Daftar Kartu Subtest Interaktif -->
+        <div id="subtest-cards-list" class="space-y-2.5">
+          <!-- Rendered via JS renderSubtestsList() -->
         </div>
       </div>
     </section>
@@ -793,10 +847,41 @@
     let _currentSourceTab = 'docx';
     let _publishedData = null;
 
+    // Presets Subtest per Kategori Ujian
+    const CATEGORY_PRESETS = {
+      UMUM: [
+        { id: 'ST1', judul: 'Ujian Utama', durasiMenit: 90 }
+      ],
+      SNBT: [
+        { id: 'ST1', judul: 'Kemampuan Penalaran Umum', durasiMenit: 30 },
+        { id: 'ST2', judul: 'Pengetahuan & Pemahaman Umum', durasiMenit: 15 },
+        { id: 'ST3', judul: 'Kemampuan Memahami Bacaan & Menulis', durasiMenit: 25 },
+        { id: 'ST4', judul: 'Pengetahuan Kuantitatif', durasiMenit: 20 },
+        { id: 'ST5', judul: 'Literasi dalam Bahasa Indonesia', durasiMenit: 45 },
+        { id: 'ST6', judul: 'Literasi dalam Bahasa Inggris', durasiMenit: 30 },
+        { id: 'ST7', judul: 'Penalaran Matematika', durasiMenit: 30 }
+      ],
+      SKD: [
+        { id: 'ST1', judul: 'Tes Wawasan Kebangsaan (TWK)', durasiMenit: 30 },
+        { id: 'ST2', judul: 'Tes Inteligensia Umum (TIU)', durasiMenit: 35 },
+        { id: 'ST3', judul: 'Tes Karakteristik Pribadi (TKP)', durasiMenit: 35 }
+      ],
+      MADRASAH: [
+        { id: 'ST1', judul: 'Al-Qur\'an Hadis & Fikih', durasiMenit: 45 },
+        { id: 'ST2', judul: 'Sejarah Kebudayaan Islam & Akidah', durasiMenit: 45 }
+      ]
+    };
+
+    let _subtests = [
+      { id: 'ST1', judul: 'Ujian Utama', durasiMenit: 90 }
+    ];
+    let _activeSubtestFilter = 'all';
+
     // Inisialisasi saat halaman selesai dimuat
     document.addEventListener('DOMContentLoaded', function () {
       initTheme();
       randomizeToken();
+      renderSubtestsList();
       checkAuth();
       setupDropzone();
     });
@@ -887,7 +972,11 @@
           const masked = _teacherToken.length > 8 ? (_teacherToken.substring(0, 4) + '-****') : _teacherToken;
           document.getElementById('active-teacher-token').innerText = masked;
         } else {
-          errEl.innerText = res.message || 'Token tidak valid atau sudah tertaut ke laptop lain.';
+          let msg = res.message || 'Token tidak valid atau sudah tertaut ke laptop lain.';
+          if (/permission|firebase|firestore|http|exception/i.test(msg)) {
+            msg = 'Kode lisensi guru tidak valid atau tidak terdaftar. Periksa kembali kode lisensi Anda.';
+          }
+          errEl.innerText = msg;
           errEl.classList.remove('hidden');
         }
       } catch (err) {
@@ -938,6 +1027,179 @@
         res += chars.charAt(Math.floor(Math.random() * chars.length));
       }
       document.getElementById('exam-token').value = res;
+    }
+
+    // ── 1b. Manajemen Subtest & Kategori Ujian ──────────────────────────
+    function onExamCategoryChanged() {
+      const cat = document.getElementById('exam-category').value;
+      const presets = CATEGORY_PRESETS[cat] || CATEGORY_PRESETS.UMUM;
+
+      _subtests = presets.map((p, i) => ({
+        id: `ST${i + 1}`,
+        judul: p.judul,
+        durasiMenit: p.durasiMenit
+      }));
+
+      const modeSelect = document.getElementById('exam-time-mode');
+      if (cat === 'UMUM') {
+        modeSelect.value = 'per_paket';
+      } else {
+        modeSelect.value = 'per_subtest';
+      }
+
+      onTimeModeChanged();
+      autoDistributeQuestionsToSubtests();
+      renderSubtestsList();
+      renderQuestionsPreview();
+    }
+
+    function onTimeModeChanged() {
+      const mode = document.getElementById('exam-time-mode').value;
+      const durInput = document.getElementById('exam-duration');
+      const badgeAuto = document.getElementById('badge-auto-calc');
+      const labelDur = document.getElementById('label-exam-duration');
+
+      if (mode === 'per_subtest') {
+        durInput.readOnly = true;
+        durInput.classList.add('bg-slate-900/60', 'text-brand-300');
+        badgeAuto.classList.remove('hidden');
+        labelDur.innerText = 'Total Durasi Ujian (Akumulasi)';
+        calculateTotalDuration();
+      } else {
+        durInput.readOnly = false;
+        durInput.classList.remove('bg-slate-900/60', 'text-brand-300');
+        badgeAuto.classList.add('hidden');
+        labelDur.innerText = 'Durasi Pengerjaan *';
+      }
+      renderSubtestsList();
+    }
+
+    function onGlobalDurationInput() {
+      const mode = document.getElementById('exam-time-mode').value;
+      if (mode === 'per_paket' && _subtests.length === 1) {
+        _subtests[0].durasiMenit = parseInt(document.getElementById('exam-duration').value) || 90;
+        renderSubtestsList();
+      }
+    }
+
+    function calculateTotalDuration() {
+      const total = _subtests.reduce((acc, st) => acc + (parseInt(st.durasiMenit) || 0), 0);
+      const mode = document.getElementById('exam-time-mode').value;
+      if (mode === 'per_subtest') {
+        const durInput = document.getElementById('exam-duration');
+        if (durInput) durInput.value = total;
+      }
+      const summaryBadge = document.getElementById('subtest-summary-badge');
+      if (summaryBadge) {
+        summaryBadge.innerText = `${_subtests.length} Subtest • ${total} Menit`;
+      }
+      return total;
+    }
+
+    function renderSubtestsList() {
+      const container = document.getElementById('subtest-cards-list');
+      if (!container) return;
+
+      calculateTotalDuration();
+      const canDelete = _subtests.length > 1;
+
+      container.innerHTML = _subtests.map((st, idx) => {
+        const qCount = _extractedQuestions.filter(q => (q.subtestIndex || 0) === idx).length;
+        return `
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-3 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 transition-all">
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 text-brand-400 font-extrabold text-xs flex items-center justify-center">
+                ST${idx + 1}
+              </span>
+              <span class="sm:hidden text-xs font-bold text-slate-300">Subtest ${idx + 1}</span>
+            </div>
+            <div class="flex-1">
+              <input type="text" value="${escapeHtml(st.judul)}" onchange="updateSubtest(${idx}, 'judul', this.value)"
+                placeholder="Judul Subtest (misal: Kemampuan Penalaran Umum)"
+                class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none">
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <div class="relative w-28">
+                <input type="number" min="1" max="240" value="${st.durasiMenit}" oninput="updateSubtest(${idx}, 'durasiMenit', this.value)"
+                  class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white outline-none text-right pr-12 focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+                <span class="absolute right-2.5 top-1.5 text-[10px] font-bold text-slate-400 pointer-events-none">Menit</span>
+              </div>
+              <span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">
+                ${qCount} Soal
+              </span>
+              <button type="button" onclick="removeSubtest(${idx})" ${canDelete ? '' : 'disabled'}
+                class="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
+                title="Hapus Subtest">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addSubtest(judul, durasiMenit) {
+      const nextNum = _subtests.length + 1;
+      _subtests.push({
+        id: `ST${nextNum}`,
+        judul: judul || `Subtest ${nextNum}`,
+        durasiMenit: parseInt(durasiMenit) || 30
+      });
+      calculateTotalDuration();
+      renderSubtestsList();
+      renderQuestionsPreview();
+    }
+
+    function removeSubtest(idx) {
+      if (_subtests.length <= 1) return;
+      _subtests.splice(idx, 1);
+      _extractedQuestions.forEach(q => {
+        if ((q.subtestIndex || 0) === idx) {
+          q.subtestIndex = Math.max(0, idx - 1);
+        } else if ((q.subtestIndex || 0) > idx) {
+          q.subtestIndex = q.subtestIndex - 1;
+        }
+      });
+      calculateTotalDuration();
+      renderSubtestsList();
+      renderQuestionsPreview();
+    }
+
+    function updateSubtest(idx, key, val) {
+      if (!_subtests[idx]) return;
+      if (key === 'durasiMenit') {
+        _subtests[idx].durasiMenit = parseInt(val) || 1;
+        calculateTotalDuration();
+      } else {
+        _subtests[idx][key] = val;
+      }
+      renderQuestionsPreview();
+    }
+
+    function changeQuestionSubtest(qIdx, newSubtestIdx) {
+      if (_extractedQuestions[qIdx]) {
+        _extractedQuestions[qIdx].subtestIndex = parseInt(newSubtestIdx) || 0;
+        renderSubtestsList();
+        renderQuestionsPreview();
+      }
+    }
+
+    function autoDistributeQuestionsToSubtests() {
+      if (!_extractedQuestions || _extractedQuestions.length === 0 || _subtests.length <= 1) return;
+      const perSub = Math.ceil(_extractedQuestions.length / _subtests.length);
+      _extractedQuestions.forEach((q, i) => {
+        if (q.subtestIndex === undefined || q.subtestIndex === null) {
+          q.subtestIndex = Math.min(Math.floor(i / perSub), _subtests.length - 1);
+        }
+      });
+    }
+
+    function setSubtestFilter(filter) {
+      _activeSubtestFilter = filter;
+      _previewCurrentPage = 1;
+      renderQuestionsPreview();
     }
 
     // ── 2. Tab Sumber Soal (DOCX vs Google Form) ────────────────────────
@@ -1186,6 +1448,8 @@
         }
 
         _extractedQuestions = questions;
+        autoDistributeQuestionsToSubtests();
+        renderSubtestsList();
         _previewCurrentPage = 1;
         renderQuestionsPreview();
         setLoading(false);
@@ -1224,6 +1488,13 @@
       let currentQ = null;
       let currentOpt = null;
 
+      // Metadata hasil deteksi otomatis dari dokumen Word
+      let detectedCategory = null;
+      let detectedTimeMode = null;
+      let detectedGlobalDuration = null;
+      let detectedSubtests = [];
+      let currentSubtestIdx = 0;
+
       // Iterasi seluruh elemen termasuk tabel, gambar, paragraf, heading
       const elements = tempDiv.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, table, hr');
       elements.forEach(el => {
@@ -1259,6 +1530,63 @@
         if (!text) return; // Jika elemen kosong (misal paragraf gambar kosong), lanjut
         text = convertMathToLatex(text);
 
+        // ── 0. Deteksi Tag Metadata Otomatis dari Dokumen Word ──────────
+        // (a) Tag Judul Ujian: [JUDUL: Try Out Mandiri 2026]
+        const titleMatch = text.match(/\[(?:JUDUL|TITLE|NAMA_UJIAN)\s*:\s*([^\]]+)\]/i);
+        if (titleMatch) {
+          const titleInput = document.getElementById('exam-title');
+          if (titleInput) titleInput.value = titleMatch[1].trim();
+          return;
+        }
+
+        // (b) Tag Kategori: [KATEGORI: SNBT]
+        const catMatch = text.match(/\[(?:KATEGORI|CATEGORY)\s*:\s*([^\]]+)\]/i);
+        if (catMatch) {
+          const rawCat = catMatch[1].trim().toUpperCase();
+          if (['UMUM', 'SNBT', 'SKD', 'MADRASAH'].includes(rawCat)) {
+            detectedCategory = rawCat;
+          }
+          return;
+        }
+
+        // (c) Tag Sistem Waktu: [JENIS_WAKTU: per_subtest]
+        const timeModeMatch = text.match(/\[(?:JENIS_WAKTU|WAKTU_MODE)\s*:\s*([^\]]+)\]/i);
+        if (timeModeMatch) {
+          const rawMode = timeModeMatch[1].trim().toLowerCase();
+          if (['per_subtest', 'per_paket'].includes(rawMode)) {
+            detectedTimeMode = rawMode;
+          }
+          return;
+        }
+
+        // (d) Tag Durasi Total: [DURASI: 90]
+        const durMatch = text.match(/\[(?:DURASI|DURATION)\s*:\s*(\d+)\]/i);
+        if (durMatch) {
+          detectedGlobalDuration = parseInt(durMatch[1]);
+          return;
+        }
+
+        // (e) Tag Subtest: [SUBTEST: Kemampuan Penalaran Umum] atau Heading "SUBTEST 1: ..."
+        const stTagMatch = text.match(/\[(?:SUBTEST|BABAK|SECTION)\s*:\s*([^\]]+)\]/i);
+        const stHeadingMatch = text.match(/^(?:SUBTEST|BABAK|BAGIAN)\s*(\d+)?\s*[:.-]\s*(.+)$/i);
+        if (stTagMatch || stHeadingMatch) {
+          const stTitle = (stTagMatch ? stTagMatch[1] : stHeadingMatch[2]).trim();
+          detectedSubtests.push({
+            id: `ST${detectedSubtests.length + 1}`,
+            judul: stTitle,
+            durasiMenit: 30
+          });
+          currentSubtestIdx = detectedSubtests.length - 1;
+          return;
+        }
+
+        // (f) Tag Durasi Subtest: [DURASI_SUBTEST: 25]
+        const stDurMatch = text.match(/\[(?:DURASI_SUBTEST|DURASI_BABAK)\s*:\s*(\d+)\]/i);
+        if (stDurMatch && detectedSubtests.length > 0) {
+          detectedSubtests[currentSubtestIdx].durasiMenit = parseInt(stDurMatch[1]) || 30;
+          return;
+        }
+
         // Cek apakah baris ini nomor soal baru (misal: "1.", "1)", "Soal 1.")
         const qMatch = text.match(/^(?:Soal\s*)?(\d+)[.)]\s*([\s\S]*)/i);
         if (qMatch) {
@@ -1266,6 +1594,7 @@
           currentQ = {
             id: questions.length + 1,
             nomor: parseInt(qMatch[1]) || (questions.length + 1),
+            subtestIndex: currentSubtestIdx,
             pertanyaan: qMatch[2] || '',
             opsi_a: '', opsi_b: '', opsi_c: '', opsi_d: '', opsi_e: '',
             gam_a: '', gam_b: '', gam_c: '', gam_d: '', gam_e: '',
@@ -1317,6 +1646,24 @@
       });
 
       if (currentQ) questions.push(currentQ);
+
+      // Sinkronisasi otomatis hasil deteksi DOCX ke form pengaturan guru
+      if (detectedCategory) {
+        document.getElementById('exam-category').value = detectedCategory;
+      }
+      if (detectedSubtests.length > 0) {
+        _subtests = detectedSubtests;
+        document.getElementById('exam-time-mode').value = detectedTimeMode || 'per_subtest';
+      } else if (detectedTimeMode) {
+        document.getElementById('exam-time-mode').value = detectedTimeMode;
+      }
+      if (detectedGlobalDuration) {
+        document.getElementById('exam-duration').value = detectedGlobalDuration;
+      }
+
+      onTimeModeChanged();
+      renderSubtestsList();
+
       return questions;
     }
 
@@ -1347,6 +1694,8 @@
         }
 
         _extractedQuestions = questions;
+        autoDistributeQuestionsToSubtests();
+        renderSubtestsList();
         _previewCurrentPage = 1;
         renderQuestionsPreview();
         setLoading(false);
@@ -1969,9 +2318,22 @@
         listHtml += `
           <div id="q-card-${actualIdx}" class="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 sm:p-5 transition-all hover:border-slate-700">
             <div class="flex items-start justify-between gap-3 mb-2">
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 flex-wrap">
                 <span class="w-7 h-7 rounded-lg bg-brand-500/20 text-brand-300 flex items-center justify-center font-bold text-xs">${actualIdx + 1}</span>
                 <span class="text-xs font-semibold text-slate-400">Pilihan Ganda</span>
+                ${_subtests.length > 1 ? `
+                  <div class="flex items-center gap-1 ml-1.5">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase">Subtest:</span>
+                    <select onchange="changeQuestionSubtest(${actualIdx}, this.value)"
+                      class="text-[11px] font-bold px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-purple-300 focus:border-purple-500 outline-none cursor-pointer">
+                      ${_subtests.map((st, sIdx) => `
+                        <option value="${sIdx}" ${((q.subtestIndex || 0) === sIdx) ? 'selected' : ''}>
+                          ST${sIdx + 1}: ${escapeHtml(st.judul)}
+                        </option>
+                      `).join('')}
+                    </select>
+                  </div>
+                ` : ''}
               </div>
               <div class="flex items-center gap-1.5">
                 <span class="text-xs text-slate-400 font-semibold">Kunci:</span>
@@ -2179,6 +2541,7 @@
         _extractedQuestions.splice(idx, 1);
         const totalPages = Math.ceil(_extractedQuestions.length / _previewPageSize) || 1;
         if (_previewCurrentPage > totalPages) _previewCurrentPage = totalPages;
+        renderSubtestsList();
         renderQuestionsPreview();
       }
     }
@@ -2187,6 +2550,7 @@
       if (confirm('Hapus semua soal yang telah diekstrak?')) {
         _extractedQuestions = [];
         _previewCurrentPage = 1;
+        renderSubtestsList();
         renderQuestionsPreview();
       }
     }
@@ -2295,6 +2659,8 @@
         titleInput.value = 'Simulasi Ujian Lengkap CBT ExamGO (Rumus, Gambar & Tabel)';
       }
 
+      autoDistributeQuestionsToSubtests();
+      renderSubtestsList();
       _previewCurrentPage = 1;
       renderQuestionsPreview();
       alert('✨ 5 Contoh Soal Lengkap (Rumus KaTeX, Gambar Gelombang, Tabel Ekonomi, Wacana Paragraf & Logika) berhasil dimuat!');
@@ -2331,6 +2697,19 @@
       btn.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span><span>Menerbitkan ke Cloud Firestore...</span>';
 
       try {
+        const category = document.getElementById('exam-category').value || 'UMUM';
+        const jenisWaktu = document.getElementById('exam-time-mode').value || 'per_paket';
+        const subtestsPayload = _subtests.map((st, sIdx) => {
+          const count = _extractedQuestions.filter(q => (q.subtestIndex || 0) === sIdx).length;
+          return {
+            subtest_id: `${token}_ST${sIdx + 1}`,
+            judul: st.judul || `Subtest ${sIdx + 1}`,
+            durasi_menit: parseInt(st.durasiMenit) || 30,
+            jumlah_soal: count,
+            order_index: sIdx
+          };
+        });
+
         const payload = {
           action: 'create_teacher_exam',
           teacher_token: _teacherToken,
@@ -2338,26 +2717,33 @@
           token: token,
           title: title,
           duration: duration,
-          category: 'UMUM',
-          questions: _extractedQuestions.map((q, i) => ({
-            id: i + 1,
-            nomor: i + 1,
-            pertanyaan: q.pertanyaan,
-            opsi_a: q.opsi_a,
-            opsi_b: q.opsi_b,
-            opsi_c: q.opsi_c,
-            opsi_d: q.opsi_d,
-            opsi_e: q.opsi_e,
-            gam_a: q.gam_a || '',
-            gam_b: q.gam_b || '',
-            gam_c: q.gam_c || '',
-            gam_d: q.gam_d || '',
-            gam_e: q.gam_e || '',
-            kunci: q.kunci || 'A',
-            pembahasan: q.pembahasan || '',
-            gambar: q.gambar || '',
-            tabel: q.tabel || ''
-          }))
+          category: category,
+          jenis_waktu: jenisWaktu,
+          subtests: subtestsPayload,
+          questions: _extractedQuestions.map((q, i) => {
+            const sIdx = q.subtestIndex || 0;
+            return {
+              id: i + 1,
+              nomor: i + 1,
+              subtest_index: sIdx,
+              subtest_id: `${token}_ST${sIdx + 1}`,
+              pertanyaan: q.pertanyaan,
+              opsi_a: q.opsi_a,
+              opsi_b: q.opsi_b,
+              opsi_c: q.opsi_c,
+              opsi_d: q.opsi_d,
+              opsi_e: q.opsi_e,
+              gam_a: q.gam_a || '',
+              gam_b: q.gam_b || '',
+              gam_c: q.gam_c || '',
+              gam_d: q.gam_d || '',
+              gam_e: q.gam_e || '',
+              kunci: q.kunci || 'A',
+              pembahasan: q.pembahasan || '',
+              gambar: q.gambar || '',
+              tabel: q.tabel || ''
+            };
+          })
         };
 
         const resp = await fetch('/api/teacher-exam', {
@@ -2385,11 +2771,19 @@
           });
           showPublishedModal();
         } else {
-          throw new Error(res.message || 'Gagal menerbitkan paket ujian.');
+          let errMsg = res.message || 'Gagal menerbitkan paket ujian.';
+          if (/permission|firebase|firestore|http/i.test(errMsg)) {
+            errMsg = 'Gagal menerbitkan paket ujian. Periksa koneksi internet Anda atau pastikan kode lisensi guru masih aktif.';
+          }
+          throw new Error(errMsg);
         }
       } catch (err) {
         console.error(err);
-        alert('Terjadi kesalahan saat menerbitkan ujian: ' + err.message);
+        let errMsg = err.message || '';
+        if (/permission|firebase|firestore|http|network/i.test(errMsg)) {
+          errMsg = 'Gagal menerbitkan paket ujian. Periksa koneksi internet Anda atau hubungi Admin ExamGO.';
+        }
+        alert('Kendala Penerbitan Ujian: ' + errMsg);
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<span>🚀 Terbitkan Ujian & Buat Token/QR</span>';

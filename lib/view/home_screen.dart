@@ -2374,11 +2374,11 @@ class _HomeScreenState extends State<HomeScreen>
             'Tidak Ditemukan',
             'Token ujian tidak valid atau sudah kadaluarsa.',
           );
-        } catch (e) {
+        } catch (_) {
           searchLoading.dismiss();
           _showError(
             'Gagal Mencari',
-            'Terjadi kesalahan saat memverifikasi token: $e',
+            'Token ujian atau kode lisensi tidak valid. Pastikan perangkat terhubung ke internet dan periksa kembali kode Anda.',
           );
         }
       },
