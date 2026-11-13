@@ -266,9 +266,39 @@
     .theme-light #quick-keys-container span.text-slate-400 {
       color: #334155 !important;
     }
+    .theme-light #quick-keys-container input {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #047857 !important;
+      font-weight: 800 !important;
+    }
+    .theme-light #quick-keys-container input:focus {
+      border-color: #10b981 !important;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+    }
     .theme-light #quick-keys-container select {
       background-color: #f8fafc !important;
       border-color: #cbd5e1 !important;
+      color: #047857 !important;
+      font-weight: 800 !important;
+    }
+    .theme-light #bulk-key-box {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+    }
+    .theme-light #bulk-key-box textarea {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    .theme-light #bulk-key-box label {
+      color: #1e293b !important;
+    }
+    .theme-light #questions-list input[id^="card-key-input-"] {
+      background-color: #ffffff !important;
+      border-color: #10b981 !important;
       color: #047857 !important;
       font-weight: 800 !important;
     }
@@ -399,14 +429,23 @@
           Unggah soal langsung dari dokumen Word atau link Google Form. Rumus matematika otomatis terkonversi ke KaTeX.
         </p>
       </div>
-      <div class="mt-4 sm:mt-0 flex justify-center">
-        <button onclick="downloadDocxTemplate()"
-          class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold transition-all shadow-sm">
-          <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="mt-4 sm:mt-0 flex flex-wrap items-center justify-center gap-2">
+        <a href="https://docs.google.com/document/d/1Lq4IiXgU4_EMUuMMJD1Ns3eYL-XRgZkt/export?format=docx"
+          target="_blank" download="template-soal-examgo.docx"
+          class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-sm">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
           </svg>
           <span>Unduh Template Word (.docx)</span>
-        </button>
+        </a>
+        <a href="https://docs.google.com/document/d/1Lq4IiXgU4_EMUuMMJD1Ns3eYL-XRgZkt/edit?usp=sharing"
+          target="_blank" rel="noopener noreferrer"
+          class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold transition-all shadow-sm">
+          <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+          </svg>
+          <span>Buka di Google Docs</span>
+        </a>
       </div>
     </div>
 
@@ -551,11 +590,28 @@
 
       <!-- Quick Answer Keys Helper -->
       <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 mb-5">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-bold text-slate-300">⚡ Setel Kunci Jawaban Cepat:</span>
-          <span class="text-[10px] text-slate-400">Klik nomor untuk lompat ke halaman soal tersebut</span>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-300">⚡ Input Kunci Jawaban Cepat (Bisa Diketik):</span>
+            <span class="text-[10px] text-slate-400 hidden sm:inline">Ketik A-E langsung (otomatis lompat ke nomor berikutnya)</span>
+          </div>
+          <button type="button" onclick="toggleBulkKeyBox()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand-500/10 hover:bg-brand-500/20 text-brand-300 border border-brand-500/30 text-xs font-bold transition-all">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            <span>📋 Tempel Kunci Sekaligus</span>
+          </button>
         </div>
-        <div id="quick-keys-container" class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1">
+
+        <!-- Slide-down bulk paste box -->
+        <div id="bulk-key-box" class="hidden mb-3 p-3 rounded-xl bg-slate-900 border border-slate-700">
+          <label class="block text-xs font-bold text-slate-200 mb-1">Tempelkan Daftar Kunci (Contoh: ABCDE ABCDE atau 1.A 2.B 3.C...):</label>
+          <textarea id="bulk-key-input" rows="2" placeholder="Tempel kunci jawaban di sini..." class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white uppercase focus:ring-1 focus:ring-brand-500 outline-none font-mono"></textarea>
+          <div class="flex justify-end gap-2 mt-2">
+            <button type="button" onclick="toggleBulkKeyBox(false)" class="px-3 py-1 text-xs text-slate-400 hover:text-white">Batal</button>
+            <button type="button" onclick="applyBulkKeys()" class="px-3.5 py-1 text-xs font-bold bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-all">Terapkan Kunci</button>
+          </div>
+        </div>
+
+        <div id="quick-keys-container" class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-1">
           <!-- Populated by JS -->
         </div>
       </div>
@@ -1243,6 +1299,9 @@
         _previewCurrentPage = 1;
         renderQuestionsPreview();
         setLoading(false);
+
+        // Otomatis konversi gambar Google Form ke Base64 via server Google Apps Script
+        autoConvertQuestionImagesToBase64();
       } catch (err) {
         console.error(err);
         alert('Gagal mengambil Google Form: ' + err.message + '\n\nPastikan form terbuka untuk publik (tidak dibatasi akun organisasi).');
@@ -1262,29 +1321,126 @@
       return map;
     }
 
+    function convertDriveUrl(url) {
+      if (!url) return '';
+      let s = String(url).trim();
+      if (s.startsWith('//')) s = 'https:' + s;
+      if (s.startsWith('data:image/')) return s;
+
+      const driveMatch = s.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?.*id=)|docs\.google\.com\/file\/d\/)([a-zA-Z0-9_-]+)/);
+      if (driveMatch) {
+        return 'https://drive.google.com/thumbnail?id=' + driveMatch[1] + '&sz=w1000';
+      }
+      return s;
+    }
+
     function wrapProxiedImageUrl(url) {
       if (!url) return '';
       let s = String(url).trim();
-      if (s.startsWith('data:image/')) return s; // Base64 inline dari Word mammoth
-      if (s.includes('/api/proxy-image?url=')) return s; // Sudah diproksi
-      if (s.startsWith('//')) s = 'https:' + s;
-
-      // Google Drive link (view, open, uc) -> direct high-res CDN thumbnail
-      const driveMatch = s.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?.*id=)|docs\.google\.com\/file\/d\/)([a-zA-Z0-9_-]+)/);
-      if (driveMatch) {
-        s = 'https://drive.google.com/thumbnail?id=' + driveMatch[1] + '&sz=w1000';
-      }
-
-      // Proksikan via Cloudflare Worker untuk menghilangkan header Cross-Origin-Resource-Policy: same-site
-      const proxyBase = (window.location && window.location.origin && window.location.origin.includes('examgo.id'))
-        ? '/api/proxy-image?url='
-        : 'https://examgo.id/api/proxy-image?url=';
-      return proxyBase + encodeURIComponent(s);
+      if (s.startsWith('data:image/')) return s;
+      return convertDriveUrl(s);
     }
 
     function normalizeGoogleImageUrl(url) {
       if (!url) return '';
-      return wrapProxiedImageUrl(url);
+      return convertDriveUrl(url);
+    }
+
+    function getTeacherApiUrl() {
+      if (window.location && window.location.origin && window.location.origin.includes('examgo.id')) {
+        return '/api/teacher-exam';
+      }
+      return 'https://examgo.id/api/teacher-exam';
+    }
+
+    async function resolveImageToBase64(rawUrl) {
+      if (!rawUrl) return '';
+      if (rawUrl.startsWith('data:image/')) return rawUrl;
+      try {
+        const resp = await fetch(getTeacherApiUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'fetch_gform_image',
+            url: rawUrl
+          })
+        });
+        if (resp.ok) {
+          const res = await resp.json();
+          if (res && res.status === 'success' && res.dataUri) {
+            return res.dataUri;
+          }
+        }
+      } catch (err) {
+        console.warn('GForm image resolver error:', err);
+      }
+      return '';
+    }
+
+    async function handleImageError(img, qIdx, field) {
+      if (img.dataset.isResolving || img.dataset.hasFailed) return;
+      img.dataset.isResolving = 'true';
+      const rawTarget = img.dataset.rawSrc || img.getAttribute('src') || '';
+      if (!rawTarget || rawTarget.startsWith('data:image/')) {
+        img.dataset.hasFailed = 'true';
+        return;
+      }
+
+      img.classList.add('animate-pulse');
+      const dataUri = await resolveImageToBase64(rawTarget);
+      img.classList.remove('animate-pulse');
+
+      if (dataUri) {
+        img.src = dataUri;
+        img.dataset.hasFailed = '';
+        img.dataset.isResolving = '';
+        if (typeof qIdx === 'number' && _extractedQuestions[qIdx]) {
+          if (field === 'main') {
+            _extractedQuestions[qIdx].gambar = dataUri;
+          } else if (field && field.startsWith('gam_')) {
+            _extractedQuestions[qIdx][field] = dataUri;
+          }
+        }
+      } else {
+        img.dataset.hasFailed = 'true';
+        img.alt = '⚠️ Gambar tidak dapat dimuat';
+        img.classList.add('opacity-40');
+      }
+    }
+
+    async function autoConvertQuestionImagesToBase64() {
+      if (!_extractedQuestions || _extractedQuestions.length === 0) return;
+      for (let i = 0; i < _extractedQuestions.length; i++) {
+        const q = _extractedQuestions[i];
+        if (q.gambar && !q.gambar.startsWith('data:image/')) {
+          const original = q.gambar;
+          resolveImageToBase64(original).then(dataUri => {
+            if (dataUri) {
+              q.gambar = dataUri;
+              const domImg = document.getElementById('q-img-' + i);
+              if (domImg) {
+                domImg.src = dataUri;
+                domImg.classList.remove('opacity-40');
+              }
+            }
+          });
+        }
+        ['a', 'b', 'c', 'd', 'e'].forEach(opt => {
+          const optGam = q['gam_' + opt];
+          if (optGam && !optGam.startsWith('data:image/')) {
+            resolveImageToBase64(optGam).then(dataUri => {
+              if (dataUri) {
+                q['gam_' + opt] = dataUri;
+                const domOptImg = document.getElementById('q-opt-img-' + i + '-' + opt);
+                if (domOptImg) {
+                  domOptImg.src = dataUri;
+                  domOptImg.classList.remove('opacity-40');
+                }
+              }
+            });
+          }
+        });
+      }
     }
 
     function findImageUrlDeep(obj, blobMap) {
@@ -1339,24 +1495,6 @@
         console.warn('DOM parser error on gform:', e);
       }
       return images;
-    }
-
-    function handleImageError(img) {
-      if (img.dataset.hasFailed) {
-        img.alt = '⚠️ Gambar tidak dapat dimuat';
-        img.classList.add('opacity-40');
-        return;
-      }
-      img.dataset.hasFailed = 'true';
-      const src = img.src || '';
-      if (!src.includes('/api/proxy-image?url=')) {
-        img.src = wrapProxiedImageUrl(src);
-        return;
-      }
-      const match = src.match(/(?:id=|%3D)([a-zA-Z0-9_-]{20,})/);
-      if (match) {
-        img.src = wrapProxiedImageUrl('https://drive.google.com/uc?export=view&id=' + match[1]);
-      }
     }
 
     function parseGFormHtml(html) {
@@ -1598,20 +1736,20 @@
       const endIndex = Math.min(startIndex + _previewPageSize, totalQuestions);
       const pageQuestions = _extractedQuestions.slice(startIndex, endIndex);
 
-      // Render Bar Kunci Cepat dengan indikator nomor yang aktif di halaman ini
+      // Render Bar Kunci Cepat dengan input teks yang bisa diketik & lompat otomatis
       let quickKeysHtml = '';
       _extractedQuestions.forEach((q, idx) => {
         const isCurrentPage = idx >= startIndex && idx < endIndex;
+        const currentKey = (q.kunci || '').toUpperCase();
         quickKeysHtml += `
           <div class="flex items-center gap-1 ${isCurrentPage ? 'bg-brand-950/80 border-brand-500/60 ring-1 ring-brand-500/30' : 'bg-slate-900 border-slate-800'} px-2 py-1 rounded-lg border text-xs transition-all">
             <button type="button" onclick="jumpToQuestion(${idx})" class="font-bold ${isCurrentPage ? 'text-brand-300' : 'text-slate-400'} hover:text-white w-5 text-left" title="Klik untuk lompat ke halaman soal #${idx + 1}">#${idx + 1}</button>
-            <select onchange="setQuestionKey(${idx}, this.value)" class="bg-slate-950 font-bold text-brand-300 rounded px-1.5 py-0.5 border border-slate-700 outline-none text-xs cursor-pointer">
-              <option value="A" ${q.kunci === 'A' ? 'selected' : ''}>A</option>
-              <option value="B" ${q.kunci === 'B' ? 'selected' : ''}>B</option>
-              <option value="C" ${q.kunci === 'C' ? 'selected' : ''}>C</option>
-              <option value="D" ${q.kunci === 'D' ? 'selected' : ''}>D</option>
-              <option value="E" ${q.kunci === 'E' ? 'selected' : ''}>E</option>
-            </select>
+            <input type="text" maxlength="1" id="quick-key-input-${idx}" value="${currentKey}"
+              oninput="handleQuickKeyInput(${idx}, this.value, this)"
+              onkeydown="handleQuickKeyNav(event, ${idx})"
+              onfocus="this.select()"
+              class="w-7 h-7 text-center font-black uppercase rounded bg-slate-950 border border-slate-700 text-brand-300 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none text-xs"
+              placeholder="-">
           </div>
         `;
       });
@@ -1701,9 +1839,15 @@
                 <span class="w-7 h-7 rounded-lg bg-brand-500/20 text-brand-300 flex items-center justify-center font-bold text-xs">${actualIdx + 1}</span>
                 <span class="text-xs font-semibold text-slate-400">Pilihan Ganda</span>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-400">Kunci:</span>
-                <select onchange="setQuestionKey(${actualIdx}, this.value)" class="bg-slate-900 font-extrabold text-amber-300 rounded-lg px-2.5 py-1 border border-slate-700 outline-none text-xs">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs text-slate-400 font-semibold">Kunci:</span>
+                <input type="text" maxlength="1" id="card-key-input-${actualIdx}" value="${(q.kunci || '').toUpperCase()}"
+                  oninput="handleCardKeyInput(${actualIdx}, this.value, this)"
+                  onfocus="this.select()"
+                  class="w-8 h-8 text-center font-black text-sm uppercase rounded-lg bg-slate-900 border border-brand-500/60 text-brand-300 focus:ring-2 focus:ring-brand-500 outline-none"
+                  placeholder="-">
+                <select id="card-key-select-${actualIdx}" onchange="setQuestionKey(${actualIdx}, this.value)" class="bg-slate-900 font-bold text-brand-300 rounded-lg px-2 py-1.5 border border-slate-700 outline-none text-xs cursor-pointer">
+                  <option value="" ${!q.kunci ? 'selected' : ''}>-</option>
                   <option value="A" ${q.kunci === 'A' ? 'selected' : ''}>A</option>
                   <option value="B" ${q.kunci === 'B' ? 'selected' : ''}>B</option>
                   <option value="C" ${q.kunci === 'C' ? 'selected' : ''}>C</option>
@@ -1718,7 +1862,12 @@
             <div class="text-sm text-slate-100 font-medium whitespace-pre-wrap leading-relaxed mb-3 katex-render">${renderContentSafely(formattedPertanyaan)}</div>
 
             <!-- Gambar Soal Utama (jika ada) -->
-            ${proxiedMainImg ? `<div class="mb-3"><img src="${proxiedMainImg}" alt="Gambar Soal ${actualIdx + 1}" referrerpolicy="no-referrer" loading="lazy" onerror="handleImageError(this)" class="max-h-72 rounded-xl border border-slate-800 object-contain shadow-md bg-slate-900/50"></div>` : ''}
+            ${proxiedMainImg ? `
+              <div class="mb-3">
+                <img id="q-img-${actualIdx}" src="${proxiedMainImg}" data-raw-src="${q.gambar || ''}" alt="Gambar Soal ${actualIdx + 1}"
+                  referrerpolicy="no-referrer" loading="lazy" onerror="handleImageError(this, ${actualIdx}, 'main')"
+                  class="max-h-72 rounded-xl border border-slate-800 object-contain shadow-md bg-slate-900/50">
+              </div>` : ''}
 
             <!-- Tabel Data Soal (jika ada) -->
             ${q.tabel ? `<div class="mb-3">${q.tabel}</div>` : ''}
@@ -1731,12 +1880,12 @@
                 if (!optText && !optGam) return '';
                 const isKey = (q.kunci || '').toUpperCase() === opt.toUpperCase();
                 return `
-                  <div class="p-2.5 rounded-xl border ${isKey ? 'bg-brand-500/10 border-brand-500/40 text-brand-200' : 'bg-slate-900/60 border-slate-800 text-slate-300'} flex flex-col gap-1.5">
+                  <div class="opt-box-${opt} p-2.5 rounded-xl border ${isKey ? 'bg-brand-500/10 border-brand-500/40 text-brand-200' : 'bg-slate-900/60 border-slate-800 text-slate-300'} flex flex-col gap-1.5">
                     <div class="flex items-start gap-2">
-                      <span class="font-bold uppercase ${isKey ? 'text-brand-400' : 'text-slate-500'}">${opt}.</span>
+                      <span class="opt-letter font-bold uppercase ${isKey ? 'text-brand-400' : 'text-slate-500'}">${opt}.</span>
                       <span class="whitespace-pre-wrap katex-render">${renderContentSafely(optText)}</span>
                     </div>
-                    ${optGam ? `<img src="${optGam}" alt="Gambar Opsi ${opt.toUpperCase()}" referrerpolicy="no-referrer" loading="lazy" onerror="handleImageError(this)" class="max-h-24 rounded-lg border border-slate-800 object-contain bg-slate-950/40 mt-1">` : ''}
+                    ${optGam ? `<img id="q-opt-img-${actualIdx}-${opt}" src="${optGam}" data-raw-src="${q['gam_' + opt] || ''}" alt="Gambar Opsi ${opt.toUpperCase()}" referrerpolicy="no-referrer" loading="lazy" onerror="handleImageError(this, ${actualIdx}, 'gam_${opt}')" class="max-h-24 rounded-lg border border-slate-800 object-contain bg-slate-950/40 mt-1">` : ''}
                   </div>
                 `;
               }).join('')}
@@ -1754,6 +1903,132 @@
 
       container.innerHTML = listHtml;
       renderAllMath();
+    }
+
+    function toggleBulkKeyBox(forceOpen) {
+      const box = document.getElementById('bulk-key-box');
+      if (!box) return;
+      if (typeof forceOpen === 'boolean') {
+        if (forceOpen) box.classList.remove('hidden');
+        else box.classList.add('hidden');
+      } else {
+        box.classList.toggle('hidden');
+      }
+      if (!box.classList.contains('hidden')) {
+        const txt = document.getElementById('bulk-key-input');
+        if (txt) txt.focus();
+      }
+    }
+
+    function applyBulkKeys() {
+      const txt = (document.getElementById('bulk-key-input')?.value || '').trim();
+      if (!txt) {
+        alert('Silakan masukkan teks atau barisan kunci jawaban terlebih dahulu.');
+        return;
+      }
+      const matches = txt.toUpperCase().match(/[A-E]/g);
+      if (!matches || matches.length === 0) {
+        alert('Tidak ditemukan huruf kunci (A/B/C/D/E) pada teks yang Anda masukkan.');
+        return;
+      }
+      let appliedCount = 0;
+      for (let i = 0; i < matches.length && i < _extractedQuestions.length; i++) {
+        _extractedQuestions[i].kunci = matches[i];
+        appliedCount++;
+      }
+      toggleBulkKeyBox(false);
+      renderQuestionsPreview();
+      alert('Berhasil menerapkan ' + appliedCount + ' kunci jawaban!');
+    }
+
+    function handleQuickKeyInput(idx, val, el) {
+      const cleanVal = (val || '').toUpperCase().trim();
+      if (['A', 'B', 'C', 'D', 'E'].includes(cleanVal)) {
+        if (_extractedQuestions[idx]) {
+          _extractedQuestions[idx].kunci = cleanVal;
+        }
+        el.value = cleanVal;
+        const cardSelect = document.getElementById('card-key-select-' + idx);
+        if (cardSelect) cardSelect.value = cleanVal;
+        const cardInput = document.getElementById('card-key-input-' + idx);
+        if (cardInput) cardInput.value = cleanVal;
+
+        updateCardOptionHighlight(idx, cleanVal);
+
+        const nextInput = document.getElementById('quick-key-input-' + (idx + 1));
+        if (nextInput) {
+          nextInput.focus();
+          nextInput.select();
+        }
+      } else if (!cleanVal) {
+        if (_extractedQuestions[idx]) {
+          _extractedQuestions[idx].kunci = '';
+        }
+        el.value = '';
+        const cardSelect = document.getElementById('card-key-select-' + idx);
+        if (cardSelect) cardSelect.value = '';
+        const cardInput = document.getElementById('card-key-input-' + idx);
+        if (cardInput) cardInput.value = '';
+        updateCardOptionHighlight(idx, '');
+      } else {
+        el.value = _extractedQuestions[idx]?.kunci || '';
+      }
+    }
+
+    function handleQuickKeyNav(evt, idx) {
+      if (evt.key === 'Backspace' && !evt.target.value) {
+        const prev = document.getElementById('quick-key-input-' + (idx - 1));
+        if (prev) {
+          prev.focus();
+          prev.select();
+        }
+      } else if (evt.key === 'ArrowRight' || evt.key === 'Tab') {
+        if (evt.key === 'ArrowRight') {
+          const next = document.getElementById('quick-key-input-' + (idx + 1));
+          if (next) {
+            next.focus();
+            next.select();
+            evt.preventDefault();
+          }
+        }
+      } else if (evt.key === 'ArrowLeft') {
+        const prev = document.getElementById('quick-key-input-' + (idx - 1));
+        if (prev) {
+          prev.focus();
+          prev.select();
+          evt.preventDefault();
+        }
+      }
+    }
+
+    function handleCardKeyInput(idx, val, el) {
+      const cleanVal = (val || '').toUpperCase().trim();
+      if (['A', 'B', 'C', 'D', 'E'].includes(cleanVal)) {
+        setQuestionKey(idx, cleanVal);
+      } else if (!cleanVal) {
+        setQuestionKey(idx, '');
+      } else {
+        el.value = _extractedQuestions[idx]?.kunci || '';
+      }
+    }
+
+    function updateCardOptionHighlight(qIdx, keyVal) {
+      const card = document.getElementById('q-card-' + qIdx);
+      if (!card) return;
+      ['a', 'b', 'c', 'd', 'e'].forEach(opt => {
+        const optBox = card.querySelector('.opt-box-' + opt);
+        if (!optBox) return;
+        const isKey = (keyVal || '').toUpperCase() === opt.toUpperCase();
+        if (isKey) {
+          optBox.className = 'opt-box-' + opt + ' p-2.5 rounded-xl border bg-brand-500/10 border-brand-500/40 text-brand-200 flex flex-col gap-1.5';
+          const badge = optBox.querySelector('.opt-letter');
+          if (badge) badge.className = 'opt-letter font-bold uppercase text-brand-400';
+        } else {
+          optBox.className = 'opt-box-' + opt + ' p-2.5 rounded-xl border bg-slate-900/60 border-slate-800 text-slate-300 flex flex-col gap-1.5';
+          const badge = optBox.querySelector('.opt-letter');
+          if (badge) badge.className = 'opt-letter font-bold uppercase text-slate-500';
+        }
+      });
     }
 
     function setQuestionKey(idx, val) {
@@ -2021,25 +2296,14 @@
     }
 
     function downloadDocxTemplate() {
-      try {
-        const b64 = "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";
-        const binary = atob(b64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-        const blob = new Blob([bytes.buffer], {
-          type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "template-soal-examgo.docx";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      } catch (err) {
-        window.open('/template-soal-examgo.docx', '_blank');
-      }
+      const url = "https://docs.google.com/document/d/1Lq4IiXgU4_EMUuMMJD1Ns3eYL-XRgZkt/export?format=docx";
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.setAttribute("download", "template-soal-examgo.docx");
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
 
     function setLoading(isLoading, text) {
