@@ -238,6 +238,67 @@
       padding: 1px 4px !important;
       border-radius: 4px !important;
     }
+    /* Subtest Manager in Light Mode */
+    .theme-light #subtest-summary-badge {
+      background-color: #ecfdf5 !important;
+      border-color: #a7f3d0 !important;
+      color: #047857 !important;
+    }
+    .theme-light button[onclick="addSubtest()"] {
+      background-color: #ecfdf5 !important;
+      border-color: #a7f3d0 !important;
+      color: #065f46 !important;
+    }
+    .theme-light button[onclick="addSubtest()"]:hover {
+      background-color: #d1fae5 !important;
+    }
+    .theme-light .subtest-card,
+    .theme-light #subtest-cards-list > div {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+    }
+    .theme-light .subtest-card:hover,
+    .theme-light #subtest-cards-list > div:hover {
+      border-color: #cbd5e1 !important;
+    }
+    .theme-light .subtest-badge-st,
+    .theme-light #subtest-cards-list span.subtest-badge-st,
+    .theme-light #subtest-cards-list div > span.w-8.h-8 {
+      background-color: #ecfdf5 !important;
+      border-color: #a7f3d0 !important;
+      color: #047857 !important;
+    }
+    .theme-light .subtest-count-badge,
+    .theme-light #subtest-cards-list span.subtest-count-badge {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #334155 !important;
+    }
+    .theme-light .subtest-input-judul,
+    .theme-light .subtest-input-durasi,
+    .theme-light #subtest-cards-list input {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    .theme-light .subtest-menit-label {
+      color: #64748b !important;
+    }
+    .theme-light .subtest-btn-delete {
+      color: #e11d48 !important;
+    }
+    .theme-light .subtest-btn-delete:hover {
+      background-color: #ffe4e6 !important;
+      color: #be123c !important;
+    }
+    .theme-light select.preview-subtest-select,
+    .theme-light select[onchange^="changeQuestionSubtest"] {
+      background-color: #f5f3ff !important;
+      border-color: #ddd6fe !important;
+      color: #6d28d9 !important;
+    }
+
     /* Step 3: Action Buttons */
     .theme-light button[onclick="renderAllMath()"] {
       background-color: #f1f5f9 !important;
@@ -406,7 +467,8 @@
     .theme-light #modal-published #btn-close-published {
       background-color: #f1f5f9 !important;
       border-color: #cbd5e1 !important;
-      color: #334155 !important;
+      color: #0f172a !important;
+      font-weight: 700 !important;
     }
     .theme-light #modal-published #btn-close-published:hover {
       background-color: #e2e8f0 !important;
@@ -579,7 +641,7 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
-            <span>+ Tambah Subtest</span>
+            <span>Tambah Subtest</span>
           </button>
         </div>
 
@@ -1106,9 +1168,9 @@
       container.innerHTML = _subtests.map((st, idx) => {
         const qCount = _extractedQuestions.filter(q => (q.subtestIndex || 0) === idx).length;
         return `
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-3 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 transition-all">
+          <div class="subtest-card flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-3 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 transition-all">
             <div class="flex items-center gap-2 shrink-0">
-              <span class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 text-brand-400 font-extrabold text-xs flex items-center justify-center">
+              <span class="subtest-badge-st w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 text-brand-400 font-extrabold text-xs flex items-center justify-center">
                 ST${idx + 1}
               </span>
               <span class="sm:hidden text-xs font-bold text-slate-300">Subtest ${idx + 1}</span>
@@ -1116,19 +1178,19 @@
             <div class="flex-1">
               <input type="text" value="${escapeHtml(st.judul)}" onchange="updateSubtest(${idx}, 'judul', this.value)"
                 placeholder="Judul Subtest (misal: Kemampuan Penalaran Umum)"
-                class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none">
+                class="subtest-input-judul w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none">
             </div>
             <div class="flex items-center gap-2 shrink-0">
               <div class="relative w-28">
                 <input type="number" min="1" max="240" value="${st.durasiMenit}" oninput="updateSubtest(${idx}, 'durasiMenit', this.value)"
-                  class="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white outline-none text-right pr-12 focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
-                <span class="absolute right-2.5 top-1.5 text-[10px] font-bold text-slate-400 pointer-events-none">Menit</span>
+                  class="subtest-input-durasi w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white outline-none text-right pr-12 focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+                <span class="subtest-menit-label absolute right-2.5 top-1.5 text-[10px] font-bold text-slate-400 pointer-events-none">Menit</span>
               </div>
-              <span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">
+              <span class="subtest-count-badge px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">
                 ${qCount} Soal
               </span>
               <button type="button" onclick="removeSubtest(${idx})" ${canDelete ? '' : 'disabled'}
-                class="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
+                class="subtest-btn-delete p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
                 title="Hapus Subtest">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -1480,6 +1542,21 @@
       return html;
     }
 
+    function extractStyledTextFromElement(el) {
+      if (!el) return '';
+      const clone = el.cloneNode(true);
+      clone.querySelectorAll('strong, b').forEach(b => {
+        b.textContent = '**' + b.textContent + '**';
+      });
+      clone.querySelectorAll('em, i').forEach(i => {
+        i.textContent = '*' + i.textContent + '*';
+      });
+      clone.querySelectorAll('u').forEach(u => {
+        u.textContent = '<u>' + u.textContent + '</u>';
+      });
+      return clone.innerText || clone.textContent || '';
+    }
+
     function parseDocxHtmlToQuestions(html) {
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = html;
@@ -1487,6 +1564,8 @@
       let questions = [];
       let currentQ = null;
       let currentOpt = null;
+      let pendingTable = '';
+      let pendingImage = '';
 
       // Metadata hasil deteksi otomatis dari dokumen Word
       let detectedCategory = null;
@@ -1502,10 +1581,12 @@
 
         // 1. Tangani Tabel dari Word
         if (tag === 'table') {
-          if (currentQ) {
-            const tblHtml = formatWordTableToHtml(el);
-            if (tblHtml) {
+          const tblHtml = formatWordTableToHtml(el);
+          if (tblHtml) {
+            if (currentQ) {
               currentQ.tabel = currentQ.tabel ? (currentQ.tabel + '\n' + tblHtml) : tblHtml;
+            } else {
+              pendingTable = pendingTable ? (pendingTable + '\n' + tblHtml) : tblHtml;
             }
           }
           return;
@@ -1515,15 +1596,19 @@
         const img = el.querySelector('img');
         const imgSrc = img ? img.src : (tag === 'img' ? el.src : '');
 
-        let rawText = el.innerText || el.textContent || '';
+        let rawText = extractStyledTextFromElement(el);
         let text = rawText.trim();
 
         // Jika ada gambar di dalam elemen ini
-        if (imgSrc && currentQ) {
-          if (currentOpt && ['a', 'b', 'c', 'd', 'e'].includes(currentOpt)) {
-            if (!currentQ['gam_' + currentOpt]) currentQ['gam_' + currentOpt] = imgSrc;
-          } else if (!currentQ.gambar) {
-            currentQ.gambar = imgSrc;
+        if (imgSrc) {
+          if (currentQ) {
+            if (currentOpt && ['a', 'b', 'c', 'd', 'e'].includes(currentOpt)) {
+              if (!currentQ['gam_' + currentOpt]) currentQ['gam_' + currentOpt] = imgSrc;
+            } else if (!currentQ.gambar) {
+              currentQ.gambar = imgSrc;
+            }
+          } else {
+            pendingImage = imgSrc;
           }
         }
 
@@ -1600,9 +1685,11 @@
             gam_a: '', gam_b: '', gam_c: '', gam_d: '', gam_e: '',
             kunci: 'A',
             pembahasan: '',
-            gambar: imgSrc || '',
-            tabel: ''
+            gambar: pendingImage || imgSrc || '',
+            tabel: pendingTable || ''
           };
+          pendingTable = '';
+          pendingImage = '';
           currentOpt = null;
           return;
         }
@@ -1740,8 +1827,11 @@
       if (s.startsWith('data:image/')) return s;
       const converted = convertDriveUrl(s);
       if (converted.startsWith('http://') || converted.startsWith('https://')) {
-        // Gunakan images.weserv.nl sebagai global CDN image proxy anti-CORS & NotSameSite
-        return 'https://images.weserv.nl/?url=' + encodeURIComponent(converted);
+        // Gunakan proxy Cloudflare Worker internal ExamGO (anti-CORS, support Referer docs.google.com)
+        const proxyPrefix = (window.location && window.location.origin && window.location.origin.includes('examgo.id'))
+          ? '/api/proxy-image?url='
+          : 'https://examgo.id/api/proxy-image?url=';
+        return proxyPrefix + encodeURIComponent(converted);
       }
       return converted;
     }
@@ -1851,11 +1941,11 @@
       if (img.dataset.isResolving || img.dataset.hasFailed) return;
       const rawTarget = img.dataset.rawSrc || '';
 
-      // 1. Jika proxy weserv gagal, coba fallback ke direct link Google Drive
-      if (!img.dataset.triedDirect && rawTarget && !rawTarget.startsWith('data:')) {
-        img.dataset.triedDirect = 'true';
-        img.removeAttribute('crossorigin');
-        img.src = convertDriveUrl(rawTarget);
+      // 1. Coba fallback ke weserv proxy jika proxy internal worker gagal
+      if (!img.dataset.triedWeserv && rawTarget && !rawTarget.startsWith('data:')) {
+        img.dataset.triedWeserv = 'true';
+        const cleanUrl = convertDriveUrl(rawTarget);
+        img.src = 'https://images.weserv.nl/?url=' + encodeURIComponent(cleanUrl);
         return;
       }
 
@@ -2153,10 +2243,21 @@
 
     function renderContentSafely(content) {
       if (!content) return '';
-      if (content.includes('<table') || content.includes('<div') || content.includes('<svg') || content.includes('data:image')) {
-        return content;
+      let s = String(content);
+      if (s.includes('<table') || s.includes('<div class="overflow-x-auto') || s.includes('<svg') || s.includes('data:image')) {
+        return s;
       }
-      return escapeHtml(content);
+      s = s.replace(/&/g, '&amp;')
+           .replace(/</g, '&lt;')
+           .replace(/>/g, '&gt;')
+           .replace(/"/g, '&quot;');
+      // Format markdown bold, italic, and underline tags safely
+      s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+           .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+           .replace(/&lt;u&gt;(.*?)&lt;\/u&gt;/gi, '<u>$1</u>')
+           .replace(/&lt;strong&gt;(.*?)&lt;\/strong&gt;/gi, '<strong>$1</strong>')
+           .replace(/&lt;em&gt;(.*?)&lt;\/em&gt;/gi, '<em>$1</em>');
+      return s;
     }
 
     let _previewCurrentPage = 1;

@@ -690,7 +690,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
 
   // ─── Klasifikasi Aturan Resmi Ujian Nasional (SNBT, TKA, SKD/BKN) ───
   bool get _isSnbt {
+    // Soal yang dibuat guru / WebGAS dan kategori umum bebas dari aturan kaku blocking time
+    if (_package?.isTeacherGenerated == true) return false;
     final kat = (_package?.kategori ?? '').trim().toUpperCase();
+    if (kat == ExamCategory.umum || kat == 'UMUM') return false;
     return kat == ExamCategory.snbt ||
         kat == 'SNBT' ||
         kat.contains('SNBT') ||
@@ -2257,6 +2260,44 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    if (!_isSnbt && _currentSubtestIndex < _subtests.length - 1)
+                      InkWell(
+                        onTap: _confirmFinishSubtestDialog,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: const Color(0xFFFDE68A),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Lanjut Babak',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF92400E),
+                                ),
+                              ),
+                              const SizedBox(width: 3),
+                              const Icon(
+                                Icons.chevron_right_rounded,
+                                size: 14,
+                                color: Color(0xFF92400E),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),

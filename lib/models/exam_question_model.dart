@@ -30,6 +30,7 @@ class ExamPackage {
   DateTime createdAt;
   String status; // 'ACTIVE', 'DRAFT', 'CLOSED'
   bool allowRetake; // Izinkan dikerjakan berulang kali
+  bool isTeacherGenerated; // Ujian buatan guru mandiri (WebGAS / App)
 
   ExamPackage({
     required this.paketId,
@@ -41,6 +42,7 @@ class ExamPackage {
     DateTime? createdAt,
     this.status = 'ACTIVE',
     this.allowRetake = true,
+    this.isTeacherGenerated = false,
   })  : subtests = subtests ?? [],
         createdAt = createdAt ?? DateTime.now();
 
@@ -57,6 +59,7 @@ class ExamPackage {
       'created_at': createdAt.toIso8601String(),
       'status': status,
       'allow_retake': allowRetake,
+      'is_teacher_generated': isTeacherGenerated,
       'subtest_count': subtests.length,
       // Ringkasan subtests disimpan di dokumen paket
       'subtests_meta': subtests.map((s) => s.toMetaJson()).toList(),
@@ -75,6 +78,9 @@ class ExamPackage {
           : DateTime.now(),
       status: data['status']?.toString() ?? 'ACTIVE',
       allowRetake: data['allow_retake'] != false && data['bisa_ulang'] != false,
+      isTeacherGenerated: data['is_teacher_generated'] == true ||
+          data['teacher_token'] != null ||
+          data['is_webgas'] == true,
     );
   }
 }

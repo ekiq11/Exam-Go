@@ -93,5 +93,63 @@ void main() {
       expect(find.byType(Table), findsOneWidget);
       expect(find.byIcon(Icons.menu_book_rounded), findsNothing);
     });
+
+    testWidgets('Tabel HTML dari WebGAS DOCX parser dirender sebagai Table Widget', (tester) async {
+      const htmlTableStr =
+          '<div class="overflow-x-auto my-3"><table class="min-w-full text-xs text-left">'
+          '<tr class="bg-slate-800 text-slate-200 font-bold">'
+          '<th class="px-3 py-2">No</th><th class="px-3 py-2">Kandungan</th><th class="px-3 py-2">Kadar</th>'
+          '</tr>'
+          '<tr>'
+          '<td class="px-3 py-2">1</td><td class="px-3 py-2">Protein</td><td class="px-3 py-2">25%</td>'
+          '</tr>'
+          '<tr>'
+          '<td class="px-3 py-2">2</td><td class="px-3 py-2">Lemak</td><td class="px-3 py-2">10%</td>'
+          '</tr>'
+          '</table></div>';
+
+      final rows = ExamQuestionTableWidget.parseTableRows(htmlTableStr);
+      expect(rows.length, equals(3));
+      expect(rows[0], equals(['No', 'Kandungan', 'Kadar']));
+      expect(rows[1], equals(['1', 'Protein', '25%']));
+      expect(rows[2], equals(['2', 'Lemak', '10%']));
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: ExamQuestionTableWidget(tabelStr: htmlTableStr),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(Table), findsOneWidget);
+    });
+
+    testWidgets('Tabel Markdown (| ... |) dirender dengan benar', (tester) async {
+      const markdownTableStr =
+          '| Hari | Jam | Aktivitas |\n'
+          '| --- | --- | --- |\n'
+          '| Senin | 08.00 | Upacara |\n'
+          '| Selasa | 09.00 | Praktikum |';
+
+      final rows = ExamQuestionTableWidget.parseTableRows(markdownTableStr);
+      expect(rows.length, equals(3));
+      expect(rows[0], equals(['Hari', 'Jam', 'Aktivitas']));
+      expect(rows[1], equals(['Senin', '08.00', 'Upacara']));
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: ExamQuestionTableWidget(tabelStr: markdownTableStr),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(Table), findsOneWidget);
+    });
   });
 }

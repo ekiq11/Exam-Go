@@ -178,6 +178,56 @@ class MathHtmlFormatter {
     html = html.replaceAll(RegExp(r'(?<!\$)\\ne(q)?(?!\w)(?!\$)'), '≠');
     html = html.replaceAll(RegExp(r'(?<!\$)\\approx(?!\w)(?!\$)'), '≈');
     html = html.replaceAll(RegExp(r'(?<!\$)\\infty(?!\w)(?!\$)'), '∞');
+    html = html.replaceAll(RegExp(r'(?<!\$)\\(degree|deg)(?!\w)(?!\$)'), '°');
+    html = html.replaceAll(RegExp(r'(?<!\$)\\sim(?!\w)(?!\$)'), '~');
+    html = html.replaceAll(RegExp(r'(?<!\$)\\rightarrow(?!\w)(?!\$)'), '→');
+    html = html.replaceAll(RegExp(r'(?<!\$)\\leftarrow(?!\w)(?!\$)'), '←');
+    html = html.replaceAll(RegExp(r'(?<!\$)\\alpha(?!\w)(?!\$)'), 'α');
+    html = html.replaceAll(RegExp(r'(?<!\$)\\beta(?!\w)(?!\$)'), 'β');
+    html = html.replaceAll(RegExp(r'(?<!\$)\\pi(?!\w)(?!\$)'), 'π');
+
+    // Decode HTML entities umum dari dokumen/web
+    html = html.replaceAll('&le;', '≤');
+    html = html.replaceAll('&ge;', '≥');
+    html = html.replaceAll('&plusmn;', '±');
+    html = html.replaceAll('&times;', '×');
+    html = html.replaceAll('&divide;', '÷');
+    html = html.replaceAll('&ne;', '≠');
+    html = html.replaceAll('&deg;', '°');
+    html = html.replaceAll('&nbsp;', ' ');
+
+    // Normalisasi tag HTML bold & italic standar
+    html = html.replaceAll(RegExp(r'<\/?strong(?:\s+[^>]*)?>', caseSensitive: false), '<b>');
+    html = html.replaceAll(RegExp(r'<\/strong>', caseSensitive: false), '</b>');
+    html = html.replaceAll(RegExp(r'<\/?em(?:\s+[^>]*)?>', caseSensitive: false), '<i>');
+    html = html.replaceAll(RegExp(r'<\/em>', caseSensitive: false), '</i>');
+
+    // Konversi tabel format Markdown (| Kolom 1 | Kolom 2 |) jika ada di teks soal
+    if (html.contains('|') && html.contains('---')) {
+      final lines = html.split('\n');
+      final newLines = <String>[];
+      final tableBuffer = <String>[];
+      bool inTable = false;
+
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+          inTable = true;
+          tableBuffer.add(trimmed);
+        } else {
+          if (inTable && tableBuffer.isNotEmpty) {
+            newLines.add(_renderMarkdownTableHtml(tableBuffer));
+            tableBuffer.clear();
+            inTable = false;
+          }
+          newLines.add(line);
+        }
+      }
+      if (inTable && tableBuffer.isNotEmpty) {
+        newLines.add(_renderMarkdownTableHtml(tableBuffer));
+      }
+      html = newLines.join('\n');
+    }
 
     // Bold (**text**) & Italic (*text*)
     html = html.replaceAllMapped(
@@ -222,11 +272,48 @@ class MathHtmlFormatter {
     });
 
     // Replace newline dengan <br/> jika belum dibungkus tag HTML blok
-    if (!html.contains('<p>') && !html.contains('<div>')) {
+    if (!html.contains('<p>') && !html.contains('<div>') && !html.contains('<table')) {
       html = html.replaceAll('\n', '<br/>');
     }
 
     return html;
+  }
+
+  /// Mengonversi baris tabel Markdown menjadi tag <table> HTML bersih & rapi
+  static String _renderMarkdownTableHtml(List<String> lines) {
+    if (lines.isEmpty) return '';
+    final rows = <List<String>>[];
+
+    for (final line in lines) {
+      if (line.contains('---')) continue;
+      final parts = line.split('|');
+      if (parts.length > 2) {
+        final cells = parts.sublist(1, parts.length - 1).map((c) => c.trim()).toList();
+        if (cells.isNotEmpty) rows.add(cells);
+      }
+    }
+
+    if (rows.isEmpty) return lines.join('\n');
+
+    final sb = StringBuffer();
+    sb.writeln('<div style="overflow-x:auto;margin:8px 0;">');
+    sb.writeln('<table border="1" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:12.5px;border-color:#cbd5e1;">');
+
+    for (int i = 0; i < rows.length; i++) {
+      final isHeader = i == 0;
+      final bg = isHeader ? '#f1f5f9' : (i.isEven ? '#fafafa' : '#ffffff');
+      sb.writeln('<tr style="background-color:$bg;">');
+      for (final cell in rows[i]) {
+        final tag = isHeader ? 'th' : 'td';
+        final weight = isHeader ? 'font-weight:600;' : '';
+        sb.writeln('<$tag style="padding:6px 10px;border:1px solid #e2e8f0;$weight">$cell</$tag>');
+      }
+      sb.writeln('</tr>');
+    }
+
+    sb.writeln('</table>');
+    sb.writeln('</div>');
+    return sb.toString();
   }
 
   /// Header HTTP default untuk memuat gambar CDN (seperti Google Forms / Google Drive) tanpa diblokir oleh bot-protection / WAF

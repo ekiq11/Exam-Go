@@ -20,6 +20,77 @@ class ExamQuestionTableWidget extends StatelessWidget {
     this.fontSizeScale = 1.0,
   });
 
+  /// Parsing serbaguna untuk berbagai format tabel:
+  /// 1. HTML Table (dari WebGAS / DOCX / Google Form)
+  /// 2. Markdown Table (| Kolom 1 | Kolom 2 |)
+  /// 3. Delimiter Klasik (=== ||| atau ,/ -)
+  static List<List<String>> parseTableRows(String tabelStr) {
+    final List<List<String>> parsedRows = [];
+    final trimmedStr = tabelStr.trim();
+    if (trimmedStr.isEmpty) return parsedRows;
+
+    // 1. Format HTML Table (misal <table ...><tr>...</tr></table>)
+    if (trimmedStr.contains('<table') || trimmedStr.contains('<tr')) {
+      final rowMatches = RegExp(r'<tr[^>]*>(.*?)<\/tr>', dotAll: true, caseSensitive: false)
+          .allMatches(trimmedStr);
+      for (final rMatch in rowMatches) {
+        final rowContent = rMatch.group(1) ?? '';
+        final cellMatches = RegExp(r'<(?:td|th)[^>]*>(.*?)<\/(?:td|th)>', dotAll: true, caseSensitive: false)
+            .allMatches(rowContent);
+        final cells = <String>[];
+        for (final cMatch in cellMatches) {
+          String cell = cMatch.group(1) ?? '';
+          // Buang tag wrapper seperti <div class="..."> atau <p> jika ada
+          cell = cell.replaceAll(RegExp(r'<\/?(?:div|p)[^>]*>', caseSensitive: false), ' ').trim();
+          cells.add(cell);
+        }
+        if (cells.isNotEmpty) {
+          parsedRows.add(cells);
+        }
+      }
+      if (parsedRows.isNotEmpty) return parsedRows;
+    }
+
+    // 2. Format Markdown Table (| Kolom 1 | Kolom 2 |)
+    if (trimmedStr.contains('|') && trimmedStr.contains('---')) {
+      final lines = trimmedStr.split('\n');
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+          if (trimmed.contains('---')) continue; // Lewati garis pemisah header
+          final parts = trimmed.split('|');
+          if (parts.length > 2) {
+            final cells = parts
+                .sublist(1, parts.length - 1)
+                .map((c) => c.trim())
+                .toList();
+            if (cells.isNotEmpty) {
+              parsedRows.add(cells);
+            }
+          }
+        }
+      }
+      if (parsedRows.isNotEmpty) return parsedRows;
+    }
+
+    // 3. Format Delimiter Klasik (=== ||| atau ,/ -)
+    final rawRows = trimmedStr.contains('===') ? trimmedStr.split('===') : trimmedStr.split(',/');
+    final delim = trimmedStr.contains('===') ? '|||' : '-';
+
+    for (final r in rawRows) {
+      if (r.trim().isEmpty) continue;
+      final cells = r.split(delim);
+      // Lepas kolom indeks jika format angka di sel pertama (1|||Bacaan, 2|||dst)
+      if (cells.isNotEmpty && int.tryParse(cells[0].trim()) != null) {
+        cells.removeAt(0);
+      }
+      final trimmed = cells.map((c) => c.trim()).where((c) => c.isNotEmpty).toList();
+      if (trimmed.isNotEmpty) parsedRows.add(trimmed);
+    }
+
+    return parsedRows;
+  }
+
   /// Deteksi apakah string tabel sebenarnya merupakan teks stimulus / bacaan
   static bool isReadingPassage(String tabelStr, {String? subtestJudul}) {
     if (tabelStr.trim().isEmpty) return false;
@@ -39,20 +110,7 @@ class ExamQuestionTableWidget extends StatelessWidget {
     }
 
     try {
-      final rawRows = tabelStr.contains('===') ? tabelStr.split('===') : tabelStr.split(',/');
-      final delim = tabelStr.contains('===') ? '|||' : '-';
-      final List<List<String>> parsedRows = [];
-
-      for (final r in rawRows) {
-        if (r.trim().isEmpty) continue;
-        final cells = r.split(delim);
-        if (cells.isNotEmpty && int.tryParse(cells[0].trim()) != null) {
-          cells.removeAt(0);
-        }
-        final trimmed = cells.map((c) => c.trim()).where((c) => c.isNotEmpty).toList();
-        if (trimmed.isNotEmpty) parsedRows.add(trimmed);
-      }
-
+      final parsedRows = parseTableRows(tabelStr);
       if (parsedRows.isEmpty) return false;
 
       const passageKeywords = [
@@ -91,21 +149,7 @@ class ExamQuestionTableWidget extends StatelessWidget {
     if (tabelStr.trim().isEmpty) return const SizedBox.shrink();
 
     try {
-      final rawRows = tabelStr.contains('===') ? tabelStr.split('===') : tabelStr.split(',/');
-      final delim = tabelStr.contains('===') ? '|||' : '-';
-      final List<List<String>> parsedRows = [];
-
-      for (final r in rawRows) {
-        if (r.trim().isEmpty) continue;
-        final cells = r.split(delim);
-        // Lepas kolom indeks jika format angka di sel pertama (1|||Bacaan, 2|||dst)
-        if (cells.isNotEmpty && int.tryParse(cells[0].trim()) != null) {
-          cells.removeAt(0);
-        }
-        final trimmed = cells.map((c) => c.trim()).where((c) => c.isNotEmpty).toList();
-        if (trimmed.isNotEmpty) parsedRows.add(trimmed);
-      }
-
+      final parsedRows = parseTableRows(tabelStr);
       if (parsedRows.isEmpty) return const SizedBox.shrink();
 
       if (isReadingPassage(tabelStr, subtestJudul: subtestJudul)) {
