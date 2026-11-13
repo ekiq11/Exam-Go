@@ -300,6 +300,7 @@ class MainActivity : FlutterFragmentActivity() {
                     val mode = am.lockTaskModeState
                     if (mode == ActivityManager.LOCK_TASK_MODE_LOCKED ||
                         mode == ActivityManager.LOCK_TASK_MODE_PINNED) {
+                        isLockTaskActive = true
                         result.success(true)
                         return
                     }
@@ -317,14 +318,28 @@ class MainActivity : FlutterFragmentActivity() {
 
     private fun stopLockTask(result: MethodChannel.Result) {
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && isLockTaskActive) {
-                stopLockTask()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                var stopped = false
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val am = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                    val mode = am.lockTaskModeState
+                    if (mode != ActivityManager.LOCK_TASK_MODE_NONE) {
+                        stopLockTask()
+                        stopped = true
+                    }
+                }
+                if (!stopped && isLockTaskActive) {
+                    stopLockTask()
+                    stopped = true
+                }
                 isLockTaskActive = false
                 result.success(true)
             } else {
+                isLockTaskActive = false
                 result.success(false)
             }
         } catch (e: Exception) {
+            isLockTaskActive = false
             result.success(false)
         }
     }
@@ -400,9 +415,19 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     override fun onDestroy() {
-        if (isLockTaskActive && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            try { stopLockTask() } catch (_: Exception) {}
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    val am = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                    if (am.lockTaskModeState != ActivityManager.LOCK_TASK_MODE_NONE) {
+                        stopLockTask()
+                    }
+                } else if (isLockTaskActive) {
+                    stopLockTask()
+                }
+            } catch (_: Exception) {}
         }
+        isLockTaskActive = false
         super.onDestroy()
     }
 }

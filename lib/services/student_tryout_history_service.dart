@@ -272,10 +272,10 @@ class StudentTryoutHistoryService {
       }
 
       final userKey = (activeToken != null && activeToken.isNotEmpty)
-          ? activeToken.replaceAll('/', '_')
+          ? '${deviceId}_${activeToken.replaceAll('/', '_')}'
           : deviceId;
 
-      final docId = '${userKey}_${item.token}';
+      final docId = '${deviceId}_${item.token}';
       final docRef = db.collection('student_tryout_history').doc(docId);
 
       final payload = {
@@ -301,7 +301,7 @@ class StudentTryoutHistoryService {
   }
 
   /// Pulihkan seluruh riwayat ujian dan butir jawaban yang pernah dikerjakan dari Firestore
-  /// Digunakan saat aplikasi baru di-install ulang atau token diaktifkan kembali
+  /// Terisolasi per-perangkat agar tidak tertukar atau bocor antar siswa/user
   Future<List<StudentTryoutHistoryItem>> restoreHistoryFromCloud({
     String? licenseToken,
   }) async {
@@ -309,41 +309,28 @@ class StudentTryoutHistoryService {
     if (db == null) return await getHistory();
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = licenseToken ??
-          prefs.getString('last_token_activated') ??
-          prefs.getString('active_event_token');
       final deviceId = await LicenseService.instance.getDeviceId();
-
-      final keysToQuery = <String>{};
-      if (token != null && token.isNotEmpty) {
-        keysToQuery.add(token.replaceAll('/', '_'));
-      }
-      keysToQuery.add(deviceId);
-
       final restoredMap = <String, StudentTryoutHistoryItem>{};
 
-      for (final key in keysToQuery) {
-        try {
-          final snap = await db
-              .collection('student_tryout_history')
-              .where('user_key', isEqualTo: key)
-              .get()
-              .timeout(const Duration(milliseconds: 4000));
+      try {
+        final snap = await db
+            .collection('student_tryout_history')
+            .where('device_id', isEqualTo: deviceId)
+            .get()
+            .timeout(const Duration(milliseconds: 4000));
 
-          for (final doc in snap.docs) {
-            final data = doc.data();
-            final rawHistory = data['history_data'];
-            if (rawHistory is Map<String, dynamic>) {
-              final item = StudentTryoutHistoryItem.fromJson(rawHistory);
-              if (!restoredMap.containsKey(item.token) ||
-                  item.submittedAt.isAfter(restoredMap[item.token]!.submittedAt)) {
-                restoredMap[item.token] = item;
-              }
+        for (final doc in snap.docs) {
+          final data = doc.data();
+          final rawHistory = data['history_data'];
+          if (rawHistory is Map<String, dynamic>) {
+            final item = StudentTryoutHistoryItem.fromJson(rawHistory);
+            if (!restoredMap.containsKey(item.token) ||
+                item.submittedAt.isAfter(restoredMap[item.token]!.submittedAt)) {
+              restoredMap[item.token] = item;
             }
           }
-        } catch (_) {}
-      }
+        }
+      } catch (_) {}
 
       if (restoredMap.isEmpty) {
         return await getHistory();

@@ -201,6 +201,7 @@ class ExamCacheService {
         jenisWaktu: initialSchedule.jenisWaktu,
         durasiMenit: initialSchedule.durasiMenit,
         allowRetake: initialSchedule.allowRetake,
+        isTeacherGenerated: initialSchedule.isTeacherGenerated,
       );
     }
 
@@ -216,7 +217,7 @@ class ExamCacheService {
 
         onProgress?.call('Mengunduh struktur paket & subtest dari Firestore...', 0.40);
         final results = await Future.wait([
-          package != null
+          (package != null && package.isTeacherGenerated)
               ? Future.value(null)
               : db.collection('paket_tryout').doc(tokenUpper).get().timeout(const Duration(milliseconds: 4000)),
           db.collection('subtest').where('paket_id', whereIn: targetIds).get().timeout(const Duration(milliseconds: 4000)),
@@ -227,8 +228,18 @@ class ExamCacheService {
         final stSnap = results[1] as QuerySnapshot<Map<String, dynamic>>?;
         final qSnap = results[2] as QuerySnapshot<Map<String, dynamic>>?;
 
-        if (package == null && pkgDocSnap != null && pkgDocSnap.exists && pkgDocSnap.data() != null) {
-          package = ExamPackage.fromFirestore(pkgDocSnap.data()!, pkgDocSnap.id);
+        if (pkgDocSnap != null && pkgDocSnap.exists && pkgDocSnap.data() != null) {
+          final pData = pkgDocSnap.data()!;
+          if (package == null) {
+            package = ExamPackage.fromFirestore(pData, pkgDocSnap.id);
+          } else {
+            package.isTeacherGenerated = pData['is_teacher_generated'] == true ||
+                pData['teacher_token'] != null ||
+                pData['is_webgas'] == true;
+            if (pData['jenis_waktu'] != null) {
+              package.jenisWaktu = pData['jenis_waktu'].toString();
+            }
+          }
         }
 
         final stDocs = <QueryDocumentSnapshot<Map<String, dynamic>>>[];
@@ -245,6 +256,27 @@ class ExamCacheService {
         }
 
         loadedSubtests = stDocs.map((d) => ExamSubtest.fromFirestore(d.data(), d.id)).toList();
+
+        // Fallback: Jika subtest di collection kosong tapi dokumen paket memiliki subtests_meta
+        if (loadedSubtests.isEmpty && pkgDocSnap != null && pkgDocSnap.exists) {
+          final pData = pkgDocSnap.data() ?? {};
+          if (pData['subtests_meta'] is List) {
+            final smList = pData['subtests_meta'] as List;
+            int sIdx = 0;
+            for (final item in smList) {
+              if (item is Map) {
+                loadedSubtests.add(ExamSubtest(
+                  subtestId: item['subtest_id']?.toString() ?? '${tokenUpper}_ST${sIdx + 1}',
+                  paketId: tokenUpper,
+                  judul: item['judul']?.toString() ?? item['judul_subtest']?.toString() ?? 'Subtest ${sIdx + 1}',
+                  durasiMenit: (item['durasi_menit'] as num?)?.toInt() ?? 30,
+                  orderIndex: sIdx,
+                ));
+                sIdx++;
+              }
+            }
+          }
+        }
         loadedSubtests.sort((a, b) {
           if (a.orderIndex != 0 || b.orderIndex != 0) {
             final cmp = a.orderIndex.compareTo(b.orderIndex);

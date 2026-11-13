@@ -496,6 +496,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
           jenisWaktu: sched.jenisWaktu,
           durasiMenit: sched.durasiMenit,
           allowRetake: sched.allowRetake,
+          isTeacherGenerated: sched.isTeacherGenerated,
         );
       }
 
@@ -712,12 +713,6 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
 
   // ─── Manajemen Timer Per-Subtest & Global ──────────────────────
   bool get _isPerSubtest {
-    // Sesuai aturan CAT BKN: SKD selalu satu kesatuan waktu global 100 menit (bebas lintas subtes)
-    if (_isSkd) return false;
-
-    // SNBT dan TKA menggunakan alokasi waktu terpisah per-subtest
-    if (_isSnbt || _isTka) return true;
-
     final jw = (_package?.jenisWaktu ?? '')
         .trim()
         .toLowerCase()
@@ -725,6 +720,16 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         .replaceAll(' ', '_');
     if (jw == 'per_subtest') return true;
     if (jw == 'per_paket') return false;
+
+    // Soal buatan guru / WebGAS jika memiliki lebih dari 1 subtest otomatis tampil per-subtest
+    if (_package?.isTeacherGenerated == true && _subtests.length > 1) return true;
+
+    // Sesuai aturan CAT BKN: SKD resmi selalu satu kesatuan waktu global 100 menit (bebas lintas subtes)
+    if (_isSkd) return false;
+
+    // SNBT dan TKA menggunakan alokasi waktu terpisah per-subtest
+    if (_isSnbt || _isTka) return true;
+
     return _subtests.length > 1;
   }
 
@@ -2951,123 +2956,151 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   }
 
   Widget _buildBlockedScreen() {
-    return Scaffold(
-      backgroundColor: const Color(0xFF991B1B),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.block_rounded,
-                  color: Color(0xFFDC2626),
-                  size: 54,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'LAYAR UJIAN TERKUNCI',
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Terdeteksi upaya meninggalkan aplikasi ujian sebanyak $_violations kali.\n\n'
-                'Silakan hubungi Pengawas Ujian di ruangan untuk membuka blokir perangkat Anda.',
-                style: GoogleFonts.poppins(
-                  color: Colors.white70,
-                  fontSize: 13,
-                  height: 1.45,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                height: 44,
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Memeriksa status izin dari pengawas...'),
-                        duration: Duration(seconds: 1),
-                      ),
-                    );
-                    final data = await MonitoringService.instance.getStudentData(
-                      widget.token,
-                      widget.studentNis,
-                    );
-                    final status = data?['status']?.toString();
-                    final isBlockedInDb =
-                        data?['is_blocked'] == true || status == 'BLOCKED';
-                    if (!isBlockedInDb &&
-                        (status == 'ONLINE' ||
-                            status == 'ACTIVE' ||
-                            data?['unblocked_at'] != null)) {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.remove(
-                        'blocked_${widget.token}_${widget.studentNis}',
-                      );
-                      if (mounted) {
-                        setState(() {
-                          _isBlocked = false;
-                          _violations = 0;
-                        });
-                        _enterImmersiveMode();
-                        SecurityService.instance.reapply();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Blokir telah dibuka! Silakan lanjutkan ujian.',
-                            ),
-                            backgroundColor: AppColors.primaryGreen,
-                          ),
-                        );
-                      }
-                    } else {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Status masih diblokir. Harap hubungi Pengawas Ujian.',
-                            ),
-                            backgroundColor: Colors.black87,
-                          ),
-                        );
-                      }
-                    }
-                  },
-                  icon: const Icon(
-                    Icons.refresh_rounded,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          _confirmExitDialog();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFF991B1B),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
                     color: Colors.white,
-                    size: 18,
+                    shape: BoxShape.circle,
                   ),
-                  label: Text(
-                    'Periksa Status Blokir',
-                    style: GoogleFonts.poppins(
+                  child: const Icon(
+                    Icons.block_rounded,
+                    color: Color(0xFFDC2626),
+                    size: 54,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'LAYAR UJIAN TERKUNCI',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Terdeteksi upaya meninggalkan aplikasi ujian sebanyak $_violations kali.\n\n'
+                  'Silakan hubungi Pengawas Ujian di ruangan untuk membuka blokir perangkat Anda.',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    height: 1.45,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  height: 44,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Memeriksa status izin dari pengawas...'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                      final data = await MonitoringService.instance.getStudentData(
+                        widget.token,
+                        widget.studentNis,
+                      );
+                      final status = data?['status']?.toString();
+                      final isBlockedInDb =
+                          data?['is_blocked'] == true || status == 'BLOCKED';
+                      if (!isBlockedInDb &&
+                          (status == 'ONLINE' ||
+                              status == 'ACTIVE' ||
+                              data?['unblocked_at'] != null)) {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.remove(
+                          'blocked_${widget.token}_${widget.studentNis}',
+                        );
+                        if (mounted) {
+                          setState(() {
+                            _isBlocked = false;
+                            _violations = 0;
+                          });
+                          _enterImmersiveMode();
+                          SecurityService.instance.reapply();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Blokir telah dibuka! Silakan lanjutkan ujian.',
+                              ),
+                              backgroundColor: AppColors.primaryGreen,
+                            ),
+                          );
+                        }
+                      } else {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Status masih diblokir. Harap hubungi Pengawas Ujian.',
+                              ),
+                              backgroundColor: Colors.black87,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.refresh_rounded,
                       color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
+                      size: 18,
                     ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.white54, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    label: Text(
+                      'Periksa Status Blokir',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.white54, width: 1.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 44,
+                  child: TextButton.icon(
+                    onPressed: () => _confirmExitDialog(),
+                    icon: const Icon(
+                      Icons.logout_rounded,
+                      color: Colors.white70,
+                      size: 18,
+                    ),
+                    label: Text(
+                      'Kumpulkan Jawaban & Keluar Ujian',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

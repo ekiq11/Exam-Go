@@ -16,6 +16,7 @@ class TryoutSchedule {
   final bool isLifetime; // Selalu aktif / tanpa batasan tanggal & jam
   final bool allowRetake; // Bisa dikerjakan berulang kali oleh user
   final String? targetExamId; // Target ID Ujian (opsional untuk integrasi token event)
+  final bool isTeacherGenerated; // Ujian buatan guru mandiri (WebGAS / App)
 
   const TryoutSchedule({
     required this.paketId,
@@ -32,6 +33,7 @@ class TryoutSchedule {
     this.isLifetime = false,
     this.allowRetake = true,
     this.targetExamId,
+    this.isTeacherGenerated = false,
   });
 
   factory TryoutSchedule.fromMap(String id, Map<String, dynamic> data) {
@@ -56,7 +58,7 @@ class TryoutSchedule {
     return TryoutSchedule(
       paketId: effectiveId,
       namaPaket: data['nama_paket']?.toString() ?? data['nama_ujian']?.toString() ?? 'Tryout Nasional',
-      jenisTest: (data['jenis_test']?.toString() ?? 'UMUM').toUpperCase(),
+      jenisTest: (data['kategori']?.toString() ?? data['jenis_test']?.toString() ?? 'UMUM').toUpperCase(),
       jenisWaktu: data['jenis_waktu']?.toString() ?? 'per_subtest',
       durasiMenit: (data['durasi_menit'] as num?)?.toInt() ?? 90,
       tanggal: data['tanggal']?.toString() ?? '',
@@ -68,6 +70,9 @@ class TryoutSchedule {
       isLifetime: data['is_lifetime'] == true || data['lifetime'] == true,
       allowRetake: data['allow_retake'] != false && data['bisa_ulang'] != false,
       targetExamId: (targetId != null && targetId.isNotEmpty && targetId != 'DEFAULT') ? targetId : null,
+      isTeacherGenerated: data['is_teacher_generated'] == true ||
+          data['teacher_token'] != null ||
+          data['is_webgas'] == true,
     );
   }
 

@@ -21,6 +21,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:examgo/services/license_service.dart';
 import 'package:examgo/services/exam_session_service.dart';
 import 'package:examgo/services/monitoring_service.dart';
+import '../constant/security_service.dart';
 import 'package:examgo/view/pre_exam_checklist.dart';
 import 'package:examgo/view/qr_scanner.dart';
 import 'package:examgo/view/qris_web_view.dart';
@@ -81,6 +82,8 @@ class _HomeScreenState extends State<HomeScreen>
   bool _connected = true;
   List<_HistoryItem> _history = [];
   int _logoTapCount = 0; // tap 7x untuk buka Mode Guru
+  bool _isStudentPremium = false;
+  Map<String, dynamic> _tryoutCardData = {'isPremium': false, 'newCount': 0};
 
   static const _historyKey = 'scan_history_v3';
   StreamSubscription<List<ConnectivityResult>>? _connectSub;
@@ -93,6 +96,9 @@ class _HomeScreenState extends State<HomeScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
+    // Bersihkan seluruh kiosk / lock dari sesi sebelumnya saat berada di Home
+    SecurityService.instance.emergencyReset();
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
@@ -104,6 +110,7 @@ class _HomeScreenState extends State<HomeScreen>
     _checkConnectivity();
     _listenConnectivity();
     _loadHistory();
+    _refreshPremiumAndStatus();
     // Cek apakah ada sesi ujian yang tidak selesai (crash recovery)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkForceUpdate().then((_) {
@@ -114,6 +121,22 @@ class _HomeScreenState extends State<HomeScreen>
       });
     });
     // FIX BUG-07: Clock dikelola oleh _ClockWidget — tidak perlu timer di sini.
+  }
+
+  Future<void> _refreshPremiumAndStatus() async {
+    try {
+      final isPrem = await LicenseService.instance.isStudentPremium();
+      int newCount = 0;
+      if (isPrem) {
+        newCount = await TryoutReminderService.instance.getNewUnattemptedCount();
+      }
+      if (mounted) {
+        setState(() {
+          _isStudentPremium = isPrem;
+          _tryoutCardData = {'isPremium': isPrem, 'newCount': newCount};
+        });
+      }
+    } catch (_) {}
   }
 
   static bool _hasShownAppLaunchAd = false;
@@ -380,19 +403,38 @@ class _HomeScreenState extends State<HomeScreen>
 
   // ─── History ──────────────────────────────────────────────────
 
+  Future<String> _getHistoryKey() async {
+    try {
+      final deviceId = await LicenseService.instance.getDeviceId();
+      final cleanId = deviceId.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+      return 'scan_history_v3_$cleanId';
+    } catch (_) {
+      return _historyKey;
+    }
+  }
+
   Future<void> _loadHistory() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final saved = prefs.getStringList(_historyKey) ?? [];
+      final key = await _getHistoryKey();
+      var saved = prefs.getStringList(key);
+      if (saved == null) {
+        // Migrasi data lama dari key global jika ada
+        saved = prefs.getStringList(_historyKey);
+        if (saved != null && saved.isNotEmpty) {
+          await prefs.setStringList(key, saved);
+        }
+      }
       if (!mounted) return;
-      setState(() => _history = saved.map(_HistoryItem.fromStorage).toList());
+      setState(() => _history = (saved ?? []).map(_HistoryItem.fromStorage).toList());
     } catch (_) {}
   }
 
   Future<void> _saveEntry(_HistoryItem item) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final current = prefs.getStringList(_historyKey) ?? [];
+      final key = await _getHistoryKey();
+      final current = prefs.getStringList(key) ?? [];
       final dedup = current
           .where((e) => _HistoryItem.fromStorage(e).url != item.url)
           .toList();
@@ -400,7 +442,7 @@ class _HomeScreenState extends State<HomeScreen>
         item.toStorage(),
         ...dedup,
       ].take(AppConfig.maxScanHistory).toList();
-      await prefs.setStringList(_historyKey, updated);
+      await prefs.setStringList(key, updated);
       if (!mounted) return;
       setState(() => _history = updated.map(_HistoryItem.fromStorage).toList());
     } catch (_) {}
@@ -416,6 +458,8 @@ class _HomeScreenState extends State<HomeScreen>
     if (confirm != true) return;
     try {
       final prefs = await SharedPreferences.getInstance();
+      final key = await _getHistoryKey();
+      await prefs.remove(key);
       await prefs.remove(_historyKey);
       if (!mounted) return;
       setState(() => _history.clear());
@@ -711,10 +755,7 @@ class _HomeScreenState extends State<HomeScreen>
   // ─── Lisensi & Kuota Freemium Siswa (Lynk.id) ─────────────────
 
   Widget _buildLicenseQuotaBadge() {
-    return FutureBuilder<bool>(
-      future: LicenseService.instance.isStudentPremium(),
-      builder: (context, snapshot) {
-        final isPremium = snapshot.data ?? false;
+    final isPremium = _isStudentPremium;
 
         if (isPremium) {
           return Container(
@@ -893,15 +934,16 @@ class _HomeScreenState extends State<HomeScreen>
             ],
           ),
         );
-      },
-    );
   }
 
   void _showStudentLicenseDialog() {
     PremiumTokenDialog.show(
       context,
       userType: 'STUDENT_LIFETIME',
-      onActivated: () => setState(() {}),
+      onActivated: () {
+        _refreshPremiumAndStatus();
+        if (mounted) setState(() {});
+      },
     );
   }
 
@@ -1104,7 +1146,13 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                       ),
                     );
-                    setState(() {});
+                    if (mounted) {
+                      setState(() {
+                        _history.clear();
+                        _isStudentPremium = false;
+                        _tryoutCardData = {'isPremium': false, 'newCount': 0};
+                      });
+                    }
                   }
                 },
                 child: Container(
@@ -1163,24 +1211,11 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Future<Map<String, dynamic>> _getTryoutCardStatus() async {
-    final isPremium = await LicenseService.instance.isStudentPremium();
-    int newCount = 0;
-    if (isPremium) {
-      newCount = await TryoutReminderService.instance.getNewUnattemptedCount();
-    }
-    return {'isPremium': isPremium, 'newCount': newCount};
-  }
-
   Widget _buildTryoutCard() {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _getTryoutCardStatus(),
-      builder: (context, snapshot) {
-        final data = snapshot.data ?? {'isPremium': false, 'newCount': 0};
-        final isPremium = data['isPremium'] as bool;
-        final newCount = data['newCount'] as int;
+    final isPremium = _tryoutCardData['isPremium'] as bool? ?? false;
+    final newCount = _tryoutCardData['newCount'] as int? ?? 0;
 
-        return InkWell(
+    return InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: () async {
             if (isPremium) {
@@ -1360,8 +1395,6 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
         );
-      },
-    );
   }
 
   void _showViolationPopup() {
@@ -1520,10 +1553,8 @@ class _HomeScreenState extends State<HomeScreen>
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F5),
       body: CustomScrollView(
-        // BouncingScrollPhysics terasa native di iOS & smooth di Android
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
+        // AlwaysScrollableScrollPhysics konsisten dan mencegah layar bergetar saat scroll
+        physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           _buildSliverAppBar(),
           SliverPadding(
@@ -1571,9 +1602,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     return SliverAppBar(
       expandedHeight: expandedHeight,
-      collapsedHeight: kToolbarHeight,
       pinned: true,
-      stretch: true,
       backgroundColor: const Color(0xFF1B5E20),
       elevation: 0,
       automaticallyImplyLeading: false,

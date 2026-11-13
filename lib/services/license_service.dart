@@ -808,6 +808,12 @@ class LicenseService {
     await prefs.remove('teacher_pin_hash');
     await prefs.remove('biometric_auth_enabled');
     await prefs.remove('examgo_onboarding_completed');
+    await prefs.remove('scan_history_v3');
+    try {
+      final devId = await getDeviceId();
+      final cleanId = devId.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+      await prefs.remove('scan_history_v3_$cleanId');
+    } catch (_) {}
 
     await StudentTryoutHistoryService.instance.clearHistory();
 
