@@ -38,6 +38,7 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
   final _titleController = TextEditingController(text: 'Try Out Akbar 2026');
   final _gformUrlController = TextEditingController();
   final _durationController = TextEditingController(text: '90');
+  final _passingGradeController = TextEditingController(text: '75');
 
   String _selectedCategory = ExamCategory.snbt;
   String _jenisWaktu = 'per_subtest'; // 'per_subtest' atau 'per_paket'
@@ -91,6 +92,7 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
     _titleController.dispose();
     _gformUrlController.dispose();
     _durationController.dispose();
+    _passingGradeController.dispose();
     super.dispose();
   }
 
@@ -726,6 +728,8 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
     _currentPackage!.jenisWaktu = _jenisWaktu;
     _currentPackage!.durasiMenit =
         int.tryParse(_durationController.text.trim()) ?? 90;
+    _currentPackage!.passingGrade =
+        int.tryParse(_passingGradeController.text.trim()) ?? 75;
     _currentPackage!.allowRetake =
         false; // Soal buatan guru 1x pengerjaan per device
 
@@ -1585,6 +1589,68 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                     Icons.access_time_rounded,
                     size: 20,
                     color: Color(0xFF64748B),
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: AppColors.primaryGreen,
+                      width: 1.5,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Passing Grade / KKM Kelulusan (%)',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF334155),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Nilai ambang batas kelulusan untuk siswa (skala 0 - 100, default 75).',
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _passingGradeController,
+                keyboardType: TextInputType.number,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF0F172A),
+                ),
+                decoration: InputDecoration(
+                  hintText: '75',
+                  suffixText: '%',
+                  suffixStyle: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF64748B),
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.grade_rounded,
+                    size: 20,
+                    color: AppColors.primaryGreen,
                   ),
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),

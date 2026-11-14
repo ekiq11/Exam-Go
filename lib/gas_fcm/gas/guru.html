@@ -764,8 +764,8 @@
           </select>
         </div>
 
-        <!-- Total Durasi Pengerjaan -->
-        <div id="wrapper-global-duration" class="sm:col-span-2">
+        <!-- Total Durasi Pengerjaan & Passing Grade -->
+        <div id="wrapper-global-duration" class="sm:col-span-1">
           <label class="block text-xs font-bold text-slate-300 mb-1.5 flex items-center justify-between">
             <span id="label-exam-duration">Durasi Pengerjaan *</span>
             <span id="badge-auto-calc"
@@ -776,6 +776,19 @@
             <input type="number" id="exam-duration" value="90" min="5" max="480" oninput="onGlobalDurationInput()"
               class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm text-white outline-none transition-colors pr-14">
             <span class="absolute right-3.5 top-2.5 text-xs font-semibold text-slate-400">Menit</span>
+          </div>
+        </div>
+
+        <!-- Nilai Passing Grade / KKM (Skala 0 - 100) -->
+        <div id="wrapper-passing-grade" class="sm:col-span-1">
+          <label class="block text-xs font-bold text-slate-300 mb-1.5 flex items-center justify-between">
+            <span id="label-passing-grade">Passing Grade / KKM *</span>
+            <span class="text-[10px] text-brand-400 font-semibold bg-brand-500/10 px-2 py-0.5 rounded-full border border-brand-500/20">Skala 0-100</span>
+          </label>
+          <div class="relative">
+            <input type="number" id="exam-passing-grade" value="75" min="0" max="100"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm text-white outline-none transition-colors pr-10 font-bold">
+            <span class="absolute right-3.5 top-2.5 text-xs font-semibold text-slate-400">%</span>
           </div>
         </div>
       </div>
@@ -1557,43 +1570,44 @@
           let tex = '';
           function getChild(n, tagName) {
             if (!n || !n.childNodes) return null;
+            const target = tagName.split(':').pop().toLowerCase();
             for (let i = 0; i < n.childNodes.length; i++) {
-              let cname = n.childNodes[i].nodeName.replace(/^.*:/, 'm:');
-              if (cname === tagName) return n.childNodes[i];
+              let cname = (n.childNodes[i].localName || n.childNodes[i].nodeName.split(':').pop()).toLowerCase();
+              if (cname === target) return n.childNodes[i];
             }
             return null;
           }
 
           for (let i = 0; i < node.childNodes.length; i++) {
             let child = node.childNodes[i];
-            let name = child.nodeName.replace(/^.*:/, 'm:');
-            if (name === 'm:r') {
+            let name = (child.localName || child.nodeName.split(':').pop()).toLowerCase();
+            if (name === 'r' || name === 'e') {
               tex += parseNode(child);
-            } else if (name === 'm:t') {
+            } else if (name === 't') {
               tex += child.textContent;
-            } else if (name === 'm:f') {
-              let num = parseNode(getChild(child, 'm:num'));
-              let den = parseNode(getChild(child, 'm:den'));
+            } else if (name === 'f') {
+              let num = parseNode(getChild(child, 'num'));
+              let den = parseNode(getChild(child, 'den'));
               tex += '\\frac{' + num + '}{' + den + '}';
-            } else if (name === 'm:rad') {
-              let deg = parseNode(getChild(child, 'm:deg'));
-              let e = parseNode(getChild(child, 'm:e'));
+            } else if (name === 'rad') {
+              let deg = parseNode(getChild(child, 'deg'));
+              let e = parseNode(getChild(child, 'e'));
               tex += deg ? ('\\sqrt[' + deg + ']{' + e + '}') : ('\\sqrt{' + e + '}');
-            } else if (name === 'm:sSup') {
-              let e = parseNode(getChild(child, 'm:e'));
-              let sup = parseNode(getChild(child, 'm:sup'));
-              tex += e + '^{' + sup + '}';
-            } else if (name === 'm:sSub') {
-              let e = parseNode(getChild(child, 'm:e'));
-              let sub = parseNode(getChild(child, 'm:sub'));
-              tex += e + '_{' + sub + '}';
-            } else if (name === 'm:sSubSup') {
-              let e = parseNode(getChild(child, 'm:e'));
-              let sub = parseNode(getChild(child, 'm:sub'));
-              let sup = parseNode(getChild(child, 'm:sup'));
-              tex += e + '_{' + sub + '}^{' + sup + '}';
-            } else if (name === 'm:d') {
-              let e = parseNode(getChild(child, 'm:e'));
+            } else if (name === 'ssup' || name === 'sup') {
+              let e = parseNode(getChild(child, 'e'));
+              let sup = parseNode(getChild(child, 'sup'));
+              tex += (e || '') + '^{' + sup + '}';
+            } else if (name === 'ssub' || name === 'sub') {
+              let e = parseNode(getChild(child, 'e'));
+              let sub = parseNode(getChild(child, 'sub'));
+              tex += (e || '') + '_{' + sub + '}';
+            } else if (name === 'ssubsup') {
+              let e = parseNode(getChild(child, 'e'));
+              let sub = parseNode(getChild(child, 'sub'));
+              let sup = parseNode(getChild(child, 'sup'));
+              tex += (e || '') + '_{' + sub + '}^{' + sup + '}';
+            } else if (name === 'd') {
+              let e = parseNode(getChild(child, 'e'));
               tex += '\\left(' + e + '\\right)';
             } else if (child.childNodes && child.childNodes.length > 0) {
               tex += parseNode(child);
@@ -1696,6 +1710,11 @@
 
       const subs = { '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9', '₊': '+', '₋': '-', 'ₐ': 'a', 'ₑ': 'e', 'ₒ': 'o', 'ₓ': 'x' };
       for (let k in subs) s = s.replaceAll(k, '_{' + subs[k] + '}');
+
+      // Sambungkan variabel yang terpisah spasi dari formula berpangkat (misal: x $^{2} -> $x^{2}$)
+      s = s.replace(/([a-zA-Z0-9\)])\s*\$(\^\{[^}]+\})/g, (m, g1, g2) => '$' + g1 + g2);
+      // Pulihkan persamaan kuadrat yang pangkatnya berdiri tanpa variabel (misal: $^{2} + 2x -> $x^{2} + 2x)
+      s = s.replace(/\$(\^\{[0-9a-zA-Z+-]+\})/g, (m, p1) => '$x' + p1);
 
       return autoWrapMathExpressions(s);
     }
@@ -3109,6 +3128,7 @@
           title: title,
           duration: duration,
           category: category,
+          passing_grade: parseInt(document.getElementById('exam-passing-grade')?.value) || 75,
           jenis_waktu: jenisWaktu,
           subtests: subtestsPayload,
           questions: _extractedQuestions.map((q, i) => {
@@ -3143,7 +3163,14 @@
           body: JSON.stringify(payload)
         });
 
-        const res = await resp.json();
+        const respText = await resp.text();
+        let res;
+        try {
+          res = JSON.parse(respText);
+        } catch (jsonErr) {
+          throw new Error('Server mengembalikan respon tidak terduga. Silakan coba kembali sesaat lagi.');
+        }
+
         if (res.status === 'success') {
           let qrPayload = res.qr_payload;
           if (!qrPayload) {

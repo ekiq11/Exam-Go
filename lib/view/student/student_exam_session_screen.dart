@@ -1427,6 +1427,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         subtests: _subtests,
         allQuestions: _allQuestions,
         answers: _answers,
+        customPassingPercentage: _package?.passingGrade ?? 75,
       );
 
       final prefs = await SharedPreferences.getInstance();

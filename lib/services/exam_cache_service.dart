@@ -243,6 +243,11 @@ class ExamCacheService {
             if (pData['durasi_menit'] != null) {
               package.durasiMenit = (pData['durasi_menit'] as num).toInt();
             }
+            if (pData['passing_grade'] != null) {
+              package.passingGrade = (pData['passing_grade'] as num).toInt();
+            } else if (pData['kkm'] != null) {
+              package.passingGrade = (pData['kkm'] as num).toInt();
+            }
           }
         }
 
@@ -334,6 +339,7 @@ class ExamCacheService {
             kategori: pMap['jenis_test']?.toString() ?? ExamCategory.umum,
             jenisWaktu: pMap['jenis_waktu']?.toString() ?? 'per_subtest',
             durasiMenit: (pMap['durasi_menit'] as num?)?.toInt() ?? 90,
+            passingGrade: (pMap['passing_grade'] as num?)?.toInt() ?? 75,
           );
         }
 

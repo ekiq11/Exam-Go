@@ -31,6 +31,7 @@ class ExamPackage {
   String status; // 'ACTIVE', 'DRAFT', 'CLOSED'
   bool allowRetake; // Izinkan dikerjakan berulang kali
   bool isTeacherGenerated; // Ujian buatan guru mandiri (WebGAS / App)
+  int passingGrade; // Ambang batas kelulusan / KKM Ujian UMUM (default: 75)
 
   ExamPackage({
     required this.paketId,
@@ -43,6 +44,7 @@ class ExamPackage {
     this.status = 'ACTIVE',
     this.allowRetake = true,
     this.isTeacherGenerated = false,
+    this.passingGrade = 75,
   })  : subtests = subtests ?? [],
         createdAt = createdAt ?? DateTime.now();
 
@@ -60,6 +62,7 @@ class ExamPackage {
       'status': status,
       'allow_retake': allowRetake,
       'is_teacher_generated': isTeacherGenerated,
+      'passing_grade': passingGrade,
       'subtest_count': subtests.length,
       // Ringkasan subtests disimpan di dokumen paket
       'subtests_meta': subtests.map((s) => s.toMetaJson()).toList(),
@@ -81,6 +84,9 @@ class ExamPackage {
       isTeacherGenerated: data['is_teacher_generated'] == true ||
           data['teacher_token'] != null ||
           data['is_webgas'] == true,
+      passingGrade: (data['passing_grade'] as num?)?.toInt() ??
+          (data['kkm'] as num?)?.toInt() ??
+          75,
     );
   }
 }
