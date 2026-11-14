@@ -553,4 +553,262 @@ class ExamPdfExporter {
 
     return file;
   }
+
+  /// Menghasilkan byte dokumen PDF Laporan Siswa Remedial & Analisis Soal
+  static Future<Uint8List> generateRemedialReportBytes({
+    required String examTitle,
+    required String examId,
+    required int passingGrade,
+    required List<Map<String, dynamic>> remedialStudents,
+    required int totalStudents,
+    required List<Map<String, dynamic>> hardestQuestions,
+    DateTime? printedAt,
+  }) async {
+    final pdf = pw.Document();
+    final now = printedAt ?? DateTime.now();
+    final dateStr =
+        '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        header: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        'ExamGO Anti-Cheat CBT',
+                        style: pw.TextStyle(
+                          fontSize: 16,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.green800,
+                        ),
+                      ),
+                      pw.Text(
+                        'Laporan Resmi Rekapitulasi Siswa Remedial & Analisis Penguatan',
+                        style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                      ),
+                    ],
+                  ),
+                  pw.Container(
+                    padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColors.amber50,
+                      borderRadius: pw.BorderRadius.circular(6),
+                      border: pw.Border.all(color: PdfColors.amber300),
+                    ),
+                    child: pw.Text(
+                      'TOKEN: $examId',
+                      style: pw.TextStyle(
+                        fontSize: 11,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.amber900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              pw.Divider(color: PdfColors.grey300, thickness: 1),
+              pw.SizedBox(height: 4),
+            ],
+          );
+        },
+        footer: (pw.Context context) {
+          return pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text(
+                'Dicetak pada: $dateStr | Otomatis oleh Sistem ExamGO',
+                style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              ),
+              pw.Text(
+                'Halaman ${context.pageNumber} dari ${context.pagesCount}',
+                style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              ),
+            ],
+          );
+        },
+        build: (pw.Context context) {
+          return [
+            // Metadata & Ringkasan Remedial
+            pw.Container(
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.grey100,
+                borderRadius: pw.BorderRadius.circular(8),
+                border: pw.Border.all(color: PdfColors.grey300),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Expanded(
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          'Mata Pelajaran / Judul Ujian:',
+                          style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+                        ),
+                        pw.Text(
+                          examTitle,
+                          style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Text(
+                        'KKM: $passingGrade  |  Total Peserta: $totalStudents Siswa',
+                        style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+                      ),
+                      pw.Text(
+                        'Status: ${remedialStudents.length} Siswa Perlu Remedial (${totalStudents - remedialStudents.length} Tuntas)',
+                        style: pw.TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: pw.FontWeight.bold,
+                          color: remedialStudents.isEmpty ? PdfColors.green800 : PdfColors.red800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 12),
+
+            // Bagian Rekomendasi Soal Sulit
+            if (hardestQuestions.isNotEmpty) ...[
+              pw.Container(
+                padding: const pw.EdgeInsets.all(10),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.amber50,
+                  borderRadius: pw.BorderRadius.circular(6),
+                  border: pw.Border.all(color: PdfColors.amber300),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      'Rekomendasi Materi Perlu Penguatan (Butir Soal Tingkat Kesalahan Tertinggi):',
+                      style: pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold, color: PdfColors.amber900),
+                    ),
+                    pw.SizedBox(height: 4),
+                    ...hardestQuestions.map((hq) {
+                      final no = hq['nomor'] ?? '-';
+                      final failPct = hq['failPct'] ?? 0;
+                      final key = hq['kunci'] ?? '-';
+                      return pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 1.5),
+                        child: pw.Text(
+                          '- Soal No. $no: $failPct% siswa kelas salah menjawab (Kunci Jawaban Guru: $key)',
+                          style: const pw.TextStyle(fontSize: 8.5, color: PdfColors.grey800),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+              pw.SizedBox(height: 14),
+            ],
+
+            pw.Text(
+              'Daftar Siswa Mengikuti Ujian Remedial:',
+              style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 6),
+
+            if (remedialStudents.isEmpty)
+              pw.Container(
+                padding: const pw.EdgeInsets.all(16),
+                alignment: pw.Alignment.center,
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.green50,
+                  borderRadius: pw.BorderRadius.circular(8),
+                ),
+                child: pw.Text(
+                  'Alhamdulillah, seluruh siswa tuntas mencapai atau melampaui KKM ($passingGrade).',
+                  style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: PdfColors.green900),
+                ),
+              )
+            else
+              pw.TableHelper.fromTextArray(
+                context: context,
+                headers: ['No', 'Nama Siswa', 'NIS', 'Skor Akhir', 'Status', 'Catatan / Tanda Tangan'],
+                headerStyle: pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+                headerDecoration: const pw.BoxDecoration(color: PdfColors.amber800),
+                headerPadding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                cellPadding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                cellStyle: const pw.TextStyle(fontSize: 8.5),
+                cellAlignments: {
+                  0: pw.Alignment.center,
+                  1: pw.Alignment.centerLeft,
+                  2: pw.Alignment.center,
+                  3: pw.Alignment.center,
+                  4: pw.Alignment.center,
+                  5: pw.Alignment.centerLeft,
+                },
+                data: List.generate(remedialStudents.length, (idx) {
+                  final s = remedialStudents[idx];
+                  final skor = (s['skor'] as num?)?.toInt() ?? 0;
+                  return [
+                    '${idx + 1}',
+                    s['name']?.toString() ?? '-',
+                    s['nis']?.toString() ?? '-',
+                    '$skor',
+                    'Remedial (< $passingGrade)',
+                    '',
+                  ];
+                }),
+              ),
+          ];
+        },
+      ),
+    );
+
+    return pdf.save();
+  }
+
+  /// Membuat berkas PDF Laporan Remedial dan membagikannya via SharePlus
+  static Future<File> exportAndShareRemedialPdf({
+    required String examTitle,
+    required String examId,
+    required int passingGrade,
+    required List<Map<String, dynamic>> remedialStudents,
+    required int totalStudents,
+    required List<Map<String, dynamic>> hardestQuestions,
+  }) async {
+    final bytes = await generateRemedialReportBytes(
+      examTitle: examTitle,
+      examId: examId,
+      passingGrade: passingGrade,
+      remedialStudents: remedialStudents,
+      totalStudents: totalStudents,
+      hardestQuestions: hardestQuestions,
+    );
+
+    final tempDir = await getTemporaryDirectory();
+    final sanitizedTitle = examTitle.replaceAll(RegExp(r'[^\w\s\-]'), '_').trim();
+    final filePath = '${tempDir.path}/Laporan_Remedial_${sanitizedTitle}_$examId.pdf';
+    final file = File(filePath);
+    await file.writeAsBytes(bytes, flush: true);
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path, mimeType: 'application/pdf')],
+        subject: 'Laporan Siswa Remedial PDF - $examTitle',
+        text: 'Laporan Rekapitulasi Siswa Remedial Ujian "$examTitle" (Token: $examId).',
+      ),
+    );
+
+    return file;
+  }
 }

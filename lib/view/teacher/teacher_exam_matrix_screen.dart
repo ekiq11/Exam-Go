@@ -29,6 +29,7 @@ class TeacherExamMatrixScreen extends StatefulWidget {
   final int passingGrade;
   final List<Map<String, dynamic>>? initialQuestions;
   final List<Map<String, dynamic>>? initialStudents;
+  final bool openRemedialOnStart;
 
   const TeacherExamMatrixScreen({
     super.key,
@@ -37,6 +38,7 @@ class TeacherExamMatrixScreen extends StatefulWidget {
     this.passingGrade = 75,
     this.initialQuestions,
     this.initialStudents,
+    this.openRemedialOnStart = false,
   });
 
   @override
@@ -52,6 +54,7 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
   bool _isExportingExcel = false;
   bool _isExportingPdf = false;
   bool _isLandscape = false;
+  bool _hasOpenedRemedialInitial = false;
 
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -376,6 +379,547 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Gagal membuat PDF: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isExportingPdf = false);
+    }
+  }
+
+  /// Dialog modal bottom sheet Analisis Siswa Remedial (1-Click Remedial)
+  void _showRemedialBottomSheet(List<Map<String, dynamic>> allStudents) {
+    final passingGrade = widget.passingGrade;
+    final remedialList = allStudents
+        .where((s) => ((s['skor'] as num?)?.toInt() ?? 0) < passingGrade)
+        .toList();
+    // Urutkan nilai terendah dahulu
+    remedialList.sort((a, b) =>
+        ((a['skor'] as num?)?.toInt() ?? 0).compareTo(
+          (b['skor'] as num?)?.toInt() ?? 0,
+        ));
+
+    final total = allStudents.length;
+    final tuntas = total - remedialList.length;
+
+    // Hitung 3 Soal Paling Sulit (Tingkat kesalahan tertinggi)
+    final List<Map<String, dynamic>> hardestQuestions = [];
+    if (_questions.isNotEmpty && total > 0) {
+      final qStats = <Map<String, dynamic>>[];
+      for (final q in _questions) {
+        final qId = q['soalId']?.toString() ?? '';
+        final qNomor = q['nomor']?.toString() ?? '0';
+        final qKunci = q['kunci']?.toString() ?? '-';
+
+        int wrongCount = 0;
+        for (final s in allStudents) {
+          final answers = (s['jawaban'] as Map<String, dynamic>?) ?? {};
+          final ans = answers[qId]?.toString().toUpperCase() ?? '';
+          if (ans != qKunci) {
+            wrongCount++;
+          }
+        }
+        final failPct = ((wrongCount / total) * 100).round();
+        qStats.add({
+          'nomor': qNomor,
+          'soalId': qId,
+          'kunci': qKunci,
+          'wrongCount': wrongCount,
+          'failPct': failPct,
+        });
+      }
+      qStats.sort((a, b) => (b['failPct'] as int).compareTo(a['failPct'] as int));
+      hardestQuestions.addAll(qStats.take(3));
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.88,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag Handle
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 44,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF3C7),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.assignment_late_rounded,
+                        color: Color(0xFFD97706),
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Rekap Siswa Remedial',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                          Text(
+                            '${widget.title} • KKM: $passingGrade',
+                            style: GoogleFonts.poppins(
+                              fontSize: 11.5,
+                              color: const Color(0xFF64748B),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, size: 20),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Divider(height: 1),
+
+              // Content Body
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(20),
+                  children: [
+                    // Summary Banner
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: remedialList.isEmpty
+                              ? [const Color(0xFFF0FDF4), const Color(0xFFDCFCE7)]
+                              : [const Color(0xFFFFFBEB), const Color(0xFFFEF3C7)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: remedialList.isEmpty
+                              ? const Color(0xFF86EFAC)
+                              : const Color(0xFFFCD34D),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            remedialList.isEmpty
+                                ? Icons.verified_rounded
+                                : Icons.info_outline_rounded,
+                            color: remedialList.isEmpty
+                                ? const Color(0xFF16A34A)
+                                : const Color(0xFFD97706),
+                            size: 26,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  remedialList.isEmpty
+                                      ? 'Luar Biasa! Seluruh Siswa Tuntas'
+                                      : '${remedialList.length} dari $total Siswa Perlu Remedial',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13.5,
+                                    color: remedialList.isEmpty
+                                        ? const Color(0xFF15803D)
+                                        : const Color(0xFF92400E),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Tuntas KKM (≥ $passingGrade): $tuntas siswa • Remedial (< $passingGrade): ${remedialList.length} siswa',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    color: remedialList.isEmpty
+                                        ? const Color(0xFF166534)
+                                        : const Color(0xFFB45309),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Top 3 Soal Paling Sulit (Materi Perlu Penguatan)
+                    if (hardestQuestions.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          const Icon(Icons.psychology_alt_rounded, size: 16, color: Color(0xFF475569)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Soal Perlu Penguatan (Kesalahan Tertinggi):',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF334155),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Column(
+                          children: hardestQuestions.map((hq) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFDC2626).withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      'Q${hq['nomor']}',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color(0xFFDC2626),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      '${hq['failPct']}% siswa kelas salah • Kunci Guru: [${hq['kunci']}]',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 11.5,
+                                        color: const Color(0xFF475569),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                    ],
+
+                    // Daftar Siswa Remedial
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Daftar Siswa Remedial:',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF334155),
+                          ),
+                        ),
+                        Text(
+                          'Urut Skor Terendah',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: const Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    if (remedialList.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        alignment: Alignment.center,
+                        child: Column(
+                          children: [
+                            const Icon(Icons.check_circle_rounded, size: 40, color: Color(0xFF16A34A)),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tidak ada siswa yang perlu remedial!',
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF15803D),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      ...List.generate(remedialList.length, (idx) {
+                        final s = remedialList[idx];
+                        final name = s['name']?.toString() ?? '-';
+                        final nis = s['nis']?.toString() ?? '-';
+                        final skor = (s['skor'] as num?)?.toInt() ?? 0;
+                        final benar = (s['benar'] as num?)?.toInt() ?? 0;
+                        final totalQ = (s['totalSoal'] as num?)?.toInt() ?? _questions.length;
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFFEE2E2)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.02),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 24,
+                                height: 24,
+                                alignment: Alignment.center,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFF1F5F9),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  '${idx + 1}',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color(0xFF0F172A),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      'NIS: $nis • Benar: $benar dari $totalQ soal',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 10.5,
+                                        color: const Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFEF2F2),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: const Color(0xFFFECACA)),
+                                ),
+                                child: Text(
+                                  '$skor',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFFDC2626),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                  ],
+                ),
+              ),
+
+              // Bottom Action Bar: Bagikan WA & Unduh PDF
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: const Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // Tombol Bagikan WhatsApp
+                    Expanded(
+                      child: SizedBox(
+                        height: 42,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            _shareRemedialWhatsApp(remedialList, total, hardestQuestions);
+                          },
+                          icon: const Icon(Icons.share_rounded, size: 16, color: Colors.white),
+                          label: Text(
+                            'Kirim WhatsApp',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF16A34A),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+
+                    // Tombol Unduh PDF Remedial
+                    Expanded(
+                      child: SizedBox(
+                        height: 42,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            Navigator.pop(ctx);
+                            _exportRemedialPdf(remedialList, total, hardestQuestions);
+                          },
+                          icon: const Icon(Icons.picture_as_pdf_rounded, size: 16, color: Colors.white),
+                          label: Text(
+                            'Unduh PDF',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFDC2626),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _shareRemedialWhatsApp(
+    List<Map<String, dynamic>> remedialStudents,
+    int totalStudents,
+    List<Map<String, dynamic>> hardestQuestions,
+  ) {
+    final passingGrade = widget.passingGrade;
+    final buffer = StringBuffer();
+    buffer.writeln('📢 *PENGUMUMAN SISWA REMEDIAL & EVALUASI UJIAN*');
+    buffer.writeln('📚 *Ujian:* ${widget.title}');
+    buffer.writeln('🔑 *Token:* ${widget.examId}');
+    buffer.writeln('🎯 *Standar KKM:* $passingGrade');
+    buffer.writeln('📊 *Hasil:* ${remedialStudents.length} siswa remedial dari $totalStudents siswa');
+    buffer.writeln('');
+
+    if (remedialStudents.isEmpty) {
+      buffer.writeln('✅ *Selamat! Seluruh siswa telah tuntas mencapai/melampaui nilai KKM.*');
+    } else {
+      buffer.writeln('⚠️ *Daftar Siswa Perlu Remedial:*');
+      for (int i = 0; i < remedialStudents.length; i++) {
+        final s = remedialStudents[i];
+        final name = s['name'] ?? '-';
+        final nis = s['nis'] ?? '-';
+        final skor = s['skor'] ?? 0;
+        buffer.writeln('${i + 1}. $name (NIS: $nis) — Nilai: $skor');
+      }
+    }
+
+    if (hardestQuestions.isNotEmpty) {
+      buffer.writeln('');
+      buffer.writeln('💡 *Topik / Butir Soal Terbanyak Salah (Perlu Penguatan):*');
+      for (final hq in hardestQuestions) {
+        buffer.writeln('• Soal ${hq['nomor']}: ${hq['failPct']}% siswa salah (Kunci: ${hq['kunci']})');
+      }
+    }
+
+    buffer.writeln('');
+    buffer.writeln('_Laporan otomatis dari ExamGo CBT Dashboard Guru_');
+
+    SharePlus.instance.share(
+      ShareParams(
+        text: buffer.toString(),
+        subject: 'Daftar Siswa Remedial - ${widget.title}',
+      ),
+    );
+  }
+
+  Future<void> _exportRemedialPdf(
+    List<Map<String, dynamic>> remedialStudents,
+    int totalStudents,
+    List<Map<String, dynamic>> hardestQuestions,
+  ) async {
+    setState(() => _isExportingPdf = true);
+    try {
+      await ExamPdfExporter.exportAndShareRemedialPdf(
+        examTitle: widget.title,
+        examId: widget.examId,
+        passingGrade: widget.passingGrade,
+        remedialStudents: remedialStudents,
+        totalStudents: totalStudents,
+        hardestQuestions: hardestQuestions,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal membuat PDF Remedial: $e')),
+        );
       }
     } finally {
       if (mounted) setState(() => _isExportingPdf = false);
@@ -808,6 +1352,13 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
       return matchQuery;
     }).toList();
 
+    if (widget.openRemedialOnStart && !_hasOpenedRemedialInitial && allStudents.isNotEmpty && !_isLoadingQuestions) {
+      _hasOpenedRemedialInitial = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showRemedialBottomSheet(allStudents);
+      });
+    }
+
     return Column(
       children: [
         // ── Toolbar Atas: Action Download & Search Bar Elegan ──
@@ -843,51 +1394,87 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
       ),
       child: Column(
         children: [
-          // ── Baris 1: Status Jumlah Siswa & Tombol Aksi Download ──
+          // ── Baris 1: Status Jumlah Siswa & Tombol Aksi Download / Remedial ──
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
-                decoration: BoxDecoration(
-                  color: isSearching
-                      ? const Color(0xFFE0F2FE)
-                      : const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  decoration: BoxDecoration(
                     color: isSearching
-                        ? const Color(0xFF7DD3FC)
-                        : Colors.transparent,
+                        ? const Color(0xFFE0F2FE)
+                        : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isSearching
+                          ? const Color(0xFF7DD3FC)
+                          : Colors.transparent,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isSearching
+                            ? Icons.person_search_rounded
+                            : Icons.people_alt_rounded,
+                        size: 13,
+                        color: isSearching
+                            ? const Color(0xFF0284C7)
+                            : const Color(0xFF475569),
+                      ),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          isSearching
+                              ? '${filteredStudents.length} dari ${allStudents.length} Siswa'
+                              : '${allStudents.length} Siswa',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.poppins(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.bold,
+                            color: isSearching
+                                ? const Color(0xFF0369A1)
+                                : const Color(0xFF334155),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isSearching
-                          ? Icons.person_search_rounded
-                          : Icons.people_alt_rounded,
-                      size: 14,
-                      color: isSearching
-                          ? const Color(0xFF0284C7)
-                          : const Color(0xFF475569),
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      isSearching
-                          ? '${filteredStudents.length} dari ${allStudents.length} Siswa'
-                          : '${allStudents.length} Siswa',
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: isSearching
-                            ? const Color(0xFF0369A1)
-                            : const Color(0xFF334155),
-                      ),
-                    ),
-                  ],
+              ),
+              const SizedBox(width: 6),
+
+              // Tombol Rekap Remedial
+              ElevatedButton.icon(
+                onPressed: () => _showRemedialBottomSheet(allStudents),
+                icon: const Icon(
+                  Icons.assignment_late_rounded,
+                  size: 13,
+                  color: Colors.white,
+                ),
+                label: Text(
+                  'Remedial',
+                  style: GoogleFonts.poppins(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFD97706),
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 7,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 5),
 
               // Tombol Download Excel
               ElevatedButton.icon(
@@ -896,8 +1483,8 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                     : () => _exportToExcel(allStudents),
                 icon: _isExportingExcel
                     ? const SizedBox(
-                        width: 13,
-                        height: 13,
+                        width: 12,
+                        height: 12,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: Colors.white,
@@ -905,13 +1492,13 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                       )
                     : const Icon(
                         Icons.table_view_rounded,
-                        size: 14,
+                        size: 13,
                         color: Colors.white,
                       ),
                 label: Text(
                   _isExportingExcel ? 'Excel...' : 'Excel',
                   style: GoogleFonts.poppins(
-                    fontSize: 11,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -920,7 +1507,7 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                   backgroundColor: const Color(0xFF15803D),
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
+                    horizontal: 8,
                     vertical: 7,
                   ),
                   shape: RoundedRectangleBorder(
@@ -928,7 +1515,7 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 5),
 
               // Tombol Download PDF
               ElevatedButton.icon(
@@ -937,8 +1524,8 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                     : () => _exportToPdf(allStudents),
                 icon: _isExportingPdf
                     ? const SizedBox(
-                        width: 13,
-                        height: 13,
+                        width: 12,
+                        height: 12,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: Colors.white,
@@ -946,13 +1533,13 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                       )
                     : const Icon(
                         Icons.picture_as_pdf_rounded,
-                        size: 14,
+                        size: 13,
                         color: Colors.white,
                       ),
                 label: Text(
                   _isExportingPdf ? 'PDF...' : 'PDF',
                   style: GoogleFonts.poppins(
-                    fontSize: 11,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -961,7 +1548,7 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                   backgroundColor: const Color(0xFFDC2626),
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
+                    horizontal: 8,
                     vertical: 7,
                   ),
                   shape: RoundedRectangleBorder(

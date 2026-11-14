@@ -32,6 +32,8 @@ class ExamPackage {
   bool allowRetake; // Izinkan dikerjakan berulang kali
   bool isTeacherGenerated; // Ujian buatan guru mandiri (WebGAS / App)
   int passingGrade; // Ambang batas kelulusan / KKM Ujian UMUM (default: 75)
+  bool randomizeQuestions; // Acak urutan butir soal per siswa (Anti-lirik sebangku)
+  bool randomizeOptions; // Acak urutan opsi jawaban A-E per siswa
 
   ExamPackage({
     required this.paketId,
@@ -45,6 +47,8 @@ class ExamPackage {
     this.allowRetake = true,
     this.isTeacherGenerated = false,
     this.passingGrade = 75,
+    this.randomizeQuestions = true,
+    this.randomizeOptions = false,
   })  : subtests = subtests ?? [],
         createdAt = createdAt ?? DateTime.now();
 
@@ -63,6 +67,8 @@ class ExamPackage {
       'allow_retake': allowRetake,
       'is_teacher_generated': isTeacherGenerated,
       'passing_grade': passingGrade,
+      'randomize_questions': randomizeQuestions,
+      'randomize_options': randomizeOptions,
       'subtest_count': subtests.length,
       // Ringkasan subtests disimpan di dokumen paket
       'subtests_meta': subtests.map((s) => s.toMetaJson()).toList(),
@@ -87,6 +93,8 @@ class ExamPackage {
       passingGrade: (data['passing_grade'] as num?)?.toInt() ??
           (data['kkm'] as num?)?.toInt() ??
           75,
+      randomizeQuestions: data['randomize_questions'] != false && data['acak_soal'] != false,
+      randomizeOptions: data['randomize_options'] == true || data['acak_opsi'] == true,
     );
   }
 }

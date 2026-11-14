@@ -135,82 +135,182 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
   void _promptPublishDialog() {
     final defaultToken = _generateToken();
     final tokenCtrl = TextEditingController(text: defaultToken);
+    final kkmCtrl = TextEditingController(text: widget.package.passingGrade.toString());
+    bool randQuestions = widget.package.randomizeQuestions;
+    bool randOptions = widget.package.randomizeOptions;
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primaryGreen.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryGreen.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.key_rounded, color: AppColors.primaryGreen, size: 22),
               ),
-              child: const Icon(Icons.key_rounded, color: AppColors.primaryGreen, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Terbitkan Paket Soal',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Terbitkan Paket Soal',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
               ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Tentukan Token Ujian untuk siswa. Anda bisa memakai token acak atau mengetik token kustom sendiri (contoh: TONAS2026):',
-              style: GoogleFonts.poppins(fontSize: 12.5, color: const Color(0xFF64748B), height: 1.4),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: tokenCtrl,
-              textCapitalization: TextCapitalization.characters,
-              inputFormatters: [
-                // Uppercase only — teacher tokens can be freeform (TONAS2026, etc.)
-                FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9\-]')),
-                TextInputFormatter.withFunction((old, val) => val.copyWith(
-                  text: val.text.toUpperCase(),
-                  selection: val.selection,
-                )),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tentukan Token Ujian untuk siswa. Anda bisa memakai token acak atau mengetik token kustom (contoh: TONAS2026):',
+                  style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B), height: 1.35),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: tokenCtrl,
+                  textCapitalization: TextCapitalization.characters,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9\-]')),
+                    TextInputFormatter.withFunction((old, val) => val.copyWith(
+                      text: val.text.toUpperCase(),
+                      selection: val.selection,
+                    )),
+                  ],
+                  decoration: InputDecoration(
+                    labelText: 'Token / Kode Ujian',
+                    hintText: 'Contoh: TONAS2026',
+                    filled: true,
+                    fillColor: const Color(0xFFF8FAFC),
+                    prefixIcon: const Icon(Icons.vpn_key_outlined, size: 20, color: Color(0xFF64748B)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                ),
+                const SizedBox(height: 14),
+                // ── Pengaturan Anti-Curang & KKM ──
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFBBF7D0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.shield_outlined, size: 16, color: Color(0xFF15803D)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Fitur Anti-Lirik & Nilai KKM',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF15803D),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      SwitchListTile(
+                        value: randQuestions,
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        activeTrackColor: AppColors.primaryGreen,
+                        activeThumbColor: Colors.white,
+                        title: Text(
+                          'Acak Urutan Soal',
+                          style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          'Tiap siswa dapat nomor soal berbeda (Anti lirik sebangku)',
+                          style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF64748B)),
+                        ),
+                        onChanged: (v) => setDialogState(() => randQuestions = v),
+                      ),
+                      const Divider(height: 12),
+                      SwitchListTile(
+                        value: randOptions,
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        activeTrackColor: AppColors.primaryGreen,
+                        activeThumbColor: Colors.white,
+                        title: Text(
+                          'Acak Pilihan Ganda (A-E)',
+                          style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          'Urutan pilihan jawaban A-E diacak per siswa',
+                          style: GoogleFonts.poppins(fontSize: 10.5, color: const Color(0xFF64748B)),
+                        ),
+                        onChanged: (v) => setDialogState(() => randOptions = v),
+                      ),
+                      const Divider(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'KKM / Standar Kelulusan:',
+                              style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 65,
+                            height: 38,
+                            child: TextField(
+                              controller: kkmCtrl,
+                              keyboardType: TextInputType.number,
+                              textAlign: TextAlign.center,
+                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              style: GoogleFonts.poppins(fontSize: 12.5, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ],
-              decoration: InputDecoration(
-                labelText: 'Token / Kode Ujian',
-                hintText: 'Contoh: TONAS2026',
-                filled: true,
-                fillColor: const Color(0xFFF8FAFC),
-                prefixIcon: const Icon(Icons.vpn_key_outlined, size: 20, color: Color(0xFF64748B)),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final chosen = tokenCtrl.text.trim().toUpperCase().replaceAll(' ', '');
+                if (chosen.isEmpty) return;
+                widget.package.randomizeQuestions = randQuestions;
+                widget.package.randomizeOptions = randOptions;
+                widget.package.passingGrade = int.tryParse(kkmCtrl.text.trim()) ?? 75;
+                Navigator.pop(ctx);
+                _publishExam(chosen);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryGreen,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                elevation: 0,
               ),
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+              child: Text('Terbitkan Sekarang', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final chosen = tokenCtrl.text.trim().toUpperCase().replaceAll(' ', '');
-              if (chosen.isEmpty) return;
-              Navigator.pop(ctx);
-              _publishExam(chosen);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryGreen,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              elevation: 0,
-            ),
-            child: Text('Terbitkan Sekarang', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
-        ],
       ),
     );
   }
@@ -257,6 +357,9 @@ class _TeacherExamPreviewScreenState extends State<TeacherExamPreviewScreen> {
         'status': 'ACTIVE',
         'allow_retake': false,
         'is_teacher_generated': true,
+        'randomize_questions': widget.package.randomizeQuestions,
+        'randomize_options': widget.package.randomizeOptions,
+        'passing_grade': widget.package.passingGrade,
       });
 
       // 2. Simpan subtest & soal

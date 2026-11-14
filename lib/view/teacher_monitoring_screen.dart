@@ -19,9 +19,14 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'dart:math';
+import '../models/exam_question_model.dart';
+import '../services/exam_cache_service.dart';
 import '../services/exam_pdf_exporter.dart';
+import '../services/qr_payload.dart';
 import '../utils/indo_date_formatter.dart';
 import 'teacher/teacher_exam_matrix_screen.dart';
+import 'teacher/teacher_exam_published_dialog.dart';
 
 // ─── Konstanta Warna & Style ──────────────────────────────────────────────────
 const _kGreen = Color(0xFF2E7D32);
@@ -184,6 +189,305 @@ class _TeacherMonitoringListScreenState
 
     if (confirmed != true) return;
     await _deleteSession(item['examId']!);
+  }
+
+  String _generateToken() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    final rand = Random.secure();
+    return List.generate(6, (index) => chars[rand.nextInt(chars.length)]).join();
+  }
+
+  Future<void> _duplicateExam(Map<String, String> item) async {
+    final oldToken = item['examId'] ?? '';
+    final oldTitle = item['title'] ?? 'Ujian';
+    final defaultNewToken = _generateToken();
+    final defaultNewTitle = '$oldTitle (Kelas B)';
+
+    final titleCtrl = TextEditingController(text: defaultNewTitle);
+    final tokenCtrl = TextEditingController(text: defaultNewToken);
+
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF7C3AED).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.copy_all_rounded, color: Color(0xFF7C3AED), size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Duplikat Sesi Ujian',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Buat token ujian baru dengan paket soal yang sama untuk kelas lain tanpa perlu upload ulang:',
+                style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B), height: 1.35),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: titleCtrl,
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  labelText: 'Judul Ujian Baru',
+                  hintText: 'Contoh: Matematika X-B',
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  prefixIcon: const Icon(Icons.edit_note_rounded, size: 20, color: Color(0xFF64748B)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: tokenCtrl,
+                textCapitalization: TextCapitalization.characters,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9\-]')),
+                  TextInputFormatter.withFunction((old, val) => val.copyWith(
+                    text: val.text.toUpperCase(),
+                    selection: val.selection,
+                  )),
+                ],
+                decoration: InputDecoration(
+                  labelText: 'Token / Kode Ujian Baru',
+                  hintText: 'Contoh: TONAS2',
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  prefixIcon: const Icon(Icons.vpn_key_outlined, size: 20, color: Color(0xFF64748B)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1.2),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Batal', style: GoogleFonts.poppins(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (titleCtrl.text.trim().isEmpty || tokenCtrl.text.trim().isEmpty) return;
+              Navigator.pop(ctx, true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF7C3AED),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              elevation: 0,
+            ),
+            child: Text('Duplikat Sekarang', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final newTitle = titleCtrl.text.trim();
+    final newToken = tokenCtrl.text.trim().toUpperCase().replaceAll(' ', '');
+
+    // Tampilkan Loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Center(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(color: Color(0xFF7C3AED)),
+              const SizedBox(height: 16),
+              Text(
+                'Menduplikasi Ujian ke [$newToken]...',
+                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final rawUrl = item['url'] ?? '';
+      final isExternalUrl = rawUrl.startsWith('http://') || rawUrl.startsWith('https://');
+
+      String newUrl = 'EXAMGO_TRYOUT://$newToken';
+      if (isExternalUrl) {
+        newUrl = rawUrl;
+      } else {
+        // Ambil data soal dari cache atau Firestore
+        final cached = await ExamCacheService.instance.loadExam(oldToken) ??
+            await ExamCacheService.instance.downloadAndCacheExam(paketId: oldToken);
+
+        final package = cached.package;
+        final questions = cached.questions;
+
+        // 1. Simpan paket_tryout baru
+        await firestore.collection('paket_tryout').doc(newToken).set({
+          'paket_id': newToken,
+          'nama_paket': newTitle,
+          'kategori': package?.kategori ?? 'UMUM',
+          'jenis_waktu': package?.jenisWaktu ?? 'per_paket',
+          'durasi_menit': package?.durasiMenit ?? 90,
+          'total_soal': questions.length,
+          'created_at': FieldValue.serverTimestamp(),
+          'status': 'ACTIVE',
+          'allow_retake': false,
+          'is_teacher_generated': true,
+          'randomize_questions': package?.randomizeQuestions ?? true,
+          'randomize_options': package?.randomizeOptions ?? false,
+          'passing_grade': package?.passingGrade ?? 75,
+        });
+
+        // 2. Simpan subtest & tryout_soal
+        if (questions.isNotEmpty) {
+          final subtestDocId = '${newToken}_ST1';
+          await firestore.collection('subtest').doc(subtestDocId).set({
+            'subtest_id': subtestDocId,
+            'paket_id': newToken,
+            'judul_subtest': 'Soal Ujian',
+            'durasi_menit': package?.durasiMenit ?? 90,
+            'soal_count': questions.length,
+          });
+
+          for (int i = 0; i < questions.length; i++) {
+            final q = questions[i];
+            final soalDocId = '${subtestDocId}_Q${i + 1}';
+            await firestore.collection('tryout_soal').doc(soalDocId).set({
+              'soal_id': soalDocId,
+              'subtest_id': subtestDocId,
+              'paket_id': newToken,
+              'nomor_soal': i + 1,
+              'pertanyaan': q.pertanyaan,
+              'opsi_a': q.opsiA,
+              'opsi_b': q.opsiB,
+              'opsi_c': q.opsiC,
+              'opsi_d': q.opsiD,
+              'opsi_e': q.opsiE,
+              'gam_a': q.gamA,
+              'gam_b': q.gamB,
+              'gam_c': q.gamC,
+              'gam_d': q.gamD,
+              'gam_e': q.gamE,
+              'kunci': q.kunci.toUpperCase(),
+              'pembahasan': q.pembahasan,
+              'gambar': q.gambar,
+              'tabel': q.tabel,
+            });
+          }
+
+          // Simpan juga ke cache lokal perangkat
+          final newPkg = ExamPackage(
+            paketId: newToken,
+            namaPaket: newTitle,
+            kategori: package?.kategori ?? 'UMUM',
+            jenisWaktu: package?.jenisWaktu ?? 'per_paket',
+            durasiMenit: package?.durasiMenit ?? 90,
+            allowRetake: false,
+            isTeacherGenerated: true,
+            passingGrade: package?.passingGrade ?? 75,
+            randomizeQuestions: package?.randomizeQuestions ?? true,
+            randomizeOptions: package?.randomizeOptions ?? false,
+          );
+          final newQuestions = questions.map((q) => ExamQuestion(
+            soalId: '${subtestDocId}_Q${q.nomorSoal}',
+            subtestId: subtestDocId,
+            nomorSoal: q.nomorSoal,
+            pertanyaan: q.pertanyaan,
+            opsiA: q.opsiA,
+            opsiB: q.opsiB,
+            opsiC: q.opsiC,
+            opsiD: q.opsiD,
+            opsiE: q.opsiE,
+            gamA: q.gamA,
+            gamB: q.gamB,
+            gamC: q.gamC,
+            gamD: q.gamD,
+            gamE: q.gamE,
+            kunci: q.kunci,
+            pembahasan: q.pembahasan,
+            gambar: q.gambar,
+            tabel: q.tabel,
+          )).toList();
+          final newSubtest = ExamSubtest(
+            subtestId: subtestDocId,
+            paketId: newToken,
+            judul: 'Soal Ujian',
+            durasiMenit: package?.durasiMenit ?? 90,
+            soalList: newQuestions,
+          );
+          await ExamCacheService.instance.saveExam(
+            paketId: newToken,
+            package: newPkg,
+            subtests: [newSubtest],
+            questions: newQuestions,
+          );
+        }
+      }
+
+      // 3. Buat sesi monitoring
+      await MonitoringService.instance.createExamSession(
+        examId: newToken,
+        title: newTitle,
+        url: newUrl,
+      );
+
+      // 4. Generate signed QR Payload
+      final qrSigned = QRPayloadService.generate(newUrl, title: newTitle);
+
+      // 5. Simpan di teacher_exam_history
+      final prefs = await SharedPreferences.getInstance();
+      final list = prefs.getStringList('teacher_exam_history') ?? [];
+      final entry = '$newToken|$newTitle|${DateTime.now().millisecondsSinceEpoch}|$newUrl|$qrSigned';
+      list.insert(0, entry);
+      if (list.length > 50) list.removeLast();
+      await prefs.setStringList('teacher_exam_history', list);
+
+      if (mounted) {
+        Navigator.pop(context); // Tutup loading dialog
+        _loadHistory(); // Refresh riwayat
+
+        // Tampilkan dialog QR & Token hasil duplikasi
+        TeacherExamPublishedDialog.show(
+          context,
+          examTitle: newTitle,
+          token: newToken,
+          qrPayload: qrSigned,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Tutup loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menduplikasi ujian: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _showTokenDetailDialog(Map<String, String> item) {
@@ -1105,182 +1409,231 @@ class _TeacherMonitoringListScreenState
                   const SizedBox(height: 10),
                   const Divider(height: 1, color: Color(0xFFF1F5F9)),
                   const SizedBox(height: 12),
-                  // Quick Actions Bar (Redesain Modern, Elegan & Profesional)
-                  Row(
+                  // Quick Actions Bar (Tata Letak 2x2 Elegan, Bebas Overflow di Layar 320dp)
+                  Column(
                     children: [
-                      // Tombol Detail & QR
-                      Expanded(
-                        child: SizedBox(
-                          height: 38,
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              HapticFeedback.lightImpact();
-                              _showTokenDetailDialog(item);
-                            },
-                            icon: const Icon(
-                              Icons.qr_code_2_rounded,
-                              size: 16,
-                              color: Color(0xFF0F766E),
-                            ),
-                            label: Text(
-                              'Detail',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.poppins(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF0F766E),
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor: const Color(0xFFF0FDF4),
-                              side: const BorderSide(
-                                color: Color(0xFFBBF7D0),
-                                width: 1,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-
-                      // Tombol Bagikan
-                      Expanded(
-                        child: SizedBox(
-                          height: 38,
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              HapticFeedback.lightImpact();
-                              _shareExamInfo(item);
-                            },
-                            icon: const Icon(
-                              Icons.share_rounded,
-                              size: 15,
-                              color: Color(0xFF2563EB),
-                            ),
-                            label: Text(
-                              'Bagikan',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.poppins(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF2563EB),
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor: const Color(0xFFEFF6FF),
-                              side: const BorderSide(
-                                color: Color(0xFFBFDBFE),
-                                width: 1,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-
-                      // Tombol Hapus (Mode Riwayat) / Pantau Live (Mode Live)
-                      if (widget.isLiveMode)
-                        Expanded(
-                          child: SizedBox(
-                            height: 38,
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                HapticFeedback.lightImpact();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        TeacherMonitoringDetailScreen(
-                                          examId: item['examId']!,
-                                          title: item['title']!,
-                                          url: item['url'],
-                                        ),
+                      Row(
+                        children: [
+                          // Tombol Detail & QR
+                          Expanded(
+                            child: SizedBox(
+                              height: 38,
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  HapticFeedback.lightImpact();
+                                  _showTokenDetailDialog(item);
+                                },
+                                icon: const Icon(
+                                  Icons.qr_code_2_rounded,
+                                  size: 16,
+                                  color: Color(0xFF0F766E),
+                                ),
+                                label: Text(
+                                  'Detail',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF0F766E),
                                   ),
-                                );
-                              },
-                              icon: const Icon(
-                                Icons.monitor_heart_rounded,
-                                size: 16,
-                                color: Colors.white,
-                              ),
-                              label: Text(
-                                'Monitor',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
                                 ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _kGreen,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFF0FDF4),
+                                  side: const BorderSide(
+                                    color: Color(0xFFBBF7D0),
+                                    width: 1,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        )
-                      else
-                        Expanded(
-                          child: SizedBox(
-                            height: 38,
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                HapticFeedback.lightImpact();
-                                _confirmDelete(item);
-                              },
-                              icon: Icon(
-                                Icons.delete_outline_rounded,
-                                size: 16,
-                                color: Colors.red.shade600,
-                              ),
-                              label: Text(
-                                'Hapus',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.red.shade600,
+                          const SizedBox(width: 8),
+
+                          // Tombol Duplikat Token (Untuk Kelas Lain)
+                          Expanded(
+                            child: SizedBox(
+                              height: 38,
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  HapticFeedback.lightImpact();
+                                  _duplicateExam(item);
+                                },
+                                icon: const Icon(
+                                  Icons.copy_all_rounded,
+                                  size: 16,
+                                  color: Color(0xFF7C3AED),
                                 ),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFEF2F2),
-                                side: BorderSide(
-                                  color: Colors.red.shade200,
-                                  width: 1,
+                                label: Text(
+                                  'Duplikat',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF7C3AED),
+                                  ),
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFFAF5FF),
+                                  side: const BorderSide(
+                                    color: Color(0xFFE9D5FF),
+                                    width: 1,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          // Tombol Bagikan
+                          Expanded(
+                            child: SizedBox(
+                              height: 38,
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  HapticFeedback.lightImpact();
+                                  _shareExamInfo(item);
+                                },
+                                icon: const Icon(
+                                  Icons.share_rounded,
+                                  size: 15,
+                                  color: Color(0xFF2563EB),
+                                ),
+                                label: Text(
+                                  'Bagikan',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF2563EB),
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFEFF6FF),
+                                  side: const BorderSide(
+                                    color: Color(0xFFBFDBFE),
+                                    width: 1,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+
+                          // Tombol Hapus (Mode Riwayat) / Pantau Live (Mode Live)
+                          if (widget.isLiveMode)
+                            Expanded(
+                              child: SizedBox(
+                                height: 38,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    HapticFeedback.lightImpact();
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            TeacherMonitoringDetailScreen(
+                                              examId: item['examId']!,
+                                              title: item['title']!,
+                                              url: item['url'],
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(
+                                    Icons.monitor_heart_rounded,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                  label: Text(
+                                    'Monitor',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: _kGreen,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          else
+                            Expanded(
+                              child: SizedBox(
+                                height: 38,
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    HapticFeedback.lightImpact();
+                                    _confirmDelete(item);
+                                  },
+                                  icon: Icon(
+                                    Icons.delete_outline_rounded,
+                                    size: 16,
+                                    color: Colors.red.shade600,
+                                  ),
+                                  label: Text(
+                                    'Hapus',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.red.shade600,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFFEF2F2),
+                                    side: BorderSide(
+                                      color: Colors.red.shade200,
+                                      width: 1,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                 ],
@@ -2245,6 +2598,114 @@ class _TeacherMonitoringDetailScreenState
                             const SizedBox(height: 2),
                             Text(
                               'Lihat tabel butir soal, kunci guru (hijau/merah), & unduh Excel/PDF',
+                              style: GoogleFonts.poppins(
+                                fontSize: 11,
+                                color: Colors.white.withValues(alpha: 0.85),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: Colors.white70,
+                        size: 16,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // ── Tombol Rekap Otomatis Siswa Remedial ────────────────
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TeacherExamMatrixScreen(
+                        examId: widget.examId,
+                        title: widget.title,
+                        openRemedialOnStart: true,
+                      ),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFB45309), Color(0xFFD97706)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFB45309).withValues(alpha: 0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.assignment_late_rounded,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  'Rekap Siswa Remedial',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFEF3C7),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'OTOMATIS',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: const Color(0xFF92400E),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Daftar siswa < KKM, analisis soal tersulit, kirim WA & PDF',
                               style: GoogleFonts.poppins(
                                 fontSize: 11,
                                 color: Colors.white.withValues(alpha: 0.85),

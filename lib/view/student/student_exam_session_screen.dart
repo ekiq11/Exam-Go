@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -608,6 +609,11 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   }
 
   void _hydrateSubtestsWithQuestions() {
+    final shouldRandomize = _package?.randomizeQuestions ?? false;
+    final seed = widget.studentNis.trim().hashCode ^
+        widget.token.trim().toUpperCase().hashCode;
+    final rand = Random(seed);
+
     if (_subtests.isNotEmpty) {
       int seqNumber = 1;
       for (final st in _subtests) {
@@ -620,6 +626,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                   (qSt.contains(sSt) || sSt.contains(qSt)));
         }).toList();
         stSoal.sort((a, b) => a.soalId.compareTo(b.soalId));
+        if (shouldRandomize) {
+          stSoal.shuffle(rand);
+        }
         for (final q in stSoal) {
           q.nomorSoal = seqNumber++;
         }
@@ -631,6 +640,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
           .toList();
       if (orphans.isNotEmpty && _subtests.isNotEmpty) {
         orphans.sort((a, b) => a.soalId.compareTo(b.soalId));
+        if (shouldRandomize) {
+          orphans.shuffle(rand);
+        }
         for (final q in orphans) {
           q.nomorSoal = seqNumber++;
         }
@@ -639,6 +651,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     } else {
       int seqNumber = 1;
       _allQuestions.sort((a, b) => a.soalId.compareTo(b.soalId));
+      if (shouldRandomize) {
+        _allQuestions.shuffle(rand);
+      }
       for (final q in _allQuestions) {
         q.nomorSoal = seqNumber++;
       }
@@ -2789,57 +2804,18 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                       ),
                       const SizedBox(height: 10),
 
-                      _buildOptionCard(
-                        'A',
-                        currentQ.opsiA,
-                        currentQ.gamA,
-                        selectedAns == 'A',
-                        () {
-                          setState(() => _answers[currentQ.soalId] = 'A');
-                          _debouncedSaveCache();
-                        },
-                      ),
-                      _buildOptionCard(
-                        'B',
-                        currentQ.opsiB,
-                        currentQ.gamB,
-                        selectedAns == 'B',
-                        () {
-                          setState(() => _answers[currentQ.soalId] = 'B');
-                          _debouncedSaveCache();
-                        },
-                      ),
-                      _buildOptionCard(
-                        'C',
-                        currentQ.opsiC,
-                        currentQ.gamC,
-                        selectedAns == 'C',
-                        () {
-                          setState(() => _answers[currentQ.soalId] = 'C');
-                          _debouncedSaveCache();
-                        },
-                      ),
-                      _buildOptionCard(
-                        'D',
-                        currentQ.opsiD,
-                        currentQ.gamD,
-                        selectedAns == 'D',
-                        () {
-                          setState(() => _answers[currentQ.soalId] = 'D');
-                          _debouncedSaveCache();
-                        },
-                      ),
-                      if (currentQ.opsiE.isNotEmpty || currentQ.gamE.isNotEmpty)
-                        _buildOptionCard(
-                          'E',
-                          currentQ.opsiE,
-                          currentQ.gamE,
-                          selectedAns == 'E',
+                      ..._getDisplayOptions(currentQ).map(
+                        (opt) => _buildOptionCard(
+                          opt.displayLabel,
+                          opt.text,
+                          opt.gam,
+                          selectedAns == opt.origKey,
                           () {
-                            setState(() => _answers[currentQ.soalId] = 'E');
+                            setState(() => _answers[currentQ.soalId] = opt.origKey);
                             _debouncedSaveCache();
                           },
                         ),
+                      ),
 
                       const SizedBox(height: 30),
                     ],
@@ -3174,6 +3150,31 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         ),
       ),
     );
+  }
+
+  List<_ExamOptionDisplayItem> _getDisplayOptions(ExamQuestion q) {
+    final rawList = [
+      _ExamOptionDisplayItem(origKey: 'A', text: q.opsiA, gam: q.gamA),
+      _ExamOptionDisplayItem(origKey: 'B', text: q.opsiB, gam: q.gamB),
+      _ExamOptionDisplayItem(origKey: 'C', text: q.opsiC, gam: q.gamC),
+      _ExamOptionDisplayItem(origKey: 'D', text: q.opsiD, gam: q.gamD),
+      if (q.opsiE.isNotEmpty || q.gamE.isNotEmpty)
+        _ExamOptionDisplayItem(origKey: 'E', text: q.opsiE, gam: q.gamE),
+    ];
+
+    if (_package?.randomizeOptions == true) {
+      final optSeed = widget.studentNis.trim().hashCode ^
+          widget.token.trim().toUpperCase().hashCode ^
+          q.soalId.hashCode;
+      final rand = Random(optSeed);
+      rawList.shuffle(rand);
+    }
+
+    const labels = ['A', 'B', 'C', 'D', 'E'];
+    for (int i = 0; i < rawList.length; i++) {
+      rawList[i].displayLabel = labels[i];
+    }
+    return rawList;
   }
 
   Widget _buildOptionCard(
@@ -4558,4 +4559,17 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
       ),
     );
   }
+}
+
+class _ExamOptionDisplayItem {
+  final String origKey;
+  final String text;
+  final String gam;
+  String displayLabel = '';
+
+  _ExamOptionDisplayItem({
+    required this.origKey,
+    required this.text,
+    required this.gam,
+  });
 }
