@@ -609,7 +609,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
   }
 
   void _hydrateSubtestsWithQuestions() {
-    final shouldRandomize = _package?.randomizeQuestions ?? false;
+    // Fitur acak HANYA untuk ujian buatan guru mandiri jika guru menyetujui/mengaktifkannya.
+    // Untuk Paket Tryout (SNBT, SKD, TKA, Event) nomor soal TIDAK PERNAH diacak.
+    final isTeacherExam = _package?.isTeacherGenerated == true && !widget.isEvent;
+    final shouldRandomize = isTeacherExam && (_package?.randomizeQuestions == true);
     final seed = widget.studentNis.trim().hashCode ^
         widget.token.trim().toUpperCase().hashCode;
     final rand = Random(seed);
@@ -3162,7 +3165,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         _ExamOptionDisplayItem(origKey: 'E', text: q.opsiE, gam: q.gamE),
     ];
 
-    if (_package?.randomizeOptions == true) {
+    // Fitur acak opsi HANYA untuk ujian buatan guru mandiri jika guru mengaktifkannya
+    final isTeacherExam = _package?.isTeacherGenerated == true && !widget.isEvent;
+    if (isTeacherExam && _package?.randomizeOptions == true) {
       final optSeed = widget.studentNis.trim().hashCode ^
           widget.token.trim().toUpperCase().hashCode ^
           q.soalId.hashCode;

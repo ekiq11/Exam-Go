@@ -47,7 +47,7 @@ class ExamPackage {
     this.allowRetake = true,
     this.isTeacherGenerated = false,
     this.passingGrade = 75,
-    this.randomizeQuestions = true,
+    this.randomizeQuestions = false,
     this.randomizeOptions = false,
   })  : subtests = subtests ?? [],
         createdAt = createdAt ?? DateTime.now();
@@ -93,7 +93,7 @@ class ExamPackage {
       passingGrade: (data['passing_grade'] as num?)?.toInt() ??
           (data['kkm'] as num?)?.toInt() ??
           75,
-      randomizeQuestions: data['randomize_questions'] != false && data['acak_soal'] != false,
+      randomizeQuestions: data['randomize_questions'] == true || data['acak_soal'] == true,
       randomizeOptions: data['randomize_options'] == true || data['acak_opsi'] == true,
     );
   }

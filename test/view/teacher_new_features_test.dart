@@ -9,7 +9,26 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Fitur 4: Acak Soal & Acak Opsi (Anti Lirik Sebangku)', () {
-    test('ExamPackage serialization preserves randomizeQuestions & randomizeOptions', () {
+    test('ExamPackage defaults randomizeQuestions & randomizeOptions to FALSE unless teacher activates', () {
+      final defaultPkg = ExamPackage(
+        paketId: 'TRYOUT_SNBT_01',
+        namaPaket: 'Paket Tryout UTBK SNBT 2026',
+        isTeacherGenerated: false, // Paket Tryout Resmi
+      );
+
+      expect(defaultPkg.randomizeQuestions, isFalse, reason: 'Paket tryout tidak boleh diacak otomatis');
+      expect(defaultPkg.randomizeOptions, isFalse);
+
+      final map = defaultPkg.toFirestore();
+      expect(map['randomize_questions'], isFalse);
+      expect(map['randomize_options'], isFalse);
+
+      final parsed = ExamPackage.fromFirestore(map, 'TRYOUT_SNBT_01');
+      expect(parsed.randomizeQuestions, isFalse);
+      expect(parsed.randomizeOptions, isFalse);
+    });
+
+    test('ExamPackage serialization preserves randomizeQuestions & randomizeOptions when activated', () {
       final pkg = ExamPackage(
         paketId: 'TEST99',
         namaPaket: 'Tryout Sains Anti-Curang',
