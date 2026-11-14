@@ -46,6 +46,14 @@
 	<key>NSFaceIDUsageDescription</key>
 	<string>ExamGO menggunakan Face ID untuk memverifikasi identitas guru sebelum mengakses Mode Guru.</string>
 
+	<!-- Mikrofon — untuk soal ujian yang berisi audio/rekaman suara -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Izinkan ExamGO menggunakan mikrofon hanya saat soal ujian meminta jawaban berupa suara. Di halaman lain, mikrofon tidak akan pernah aktif.</string>
+
+	<!-- Lokasi saat digunakan — untuk melampirkan lokasi pada foto yang diambil saat mengumpulkan jawaban -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Izinkan ExamGO mengetahui lokasi Anda hanya saat mengambil foto untuk jawaban ujian, agar foto terlampir informasi lokasi sekolah. Lokasi Anda tidak dilacak di luar itu.</string>
+
 	<!-- Galeri baca — setara READ_EXTERNAL_STORAGE (maxSdkVersion 32) -->
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>ExamGO memerlukan akses galeri foto untuk memindai QR Code dari gambar yang tersimpan.</string>
