@@ -457,5 +457,44 @@ void main() {
       expect(kodeContent, contains('updateMask.fieldPaths=school'));
       expect(kodeContent, contains('updateMask.fieldPaths=mobile_device_id'));
     });
+
+    test('guru.html and Kode.js support history pagination, symmetrical form layout, and action buttons', () {
+      final guruHtmlFile = File('lib/gas_fcm/gas/guru.html');
+      final kodeJsFile = File('lib/gas_fcm/gas/Kode.js');
+      final guruContent = guruHtmlFile.readAsStringSync();
+      final kodeContent = kodeJsFile.readAsStringSync();
+
+      // Form symmetry (Row 1 & Row 2 md:grid-cols-12 6-3-3 alignment)
+      expect(guruContent, contains('md:col-span-6'));
+      expect(guruContent, contains('md:col-span-3'));
+      expect(guruContent, contains('id="exam-title"'));
+      expect(guruContent, contains('id="exam-category"'));
+      expect(guruContent, contains('id="exam-token"'));
+      expect(guruContent, contains('id="exam-time-mode"'));
+      expect(guruContent, contains('id="wrapper-global-duration"'));
+      expect(guruContent, contains('id="wrapper-passing-grade"'));
+
+      // History Pagination
+      expect(guruContent, contains('id="exam-history-pagination"'));
+      expect(guruContent, contains('_historyCurrentPage'));
+      expect(guruContent, contains('_historyItemsPerPage'));
+      expect(guruContent, contains('function renderHistoryPagination('));
+      expect(guruContent, contains('function goToHistoryPage('));
+
+      // History action buttons & handlers
+      expect(guruContent, contains('function openHistoryQrModalByToken('));
+      expect(guruContent, contains('function startMonitoringForExam('));
+      expect(guruContent, contains('function openExamMatrixModal('));
+      expect(guruContent, contains(r"openHistoryQrModalByToken('${token}')"));
+      expect(guruContent, contains(r"startMonitoringForExam('${token}')"));
+      expect(guruContent, contains(r"openExamMatrixModal('${token}')"));
+
+      // Title sanitation prevents "..." leaks
+      expect(guruContent, contains('function sanitizeExamTitle('));
+      expect(kodeContent, contains('function sanitizeExamTitle('));
+      expect(kodeContent, contains('reqAction === \'get_exam_matrix_results\''));
+      expect(kodeContent, contains('reqAction === \'get_exam_monitoring\''));
+      expect(kodeContent, contains('reqAction === \'get_teacher_exams\''));
+    });
   });
 }
