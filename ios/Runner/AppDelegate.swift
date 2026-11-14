@@ -152,11 +152,26 @@ import UserNotifications
     }
 
     // ══════════════════════════════════════════════════════════
-    // MARK: App Lifecycle
+    // MARK: App & Scene Lifecycle
     // Setara: onResume() / onPause() / onDestroy() di MainActivity.kt
     // ══════════════════════════════════════════════════════════
 
     override func applicationDidBecomeActive(_ application: UIApplication) {
+        super.applicationDidBecomeActive(application)
+        sceneDidBecomeActive()
+    }
+
+    override func applicationWillResignActive(_ application: UIApplication) {
+        super.applicationWillResignActive(application)
+        sceneWillResignActive()
+    }
+
+    override func applicationDidEnterBackground(_ application: UIApplication) {
+        super.applicationDidEnterBackground(application)
+        sceneDidEnterBackground()
+    }
+
+    func sceneDidBecomeActive() {
         if isKioskActive {
             // Re-apply immersive saat resume (setara onResume re-inject handler)
             applyImmersive()
@@ -164,14 +179,14 @@ import UserNotifications
         }
     }
 
-    override func applicationWillResignActive(_ application: UIApplication) {
+    func sceneWillResignActive() {
         if isKioskActive {
             // Blur content saat app di-background (tambahan keamanan)
             showSecureOverlay()
         }
     }
 
-    override func applicationDidEnterBackground(_ application: UIApplication) {
+    func sceneDidEnterBackground() {
         if isKioskActive {
             print("⚠️ App entered background while kiosk active")
         }
