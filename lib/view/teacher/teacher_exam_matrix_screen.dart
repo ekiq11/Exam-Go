@@ -57,13 +57,13 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
   String _selectedFilter = 'Semua'; // 'Semua', 'Tuntas', 'Remedial'
 
   final ScrollController _horizontalBodyScrollController = ScrollController();
-  final ScrollController _horizontalHeaderScrollController =
-      ScrollController();
+  final ScrollController _horizontalHeaderScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialQuestions != null && widget.initialQuestions!.isNotEmpty) {
+    if (widget.initialQuestions != null &&
+        widget.initialQuestions!.isNotEmpty) {
       _questions = List.from(widget.initialQuestions!);
       _isLoadingQuestions = false;
     } else {
@@ -98,7 +98,9 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
       ]);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Mode Landscape aktif: Tampilan kolom soal lebih luas.'),
+          content: Text(
+            'Mode Landscape aktif: Tampilan kolom soal lebih luas.',
+          ),
           duration: Duration(seconds: 2),
         ),
       );
@@ -148,7 +150,9 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
         };
       }).toList();
 
-      formatted.sort((a, b) => (a['nomorSoal'] as int).compareTo(b['nomorSoal'] as int));
+      formatted.sort(
+        (a, b) => (a['nomorSoal'] as int).compareTo(b['nomorSoal'] as int),
+      );
 
       if (mounted) {
         setState(() {
@@ -243,7 +247,9 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
 ''');
 
       for (final q in _questions) {
-        buffer.write('<th class="th-header" style="width: 45px;">Q${q['nomorSoal']}</th>');
+        buffer.write(
+          '<th class="th-header" style="width: 45px;">Q${q['nomorSoal']}</th>',
+        );
       }
       buffer.write('</tr>\n');
 
@@ -288,21 +294,25 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
           final nomor = q['nomorSoal']?.toString() ?? '';
           final kunci = (q['kunci']?.toString() ?? '').trim().toUpperCase();
 
-          final studentAns = (rawAnswers[soalId] ??
-                  rawAnswers[nomor] ??
-                  rawAnswers['Q$nomor'] ??
-                  '-')
-              .toString()
-              .trim()
-              .toUpperCase();
+          final studentAns =
+              (rawAnswers[soalId] ??
+                      rawAnswers[nomor] ??
+                      rawAnswers['Q$nomor'] ??
+                      '-')
+                  .toString()
+                  .trim()
+                  .toUpperCase();
 
-          final isCorrect = studentAns.isNotEmpty &&
+          final isCorrect =
+              studentAns.isNotEmpty &&
               studentAns != '-' &&
               kunci.isNotEmpty &&
               studentAns == kunci;
 
           final cssClass = isCorrect ? 'ans-correct' : 'ans-wrong';
-          buffer.write('<td class="$cssClass">${studentAns.isEmpty ? '-' : studentAns}</td>');
+          buffer.write(
+            '<td class="$cssClass">${studentAns.isEmpty ? '-' : studentAns}</td>',
+          );
         }
         buffer.write('</tr>\n');
       }
@@ -314,8 +324,11 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
 ''');
 
       final tempDir = await getTemporaryDirectory();
-      final sanitizedTitle = widget.title.replaceAll(RegExp(r'[^\w\s\-]'), '_').trim();
-      final filePath = '${tempDir.path}/Matriks_Jawaban_${sanitizedTitle}_${widget.examId}.xls';
+      final sanitizedTitle = widget.title
+          .replaceAll(RegExp(r'[^\w\s\-]'), '_')
+          .trim();
+      final filePath =
+          '${tempDir.path}/Matriks_Jawaban_${sanitizedTitle}_${widget.examId}.xls';
       final file = File(filePath);
       await file.writeAsString(buffer.toString(), encoding: utf8);
 
@@ -323,14 +336,15 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
         ShareParams(
           files: [XFile(file.path, mimeType: 'application/vnd.ms-excel')],
           subject: 'Matriks Jawaban Excel - ${widget.title}',
-          text: 'Matriks Analisis Butir Soal Ujian "${widget.title}" (Token: ${widget.examId}).',
+          text:
+              'Matriks Analisis Butir Soal Ujian "${widget.title}" (Token: ${widget.examId}).',
         ),
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengekspor Excel: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal mengekspor Excel: $e')));
       }
     } finally {
       if (mounted) setState(() => _isExportingExcel = false);
@@ -356,9 +370,9 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal membuat PDF: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal membuat PDF: $e')));
       }
     } finally {
       if (mounted) setState(() => _isExportingPdf = false);
@@ -414,7 +428,9 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                           ? _kLightGreen.withValues(alpha: 0.15)
                           : Colors.red.shade50,
                       child: Icon(
-                        isPassed ? Icons.check_circle_rounded : Icons.info_outline_rounded,
+                        isPassed
+                            ? Icons.check_circle_rounded
+                            : Icons.info_outline_rounded,
                         color: isPassed ? _kPrimaryGreen : Colors.red.shade700,
                       ),
                     ),
@@ -435,7 +451,9 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                             'NIS: $nis | Status: ${isPassed ? 'TUNTAS' : 'REMEDIAL'}',
                             style: GoogleFonts.poppins(
                               fontSize: 12,
-                              color: isPassed ? _kPrimaryGreen : Colors.red.shade700,
+                              color: isPassed
+                                  ? _kPrimaryGreen
+                                  : Colors.red.shade700,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -443,7 +461,10 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: isPassed
                             ? const Color(0xFFD1FAE5)
@@ -455,7 +476,9 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: isPassed ? const Color(0xFF065F46) : const Color(0xFF991B1B),
+                          color: isPassed
+                              ? const Color(0xFF065F46)
+                              : const Color(0xFF991B1B),
                         ),
                       ),
                     ),
@@ -468,11 +491,23 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   children: [
-                    _buildStatMiniBadge('Benar: $benar', const Color(0xFFD1FAE5), const Color(0xFF065F46)),
+                    _buildStatMiniBadge(
+                      'Benar: $benar',
+                      const Color(0xFFD1FAE5),
+                      const Color(0xFF065F46),
+                    ),
                     const SizedBox(width: 8),
-                    _buildStatMiniBadge('Salah: $salah', const Color(0xFFFEE2E2), const Color(0xFF991B1B)),
+                    _buildStatMiniBadge(
+                      'Salah: $salah',
+                      const Color(0xFFFEE2E2),
+                      const Color(0xFF991B1B),
+                    ),
                     const SizedBox(width: 8),
-                    _buildStatMiniBadge('Kosong: $kosong', Colors.grey.shade200, Colors.grey.shade800),
+                    _buildStatMiniBadge(
+                      'Kosong: $kosong',
+                      Colors.grey.shade200,
+                      Colors.grey.shade800,
+                    ),
                   ],
                 ),
               ),
@@ -489,17 +524,21 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                     final q = _questions[idx];
                     final nomor = q['nomorSoal'];
                     final soalId = q['soalId']?.toString() ?? '';
-                    final kunci = (q['kunci']?.toString() ?? '').trim().toUpperCase();
-
-                    final studentAns = (rawAnswers[soalId] ??
-                            rawAnswers['$nomor'] ??
-                            rawAnswers['Q$nomor'] ??
-                            '-')
-                        .toString()
+                    final kunci = (q['kunci']?.toString() ?? '')
                         .trim()
                         .toUpperCase();
 
-                    final isCorrect = studentAns.isNotEmpty &&
+                    final studentAns =
+                        (rawAnswers[soalId] ??
+                                rawAnswers['$nomor'] ??
+                                rawAnswers['Q$nomor'] ??
+                                '-')
+                            .toString()
+                            .trim()
+                            .toUpperCase();
+
+                    final isCorrect =
+                        studentAns.isNotEmpty &&
                         studentAns != '-' &&
                         kunci.isNotEmpty &&
                         studentAns == kunci;
@@ -537,7 +576,10 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: isCorrect
                                   ? const Color(0xFFD1FAE5)
@@ -615,19 +657,20 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
               '${widget.title} • Token: ${widget.examId}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.poppins(
-                fontSize: 11,
-                color: Colors.white70,
-              ),
+              style: GoogleFonts.poppins(fontSize: 11, color: Colors.white70),
             ),
           ],
         ),
         actions: [
           // Tombol Putar Layar (Landscape / Portrait)
           IconButton(
-            tooltip: _isLandscape ? 'Kembali ke Potret' : 'Mode Layar Luas (Landscape)',
+            tooltip: _isLandscape
+                ? 'Kembali ke Potret'
+                : 'Mode Layar Luas (Landscape)',
             icon: Icon(
-              _isLandscape ? Icons.stay_current_portrait_rounded : Icons.screen_rotation_rounded,
+              _isLandscape
+                  ? Icons.stay_current_portrait_rounded
+                  : Icons.screen_rotation_rounded,
               color: Colors.white,
               size: 20,
             ),
@@ -647,68 +690,81 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
               ),
             )
           : _questionsError != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline_rounded, size: 48, color: Colors.red),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Gagal Memuat Soal Ujian',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          _questionsError!,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade600),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: _loadQuestionsData,
-                          icon: const Icon(Icons.refresh_rounded),
-                          label: const Text('Coba Lagi'),
-                          style: ElevatedButton.styleFrom(backgroundColor: _kPrimaryGreen),
-                        ),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      size: 48,
+                      color: Colors.red,
                     ),
-                  ),
-                )
-              : widget.initialStudents != null
-                  ? _buildMatrixContent(widget.initialStudents!)
-                  : StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('jawaban_tryout')
-                          .where('token', isEqualTo: widget.examId)
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator(color: _kLightGreen));
-                        }
-
-                        final docs = snapshot.data?.docs ?? [];
-                        final List<Map<String, dynamic>> allStudents = docs.map((d) {
-                          final data = d.data() as Map<String, dynamic>;
-                          return {
-                            'name': data['nama_peserta']?.toString() ?? 'Anonim',
-                            'nis': data['nis']?.toString() ?? '-',
-                            'skor': (data['skor_akhir'] as num?)?.toInt() ?? 0,
-                            'benar': (data['jumlah_benar'] as num?)?.toInt() ?? 0,
-                            'salah': (data['jumlah_salah'] as num?)?.toInt() ?? 0,
-                            'totalSoal': (data['total_soal'] as num?)?.toInt() ?? _questions.length,
-                            'jawaban': (data['jawaban'] as Map<String, dynamic>?) ?? {},
-                            'submittedAt': data['submitted_at'],
-                          };
-                        }).toList();
-
-                        return _buildMatrixContent(allStudents);
-                      },
+                    const SizedBox(height: 12),
+                    Text(
+                      'Gagal Memuat Soal Ujian',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _questionsError!,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: _loadQuestionsData,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Coba Lagi'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _kPrimaryGreen,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : widget.initialStudents != null
+          ? _buildMatrixContent(widget.initialStudents!)
+          : StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('jawaban_tryout')
+                  .where('token', isEqualTo: widget.examId)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: _kLightGreen),
+                  );
+                }
+
+                final docs = snapshot.data?.docs ?? [];
+                final List<Map<String, dynamic>> allStudents = docs.map((d) {
+                  final data = d.data() as Map<String, dynamic>;
+                  return {
+                    'name': data['nama_peserta']?.toString() ?? 'Anonim',
+                    'nis': data['nis']?.toString() ?? '-',
+                    'skor': (data['skor_akhir'] as num?)?.toInt() ?? 0,
+                    'benar': (data['jumlah_benar'] as num?)?.toInt() ?? 0,
+                    'salah': (data['jumlah_salah'] as num?)?.toInt() ?? 0,
+                    'totalSoal':
+                        (data['total_soal'] as num?)?.toInt() ??
+                        _questions.length,
+                    'jawaban': (data['jawaban'] as Map<String, dynamic>?) ?? {},
+                    'submittedAt': data['submitted_at'],
+                  };
+                }).toList();
+
+                return _buildMatrixContent(allStudents);
+              },
+            ),
     );
   }
 
@@ -717,7 +773,9 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
     final list = List<Map<String, dynamic>>.from(allStudents);
     // Urutkan nilai tertinggi ke terendah
     list.sort(
-      (a, b) => ((b['skor'] as num?)?.toInt() ?? 0).compareTo((a['skor'] as num?)?.toInt() ?? 0),
+      (a, b) => ((b['skor'] as num?)?.toInt() ?? 0).compareTo(
+        (a['skor'] as num?)?.toInt() ?? 0,
+      ),
     );
 
     // Filter pencarian dan status KKM
@@ -774,11 +832,19 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                     border: Border.all(color: Colors.grey.shade300),
                   ),
                   child: TextField(
-                    onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                    onChanged: (val) =>
+                        setState(() => _searchQuery = val.trim()),
                     decoration: InputDecoration(
                       hintText: 'Cari nama atau NIS siswa...',
-                      hintStyle: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade500),
-                      prefixIcon: const Icon(Icons.search_rounded, size: 18, color: Colors.grey),
+                      hintStyle: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey.shade500,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        size: 18,
+                        color: Colors.grey,
+                      ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(vertical: 10),
                     ),
@@ -796,18 +862,34 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                     ? const SizedBox(
                         width: 14,
                         height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
-                    : const Icon(Icons.table_view_rounded, size: 15, color: Colors.white),
+                    : const Icon(
+                        Icons.table_view_rounded,
+                        size: 15,
+                        color: Colors.white,
+                      ),
                 label: Text(
                   _isExportingExcel ? 'Excel...' : 'Excel',
-                  style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF15803D),
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
               const SizedBox(width: 6),
@@ -821,18 +903,34 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                     ? const SizedBox(
                         width: 14,
                         height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
-                    : const Icon(Icons.picture_as_pdf_rounded, size: 15, color: Colors.white),
+                    : const Icon(
+                        Icons.picture_as_pdf_rounded,
+                        size: 15,
+                        color: Colors.white,
+                      ),
                 label: Text(
                   _isExportingPdf ? 'PDF...' : 'PDF',
-                  style: GoogleFonts.poppins(fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFDC2626),
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ],
@@ -844,7 +942,9 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
 
   /// Legenda warna dan filter chip status
   Widget _buildLegendAndFilterBar(List<Map<String, dynamic>> allStudents) {
-    final passedCount = allStudents.where((s) => (s['skor'] as int) >= widget.passingGrade).length;
+    final passedCount = allStudents
+        .where((s) => (s['skor'] as int) >= widget.passingGrade)
+        .length;
     final remedialCount = allStudents.length - passedCount;
 
     return Container(
@@ -858,9 +958,17 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
         child: Row(
           children: [
             // Legenda Warna
-            _buildLegendPill('🟢 Benar', const Color(0xFFD1FAE5), const Color(0xFF065F46)),
+            _buildLegendPill(
+              '🟢 Benar',
+              const Color(0xFFD1FAE5),
+              const Color(0xFF065F46),
+            ),
             const SizedBox(width: 6),
-            _buildLegendPill('🔴 Salah/Kosong', const Color(0xFFFEE2E2), const Color(0xFF991B1B)),
+            _buildLegendPill(
+              '🔴 Salah/Kosong',
+              const Color(0xFFFEE2E2),
+              const Color(0xFF991B1B),
+            ),
             const SizedBox(width: 6),
             _buildLegendPill('🔑 Kunci Guru', _kKeyHeaderBg, Colors.white),
             const SizedBox(width: 14),
@@ -1007,8 +1115,14 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                       decoration: BoxDecoration(
                         color: isEven ? Colors.white : const Color(0xFFF1F5F9),
                         border: Border(
-                          bottom: BorderSide(color: Colors.grey.shade300, width: 0.5),
-                          right: BorderSide(color: Colors.grey.shade400, width: 1),
+                          bottom: BorderSide(
+                            color: Colors.grey.shade300,
+                            width: 0.5,
+                          ),
+                          right: BorderSide(
+                            color: Colors.grey.shade400,
+                            width: 1,
+                          ),
                         ),
                       ),
                       child: Row(
@@ -1048,7 +1162,10 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                                     ),
                                     const Spacer(),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                        vertical: 1,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: isPassed
                                             ? const Color(0xFFD1FAE5)
@@ -1106,7 +1223,10 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                             alignment: Alignment.center,
                             decoration: const BoxDecoration(
                               border: Border(
-                                right: BorderSide(color: Colors.white12, width: 0.5),
+                                right: BorderSide(
+                                  color: Colors.white12,
+                                  width: 0.5,
+                                ),
                               ),
                             ),
                             child: Text(
@@ -1128,7 +1248,10 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                       decoration: BoxDecoration(
                         color: _kKeyHeaderBg,
                         border: Border(
-                          bottom: BorderSide(color: Colors.grey.shade400, width: 1),
+                          bottom: BorderSide(
+                            color: Colors.grey.shade400,
+                            width: 1,
+                          ),
                         ),
                       ),
                       child: Row(
@@ -1139,7 +1262,10 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               border: Border(
-                                right: BorderSide(color: Colors.grey.shade700, width: 0.5),
+                                right: BorderSide(
+                                  color: Colors.grey.shade700,
+                                  width: 0.5,
+                                ),
                               ),
                             ),
                             child: Container(
@@ -1167,7 +1293,8 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                     // 3. Baris Jawaban Tiap Siswa
                     ...List.generate(students.length, (sIdx) {
                       final s = students[sIdx];
-                      final rawAnswers = (s['jawaban'] as Map<String, dynamic>?) ?? {};
+                      final rawAnswers =
+                          (s['jawaban'] as Map<String, dynamic>?) ?? {};
                       final isEven = sIdx % 2 == 0;
 
                       return InkWell(
@@ -1175,26 +1302,35 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                         child: Container(
                           height: rowHeight,
                           decoration: BoxDecoration(
-                            color: isEven ? Colors.white : const Color(0xFFF1F5F9),
+                            color: isEven
+                                ? Colors.white
+                                : const Color(0xFFF1F5F9),
                             border: Border(
-                              bottom: BorderSide(color: Colors.grey.shade300, width: 0.5),
+                              bottom: BorderSide(
+                                color: Colors.grey.shade300,
+                                width: 0.5,
+                              ),
                             ),
                           ),
                           child: Row(
                             children: _questions.map((q) {
                               final soalId = q['soalId']?.toString() ?? '';
                               final nomor = q['nomorSoal']?.toString() ?? '';
-                              final kunci = (q['kunci']?.toString() ?? '').trim().toUpperCase();
-
-                              final studentAns = (rawAnswers[soalId] ??
-                                      rawAnswers[nomor] ??
-                                      rawAnswers['Q$nomor'] ??
-                                      '-')
-                                  .toString()
+                              final kunci = (q['kunci']?.toString() ?? '')
                                   .trim()
                                   .toUpperCase();
 
-                              final isCorrect = studentAns.isNotEmpty &&
+                              final studentAns =
+                                  (rawAnswers[soalId] ??
+                                          rawAnswers[nomor] ??
+                                          rawAnswers['Q$nomor'] ??
+                                          '-')
+                                      .toString()
+                                      .trim()
+                                      .toUpperCase();
+
+                              final isCorrect =
+                                  studentAns.isNotEmpty &&
                                   studentAns != '-' &&
                                   kunci.isNotEmpty &&
                                   studentAns == kunci;
@@ -1256,7 +1392,11 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
           const SizedBox(height: 12),
           Text(
             'Tidak ada data siswa ditemukan',
-            style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey.shade700),
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
           ),
         ],
       ),

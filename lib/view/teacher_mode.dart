@@ -466,7 +466,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   bool _isTeacherPremium = false;
   int _remainingTeacherUploads = 3;
   bool _isLoadingLicense = true;
-  int _activeExamCount = 0;
 
   static bool _hasShownTeacherAd = false;
 
@@ -506,13 +505,10 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     try {
       await MonitoringService.instance.syncTeacherExamHistory();
     } catch (_) {}
-    final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList('teacher_exam_history') ?? [];
     if (mounted) {
       setState(() {
         _isTeacherPremium = premium;
         _remainingTeacherUploads = remainingUploads;
-        _activeExamCount = list.length;
         _isLoadingLicense = false;
       });
     }
@@ -614,7 +610,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       );
     }
 
-    final remaining = (5 - _activeExamCount).clamp(0, 5);
+    final remaining = _remainingTeacherUploads.clamp(0, 3);
     final isLimitReached = remaining <= 0;
 
     return Container(
@@ -684,8 +680,8 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                   const SizedBox(width: 4),
                   Text(
                     isLimitReached
-                        ? '0 / 5 Kuota Habis'
-                        : 'Sisa $remaining dari 5 URL Ujian',
+                        ? '0 / 3 Kuota Habis'
+                        : 'Sisa $remaining dari 3 URL Ujian',
                     style: GoogleFonts.poppins(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
@@ -702,7 +698,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: (remaining / 5).clamp(0.0, 1.0),
+              value: (remaining / 3).clamp(0.0, 1.0),
               minHeight: 6,
               backgroundColor: const Color(0xFFF1F5F9),
               valueColor: AlwaysStoppedAnimation(
@@ -715,8 +711,8 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           const SizedBox(height: 10),
           Text(
             isLimitReached
-                ? 'Batas maksimal 5 URL ujian aktif telah tercapai (0 tersisa). Hapus sesi lama di Pemantauan atau beralih ke Guru Premium untuk membuat ujian tanpa batas.'
-                : 'Tersisa $remaining kuota pembuatan URL ujian aktif. Setiap membuat link/QR baru, kuota akan berkurang dari 5 hingga 0.',
+                ? 'Batas maksimal 3 URL ujian gratis telah tercapai (0 tersisa). Beralih ke Guru Premium untuk membuat ujian tanpa batas.'
+                : 'Tersisa $remaining kuota pembuatan URL ujian aktif. Kuota ini tersinkronisasi ke server dan tidak akan ter-reset meskipun aplikasi dihapus.',
             style: GoogleFonts.poppins(
               fontSize: 11,
               color: isLimitReached
@@ -984,6 +980,26 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               color: AppColors.primaryGreen,
               title: 'Buat QR Ujian URL',
               subtitle: 'Generate QR Code untuk link ujian web eksternal',
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3.5,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD1FAE5),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFF10B981), width: 1),
+                ),
+                child: Text(
+                  'FREE',
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF065F46),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
               onTap: () async {
                 await Navigator.push(
                   context,

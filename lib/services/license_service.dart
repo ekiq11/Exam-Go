@@ -250,6 +250,13 @@ class LicenseService {
     final prefs = await SharedPreferences.getInstance();
     int localCount = prefs.getInt(_kTeacherUploadsKey) ?? 0;
 
+    // Perhitungkan juga riwayat lokal jika ada
+    final historyList = prefs.getStringList('teacher_exam_history') ?? [];
+    if (historyList.length > localCount) {
+      localCount = historyList.length;
+      await prefs.setInt(_kTeacherUploadsKey, localCount);
+    }
+
     final db = _db;
     if (db != null) {
       try {
@@ -260,7 +267,18 @@ class LicenseService {
           if (serverCount > localCount) {
             localCount = serverCount;
             await prefs.setInt(_kTeacherUploadsKey, localCount);
+          } else if (localCount > serverCount) {
+            // Sinkronkan ke cloud agar Firestore selalu menyimpan count terbesar
+            await db.collection('devices').doc(deviceId).set({
+              'teacher_upload_count': localCount,
+              'last_teacher_upload': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
           }
+        } else if (localCount > 0) {
+          await db.collection('devices').doc(deviceId).set({
+            'teacher_upload_count': localCount,
+            'last_teacher_upload': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
         }
       } catch (_) {}
     }

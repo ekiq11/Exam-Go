@@ -168,7 +168,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
     _showSnack(
       isPremium
           ? 'QR Ujian baru berhasil dibuat (Guru Premium Unlimited)'
-          : 'QR Ujian baru berhasil dibuat.',
+          : 'QR Ujian baru berhasil dibuat (Fitur Gratis Unlimited).',
     );
   }
 

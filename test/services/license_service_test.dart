@@ -107,6 +107,19 @@ void main() {
       expect(await LicenseService.instance.getRemainingTeacherUploads(), equals(9999));
     });
 
+    test('Teacher Free Quota counts local teacher_exam_history to prevent reset', () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('license_teacher_is_premium');
+      await prefs.remove('license_teacher_upload_count');
+      await prefs.setStringList('teacher_exam_history', [
+        'EXAM1|Math|123|url1',
+      ]);
+
+      // Karena ada 1 di riwayat, sisa kuota langsung dihitung 2 (bukan 3)
+      final remaining = await LicenseService.instance.getRemainingTeacherUploads();
+      expect(remaining, equals(2));
+    });
+
     test('getDeviceId returns non-empty string without throwing', () async {
       final deviceId = await LicenseService.instance.getDeviceId();
       expect(deviceId, isNotEmpty);
