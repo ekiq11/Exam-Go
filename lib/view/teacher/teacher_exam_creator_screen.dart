@@ -1083,13 +1083,7 @@ class _TeacherExamCreatorScreenState extends State<TeacherExamCreatorScreen>
                   children: [
                     if (_hasLoadedLicense) _buildTeacherLicenseBanner(),
                     _buildWebPortalHintBanner(),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      transitionBuilder: (child, animation) {
-                        return FadeTransition(opacity: animation, child: child);
-                      },
-                      child: _buildActiveStepView(),
-                    ),
+                    _buildActiveStepView(),
                   ],
                 ),
               ),

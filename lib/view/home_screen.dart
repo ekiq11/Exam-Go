@@ -1944,6 +1944,13 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildConnectionBanner() {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 350),
+      layoutBuilder: (currentChild, previousChildren) => Stack(
+        alignment: Alignment.center,
+        children: [
+          ...previousChildren.map((w) => IgnorePointer(child: w)),
+          ?currentChild,
+        ],
+      ),
       transitionBuilder: (child, anim) => SlideTransition(
         position: Tween<Offset>(
           begin: const Offset(0, -0.25),
