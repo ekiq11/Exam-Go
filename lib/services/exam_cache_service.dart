@@ -217,9 +217,7 @@ class ExamCacheService {
 
         onProgress?.call('Mengunduh struktur paket & subtest dari Firestore...', 0.40);
         final results = await Future.wait([
-          (package != null && package.isTeacherGenerated)
-              ? Future.value(null)
-              : db.collection('paket_tryout').doc(tokenUpper).get().timeout(const Duration(milliseconds: 4000)),
+          db.collection('paket_tryout').doc(tokenUpper).get().timeout(const Duration(milliseconds: 4000)),
           db.collection('subtest').where('paket_id', whereIn: targetIds).get().timeout(const Duration(milliseconds: 4000)),
           db.collection('tryout_soal').where('paket_id', whereIn: targetIds).get().timeout(const Duration(milliseconds: 4000)),
         ]);
@@ -236,8 +234,14 @@ class ExamCacheService {
             package.isTeacherGenerated = pData['is_teacher_generated'] == true ||
                 pData['teacher_token'] != null ||
                 pData['is_webgas'] == true;
-            if (pData['jenis_waktu'] != null) {
+            if (pData['kategori'] != null && pData['kategori'].toString().isNotEmpty) {
+              package.kategori = pData['kategori'].toString();
+            }
+            if (pData['jenis_waktu'] != null && pData['jenis_waktu'].toString().isNotEmpty) {
               package.jenisWaktu = pData['jenis_waktu'].toString();
+            }
+            if (pData['durasi_menit'] != null) {
+              package.durasiMenit = (pData['durasi_menit'] as num).toInt();
             }
           }
         }
@@ -257,22 +261,25 @@ class ExamCacheService {
 
         loadedSubtests = stDocs.map((d) => ExamSubtest.fromFirestore(d.data(), d.id)).toList();
 
-        // Fallback: Jika subtest di collection kosong tapi dokumen paket memiliki subtests_meta
-        if (loadedSubtests.isEmpty && pkgDocSnap != null && pkgDocSnap.exists) {
+        // Fallback: Jika subtest di collection kosong atau lebih sedikit dibanding subtests_meta di dokumen paket
+        if (pkgDocSnap != null && pkgDocSnap.exists) {
           final pData = pkgDocSnap.data() ?? {};
           if (pData['subtests_meta'] is List) {
             final smList = pData['subtests_meta'] as List;
-            int sIdx = 0;
-            for (final item in smList) {
-              if (item is Map) {
-                loadedSubtests.add(ExamSubtest(
-                  subtestId: item['subtest_id']?.toString() ?? '${tokenUpper}_ST${sIdx + 1}',
-                  paketId: tokenUpper,
-                  judul: item['judul']?.toString() ?? item['judul_subtest']?.toString() ?? 'Subtest ${sIdx + 1}',
-                  durasiMenit: (item['durasi_menit'] as num?)?.toInt() ?? 30,
-                  orderIndex: sIdx,
-                ));
-                sIdx++;
+            if (smList.length > loadedSubtests.length) {
+              loadedSubtests.clear();
+              int sIdx = 0;
+              for (final item in smList) {
+                if (item is Map) {
+                  loadedSubtests.add(ExamSubtest(
+                    subtestId: item['subtest_id']?.toString() ?? '${tokenUpper}_ST${sIdx + 1}',
+                    paketId: tokenUpper,
+                    judul: item['judul']?.toString() ?? item['judul_subtest']?.toString() ?? 'Subtest ${sIdx + 1}',
+                    durasiMenit: (item['durasi_menit'] as num?)?.toInt() ?? 30,
+                    orderIndex: sIdx,
+                  ));
+                  sIdx++;
+                }
               }
             }
           }

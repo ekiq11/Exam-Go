@@ -689,31 +689,80 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     }
   }
 
-  // ─── Klasifikasi Aturan Resmi Ujian Nasional (SNBT, TKA, SKD/BKN) ───
-  bool get _isSnbt {
-    // Soal yang dibuat guru / WebGAS dan kategori umum bebas dari aturan kaku blocking time
-    if (_package?.isTeacherGenerated == true) return false;
-    final kat = (_package?.kategori ?? '').trim().toUpperCase();
-    if (kat == ExamCategory.umum || kat == 'UMUM') return false;
-    return kat == ExamCategory.snbt ||
-        kat == 'SNBT' ||
-        kat.contains('SNBT') ||
-        kat.contains('UTBK');
-  }
+  // ─── Klasifikasi Aturan Resmi Ujian Nasional (SNBT, TKA, SKD/BKN, UMUM) ───
+  String get _cleanCategory =>
+      (_package?.kategori ?? widget.initialSchedule?.jenisTest ?? 'UMUM')
+          .trim()
+          .toUpperCase();
 
-  bool get _isSkd {
-    final kat = (_package?.kategori ?? '').trim().toUpperCase();
-    return kat == ExamCategory.skd || kat == 'SKD';
-  }
+  bool get _isSkd => _cleanCategory.contains('SKD');
+  bool get _isSnbt =>
+      _cleanCategory.contains('SNBT') || _cleanCategory.contains('UTBK');
+  bool get _isTka =>
+      _cleanCategory.startsWith('TKA') || _cleanCategory.contains('TKA');
+  bool get _isUmum => !_isSkd && !_isSnbt && !_isTka;
 
-  bool get _isTka {
-    final kat = (_package?.kategori ?? '').trim().toUpperCase();
-    return kat.startsWith('TKA') || kat.contains('TKA');
+  Widget _buildCategoryPill(String kategori) {
+    final kat = kategori.trim().toUpperCase();
+    Color bg = AppColors.paleGreen;
+    Color text = AppColors.primaryGreen;
+    Color border = const Color(0xFFA5D6A7);
+    String label = kat;
+
+    if (kat.contains('SNBT') || kat.contains('UTBK')) {
+      bg = AppColors.paleGreen;
+      text = AppColors.primaryGreen;
+      border = const Color(0xFFA5D6A7);
+      label = 'UTBK • SNBT';
+    } else if (kat.contains('SKD')) {
+      bg = const Color(0xFFF1F8E9);
+      text = const Color(0xFF33691E);
+      border = const Color(0xFFC5E1A5);
+      label = 'CAT • BKN SKD';
+    } else if (kat.contains('TKA')) {
+      bg = const Color(0xFFFFF8E1);
+      text = const Color(0xFFE65100);
+      border = const Color(0xFFFFECB3);
+      label = kat.isEmpty ? 'TKA • AKADEMIK' : kat;
+    } else if (kat.contains('MADRASAH')) {
+      bg = const Color(0xFFF0FDF4);
+      text = const Color(0xFF15803D);
+      border = const Color(0xFF86EFAC);
+      label = 'ASESMEN • MADRASAH';
+    } else if (kat.contains('EVENT')) {
+      bg = const Color(0xFFFEF3C7);
+      text = const Color(0xFFB45309);
+      border = const Color(0xFFFDE68A);
+      label = 'EVENT KHUSUS';
+    } else {
+      bg = const Color(0xFFEFF6FF);
+      text = const Color(0xFF1D4ED8);
+      border = const Color(0xFFBFDBFE);
+      label = 'CBT • UMUM';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: border, width: 0.8),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 9.5,
+          fontWeight: FontWeight.bold,
+          color: text,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
   }
 
   // ─── Manajemen Timer Per-Subtest & Global ──────────────────────
   bool get _isPerSubtest {
-    final jw = (_package?.jenisWaktu ?? '')
+    final jw = (_package?.jenisWaktu ?? widget.initialSchedule?.jenisWaktu ?? '')
         .trim()
         .toLowerCase()
         .replaceAll('-', '_')
@@ -721,16 +770,19 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     if (jw == 'per_subtest') return true;
     if (jw == 'per_paket') return false;
 
-    // Soal buatan guru / WebGAS jika memiliki lebih dari 1 subtest otomatis tampil per-subtest
-    if (_package?.isTeacherGenerated == true && _subtests.length > 1) return true;
-
     // Sesuai aturan CAT BKN: SKD resmi selalu satu kesatuan waktu global 100 menit (bebas lintas subtes)
     if (_isSkd) return false;
 
-    // SNBT dan TKA menggunakan alokasi waktu terpisah per-subtest
+    // SNBT dan TKA resmi menggunakan alokasi waktu terpisah per-subtest
     if (_isSnbt || _isTka) return true;
 
-    return _subtests.length > 1;
+    // Untuk ujian UMUM atau buatan guru, jika memiliki lebih dari 1 subtest otomatis tampil per-subtest
+    if (_isUmum && _subtests.length > 1) return true;
+
+    // Soal buatan guru / WebGAS jika memiliki lebih dari 1 subtest otomatis tampil per-subtest
+    if (_subtests.length > 1) return true;
+
+    return false;
   }
 
   List<ExamQuestion> _getActiveQuestions() {
@@ -966,35 +1018,41 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        Row(
                           children: [
-                            Text(
-                              'Lembar Navigasi Soal',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF0F172A),
-                              ),
+                            _buildCategoryPill(_cleanCategory),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Lembar Navigasi Soal',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF0F172A),
+                                  ),
+                                ),
+                                if (_isSkd)
+                                  Text(
+                                    'Simulasi CAT BKN: Bebas Akses Seluruh Soal',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11,
+                                      color: const Color(0xFF2563EB),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  )
+                                else if (_subtests.length > 1 && _currentSubtestIndex < _subtests.length)
+                                  Text(
+                                    'Subtest ${_currentSubtestIndex + 1}/${_subtests.length}: ${_subtests[_currentSubtestIndex].judul}',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11,
+                                      color: AppColors.primaryGreen,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                              ],
                             ),
-                            if (_isSkd)
-                              Text(
-                                'Simulasi CAT BKN: Bebas Akses Seluruh Soal',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11.5,
-                                  color: const Color(0xFF2563EB),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              )
-                            else if (_isPerSubtest && _subtests.isNotEmpty)
-                              Text(
-                                'Subtest ${_currentSubtestIndex + 1}/${_subtests.length}: ${_subtests[_currentSubtestIndex].judul}',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11.5,
-                                  color: AppColors.primaryGreen,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
                           ],
                         ),
                         IconButton(
@@ -2084,6 +2142,14 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
     final isRagu = _raguRagu.contains(currentQ.soalId);
     final isWarningTimer = _remainingSeconds < 300; // < 5 menit
 
+    // Sinkronisasi index subtest aktif dengan soal saat mode bebas navigasi (misal CAT BKN SKD)
+    if (!_isPerSubtest && _subtests.isNotEmpty) {
+      final sIdx = _subtests.indexWhere((st) => st.subtestId == currentQ.subtestId);
+      if (sIdx != -1 && sIdx != _currentSubtestIndex) {
+        _currentSubtestIndex = sIdx;
+      }
+    }
+
     final String currentSubtestTitle;
     if (_isPerSubtest && _currentSubtestIndex < _subtests.length) {
       currentSubtestTitle = _subtests[_currentSubtestIndex].judul;
@@ -2220,89 +2286,287 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
           },
           child: Column(
             children: [
-            // Bar Navigasi Subtest jika dalam mode per_subtest
-            if (_isPerSubtest && _subtests.length > 1)
+            // ── Baris Navigasi Subtest Ujian Standar Nasional (SKD, SNBT, TKA, UMUM) ──
+            if (_subtests.length > 1)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
                 ),
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryGreen.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        'Babak ${_currentSubtestIndex + 1}/${_subtests.length}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primaryGreen,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _subtests[_currentSubtestIndex].judul,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF0F172A),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (!_isSnbt && _currentSubtestIndex < _subtests.length - 1)
-                      InkWell(
-                        onTap: _confirmFinishSubtestDialog,
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFEF3C7),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: const Color(0xFFFDE68A),
-                              width: 1,
+                    // Baris Atas: Kategori Pill + Status Babak + Aksi Lanjut
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+                      child: Row(
+                        children: [
+                          _buildCategoryPill(_cleanCategory),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryGreen.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              _isPerSubtest
+                                  ? 'Babak ${_currentSubtestIndex + 1}/${_subtests.length}'
+                                  : 'Subtest ${_currentSubtestIndex + 1}/${_subtests.length}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryGreen,
+                              ),
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'Lanjut Babak',
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _currentSubtestIndex < _subtests.length
+                                  ? _subtests[_currentSubtestIndex].judul
+                                  : (_package?.namaPaket ?? 'Subtest'),
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF0F172A),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (_isPerSubtest && _currentSubtestIndex < _subtests.length - 1)
+                            if (_isSnbt && _package?.isTeacherGenerated != true)
+                              InkWell(
+                                onTap: _showBlockingTimeInfoDialog,
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF1F5F9),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: const Color(0xFFCBD5E1),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.lock_clock_rounded,
+                                        size: 13,
+                                        color: Color(0xFF64748B),
+                                      ),
+                                      const SizedBox(width: 3),
+                                      Text(
+                                        'Blocking Time',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: const Color(0xFF64748B),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            else
+                              InkWell(
+                                onTap: _confirmFinishSubtestDialog,
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFEF3C7),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: const Color(0xFFFDE68A),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'Lanjut Babak',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: const Color(0xFF92400E),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 3),
+                                      const Icon(
+                                        Icons.chevron_right_rounded,
+                                        size: 14,
+                                        color: Color(0xFF92400E),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                          else if (!_isPerSubtest)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEFF6FF),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: const Color(0xFFBFDBFE)),
+                              ),
+                              child: Text(
+                                _isSkd ? 'CAT BKN' : 'Bebas Akses',
                                 style: GoogleFonts.poppins(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF92400E),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF1D4ED8),
                                 ),
                               ),
-                              const SizedBox(width: 3),
-                              const Icon(
-                                Icons.chevron_right_rounded,
-                                size: 14,
-                                color: Color(0xFF92400E),
-                              ),
-                            ],
-                          ),
-                        ),
+                            ),
+                        ],
                       ),
+                    ),
+
+                    // Baris Bawah: Horizontal Chips Subtest Tabs
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
+                      child: Row(
+                        children: List.generate(_subtests.length, (sIdx) {
+                          final st = _subtests[sIdx];
+                          final isCurrent = sIdx == _currentSubtestIndex;
+                          final isCompleted = _isPerSubtest && sIdx < _currentSubtestIndex;
+                          final isLocked = _isPerSubtest &&
+                              _isSnbt &&
+                              _package?.isTeacherGenerated != true &&
+                              sIdx > _currentSubtestIndex;
+
+                          Color chipBg = const Color(0xFFF8FAFC);
+                          Color chipBorder = const Color(0xFFE2E8F0);
+                          Color chipText = const Color(0xFF475569);
+
+                          if (isCurrent) {
+                            chipBg = AppColors.primaryGreen;
+                            chipBorder = AppColors.primaryGreen;
+                            chipText = Colors.white;
+                          } else if (isCompleted) {
+                            chipBg = const Color(0xFFF0FDF4);
+                            chipBorder = const Color(0xFFBBF7D0);
+                            chipText = const Color(0xFF166534);
+                          } else if (isLocked) {
+                            chipBg = const Color(0xFFF1F5F9);
+                            chipBorder = const Color(0xFFE2E8F0);
+                            chipText = const Color(0xFF94A3B8);
+                          }
+
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: InkWell(
+                              onTap: () {
+                                if (_isPerSubtest) {
+                                  if (isCurrent) return;
+                                  if (isCompleted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Subtest ini sudah selesai dikerjakan.'),
+                                        duration: Duration(seconds: 1),
+                                      ),
+                                    );
+                                  } else if (isLocked) {
+                                    _showBlockingTimeInfoDialog();
+                                  } else {
+                                    _confirmFinishSubtestDialog();
+                                  }
+                                } else {
+                                  // Mode CAT BKN / Unified: Langsung lompat ke butir soal pertama subtest ini
+                                  final firstQIndex = _allQuestions.indexWhere(
+                                    (q) => q.subtestId == st.subtestId,
+                                  );
+                                  if (firstQIndex != -1) {
+                                    setState(() {
+                                      _currentIndex = firstQIndex;
+                                      _currentSubtestIndex = sIdx;
+                                    });
+                                    _debouncedSaveCache();
+                                  }
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(8),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: chipBg,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: chipBorder),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (isCompleted) ...[
+                                      const Icon(
+                                        Icons.check_circle_rounded,
+                                        size: 13,
+                                        color: Color(0xFF166534),
+                                      ),
+                                      const SizedBox(width: 4),
+                                    ] else if (isLocked) ...[
+                                      const Icon(
+                                        Icons.lock_rounded,
+                                        size: 13,
+                                        color: Color(0xFF94A3B8),
+                                      ),
+                                      const SizedBox(width: 4),
+                                    ],
+                                    Text(
+                                      st.judul,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 11,
+                                        fontWeight: isCurrent
+                                            ? FontWeight.bold
+                                            : FontWeight.w600,
+                                        color: chipText,
+                                      ),
+                                    ),
+                                    if (st.soalList.isNotEmpty) ...[
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '(${st.soalList.length})',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: isCurrent
+                                              ? FontWeight.w600
+                                              : FontWeight.normal,
+                                          color: isCurrent
+                                              ? Colors.white.withValues(alpha: 0.85)
+                                              : chipText.withValues(alpha: 0.8),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
                   ],
                 ),
               ),

@@ -582,8 +582,9 @@
           <select id="exam-category" onchange="onExamCategoryChanged()"
             class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm text-white outline-none transition-colors font-medium">
             <option value="UMUM" selected>📚 CBT Umum / Ujian Sekolah</option>
-            <option value="SNBT">🎓 SNBT / UTBK Seleksi PTN</option>
             <option value="SKD">🏛️ SKD / Kedinasan / CPNS</option>
+            <option value="SNBT">🎓 SNBT / UTBK Seleksi PTN</option>
+            <option value="TKA">🔬 TKA (Tes Kemampuan Akademik)</option>
             <option value="MADRASAH">🕌 Asesmen Madrasah / Keagamaan</option>
           </select>
         </div>
@@ -914,6 +915,11 @@
       UMUM: [
         { id: 'ST1', judul: 'Ujian Utama', durasiMenit: 90 }
       ],
+      SKD: [
+        { id: 'ST1', judul: 'Tes Wawasan Kebangsaan (TWK)', durasiMenit: 30 },
+        { id: 'ST2', judul: 'Tes Inteligensia Umum (TIU)', durasiMenit: 35 },
+        { id: 'ST3', judul: 'Tes Karakteristik Pribadi (TKP)', durasiMenit: 35 }
+      ],
       SNBT: [
         { id: 'ST1', judul: 'Kemampuan Penalaran Umum', durasiMenit: 30 },
         { id: 'ST2', judul: 'Pengetahuan & Pemahaman Umum', durasiMenit: 15 },
@@ -923,10 +929,11 @@
         { id: 'ST6', judul: 'Literasi dalam Bahasa Inggris', durasiMenit: 30 },
         { id: 'ST7', judul: 'Penalaran Matematika', durasiMenit: 30 }
       ],
-      SKD: [
-        { id: 'ST1', judul: 'Tes Wawasan Kebangsaan (TWK)', durasiMenit: 30 },
-        { id: 'ST2', judul: 'Tes Inteligensia Umum (TIU)', durasiMenit: 35 },
-        { id: 'ST3', judul: 'Tes Karakteristik Pribadi (TKP)', durasiMenit: 35 }
+      TKA: [
+        { id: 'ST1', judul: 'Matematika', durasiMenit: 30 },
+        { id: 'ST2', judul: 'Fisika / Ekonomi', durasiMenit: 30 },
+        { id: 'ST3', judul: 'Kimia / Geografi', durasiMenit: 30 },
+        { id: 'ST4', judul: 'Biologi / Sosiologi', durasiMenit: 30 }
       ],
       MADRASAH: [
         { id: 'ST1', judul: 'Al-Qur\'an Hadis & Fikih', durasiMenit: 45 },
@@ -1110,7 +1117,7 @@
       }
 
       onTimeModeChanged();
-      autoDistributeQuestionsToSubtests();
+      autoDistributeQuestionsToSubtests(true);
       renderSubtestsList();
       renderQuestionsPreview();
     }
@@ -1209,6 +1216,7 @@
         judul: judul || `Subtest ${nextNum}`,
         durasiMenit: parseInt(durasiMenit) || 30
       });
+      autoDistributeQuestionsToSubtests(false);
       calculateTotalDuration();
       renderSubtestsList();
       renderQuestionsPreview();
@@ -1248,11 +1256,13 @@
       }
     }
 
-    function autoDistributeQuestionsToSubtests() {
+    function autoDistributeQuestionsToSubtests(force = false) {
       if (!_extractedQuestions || _extractedQuestions.length === 0 || _subtests.length <= 1) return;
+      const allZeroOrUnset = _extractedQuestions.every(q => q.subtestIndex === undefined || q.subtestIndex === null || q.subtestIndex === 0);
+      const shouldDistribute = force || allZeroOrUnset;
       const perSub = Math.ceil(_extractedQuestions.length / _subtests.length);
       _extractedQuestions.forEach((q, i) => {
-        if (q.subtestIndex === undefined || q.subtestIndex === null) {
+        if (shouldDistribute || q.subtestIndex === undefined || q.subtestIndex === null || q.subtestIndex >= _subtests.length) {
           q.subtestIndex = Math.min(Math.floor(i / perSub), _subtests.length - 1);
         }
       });
@@ -1652,8 +1662,8 @@
         }
 
         // (e) Tag Subtest: [SUBTEST: Kemampuan Penalaran Umum] atau Heading "SUBTEST 1: ..."
-        const stTagMatch = text.match(/\[(?:SUBTEST|BABAK|SECTION)\s*:\s*([^\]]+)\]/i);
-        const stHeadingMatch = text.match(/^(?:SUBTEST|BABAK|BAGIAN)\s*(\d+)?\s*[:.-]\s*(.+)$/i);
+        const stTagMatch = text.match(/\[(?:SUBTEST|BABAK|SECTION|SUBTES|BAGIAN)\s*:\s*([^\]]+)\]/i);
+        const stHeadingMatch = text.match(/^(?:[=\-*#]+\s*)?(?:SUBTEST|SUBTES|BABAK|BAGIAN)\s*(\d+)?\s*[:.-]?\s*([^\n\r]+?)(?:\s*[=\-*#]+)?$/i);
         if (stTagMatch || stHeadingMatch) {
           const stTitle = (stTagMatch ? stTagMatch[1] : stHeadingMatch[2]).trim();
           detectedSubtests.push({
@@ -2798,6 +2808,17 @@
       btn.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span><span>Menerbitkan ke Cloud Firestore...</span>';
 
       try {
+        // Sinkronisasi data kartu subtest dari input DOM ke state _subtests
+        const cards = document.querySelectorAll('#subtest-cards-list .subtest-card');
+        cards.forEach((card, idx) => {
+          if (_subtests[idx]) {
+            const judulInput = card.querySelector('.subtest-input-judul');
+            const durasiInput = card.querySelector('.subtest-input-durasi');
+            if (judulInput && judulInput.value.trim()) _subtests[idx].judul = judulInput.value.trim();
+            if (durasiInput && durasiInput.value) _subtests[idx].durasiMenit = parseInt(durasiInput.value) || 30;
+          }
+        });
+
         const category = document.getElementById('exam-category').value || 'UMUM';
         const jenisWaktu = document.getElementById('exam-time-mode').value || 'per_paket';
         const subtestsPayload = _subtests.map((st, sIdx) => {
@@ -2822,7 +2843,7 @@
           jenis_waktu: jenisWaktu,
           subtests: subtestsPayload,
           questions: _extractedQuestions.map((q, i) => {
-            const sIdx = q.subtestIndex || 0;
+            const sIdx = Math.min(Math.max(0, q.subtestIndex || 0), _subtests.length - 1);
             return {
               id: i + 1,
               nomor: i + 1,
