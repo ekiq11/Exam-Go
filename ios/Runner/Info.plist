@@ -42,6 +42,14 @@
 	<key>NSCameraUsageDescription</key>
 	<string>ExamGO memerlukan akses kamera untuk memindai QR Code ujian. Kamera hanya aktif saat halaman scan dibuka.</string>
 
+	<!-- Mikrofon — diperlukan oleh SDK WebView/WebKit untuk kompatibilitas audio/video ujian CBT -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>ExamGO memerlukan akses mikrofon apabila sesi ujian CBT berbasis web sekolah membutuhkan input suara atau verifikasi audio peserta.</string>
+
+	<!-- Lokasi — diperlukan oleh SDK WebView untuk validasi geofencing lokasi ujian sekolah -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>ExamGO dapat menggunakan lokasi saat aplikasi aktif untuk memverifikasi bahwa siswa berada di area sekolah atau laboratorium ujian yang telah ditentukan.</string>
+
 	<!-- Face ID — untuk autentikasi Mode Guru -->
 	<key>NSFaceIDUsageDescription</key>
 	<string>ExamGO menggunakan Face ID untuk memverifikasi identitas guru sebelum mengakses Mode Guru.</string>

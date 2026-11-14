@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -256,6 +257,20 @@ void main() {
       expect(resUmum.maxScore, equals(100));
       expect(resUmum.finalScore, equals(100));
       expect(resUmum.statusKelulusan, contains('MEMENUHI KKM'));
+    });
+
+    test('iOS Info.plist contains all required App Store review purpose strings', () {
+      final infoPlist = File('ios/Runner/Info.plist');
+      expect(infoPlist.existsSync(), isTrue);
+      final content = infoPlist.readAsStringSync();
+
+      // Required by Apple ITMS-90683
+      expect(content, contains('<key>NSMicrophoneUsageDescription</key>'));
+      expect(content, contains('<key>NSLocationWhenInUseUsageDescription</key>'));
+      expect(content, contains('<key>NSCameraUsageDescription</key>'));
+      expect(content, contains('<key>NSPhotoLibraryUsageDescription</key>'));
+      expect(content, contains('<key>NSFaceIDUsageDescription</key>'));
+      expect(content, contains('<key>UIRequiresFullScreen</key>'));
     });
   });
 }
