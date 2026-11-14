@@ -659,6 +659,90 @@
     .theme-light table tr.hover\:bg-slate-800\/40:hover {
       background-color: #f8fafc !important;
     }
+
+    /* ── Top Navigation Tabs & Monitoring / Matrix Styles ── */
+    .tab-nav-btn {
+      transition: all 0.2s ease-in-out;
+    }
+
+    .monitoring-filter-pill.active {
+      background-color: #059669 !important;
+      color: #ffffff !important;
+    }
+
+    /* Light Mode Overrides for Navigation, Monitoring, History, and Matrix */
+    .theme-light #main-tab-nav-bar {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+    }
+
+    .theme-light #tab-nav-create.bg-brand-600,
+    .theme-light #tab-nav-monitoring.bg-brand-600,
+    .theme-light #tab-nav-history.bg-brand-600 {
+      background-color: #059669 !important;
+      color: #ffffff !important;
+    }
+
+    .theme-light #tab-nav-create:not(.bg-brand-600),
+    .theme-light #tab-nav-monitoring:not(.bg-brand-600),
+    .theme-light #tab-nav-history:not(.bg-brand-600) {
+      color: #475569 !important;
+    }
+
+    .theme-light #tab-nav-create:not(.bg-brand-600):hover,
+    .theme-light #tab-nav-monitoring:not(.bg-brand-600):hover,
+    .theme-light #tab-nav-history:not(.bg-brand-600):hover {
+      background-color: #f1f5f9 !important;
+      color: #0f172a !important;
+    }
+
+    .theme-light .exam-history-card {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .theme-light .exam-history-card h3 {
+      color: #0f172a !important;
+    }
+
+    .theme-light #modal-exam-matrix > div {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+
+    .theme-light #modal-exam-matrix .matrix-modal-bg {
+      background-color: #f8fafc !important;
+      border-color: #e2e8f0 !important;
+    }
+
+    .theme-light #modal-exam-matrix h3 {
+      color: #0f172a !important;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #modal-exam-matrix,
+      #modal-exam-matrix * {
+        visibility: visible;
+      }
+      #modal-exam-matrix {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: auto;
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      #modal-exam-matrix button,
+      #modal-exam-matrix input {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 
@@ -711,6 +795,43 @@
 
   <!-- ── Main Content Container ────────────────────────────────────────── -->
   <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
+
+    <!-- ── Top Navigation Tabs (Buat Ujian, Live Monitoring, Riwayat & Rekap Nilai) ── -->
+    <div id="main-tab-nav-bar" class="flex items-center justify-between border-b border-slate-800 pb-4 mb-6 gap-3 flex-wrap">
+      <div class="inline-flex items-center p-1 bg-slate-900/90 rounded-2xl border border-slate-800 shadow-sm gap-1">
+        <button type="button" id="tab-nav-create" onclick="switchMainTab('create')"
+          class="tab-nav-btn flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm bg-brand-600 text-white">
+          <span>📝</span>
+          <span>Buat Ujian & Token</span>
+        </button>
+        <button type="button" id="tab-nav-monitoring" onclick="switchMainTab('monitoring')"
+          class="tab-nav-btn flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span>Live Monitoring</span>
+          <span id="badge-live-count" class="hidden text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300">0</span>
+        </button>
+        <button type="button" id="tab-nav-history" onclick="switchMainTab('history')"
+          class="tab-nav-btn flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <span>📊</span>
+          <span>Riwayat Ujian & Rekap</span>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2 text-xs">
+        <button type="button" onclick="refreshCurrentTab()"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 font-medium transition-colors"
+          title="Segarkan Data Tab Aktif">
+          <span id="icon-tab-refresh" class="text-sm">🔄</span>
+          <span class="hidden sm:inline">Segarkan</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── View 1: Buat Ujian & Token (Generator) ── -->
+    <div id="view-create-exam" class="transition-all duration-200">
 
     <!-- Hero / Header Title -->
     <div class="mb-8 text-center sm:text-left sm:flex sm:items-center sm:justify-between">
@@ -1057,6 +1178,158 @@
         </button>
       </div>
     </section>
+    </div>
+    <!-- ── End View 1 (Buat Ujian) ── -->
+
+    <!-- ── View 2: Live Monitoring Ujian Real-Time ── -->
+    <div id="view-live-monitoring" class="hidden space-y-6 transition-all duration-200">
+      <!-- Header & Selector Sesi Ujian -->
+      <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="relative flex h-2.5 w-2.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <h2 class="text-xl font-extrabold text-white">Live Monitoring Ujian Real-Time</h2>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">CBT PROKTOR</span>
+          </div>
+          <p class="text-xs text-slate-400">Pantau aktivitas siswa, status pengerjaan, sisa baterai, dan deteksi kecurangan secara langsung dari laptop.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Dropdown Sesi Ujian -->
+          <div class="flex items-center gap-2 min-w-[240px]">
+            <label class="text-xs font-bold text-slate-400 shrink-0">Pilih Ujian:</label>
+            <select id="select-monitoring-exam" onchange="onSelectMonitoringExam(this.value)"
+              class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs font-bold text-brand-300 outline-none focus:border-brand-500">
+              <option value="">-- Memuat Sesi Ujian Guru --</option>
+            </select>
+          </div>
+
+          <!-- Auto Refresh Checkbox -->
+          <label class="inline-flex items-center gap-2 cursor-pointer bg-slate-950/80 px-3 py-2 rounded-xl border border-slate-800 text-xs text-slate-300">
+            <input type="checkbox" id="check-auto-refresh" checked onchange="toggleAutoRefresh(this.checked)" class="rounded text-brand-500 focus:ring-0">
+            <span>Auto Refresh (5s)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: Total Peserta -->
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-sm flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-slate-800 flex items-center justify-center text-xl shrink-0">👥</div>
+          <div>
+            <div class="text-[11px] font-semibold text-slate-400">Total Peserta</div>
+            <div id="stat-total-students" class="text-2xl font-black text-white">0</div>
+          </div>
+        </div>
+
+        <!-- Card 2: Online / Mengerjakan -->
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-sm flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl shrink-0">🟢</div>
+          <div>
+            <div class="text-[11px] font-semibold text-emerald-400">Aktif Mengerjakan</div>
+            <div id="stat-online-students" class="text-2xl font-black text-emerald-400">0</div>
+          </div>
+        </div>
+
+        <!-- Card 3: Terblokir / Curang -->
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-sm flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center text-xl shrink-0">🚨</div>
+          <div>
+            <div class="text-[11px] font-semibold text-rose-400">Terblokir / Curang</div>
+            <div id="stat-blocked-students" class="text-2xl font-black text-rose-400">0</div>
+          </div>
+        </div>
+
+        <!-- Card 4: Selesai -->
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 shadow-sm flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center text-xl shrink-0">🏁</div>
+          <div>
+            <div class="text-[11px] font-semibold text-blue-400">Ujian Selesai</div>
+            <div id="stat-finished-students" class="text-2xl font-black text-blue-400">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Students Table Section -->
+      <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+        <!-- Toolbar & Filter -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div class="relative flex-1 max-w-sm">
+            <input type="text" id="search-monitoring-student" oninput="filterMonitoringTable()"
+              placeholder="Cari nama siswa atau NIS..."
+              class="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-brand-500">
+            <span class="absolute left-3 top-2.5 text-slate-500 text-xs">🔍</span>
+          </div>
+
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button type="button" onclick="setMonitoringStatusFilter('all')" class="monitoring-filter-pill active px-3 py-1.5 rounded-lg text-xs font-bold bg-brand-600 text-white" data-status="all">Semua</button>
+            <button type="button" onclick="setMonitoringStatusFilter('ONLINE')" class="monitoring-filter-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white" data-status="ONLINE">🟢 Online</button>
+            <button type="button" onclick="setMonitoringStatusFilter('BLOCKED')" class="monitoring-filter-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white" data-status="BLOCKED">🚨 Terblokir</button>
+            <button type="button" onclick="setMonitoringStatusFilter('SELESAI')" class="monitoring-filter-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white" data-status="SELESAI">🏁 Selesai</button>
+          </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="overflow-x-auto rounded-xl border border-slate-800">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-slate-950 text-slate-400 font-bold uppercase tracking-wider text-[11px] border-b border-slate-800">
+              <tr>
+                <th class="p-3 w-12 text-center">No</th>
+                <th class="p-3">Siswa (Nama & NIS)</th>
+                <th class="p-3 text-center">Status</th>
+                <th class="p-3 text-center">Baterai</th>
+                <th class="p-3 text-center">Pelanggaran</th>
+                <th class="p-3 text-center">Ping / Waktu</th>
+                <th class="p-3 text-center">Aksi Proktor</th>
+              </tr>
+            </thead>
+            <tbody id="monitoring-students-tbody" class="divide-y divide-slate-800 text-slate-200">
+              <tr>
+                <td colspan="7" class="p-8 text-center text-slate-500 text-xs">
+                  Pilih sesi ujian di atas untuk mulai memantau peserta ujian secara langsung.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- ── End View 2 ── -->
+
+    <!-- ── View 3: Riwayat Ujian & Rekap Nilai ── -->
+    <div id="view-exam-history" class="hidden space-y-6 transition-all duration-200">
+      <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-extrabold text-white flex items-center gap-2">
+            <span>Riwayat Ujian & Token Diterbitkan</span>
+            <span id="history-count-badge" class="text-xs px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">0 Ujian</span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">Daftar seluruh paket soal ujian dan token yang telah dibuat oleh lisensi guru ini. Pantau live, tampilkan QR proyektor, atau lihat matriks rekap nilai siswa.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="relative w-full sm:w-64">
+            <input type="text" id="search-history-exam" oninput="filterExamHistoryCards()"
+              placeholder="Cari token atau judul ujian..."
+              class="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-brand-500">
+            <span class="absolute left-3 top-2.5 text-slate-500 text-xs">🔍</span>
+          </div>
+          <button type="button" onclick="loadTeacherExamsHistory(true)"
+            class="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all shrink-0">
+            <span>🔄 Segarkan</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid Cards Riwayat Ujian -->
+      <div id="exam-history-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+    <!-- ── End View 3 ── -->
 
   </main>
 
@@ -1143,6 +1416,79 @@
           class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 transition-all active:scale-95">
           <span>Tutup / Buat Ujian Lain</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal: Rekap Nilai & Matriks Analisis Jawaban Siswa ────────── -->
+  <div id="modal-exam-matrix"
+    class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-6xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Modal Header -->
+      <div class="matrix-modal-bg p-5 border-b border-slate-800 flex items-center justify-between gap-4 shrink-0 bg-slate-950/60">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-brand-500/20 text-brand-300 border border-brand-500/30">MATRIKS HASIL CBT</span>
+            <h3 id="matrix-modal-title" class="text-lg sm:text-xl font-black text-white">Matematika Wajib X</h3>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">
+            Token: <span id="matrix-modal-token" class="font-mono font-bold text-brand-400 mr-3">-</span>
+            KKM: <span id="matrix-modal-kkm" class="font-bold text-amber-400 mr-3">75</span>
+            Total Peserta: <span id="matrix-modal-student-count" class="font-bold text-white">0</span>
+          </p>
+        </div>
+        <button type="button" onclick="closeExamMatrixModal()"
+          class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-lg transition-colors shrink-0">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Toolbar & Quick Stats -->
+      <div class="matrix-modal-bg p-4 bg-slate-900/90 border-b border-slate-800 shrink-0 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <!-- Stat Chips -->
+        <div class="flex items-center gap-2 flex-wrap text-xs">
+          <div class="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-1.5">
+            <span class="text-slate-400">Rata-rata:</span>
+            <span id="matrix-stat-avg" class="font-black text-brand-400">0.0</span>
+          </div>
+          <div class="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-1.5">
+            <span class="text-slate-400">Tertinggi:</span>
+            <span id="matrix-stat-max" class="font-black text-emerald-400">0</span>
+          </div>
+          <div class="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-1.5">
+            <span class="text-slate-400">Terendah:</span>
+            <span id="matrix-stat-min" class="font-black text-rose-400">0</span>
+          </div>
+          <div class="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-1.5">
+            <span class="text-slate-400">Tuntas:</span>
+            <span id="matrix-stat-pass-rate" class="font-black text-blue-400">0%</span>
+          </div>
+        </div>
+
+        <!-- Filter & Export Actions -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <div class="relative w-48 sm:w-56">
+            <input type="text" id="search-matrix-student" oninput="filterMatrixTable()"
+              placeholder="Cari siswa atau NIS..."
+              class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-brand-500">
+            <span class="absolute left-2.5 top-2 text-slate-500 text-xs">🔍</span>
+          </div>
+          <button type="button" onclick="exportMatrixToExcel()"
+            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors shadow-sm">
+            <span>📊</span><span>Ekspor Excel (.csv)</span>
+          </button>
+          <button type="button" onclick="printMatrixModal()"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs transition-colors">
+            <span>🖨️</span><span>Cetak</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body: Matrix Table Scrollable -->
+      <div class="flex-1 overflow-auto p-4 bg-slate-950/40">
+        <div id="matrix-table-container" class="rounded-xl border border-slate-800 overflow-x-auto">
+          <!-- Rendered via JS -->
+        </div>
       </div>
     </div>
   </div>
@@ -1273,6 +1619,7 @@
         document.getElementById('active-teacher-token').innerText = masked;
         // Pastikan token & laptop ini langsung tersinkron ke database Firestore admin
         syncTeacherDeviceInBackground(_teacherToken);
+        loadTeacherExamsHistory();
       }
     }
 
@@ -1312,6 +1659,7 @@
           if (box) { box.classList.remove('hidden'); box.classList.add('flex'); }
           const masked = _teacherToken.length > 8 ? (_teacherToken.substring(0, 4) + '-****') : _teacherToken;
           document.getElementById('active-teacher-token').innerText = masked;
+          loadTeacherExamsHistory();
         } else {
           let msg = res.message || 'Token tidak valid atau sudah tertaut ke laptop lain.';
           if (/permission|firebase|firestore|http|exception/i.test(msg)) {
@@ -3226,6 +3574,7 @@
             timestamp: Date.now(),
             qrPayload: qrPayload
           });
+          loadTeacherExamsHistory(true);
           showPublishedModal();
         } else {
           let errMsg = res.message || 'Gagal menerbitkan paket ujian.';
@@ -3330,6 +3679,766 @@
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
+    }
+
+    // ── 11. Manajemen Navigasi Tab Utama (Buat Ujian, Live Monitoring, Riwayat & Rekap) ──
+    let _activeMainTab = 'create';
+    let _teacherExamsList = [];
+    let _currentMonitoringExamId = '';
+    let _monitoringTimer = null;
+    let _monitoringStudents = [];
+    let _monitoringFilterStatus = 'all';
+    let _matrixExamData = null;
+
+    function switchMainTab(tab) {
+      _activeMainTab = tab;
+      const vCreate = document.getElementById('view-create-exam');
+      const vMonitoring = document.getElementById('view-live-monitoring');
+      const vHistory = document.getElementById('view-exam-history');
+
+      const btnCreate = document.getElementById('tab-nav-create');
+      const btnMonitoring = document.getElementById('tab-nav-monitoring');
+      const btnHistory = document.getElementById('tab-nav-history');
+
+      // Reset style all buttons
+      [btnCreate, btnMonitoring, btnHistory].forEach(btn => {
+        if (!btn) return;
+        btn.classList.remove('bg-brand-600', 'text-white', 'shadow-sm');
+        btn.classList.add('text-slate-400');
+      });
+
+      // Hide all views
+      if (vCreate) vCreate.classList.add('hidden');
+      if (vMonitoring) vMonitoring.classList.add('hidden');
+      if (vHistory) vHistory.classList.add('hidden');
+
+      if (tab === 'create') {
+        if (vCreate) vCreate.classList.remove('hidden');
+        if (btnCreate) {
+          btnCreate.classList.add('bg-brand-600', 'text-white', 'shadow-sm');
+          btnCreate.classList.remove('text-slate-400');
+        }
+        stopAutoRefresh();
+      } else if (tab === 'monitoring') {
+        if (vMonitoring) vMonitoring.classList.remove('hidden');
+        if (btnMonitoring) {
+          btnMonitoring.classList.add('bg-brand-600', 'text-white', 'shadow-sm');
+          btnMonitoring.classList.remove('text-slate-400');
+        }
+        if (_teacherExamsList.length === 0) {
+          loadTeacherExamsHistory();
+        } else if (_currentMonitoringExamId) {
+          fetchMonitoringData();
+        } else if (_teacherExamsList.length > 0) {
+          onSelectMonitoringExam(_teacherExamsList[0].token);
+        }
+        const autoCheck = document.getElementById('check-auto-refresh');
+        if (autoCheck && autoCheck.checked) {
+          startAutoRefresh();
+        }
+      } else if (tab === 'history') {
+        if (vHistory) vHistory.classList.remove('hidden');
+        if (btnHistory) {
+          btnHistory.classList.add('bg-brand-600', 'text-white', 'shadow-sm');
+          btnHistory.classList.remove('text-slate-400');
+        }
+        stopAutoRefresh();
+        if (_teacherExamsList.length === 0) {
+          loadTeacherExamsHistory();
+        } else {
+          renderExamHistoryGrid();
+        }
+      }
+    }
+
+    function refreshCurrentTab() {
+      const icon = document.getElementById('icon-tab-refresh');
+      if (icon) {
+        icon.classList.add('animate-spin');
+        setTimeout(() => icon.classList.remove('animate-spin'), 800);
+      }
+      if (_activeMainTab === 'monitoring') {
+        fetchMonitoringData(true);
+      } else if (_activeMainTab === 'history') {
+        loadTeacherExamsHistory(true);
+      } else {
+        loadTeacherExamsHistory(true);
+      }
+    }
+
+    // ── 12. Mengambil & Mengelola Riwayat Ujian Guru ──
+    async function loadTeacherExamsHistory(forceRefresh) {
+      if (!_teacherToken || _teacherToken.length < 4) return;
+      try {
+        const resp = await fetch(getTeacherApiUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'get_teacher_exams',
+            teacher_token: _teacherToken
+          })
+        });
+        const res = await resp.json();
+        let exams = (res.status === 'success' && Array.isArray(res.data)) ? res.data : [];
+
+        // Gabungkan dengan riwayat lokal jika ada ujian yang baru dibuat
+        try {
+          const localHist = JSON.parse(localStorage.getItem('examgo_teacher_published_history') || '[]');
+          localHist.forEach(loc => {
+            if (!exams.some(e => e.token === loc.token)) {
+              exams.unshift({
+                token: loc.token,
+                title: loc.title,
+                created_at: loc.timestamp ? new Date(loc.timestamp).toISOString() : new Date().toISOString(),
+                qr_payload: loc.qrPayload,
+                source: 'local_storage',
+                category: 'UMUM',
+                duration: 90,
+                student_count: 0
+              });
+            }
+          });
+        } catch (_) {}
+
+        _teacherExamsList = exams;
+
+        // Update selector monitoring
+        const sel = document.getElementById('select-monitoring-exam');
+        if (sel) {
+          if (exams.length === 0) {
+            sel.innerHTML = '<option value="">Belum ada ujian dibuat</option>';
+          } else {
+            sel.innerHTML = exams.map(e => `<option value="${escapeHtml(e.token)}" ${_currentMonitoringExamId === e.token ? 'selected' : ''}>${escapeHtml(e.title || 'Ujian')} [${escapeHtml(e.token)}]</option>`).join('');
+            if (!_currentMonitoringExamId && exams.length > 0) {
+              _currentMonitoringExamId = exams[0].token;
+            }
+          }
+        }
+
+        // Update history count badge
+        const badge = document.getElementById('history-count-badge');
+        if (badge) badge.innerText = `${exams.length} Ujian`;
+
+        renderExamHistoryGrid();
+
+        if (_activeMainTab === 'monitoring' && _currentMonitoringExamId) {
+          fetchMonitoringData();
+        }
+      } catch (err) {
+        console.error('loadTeacherExamsHistory error:', err);
+      }
+    }
+
+    function renderExamHistoryGrid() {
+      const container = document.getElementById('exam-history-grid');
+      if (!container) return;
+
+      const q = (document.getElementById('search-history-exam')?.value || '').toLowerCase().trim();
+      const filtered = _teacherExamsList.filter(e => {
+        if (!q) return true;
+        return (e.title || '').toLowerCase().includes(q) || (e.token || '').toLowerCase().includes(q) || (e.category || '').toLowerCase().includes(q);
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full p-12 text-center bg-slate-900/50 rounded-2xl border border-dashed border-slate-800">
+            <div class="text-4xl mb-3">📋</div>
+            <h3 class="text-base font-bold text-white mb-1">Belum Ada Sesi Ujian</h3>
+            <p class="text-xs text-slate-400 max-w-md mx-auto mb-4">Ujian yang Anda buat melalui tab "Buat Ujian & Token" atau dari aplikasi Android akan otomatis muncul di sini.</p>
+            <button type="button" onclick="switchMainTab('create')" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition-colors shadow-sm">
+              Buat Ujian Sekarang
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(e => {
+        const title = escapeHtml(e.title || 'Ujian CBT');
+        const token = escapeHtml(e.token || '-');
+        const cat = escapeHtml(e.category || 'UMUM');
+        const dur = parseInt(e.duration) || 90;
+        const count = parseInt(e.student_count) || 0;
+        const dateStr = e.created_at ? new Date(e.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Hari ini';
+        const qrPayload = escapeHtml(e.qr_payload || ('EXAMGO_TRYOUT://' + token));
+
+        return `
+          <div class="exam-history-card bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between transition-all hover:border-slate-700">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-400 border border-brand-500/30 uppercase tracking-wider">${cat}</span>
+                <span class="text-[11px] text-slate-400 font-medium">${dateStr}</span>
+              </div>
+              <h3 class="text-base font-extrabold text-white line-clamp-1 mb-2" title="${title}">${title}</h3>
+
+              <!-- Token Display Box -->
+              <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center justify-between gap-2 mb-4">
+                <div>
+                  <div class="text-[9px] font-extrabold uppercase text-slate-400 tracking-wider">TOKEN UJIAN</div>
+                  <div class="font-mono font-black text-lg text-brand-300 tracking-wider select-all">${token}</div>
+                </div>
+                <button type="button" onclick="copyTokenToClipboard('${token}')"
+                  class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
+                  title="Salin Kode Token">
+                  📋 Salin
+                </button>
+              </div>
+
+              <!-- Stats Info -->
+              <div class="grid grid-cols-2 gap-2 text-xs text-slate-400 pb-3 border-b border-slate-800/80 mb-4">
+                <div class="flex items-center gap-1.5">
+                  <span>⏱️</span>
+                  <span>Durasi: <strong class="text-slate-200">${dur} Mnt</strong></span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span>👥</span>
+                  <span>Peserta: <strong class="text-slate-200">${count} Siswa</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Grid -->
+            <div class="grid grid-cols-3 gap-2 pt-1">
+              <button type="button" onclick="showHistoryQrModal('${token}', '${title.replace(/'/g, "\\'")}', '${qrPayload}')"
+                class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 flex flex-col items-center justify-center gap-0.5 transition-colors">
+                <span class="text-sm">🖥️</span>
+                <span class="text-[10px]">QR Layar</span>
+              </button>
+
+              <button type="button" onclick="startMonitoringForExam('${token}')"
+                class="px-2.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex flex-col items-center justify-center gap-0.5 transition-colors shadow-sm">
+                <span class="text-sm">📡</span>
+                <span class="text-[10px]">Pantau Live</span>
+              </button>
+
+              <button type="button" onclick="openExamMatrixModal('${token}')"
+                class="px-2.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex flex-col items-center justify-center gap-0.5 transition-colors shadow-sm">
+                <span class="text-sm">📊</span>
+                <span class="text-[10px]">Rekap Nilai</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterExamHistoryCards() {
+      renderExamHistoryGrid();
+    }
+
+    function copyTokenToClipboard(token) {
+      if (!token) return;
+      navigator.clipboard.writeText(token).then(() => {
+        alert('Kode Token ' + token + ' berhasil disalin ke clipboard!');
+      }).catch(() => {
+        prompt('Salin Token Ujian:', token);
+      });
+    }
+
+    function showHistoryQrModal(token, title, qrPayload) {
+      _publishedData = {
+        token: token,
+        title: title,
+        qrPayload: qrPayload || ('EXAMGO_TRYOUT://' + token)
+      };
+      showPublishedModal();
+    }
+
+    // ── 13. Live Monitoring Siswa Real-Time ──
+    function startMonitoringForExam(token) {
+      _currentMonitoringExamId = token;
+      switchMainTab('monitoring');
+      const sel = document.getElementById('select-monitoring-exam');
+      if (sel) sel.value = token;
+      fetchMonitoringData(true);
+    }
+
+    function onSelectMonitoringExam(token) {
+      _currentMonitoringExamId = token;
+      fetchMonitoringData(true);
+    }
+
+    function toggleAutoRefresh(checked) {
+      if (checked) {
+        startAutoRefresh();
+      } else {
+        stopAutoRefresh();
+      }
+    }
+
+    function startAutoRefresh() {
+      stopAutoRefresh();
+      _monitoringTimer = setInterval(() => {
+        if (_activeMainTab === 'monitoring') {
+          fetchMonitoringData(false);
+        }
+      }, 5000);
+    }
+
+    function stopAutoRefresh() {
+      if (_monitoringTimer) {
+        clearInterval(_monitoringTimer);
+        _monitoringTimer = null;
+      }
+    }
+
+    async function fetchMonitoringData(manual) {
+      if (!_currentMonitoringExamId || !_teacherToken) return;
+      try {
+        const resp = await fetch(getTeacherApiUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'get_exam_monitoring',
+            teacher_token: _teacherToken,
+            exam_id: _currentMonitoringExamId
+          })
+        });
+        const res = await resp.json();
+        if (res.status === 'success' && res.data) {
+          const d = res.data;
+          document.getElementById('stat-total-students').innerText = d.total || 0;
+          document.getElementById('stat-online-students').innerText = d.online || 0;
+          document.getElementById('stat-blocked-students').innerText = d.blocked || 0;
+          document.getElementById('stat-finished-students').innerText = d.finished || 0;
+
+          const liveBadge = document.getElementById('badge-live-count');
+          if (liveBadge) {
+            if (d.online > 0) {
+              liveBadge.innerText = d.online;
+              liveBadge.classList.remove('hidden');
+            } else {
+              liveBadge.classList.add('hidden');
+            }
+          }
+
+          _monitoringStudents = Array.isArray(d.students) ? d.students : [];
+          renderMonitoringTable();
+        }
+      } catch (err) {
+        if (manual) console.error('fetchMonitoringData error:', err);
+      }
+    }
+
+    function setMonitoringStatusFilter(st) {
+      _monitoringFilterStatus = st;
+      document.querySelectorAll('.monitoring-filter-pill').forEach(btn => {
+        if (btn.getAttribute('data-status') === st) {
+          btn.classList.add('active', 'bg-brand-600', 'text-white');
+          btn.classList.remove('bg-slate-800', 'text-slate-300');
+        } else {
+          btn.classList.remove('active', 'bg-brand-600', 'text-white');
+          btn.classList.add('bg-slate-800', 'text-slate-300');
+        }
+      });
+      renderMonitoringTable();
+    }
+
+    function filterMonitoringTable() {
+      renderMonitoringTable();
+    }
+
+    function renderMonitoringTable() {
+      const tbody = document.getElementById('monitoring-students-tbody');
+      if (!tbody) return;
+
+      const q = (document.getElementById('search-monitoring-student')?.value || '').toLowerCase().trim();
+      const filtered = _monitoringStudents.filter(s => {
+        const st = String(s.status || 'ONLINE').toUpperCase();
+        if (_monitoringFilterStatus !== 'all') {
+          if (_monitoringFilterStatus === 'ONLINE' && st !== 'ONLINE') return false;
+          if (_monitoringFilterStatus === 'BLOCKED' && !st.includes('BLOCK') && !st.includes('CURANG')) return false;
+          if (_monitoringFilterStatus === 'SELESAI' && !st.includes('SELESAI') && !st.includes('FINISHED')) return false;
+        }
+        if (!q) return true;
+        return (s.nama || '').toLowerCase().includes(q) || (s.nis || '').toLowerCase().includes(q);
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="p-8 text-center text-slate-500 text-xs">
+              ${_monitoringStudents.length === 0 ? 'Belum ada siswa yang bergabung pada sesi ujian ini.' : 'Tidak ada data siswa yang cocok dengan filter pencarian.'}
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((s, idx) => {
+        const nis = escapeHtml(s.nis || '-');
+        const nama = escapeHtml(s.nama || 'Siswa ExamGO');
+        const initials = nama.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'SW';
+        const st = String(s.status || 'ONLINE').toUpperCase();
+        const bat = parseInt(s.baterai) || 100;
+        const violations = parseInt(s.pelanggaran) || 0;
+        const lastPing = s.last_ping ? new Date(s.last_ping).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Aktif';
+
+        // Badge Status
+        let statusBadge = '';
+        if (st.includes('BLOCK') || st.includes('CURANG')) {
+          statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-300 font-bold border border-rose-500/40 text-[11px]"><span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping"></span>TERBLOKIR</span>`;
+        } else if (st.includes('SELESAI') || st.includes('FINISHED')) {
+          statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 font-bold border border-blue-500/40 text-[11px]">🏁 SELESAI</span>`;
+        } else if (st.includes('OFFLINE') || st.includes('IDLE')) {
+          statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 font-semibold border border-slate-700 text-[11px]">⚪ OFFLINE</span>`;
+        } else {
+          statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40 text-[11px]"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>ONLINE</span>`;
+        }
+
+        // Baterai Display
+        let batColor = bat < 20 ? 'text-rose-400' : (bat < 50 ? 'text-amber-400' : 'text-emerald-400');
+        let batIcon = bat < 20 ? '🪫' : '🔋';
+
+        // Violations Display
+        let violBadge = violations > 0
+          ? `<span class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-black border border-rose-500/40">${violations}x</span>`
+          : `<span class="text-slate-500 font-medium">0</span>`;
+
+        return `
+          <tr class="hover:bg-slate-800/40 transition-colors">
+            <td class="p-3 text-center text-slate-400 font-semibold">${idx + 1}</td>
+            <td class="p-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-slate-800 text-brand-400 border border-slate-700 flex items-center justify-center font-extrabold text-[11px] shrink-0">
+                  ${initials}
+                </div>
+                <div>
+                  <div class="font-bold text-white text-xs">${nama}</div>
+                  <div class="text-[10px] text-slate-400 font-mono">${nis}</div>
+                </div>
+              </div>
+            </td>
+            <td class="p-3 text-center">${statusBadge}</td>
+            <td class="p-3 text-center">
+              <span class="inline-flex items-center gap-1 font-bold ${batColor}">
+                <span>${batIcon}</span>
+                <span>${bat}%</span>
+              </span>
+            </td>
+            <td class="p-3 text-center">${violBadge}</td>
+            <td class="p-3 text-center text-slate-400 font-mono text-[11px]">${lastPing}</td>
+            <td class="p-3 text-center">
+              <div class="flex items-center justify-center gap-1.5">
+                ${(st.includes('BLOCK') || violations > 0) ? `
+                  <button type="button" onclick="unblockStudentFromWeb('${nis}', '${nama.replace(/'/g, "\\'")}')"
+                    class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] shadow-sm transition-colors"
+                    title="Buka blokir siswa agar dapat melanjutkan">
+                    🔓 Buka Blokir
+                  </button>
+                ` : ''}
+                <button type="button" onclick="allowRetakeFromWeb('${nis}', '${nama.replace(/'/g, "\\'")}')"
+                  class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold text-[11px] border border-slate-700 transition-colors"
+                  title="Izinkan siswa mengerjakan ulang dari awal">
+                  🔄 Ulang
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function unblockStudentFromWeb(nis, name) {
+      if (!confirm(`Buka blokir siswa ${name} (${nis}) agar dapat melanjutkan ujian?`)) return;
+      try {
+        const resp = await fetch(getTeacherApiUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update_student_status',
+            teacher_token: _teacherToken,
+            exam_id: _currentMonitoringExamId,
+            nis: nis,
+            status: 'ONLINE',
+            violations: 0
+          })
+        });
+        const res = await resp.json();
+        if (res.status === 'success') {
+          alert(`Siswa ${name} berhasil dibuka blokirnya!`);
+          fetchMonitoringData(true);
+        } else {
+          alert('Gagal membuka blokir: ' + (res.message || 'Silakan coba lagi.'));
+        }
+      } catch (err) {
+        alert('Kendala jaringan saat membuka blokir.');
+      }
+    }
+
+    async function allowRetakeFromWeb(nis, name) {
+      if (!confirm(`Izinkan siswa ${name} (${nis}) mengerjakan ulang ujian? Sesi pengerjaan sebelumnya akan direset.`)) return;
+      try {
+        const resp = await fetch(getTeacherApiUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update_student_status',
+            teacher_token: _teacherToken,
+            exam_id: _currentMonitoringExamId,
+            nis: nis,
+            status: 'RESET',
+            violations: 0
+          })
+        });
+        const res = await resp.json();
+        if (res.status === 'success') {
+          alert(`Siswa ${name} telah diizinkan ujian ulang.`);
+          fetchMonitoringData(true);
+        } else {
+          alert('Gagal reset sesi: ' + (res.message || 'Silakan coba lagi.'));
+        }
+      } catch (err) {
+        alert('Kendala jaringan saat reset sesi ujian.');
+      }
+    }
+
+    // ── 14. Rekap Nilai & Matriks Analisis Jawaban Siswa ──
+    async function openExamMatrixModal(examId) {
+      if (!examId || !_teacherToken) return;
+      setLoading(true, 'Mengambil rekap nilai & matriks jawaban...');
+      try {
+        const resp = await fetch(getTeacherApiUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'get_exam_matrix_results',
+            teacher_token: _teacherToken,
+            exam_id: examId
+          })
+        });
+        const res = await resp.json();
+        if (res.status !== 'success' || !res.data) {
+          throw new Error(res.message || 'Data rekap nilai belum tersedia untuk ujian ini.');
+        }
+
+        _matrixExamData = res.data;
+        renderMatrixModalContent();
+        document.getElementById('modal-exam-matrix').classList.remove('hidden');
+      } catch (err) {
+        alert('Informasi Matriks: ' + err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function closeExamMatrixModal() {
+      document.getElementById('modal-exam-matrix').classList.add('hidden');
+      _matrixExamData = null;
+    }
+
+    function renderMatrixModalContent() {
+      if (!_matrixExamData) return;
+      const d = _matrixExamData;
+      const kkm = parseInt(d.passing_grade) || 75;
+
+      document.getElementById('matrix-modal-title').innerText = d.title || 'Ujian CBT';
+      document.getElementById('matrix-modal-token').innerText = d.token || d.exam_id || '-';
+      document.getElementById('matrix-modal-kkm').innerText = kkm;
+      document.getElementById('matrix-modal-student-count').innerText = (d.students || []).length;
+
+      const students = d.students || [];
+      const questions = d.questions || [];
+
+      // Kalkulasi Stats
+      let totalScore = 0;
+      let maxScore = 0;
+      let minScore = students.length > 0 ? 100 : 0;
+      let passedCount = 0;
+
+      students.forEach(s => {
+        const score = parseFloat(s.nilai) || 0;
+        totalScore += score;
+        if (score > maxScore) maxScore = score;
+        if (score < minScore) minScore = score;
+        if (score >= kkm) passedCount++;
+      });
+
+      const avgScore = students.length > 0 ? (totalScore / students.length).toFixed(1) : '0.0';
+      const passRate = students.length > 0 ? Math.round((passedCount / students.length) * 100) : 0;
+
+      document.getElementById('matrix-stat-avg').innerText = avgScore;
+      document.getElementById('matrix-stat-max').innerText = maxScore;
+      document.getElementById('matrix-stat-min').innerText = minScore;
+      document.getElementById('matrix-stat-pass-rate').innerText = `${passRate}% (${passedCount}/${students.length})`;
+
+      renderMatrixTable();
+    }
+
+    function filterMatrixTable() {
+      renderMatrixTable();
+    }
+
+    function renderMatrixTable() {
+      if (!_matrixExamData) return;
+      const container = document.getElementById('matrix-table-container');
+      if (!container) return;
+
+      const d = _matrixExamData;
+      const kkm = parseInt(d.passing_grade) || 75;
+      const questions = d.questions || [];
+      const q = (document.getElementById('search-matrix-student')?.value || '').toLowerCase().trim();
+
+      const filteredStudents = (d.students || []).filter(s => {
+        if (!q) return true;
+        return (s.nama || '').toLowerCase().includes(q) || (s.nis || '').toLowerCase().includes(q);
+      });
+
+      if (filteredStudents.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center text-slate-500 text-xs">
+            Tidak ada siswa yang cocok dengan pencarian atau belum ada lembar jawaban tersimpan.
+          </div>
+        `;
+        return;
+      }
+
+      // Bangun Header Tabel
+      let html = `
+        <table class="w-full text-left text-xs whitespace-nowrap border-collapse">
+          <thead>
+            <tr class="bg-slate-950 text-slate-400 font-bold uppercase text-[11px] border-b border-slate-800">
+              <th class="p-3 sticky left-0 z-20 bg-slate-950 border-r border-slate-800 w-12 text-center">No</th>
+              <th class="p-3 sticky left-12 z-20 bg-slate-950 border-r border-slate-800 min-w-[160px]">NIS & Nama Siswa</th>
+              <th class="p-3 text-center border-r border-slate-800 min-w-[70px]">Nilai</th>
+              <th class="p-3 text-center border-r border-slate-800 min-w-[80px]">Status</th>
+              <th class="p-3 text-center border-r border-slate-800">Benar</th>
+              <th class="p-3 text-center border-r border-slate-800">Salah</th>
+              <th class="p-3 text-center border-r border-slate-800">Kosong</th>
+      `;
+
+      // Kolom per butir soal
+      questions.forEach((qu, i) => {
+        html += `<th class="p-2 text-center border-r border-slate-800/80 min-w-[36px]" title="Soal No. ${qu.nomor || (i + 1)}">S${qu.nomor || (i + 1)}</th>`;
+      });
+      html += `</tr>`;
+
+      // Baris Kunci Jawaban Guru
+      html += `
+        <tr class="bg-brand-950/60 text-brand-300 font-bold border-b border-brand-800/50">
+          <td colspan="2" class="p-2.5 sticky left-0 z-10 bg-slate-900 border-r border-slate-800 text-right pr-4 text-[11px] uppercase tracking-wider">
+            🔑 KUNCI GURU
+          </td>
+          <td class="p-2 text-center border-r border-slate-800">-</td>
+          <td class="p-2 text-center border-r border-slate-800">-</td>
+          <td class="p-2 text-center border-r border-slate-800">-</td>
+          <td class="p-2 text-center border-r border-slate-800">-</td>
+          <td class="p-2 text-center border-r border-slate-800">-</td>
+      `;
+      questions.forEach(qu => {
+        html += `<td class="p-2 text-center font-mono font-black text-brand-300 border-r border-slate-800/60 bg-brand-950/40">${qu.kunci || '-'}</td>`;
+      });
+      html += `</tr></thead><tbody class="divide-y divide-slate-800 text-slate-200">`;
+
+      // Baris Siswa
+      filteredStudents.forEach((s, idx) => {
+        const score = parseFloat(s.nilai) || 0;
+        const isPass = score >= kkm;
+        const jMap = s.jawaban_map || {};
+
+        html += `
+          <tr class="hover:bg-slate-800/40 transition-colors">
+            <td class="p-3 sticky left-0 z-10 bg-slate-900 border-r border-slate-800 text-center font-semibold text-slate-400">${idx + 1}</td>
+            <td class="p-3 sticky left-12 z-10 bg-slate-900 border-r border-slate-800">
+              <div class="font-bold text-white text-xs">${escapeHtml(s.nama || '-')}</div>
+              <div class="text-[10px] text-slate-400 font-mono">${escapeHtml(s.nis || '-')}</div>
+            </td>
+            <td class="p-3 text-center border-r border-slate-800">
+              <span class="font-black text-sm ${isPass ? 'text-emerald-400' : 'text-rose-400'}">${score}</span>
+            </td>
+            <td class="p-3 text-center border-r border-slate-800">
+              ${isPass
+                ? '<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30 text-[10px]">LULUS</span>'
+                : '<span class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30 text-[10px]">REMEDIAL</span>'
+              }
+            </td>
+            <td class="p-3 text-center font-bold text-emerald-400 border-r border-slate-800">${s.benar || 0}</td>
+            <td class="p-3 text-center font-bold text-rose-400 border-r border-slate-800">${s.salah || 0}</td>
+            <td class="p-3 text-center font-semibold text-slate-500 border-r border-slate-800">${s.kosong || 0}</td>
+        `;
+
+        // Render setiap sel jawaban
+        questions.forEach(qu => {
+          const qNum = String(qu.nomor);
+          const studentAns = (jMap[qNum] || '').trim().toUpperCase();
+          const teacherKey = (qu.kunci || '').trim().toUpperCase();
+
+          if (!studentAns || studentAns === '-') {
+            html += `<td class="p-2 text-center text-slate-600 font-mono text-[11px] border-r border-slate-800/60">-</td>`;
+          } else if (studentAns === teacherKey) {
+            html += `<td class="p-2 text-center bg-emerald-500/15 text-emerald-300 font-bold font-mono text-[11px] border-r border-emerald-500/20" title="Benar: ${studentAns}">✓ ${studentAns}</td>`;
+          } else {
+            html += `<td class="p-2 text-center bg-rose-500/15 text-rose-300 font-bold font-mono text-[11px] border-r border-rose-500/20" title="Salah: ${studentAns} (Kunci: ${teacherKey})">${studentAns}</td>`;
+          }
+        });
+
+        html += `</tr>`;
+      });
+
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+    }
+
+    function exportMatrixToExcel() {
+      if (!_matrixExamData) return;
+      const d = _matrixExamData;
+      const questions = d.questions || [];
+      const students = d.students || [];
+
+      let csv = '\uFEFF'; // UTF-8 BOM untuk Microsoft Excel
+      csv += `"REKAP NILAI & MATRIKS JAWABAN SISWA"\n`;
+      csv += `"Judul Ujian:","${(d.title || '').replace(/"/g, '""')}"\n`;
+      csv += `"Token:","${d.token || d.exam_id || '-'}"\n`;
+      csv += `"KKM:","${d.passing_grade || 75}"\n`;
+      csv += `"Tanggal Unduh:","${new Date().toLocaleString('id-ID')}"\n\n`;
+
+      // Header Kolom
+      let headerRow = ['No', 'NIS', 'Nama Siswa', 'Nilai', 'Status', 'Benar', 'Salah', 'Kosong'];
+      questions.forEach((qu, i) => headerRow.push(`Soal ${qu.nomor || (i + 1)}`));
+      csv += headerRow.map(h => `"${h}"`).join(',') + '\n';
+
+      // Baris Kunci
+      let keyRow = ['-', '-', 'KUNCI GURU', '-', '-', '-', '-', '-'];
+      questions.forEach(qu => keyRow.push(qu.kunci || ''));
+      csv += keyRow.map(k => `"${k}"`).join(',') + '\n';
+
+      // Baris Data Siswa
+      students.forEach((s, idx) => {
+        const jMap = s.jawaban_map || {};
+        const score = s.nilai || 0;
+        const status = score >= (d.passing_grade || 75) ? 'LULUS' : 'REMEDIAL';
+        let row = [
+          idx + 1,
+          `'${s.nis || ''}`,
+          (s.nama || '').replace(/"/g, '""'),
+          score,
+          status,
+          s.benar || 0,
+          s.salah || 0,
+          s.kosong || 0
+        ];
+        questions.forEach(qu => {
+          const ans = jMap[String(qu.nomor)] || '';
+          row.push(ans);
+        });
+        csv += row.map(r => `"${r}"`).join(',') + '\n';
+      });
+
+      // Trigger Unduh File
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const filename = `Rekap_Nilai_${d.token || 'Exam'}_${(d.title || '').replace(/[^a-zA-Z0-9]/g, '_')}.csv`;
+      a.href = url;
+      a.setAttribute('download', filename);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function printMatrixModal() {
+      window.print();
     }
   </script>
 </body>

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../models/exam_question_model.dart';
 import '../../services/exam_cache_service.dart';
 import '../../services/exam_pdf_exporter.dart';
+import '../student/widgets/tryout_spider_chart_widget.dart';
 
 const Color _kDarkGreen = Color(0xFF1B5E20);
 const Color _kPrimaryGreen = Color(0xFF2E7D32);
@@ -392,21 +394,24 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
         .where((s) => ((s['skor'] as num?)?.toInt() ?? 0) < passingGrade)
         .toList();
     // Urutkan nilai terendah dahulu
-    remedialList.sort((a, b) =>
-        ((a['skor'] as num?)?.toInt() ?? 0).compareTo(
-          (b['skor'] as num?)?.toInt() ?? 0,
-        ));
+    remedialList.sort(
+      (a, b) => ((a['skor'] as num?)?.toInt() ?? 0).compareTo(
+        (b['skor'] as num?)?.toInt() ?? 0,
+      ),
+    );
 
     final total = allStudents.length;
     final tuntas = total - remedialList.length;
 
-    // Hitung 3 Soal Paling Sulit (Tingkat kesalahan tertinggi)
+    // Hitung 3 Soal Paling Sulit (Tingkat kesalahan tertinggi) & Data Grafik Spider
     final List<Map<String, dynamic>> hardestQuestions = [];
+    final List<TryoutSubScore> spiderScores = [];
     if (_questions.isNotEmpty && total > 0) {
       final qStats = <Map<String, dynamic>>[];
       for (final q in _questions) {
         final qId = q['soalId']?.toString() ?? '';
-        final qNomor = q['nomor']?.toString() ?? '0';
+        final qNomor =
+            q['nomor']?.toString() ?? q['nomorSoal']?.toString() ?? '0';
         final qKunci = q['kunci']?.toString() ?? '-';
 
         int wrongCount = 0;
@@ -426,8 +431,38 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
           'failPct': failPct,
         });
       }
-      qStats.sort((a, b) => (b['failPct'] as int).compareTo(a['failPct'] as int));
+      qStats.sort(
+        (a, b) => (b['failPct'] as int).compareTo(a['failPct'] as int),
+      );
       hardestQuestions.addAll(qStats.take(3));
+
+      // Siapkan minimal 3 sumbu untuk Spider Chart (polygon membutuhkan >= 3 sudut)
+      final chartQuestions = qStats.length >= 3
+          ? qStats.take(math.min(6, qStats.length)).toList()
+          : qStats;
+      if (chartQuestions.length >= 3) {
+        for (final hq in chartQuestions) {
+          final fail = (hq['failPct'] as int).toDouble();
+          final mastery = (100.0 - fail).clamp(0.0, 100.0);
+          final wrong = hq['wrongCount'] as int;
+          final correct = total - wrong;
+          final color = mastery < 50
+              ? const Color(0xFFDC2626)
+              : (mastery < 75
+                    ? const Color(0xFFD97706)
+                    : const Color(0xFF16A34A));
+          spiderScores.add(
+            TryoutSubScore(
+              name: 'No. ${hq['nomor']}',
+              score: mastery,
+              maxValue: 100.0,
+              totalBenar: correct,
+              totalSoal: total,
+              color: color,
+            ),
+          );
+        }
+      }
     }
 
     showModalBottomSheet(
@@ -459,7 +494,10 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
 
               // Header
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     Container(
@@ -520,8 +558,14 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: remedialList.isEmpty
-                              ? [const Color(0xFFF0FDF4), const Color(0xFFDCFCE7)]
-                              : [const Color(0xFFFFFBEB), const Color(0xFFFEF3C7)],
+                              ? [
+                                  const Color(0xFFF0FDF4),
+                                  const Color(0xFFDCFCE7),
+                                ]
+                              : [
+                                  const Color(0xFFFFFBEB),
+                                  const Color(0xFFFEF3C7),
+                                ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -579,11 +623,15 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
 
                     const SizedBox(height: 16),
 
-                    // Top 3 Soal Paling Sulit (Materi Perlu Penguatan)
+                    // Top Soal Paling Sulit & Grafik Spider Butir Soal Penguatan
                     if (hardestQuestions.isNotEmpty) ...[
                       Row(
                         children: [
-                          const Icon(Icons.psychology_alt_rounded, size: 16, color: Color(0xFF475569)),
+                          const Icon(
+                            Icons.psychology_alt_rounded,
+                            size: 16,
+                            color: Color(0xFF475569),
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             'Soal Perlu Penguatan (Kesalahan Tertinggi):',
@@ -596,8 +644,25 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
+
+                      // Grafik Spider Analisis Soal Penguatan
+                      if (spiderScores.length >= 3) ...[
+                        TryoutSpiderChartWidget(
+                          subScores: spiderScores,
+                          title: 'Grafik Penguasaan Butir Soal',
+                          subtitle:
+                              'Persentase ketercapaian kelas per nomor soal',
+                          height: 220,
+                          showLegend: true,
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(12),
@@ -610,9 +675,14 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                               child: Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 7,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFDC2626).withValues(alpha: 0.1),
+                                      color: const Color(
+                                        0xFFDC2626,
+                                      ).withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
@@ -672,7 +742,11 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                         alignment: Alignment.center,
                         child: Column(
                           children: [
-                            const Icon(Icons.check_circle_rounded, size: 40, color: Color(0xFF16A34A)),
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              size: 40,
+                              color: Color(0xFF16A34A),
+                            ),
                             const SizedBox(height: 8),
                             Text(
                               'Tidak ada siswa yang perlu remedial!',
@@ -692,11 +766,16 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                         final nis = s['nis']?.toString() ?? '-';
                         final skor = (s['skor'] as num?)?.toInt() ?? 0;
                         final benar = (s['benar'] as num?)?.toInt() ?? 0;
-                        final totalQ = (s['totalSoal'] as num?)?.toInt() ?? _questions.length;
+                        final totalQ =
+                            (s['totalSoal'] as num?)?.toInt() ??
+                            _questions.length;
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
@@ -754,11 +833,16 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFFEF2F2),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: const Color(0xFFFECACA)),
+                                  border: Border.all(
+                                    color: const Color(0xFFFECACA),
+                                  ),
                                 ),
                                 child: Text(
                                   '$skor',
@@ -777,12 +861,14 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                 ),
               ),
 
-              // Bottom Action Bar: Bagikan WA & Unduh PDF
+              // Bottom Action Bar: Bagikan WA & Unduh PDF (Modern Redesign)
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  border: const Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+                  border: const Border(
+                    top: BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
@@ -793,53 +879,155 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                 ),
                 child: Row(
                   children: [
-                    // Tombol Bagikan WhatsApp
+                    // Tombol Bagikan WhatsApp Modern Redesign
                     Expanded(
-                      child: SizedBox(
-                        height: 42,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            HapticFeedback.lightImpact();
-                            _shareRemedialWhatsApp(remedialList, total, hardestQuestions);
-                          },
-                          icon: const Icon(Icons.share_rounded, size: 16, color: Colors.white),
-                          label: Text(
-                            'Kirim WhatsApp',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                      child: Container(
+                        height: 46,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF25D366), Color(0xFF128C7E)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF16A34A),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            elevation: 0,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(
+                                0xFF128C7E,
+                              ).withValues(alpha: 0.35),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              _shareRemedialWhatsApp(
+                                remedialList,
+                                total,
+                                hardestQuestions,
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.22,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.chat_rounded,
+                                      size: 15,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      'Kirim WhatsApp',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                        letterSpacing: 0.2,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
 
-                    // Tombol Unduh PDF Remedial
+                    // Tombol Unduh PDF Remedial Modern Redesign
                     Expanded(
-                      child: SizedBox(
-                        height: 42,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            HapticFeedback.lightImpact();
-                            Navigator.pop(ctx);
-                            _exportRemedialPdf(remedialList, total, hardestQuestions);
-                          },
-                          icon: const Icon(Icons.picture_as_pdf_rounded, size: 16, color: Colors.white),
-                          label: Text(
-                            'Unduh PDF',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                      child: Container(
+                        height: 46,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFE11D48), Color(0xFFBE123C)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFDC2626),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            elevation: 0,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(
+                                0xFFBE123C,
+                              ).withValues(alpha: 0.35),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              Navigator.pop(ctx);
+                              _exportRemedialPdf(
+                                remedialList,
+                                total,
+                                hardestQuestions,
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.22,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.picture_as_pdf_rounded,
+                                      size: 15,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      'Unduh PDF',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                        letterSpacing: 0.2,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -865,11 +1053,15 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
     buffer.writeln('📚 *Ujian:* ${widget.title}');
     buffer.writeln('🔑 *Token:* ${widget.examId}');
     buffer.writeln('🎯 *Standar KKM:* $passingGrade');
-    buffer.writeln('📊 *Hasil:* ${remedialStudents.length} siswa remedial dari $totalStudents siswa');
+    buffer.writeln(
+      '📊 *Hasil:* ${remedialStudents.length} siswa remedial dari $totalStudents siswa',
+    );
     buffer.writeln('');
 
     if (remedialStudents.isEmpty) {
-      buffer.writeln('✅ *Selamat! Seluruh siswa telah tuntas mencapai/melampaui nilai KKM.*');
+      buffer.writeln(
+        '✅ *Selamat! Seluruh siswa telah tuntas mencapai/melampaui nilai KKM.*',
+      );
     } else {
       buffer.writeln('⚠️ *Daftar Siswa Perlu Remedial:*');
       for (int i = 0; i < remedialStudents.length; i++) {
@@ -883,9 +1075,13 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
 
     if (hardestQuestions.isNotEmpty) {
       buffer.writeln('');
-      buffer.writeln('💡 *Topik / Butir Soal Terbanyak Salah (Perlu Penguatan):*');
+      buffer.writeln(
+        '💡 *Topik / Butir Soal Terbanyak Salah (Perlu Penguatan):*',
+      );
       for (final hq in hardestQuestions) {
-        buffer.writeln('• Soal ${hq['nomor']}: ${hq['failPct']}% siswa salah (Kunci: ${hq['kunci']})');
+        buffer.writeln(
+          '• Soal ${hq['nomor']}: ${hq['failPct']}% siswa salah (Kunci: ${hq['kunci']})',
+        );
       }
     }
 
@@ -1328,9 +1524,9 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
       );
     } else {
       list.sort(
-        (a, b) => (a['name']?.toString() ?? '')
-            .toLowerCase()
-            .compareTo((b['name']?.toString() ?? '').toLowerCase()),
+        (a, b) => (a['name']?.toString() ?? '').toLowerCase().compareTo(
+          (b['name']?.toString() ?? '').toLowerCase(),
+        ),
       );
     }
 
@@ -1352,7 +1548,10 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
       return matchQuery;
     }).toList();
 
-    if (widget.openRemedialOnStart && !_hasOpenedRemedialInitial && allStudents.isNotEmpty && !_isLoadingQuestions) {
+    if (widget.openRemedialOnStart &&
+        !_hasOpenedRemedialInitial &&
+        allStudents.isNotEmpty &&
+        !_isLoadingQuestions) {
       _hasOpenedRemedialInitial = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _showRemedialBottomSheet(allStudents);
@@ -1394,12 +1593,17 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
       ),
       child: Column(
         children: [
-          // ── Baris 1: Status Jumlah Siswa & Tombol Aksi Download / Remedial ──
+          // ── Baris 1: Status Jumlah Siswa (Kiri) & Tombol Aksi Remedial, Excel, PDF (Kanan) ──
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // Total Siswa (Sebelah Kiri)
               Flexible(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: isSearching
                         ? const Color(0xFFE0F2FE)
@@ -1444,117 +1648,123 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
 
-              // Tombol Rekap Remedial
-              ElevatedButton.icon(
-                onPressed: () => _showRemedialBottomSheet(allStudents),
-                icon: const Icon(
-                  Icons.assignment_late_rounded,
-                  size: 13,
-                  color: Colors.white,
-                ),
-                label: Text(
-                  'Remedial',
-                  style: GoogleFonts.poppins(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD97706),
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 7,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 5),
-
-              // Tombol Download Excel
-              ElevatedButton.icon(
-                onPressed: (_isExportingExcel || _isExportingPdf)
-                    ? null
-                    : () => _exportToExcel(allStudents),
-                icon: _isExportingExcel
-                    ? const SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(
-                        Icons.table_view_rounded,
-                        size: 13,
+              // Tombol Remedial, Excel, PDF (Sebelah Kanan)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Tombol Rekap Remedial
+                  ElevatedButton.icon(
+                    onPressed: () => _showRemedialBottomSheet(allStudents),
+                    icon: const Icon(
+                      Icons.assignment_late_rounded,
+                      size: 13,
+                      color: Colors.white,
+                    ),
+                    label: Text(
+                      'Remedial',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
-                label: Text(
-                  _isExportingExcel ? 'Excel...' : 'Excel',
-                  style: GoogleFonts.poppins(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD97706),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 7,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF15803D),
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 7,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 5),
+                  const SizedBox(width: 5),
 
-              // Tombol Download PDF
-              ElevatedButton.icon(
-                onPressed: (_isExportingExcel || _isExportingPdf)
-                    ? null
-                    : () => _exportToPdf(allStudents),
-                icon: _isExportingPdf
-                    ? const SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(
-                        Icons.picture_as_pdf_rounded,
-                        size: 13,
+                  // Tombol Download Excel
+                  ElevatedButton.icon(
+                    onPressed: (_isExportingExcel || _isExportingPdf)
+                        ? null
+                        : () => _exportToExcel(allStudents),
+                    icon: _isExportingExcel
+                        ? const SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.table_view_rounded,
+                            size: 13,
+                            color: Colors.white,
+                          ),
+                    label: Text(
+                      _isExportingExcel ? 'Excel...' : 'Excel',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
-                label: Text(
-                  _isExportingPdf ? 'PDF...' : 'PDF',
-                  style: GoogleFonts.poppins(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF15803D),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 7,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFDC2626),
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 7,
+                  const SizedBox(width: 5),
+
+                  // Tombol Download PDF
+                  ElevatedButton.icon(
+                    onPressed: (_isExportingExcel || _isExportingPdf)
+                        ? null
+                        : () => _exportToPdf(allStudents),
+                    icon: _isExportingPdf
+                        ? const SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.picture_as_pdf_rounded,
+                            size: 13,
+                            color: Colors.white,
+                          ),
+                    label: Text(
+                      _isExportingPdf ? 'PDF...' : 'PDF',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFDC2626),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 7,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
+                ],
               ),
             ],
           ),
