@@ -230,6 +230,40 @@
       border-color: #fcd34d !important;
     }
 
+    .theme-light #exam-duration[readonly] {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #047857 !important;
+      font-weight: 700 !important;
+      cursor: default;
+    }
+
+    .theme-light #badge-auto-calc {
+      background-color: #ecfdf5 !important;
+      border-color: #a7f3d0 !important;
+      color: #047857 !important;
+    }
+
+    .theme-light #wrapper-passing-grade span.bg-brand-500\/10 {
+      background-color: #ecfdf5 !important;
+      border-color: #a7f3d0 !important;
+      color: #047857 !important;
+    }
+
+    .theme-light section span.bg-brand-500\/20 {
+      background-color: #ecfdf5 !important;
+      color: #047857 !important;
+      border: 1px solid #a7f3d0 !important;
+    }
+
+    .theme-light section h2 {
+      color: #0f172a !important;
+    }
+
+    .theme-light section label {
+      color: #334155 !important;
+    }
+
     /* Tab Switcher in Step 2 */
     .theme-light #tab-btn-docx.text-slate-400,
     .theme-light #tab-btn-gform.text-slate-400 {
@@ -722,16 +756,19 @@
         <h2 class="text-base font-bold text-white">Pengaturan Sesi Ujian</h2>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Judul Ujian -->
-        <div class="sm:col-span-2">
-          <label class="block text-xs font-bold text-slate-300 mb-1.5">Judul / Mata Pelajaran Ujian *</label>
+      <!-- Baris 1: Identitas Ujian (Judul, Kategori, Token) -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-5 mb-4">
+        <!-- Judul Ujian (Lebar 50% di desktop / 6 dari 12 kolom) -->
+        <div class="md:col-span-6">
+          <label class="block text-xs font-bold text-slate-300 mb-1.5 flex items-center justify-between">
+            <span>Judul / Mata Pelajaran Ujian *</span>
+          </label>
           <input type="text" id="exam-title" placeholder="Contoh: Penilaian Harian Matematika Wajib X-A"
             class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm text-white placeholder-slate-500 outline-none transition-colors">
         </div>
 
-        <!-- Kategori Ujian -->
-        <div>
+        <!-- Kategori Ujian (Lebar 25% di desktop / 3 dari 12 kolom) -->
+        <div class="md:col-span-3">
           <label class="block text-xs font-bold text-slate-300 mb-1.5">Kategori Ujian *</label>
           <select id="exam-category" onchange="onExamCategoryChanged()"
             class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm text-white outline-none transition-colors font-medium">
@@ -743,34 +780,36 @@
           </select>
         </div>
 
-        <!-- Token Ujian -->
-        <div>
+        <!-- Token Ujian (Lebar 25% di desktop / 3 dari 12 kolom) -->
+        <div class="md:col-span-3">
           <label class="block text-xs font-bold text-slate-300 mb-1.5 flex items-center justify-between">
             <span>Kode / Token Ujian *</span>
             <button type="button" onclick="randomizeToken()"
-              class="text-[10px] text-brand-400 hover:underline">Acak</button>
+              class="text-[11px] font-semibold text-brand-400 hover:underline">Acak</button>
           </label>
           <input type="text" id="exam-token" maxlength="12" placeholder="Contoh: MTK10A"
             class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 font-mono font-bold text-sm text-amber-300 uppercase outline-none tracking-wider transition-colors">
         </div>
+      </div>
 
+      <!-- Baris 2: Parameter Waktu & KKM Kelulusan (3 Kolom Seimbang & Sejajar) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5">
         <!-- Sistem Waktu Ujian -->
-        <div class="sm:col-span-2">
+        <div>
           <label class="block text-xs font-bold text-slate-300 mb-1.5">Sistem Waktu Pengerjaan *</label>
           <select id="exam-time-mode" onchange="onTimeModeChanged()"
             class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm text-white outline-none transition-colors font-medium">
-            <option value="per_paket" selected>⏱️ 1 Paket Utuh (Semua soal dikerjakan dalam 1 durasi waktu)</option>
-            <option value="per_subtest">📑 Multi-Subtest (Durasi & waktu terpisah tiap babak subtest)</option>
+            <option value="per_paket" selected>⏱️ 1 Paket Utuh (Semua Soal 1 Waktu)</option>
+            <option value="per_subtest">📑 Multi-Subtest (Durasi Tiap Babak Terpisah)</option>
           </select>
         </div>
 
-        <!-- Total Durasi Pengerjaan & Passing Grade -->
-        <div id="wrapper-global-duration" class="sm:col-span-1">
+        <!-- Total Durasi Pengerjaan -->
+        <div id="wrapper-global-duration">
           <label class="block text-xs font-bold text-slate-300 mb-1.5 flex items-center justify-between">
             <span id="label-exam-duration">Durasi Pengerjaan *</span>
             <span id="badge-auto-calc"
-              class="hidden text-[10px] font-bold text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-full border border-brand-500/20">Auto
-              (Akumulasi Subtest)</span>
+              class="hidden text-[10px] font-bold text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-full border border-brand-500/20">Auto Subtest</span>
           </label>
           <div class="relative">
             <input type="number" id="exam-duration" value="90" min="5" max="480" oninput="onGlobalDurationInput()"
@@ -780,7 +819,7 @@
         </div>
 
         <!-- Nilai Passing Grade / KKM (Skala 0 - 100) -->
-        <div id="wrapper-passing-grade" class="sm:col-span-1">
+        <div id="wrapper-passing-grade">
           <label class="block text-xs font-bold text-slate-300 mb-1.5 flex items-center justify-between">
             <span id="label-passing-grade">Passing Grade / KKM *</span>
             <span class="text-[10px] text-brand-400 font-semibold bg-brand-500/10 px-2 py-0.5 rounded-full border border-brand-500/20">Skala 0-100</span>
@@ -1365,7 +1404,7 @@
         durInput.readOnly = true;
         durInput.classList.add('bg-slate-900/60', 'text-brand-300');
         badgeAuto.classList.remove('hidden');
-        labelDur.innerText = 'Total Durasi Ujian (Akumulasi)';
+        labelDur.innerText = 'Total Durasi Ujian *';
         calculateTotalDuration();
       } else {
         durInput.readOnly = false;
@@ -1408,29 +1447,29 @@
       container.innerHTML = _subtests.map((st, idx) => {
         const qCount = _extractedQuestions.filter(q => (q.subtestIndex || 0) === idx).length;
         return `
-          <div class="subtest-card flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-3 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 transition-all">
+          <div class="subtest-card flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-3 rounded-xl bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs">
             <div class="flex items-center justify-between sm:justify-start gap-2 shrink-0">
-              <span class="subtest-badge-st w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 text-brand-400 font-extrabold text-xs flex items-center justify-center">
+              <span class="subtest-badge-st w-8 h-8 rounded-lg bg-emerald-50 dark:bg-slate-800 border border-emerald-200 dark:border-slate-700 text-emerald-700 dark:text-brand-400 font-extrabold text-xs flex items-center justify-center">
                 ST${idx + 1}
               </span>
-              <span class="sm:hidden text-xs font-bold text-slate-300">Subtest ${idx + 1}</span>
+              <span class="sm:hidden text-xs font-bold text-slate-700 dark:text-slate-300">Subtest ${idx + 1}</span>
             </div>
             <div class="flex-1">
               <input type="text" value="${escapeHtml(st.judul)}" onchange="updateSubtest(${idx}, 'judul', this.value)"
                 placeholder="Judul Subtest (misal: Kemampuan Penalaran Umum)"
-                class="subtest-input-judul w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none">
+                class="subtest-input-judul w-full px-3.5 py-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-all">
             </div>
             <div class="flex items-center justify-between sm:justify-start gap-2 shrink-0">
               <div class="relative w-28">
                 <input type="number" min="1" max="240" value="${st.durasiMenit}" oninput="updateSubtest(${idx}, 'durasiMenit', this.value)"
-                  class="subtest-input-durasi w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white outline-none text-right pr-12 focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
-                <span class="subtest-menit-label absolute right-2.5 top-1.5 text-[10px] font-bold text-slate-400 pointer-events-none">Menit</span>
+                  class="subtest-input-durasi w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white outline-none text-right pr-12 focus:bg-white dark:focus:bg-slate-900 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all">
+                <span class="subtest-menit-label absolute right-2.5 top-2 text-[10px] font-bold text-slate-400 dark:text-slate-400 pointer-events-none">Menit</span>
               </div>
-              <span class="subtest-count-badge px-2.5 py-1 rounded-md text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">
+              <span class="subtest-count-badge px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 whitespace-nowrap">
                 ${qCount} Soal
               </span>
               <button type="button" onclick="removeSubtest(${idx})" ${canDelete ? '' : 'disabled'}
-                class="subtest-btn-delete p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
+                class="subtest-btn-delete p-2 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 disabled:opacity-20 disabled:hover:bg-transparent transition-colors"
                 title="Hapus Subtest">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>

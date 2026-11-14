@@ -277,9 +277,40 @@ class MathHtmlFormatter {
       return '<span class="math-tex inline" data-math="$mathStr"></span>';
     });
 
+    // Normalisasi tag <table> HTML agar selalu scrollable horizontal & bergaris rapi
+    if (html.contains('<table') && !html.contains('overflow-x:auto') && !html.contains('overflow-x')) {
+      html = html.replaceAllMapped(
+        RegExp(r'<table(?:\s+[^>]*)?>[\s\S]*?<\/table>', caseSensitive: false),
+        (match) {
+          String tbl = match.group(0)!;
+          if (!tbl.contains('border=')) {
+            tbl = tbl.replaceFirst(
+              RegExp(r'<table(?:\s+[^>]*)?>', caseSensitive: false),
+              '<table border="1" cellpadding="6" style="border-collapse:collapse;width:100%;font-size:12.5px;border-color:#cbd5e1;">',
+            );
+          }
+          return '<div style="overflow-x:auto;margin:8px 0;">$tbl</div>';
+        },
+      );
+    }
+
     // Replace newline dengan <br/> jika belum dibungkus tag HTML blok
-    if (!html.contains('<p>') && !html.contains('<div>') && !html.contains('<table')) {
-      html = html.replaceAll('\n', '<br/>');
+    if (!html.contains('<p>') && !html.contains('<div>')) {
+      if (!html.contains('<table')) {
+        html = html.replaceAll('\n', '<br/>');
+      } else {
+        // Ganti baris baru di luar tabel dengan <br/> agar wacana tetap rapi
+        final parts = html.split(RegExp(r'(<div[^>]*>[\s\S]*?<\/div>|<table[\s\S]*?<\/table>)', caseSensitive: false));
+        final matches = RegExp(r'(<div[^>]*>[\s\S]*?<\/div>|<table[\s\S]*?<\/table>)', caseSensitive: false).allMatches(html).toList();
+        final sb = StringBuffer();
+        for (int i = 0; i < parts.length; i++) {
+          sb.write(parts[i].replaceAll('\n', '<br/>'));
+          if (i < matches.length) {
+            sb.write(matches[i].group(0));
+          }
+        }
+        html = sb.toString();
+      }
     }
 
     return html;

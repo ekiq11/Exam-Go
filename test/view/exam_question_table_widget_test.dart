@@ -151,5 +151,40 @@ void main() {
 
       expect(find.byType(Table), findsOneWidget);
     });
+
+    testWidgets('Tabel HTML di dalam subtest Literasi Bahasa tetap dirender sebagai Table Widget', (tester) async {
+      const htmlTableStr =
+          '<div class="overflow-x-auto my-3"><table class="min-w-full text-xs text-left">'
+          '<tr class="bg-slate-800 text-slate-200 font-bold">'
+          '<th class="px-3 py-2">No</th><th class="px-3 py-2">Tokoh</th><th class="px-3 py-2">Peran</th>'
+          '</tr>'
+          '<tr>'
+          '<td class="px-3 py-2">1</td><td class="px-3 py-2">Bima</td><td class="px-3 py-2">Protagonis</td>'
+          '</tr>'
+          '</table></div>';
+
+      expect(
+        ExamQuestionTableWidget.isReadingPassage(
+          htmlTableStr,
+          subtestJudul: 'Literasi Bahasa Indonesia',
+        ),
+        isFalse,
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: ExamQuestionTableWidget(
+                tabelStr: htmlTableStr,
+                subtestJudul: 'Literasi Bahasa Indonesia',
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(Table), findsOneWidget);
+    });
   });
 }

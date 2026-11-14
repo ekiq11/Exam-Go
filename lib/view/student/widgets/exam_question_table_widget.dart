@@ -93,25 +93,38 @@ class ExamQuestionTableWidget extends StatelessWidget {
 
   /// Deteksi apakah string tabel sebenarnya merupakan teks stimulus / bacaan
   static bool isReadingPassage(String tabelStr, {String? subtestJudul}) {
-    if (tabelStr.trim().isEmpty) return false;
+    final trimmedStr = tabelStr.trim();
+    if (trimmedStr.isEmpty) return false;
 
-    // Subtest bacaan/literasi selalu mengalirkan tabel sebagai teks bacaan (bukan tabel angka)
-    if (subtestJudul != null && subtestJudul.trim().isNotEmpty) {
-      final s = subtestJudul.toLowerCase();
-      if (s.contains('bacaan') ||
-          s.contains('literasi') ||
-          s.contains('bahasa') ||
-          s.contains('pemahaman') ||
-          s.contains('menulis') ||
-          s.contains('reading') ||
-          s.contains('english')) {
-        return true;
-      }
+    // 1. Format HTML Table (<table...>) atau Tabel Markdown (|---|) PASTI berupa Tabel Data sebenarnya
+    if (trimmedStr.contains('<table') ||
+        trimmedStr.contains('<tr') ||
+        (trimmedStr.contains('|') && trimmedStr.contains('---'))) {
+      return false;
     }
 
     try {
-      final parsedRows = parseTableRows(tabelStr);
+      final parsedRows = parseTableRows(trimmedStr);
       if (parsedRows.isEmpty) return false;
+
+      // 2. Jika memiliki 3 kolom atau lebih, PASTI tabel data kuantitatif (misal: No | Nama | Nilai)
+      final maxCols = parsedRows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
+      if (maxCols >= 3) return false;
+
+      // 3. Subtest bacaan/literasi untuk format teks paragraf/delimiter klasik (1|||Bacaan===2|||Teks...)
+      if (subtestJudul != null && subtestJudul.trim().isNotEmpty) {
+        final s = subtestJudul.toLowerCase();
+        if (s.contains('bacaan') ||
+            s.contains('literasi') ||
+            s.contains('bahasa') ||
+            s.contains('pemahaman') ||
+            s.contains('menulis') ||
+            s.contains('reading') ||
+            s.contains('english')) {
+          // Format sel tunggal (maxCols <= 1) atau format 2 kolom berlabel wacana
+          return true;
+        }
+      }
 
       const passageKeywords = [
         'bacaan',
@@ -133,12 +146,14 @@ class ExamQuestionTableWidget extends StatelessWidget {
         'percakapan',
       ];
 
-      final maxCols = parsedRows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
-      final hasLongText = parsedRows.any((r) => r.any((c) => c.length > 60));
       final headerMatches = parsedRows[0].any((c) =>
           passageKeywords.any((k) => c.toLowerCase().contains(k)));
 
-      return headerMatches || (hasLongText && maxCols <= 2);
+      // Format sel tunggal (maxCols == 1) adalah teks wacana mengalir
+      if (maxCols == 1) return true;
+
+      // Format 2 kolom hanya dianggap bacaan jika baris pertamanya memiliki keyword wacana
+      return headerMatches;
     } catch (_) {
       return false;
     }
