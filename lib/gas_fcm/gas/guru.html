@@ -672,8 +672,22 @@
 
     /* Light Mode Overrides for Navigation, Monitoring, History, and Matrix */
     .theme-light #main-tab-nav-bar {
+      border-color: #e2e8f0 !important;
+    }
+
+    .theme-light #main-tab-nav-bar > div:first-child {
       background-color: #ffffff !important;
       border-color: #e2e8f0 !important;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .theme-light #main-tab-nav-bar button.tab-nav-btn {
+      color: #64748b !important;
+    }
+
+    .theme-light #main-tab-nav-bar button.tab-nav-btn:hover {
+      background-color: #f8fafc !important;
+      color: #0f172a !important;
     }
 
     .theme-light #tab-nav-create.bg-brand-600,
@@ -681,29 +695,253 @@
     .theme-light #tab-nav-history.bg-brand-600 {
       background-color: #059669 !important;
       color: #ffffff !important;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
     }
 
-    .theme-light #tab-nav-create:not(.bg-brand-600),
-    .theme-light #tab-nav-monitoring:not(.bg-brand-600),
-    .theme-light #tab-nav-history:not(.bg-brand-600) {
-      color: #475569 !important;
+    .theme-light #main-tab-nav-bar button[onclick="refreshCurrentTab()"] {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #334155 !important;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
     }
 
-    .theme-light #tab-nav-create:not(.bg-brand-600):hover,
-    .theme-light #tab-nav-monitoring:not(.bg-brand-600):hover,
-    .theme-light #tab-nav-history:not(.bg-brand-600):hover {
-      background-color: #f1f5f9 !important;
+    .theme-light #main-tab-nav-bar button[onclick="refreshCurrentTab()"]:hover {
+      background-color: #f8fafc !important;
+      border-color: #94a3b8 !important;
       color: #0f172a !important;
     }
 
+    /* ── Light Mode: View 3 Riwayat Ujian Header Banner ── */
+    .theme-light #view-exam-history > div:first-child {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .theme-light #view-exam-history h2,
+    .theme-light #view-exam-history h2 span {
+      color: #0f172a !important;
+    }
+
+    .theme-light #view-exam-history p {
+      color: #475569 !important;
+    }
+
+    .theme-light #history-count-badge {
+      background-color: #ecfdf5 !important;
+      color: #047857 !important;
+      border-color: #a7f3d0 !important;
+    }
+
+    .theme-light #search-history-exam {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+
+    .theme-light #search-history-exam::placeholder {
+      color: #94a3b8 !important;
+    }
+
+    /* ── Light Mode: Exam History Cards ── */
     .theme-light .exam-history-card {
       background-color: #ffffff !important;
       border-color: #e2e8f0 !important;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .theme-light .exam-history-card:hover {
+      border-color: #cbd5e1 !important;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04) !important;
     }
 
     .theme-light .exam-history-card h3 {
       color: #0f172a !important;
+    }
+
+    .theme-light .exam-history-card span.tracking-wider {
+      background-color: #ecfdf5 !important;
+      color: #047857 !important;
+      border-color: #a7f3d0 !important;
+    }
+
+    .theme-light .exam-history-card span.text-slate-400 {
+      color: #64748b !important;
+    }
+
+    /* Token Box Inside Card in Light Mode */
+    .theme-light .exam-history-card .p-3.rounded-xl.bg-slate-950\/70,
+    .theme-light .exam-history-card .bg-slate-950\/70 {
+      background-color: #f8fafc !important;
+      border-color: #e2e8f0 !important;
+    }
+
+    .theme-light .exam-history-card .text-\[9px\].font-extrabold {
+      color: #64748b !important;
+    }
+
+    .theme-light .exam-history-card .font-mono.font-black {
+      color: #0f172a !important;
+    }
+
+    .theme-light .exam-history-card button[onclick^="copyTokenToClipboard"] {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #334155 !important;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .theme-light .exam-history-card button[onclick^="copyTokenToClipboard"]:hover {
+      background-color: #f1f5f9 !important;
+      color: #0f172a !important;
+    }
+
+    /* Stats Row in Card */
+    .theme-light .exam-history-card .border-slate-800\/80 {
+      border-color: #f1f5f9 !important;
+      color: #64748b !important;
+    }
+
+    .theme-light .exam-history-card .border-slate-800\/80 strong {
+      color: #0f172a !important;
+    }
+
+    /* Action Buttons in Card */
+    .theme-light .exam-history-card button[onclick^="openHistoryQrModalByToken"] {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #1e293b !important;
+    }
+
+    .theme-light .exam-history-card button[onclick^="openHistoryQrModalByToken"]:hover {
+      background-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+
+    /* ── Light Mode: Exam History Pagination ── */
+    .theme-light #exam-history-pagination {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      color: #475569 !important;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .theme-light #exam-history-pagination strong {
+      color: #0f172a !important;
+    }
+
+    .theme-light #exam-history-pagination button {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #334155 !important;
+    }
+
+    .theme-light #exam-history-pagination button:hover:not(.opacity-40) {
+      background-color: #f1f5f9 !important;
+      color: #0f172a !important;
+    }
+
+    .theme-light #exam-history-pagination button.bg-brand-600 {
+      background-color: #059669 !important;
+      border-color: #047857 !important;
+      color: #ffffff !important;
+    }
+
+    /* ── Light Mode: View 2 Live Monitoring ── */
+    .theme-light #view-live-monitoring > div:first-child {
+      border-color: #e2e8f0 !important;
+    }
+
+    .theme-light #view-live-monitoring > div.grid > div {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .theme-light #view-live-monitoring > div.grid > div .text-white {
+      color: #0f172a !important;
+    }
+
+    .theme-light #view-live-monitoring > div:last-child {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .theme-light #search-monitoring-student {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+
+    .theme-light .monitoring-filter-pill:not(.active) {
+      background-color: #f1f5f9 !important;
+      border: 1px solid #cbd5e1 !important;
+      color: #334155 !important;
+    }
+
+    .theme-light .monitoring-filter-pill:not(.active):hover {
+      background-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+
+    .theme-light #view-live-monitoring thead {
+      background-color: #f8fafc !important;
+      border-color: #e2e8f0 !important;
+      color: #475569 !important;
+    }
+
+    .theme-light #view-live-monitoring th {
+      border-color: #e2e8f0 !important;
+      color: #475569 !important;
+    }
+
+    .theme-light #view-live-monitoring tbody tr {
+      background-color: #ffffff !important;
+      border-color: #f1f5f9 !important;
+      color: #1e293b !important;
+    }
+
+    .theme-light #view-live-monitoring tbody tr:hover {
+      background-color: #f8fafc !important;
+    }
+
+    .theme-light #view-live-monitoring td {
+      border-color: #f1f5f9 !important;
+    }
+
+    /* ── Light Mode: Published & Projector Modal ── */
+    .theme-light #published-modal-card {
+      background-color: #ffffff !important;
+      border-color: #10b981 !important;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .theme-light #published-exam-title {
+      color: #0f172a !important;
+    }
+
+    .theme-light #token-display-box {
+      background-color: #f8fafc !important;
+      border-color: #10b981 !important;
+    }
+
+    .theme-light #published-exam-token {
+      color: #047857 !important;
+    }
+
+    .theme-light #token-display-box .token-label {
+      color: #64748b !important;
+    }
+
+    .theme-light #btn-close-published {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #1e293b !important;
+    }
+
+    .theme-light #btn-close-published:hover {
+      background-color: #e2e8f0 !important;
     }
 
     .theme-light #modal-exam-matrix > div {
