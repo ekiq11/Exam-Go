@@ -210,4 +210,347 @@ class ExamPdfExporter {
 
     return file;
   }
+
+  /// Menghasilkan byte dokumen PDF matriks analisis butir soal & jawaban siswa (Landscape A4)
+  static Future<Uint8List> generateMatrixReportBytes({
+    required String examTitle,
+    required String examId,
+    required List<Map<String, dynamic>> questions,
+    required List<Map<String, dynamic>> students,
+    DateTime? printedAt,
+  }) async {
+    final pdf = pw.Document();
+    final now = printedAt ?? DateTime.now();
+    final dateStr =
+        '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+    final totalSubmissions = students.length;
+    final avgScore = totalSubmissions > 0
+        ? (students.fold<int>(0, (total, s) => total + ((s['skor'] as num?)?.toInt() ?? 0)) / totalSubmissions).round()
+        : 0;
+
+    // Chunk butir soal maksimal 25 soal per halaman landscape agar tidak terpotong
+    const int chunkSize = 25;
+    final int totalChunks = (questions.isEmpty) ? 1 : ((questions.length + chunkSize - 1) ~/ chunkSize);
+
+    for (int chunkIdx = 0; chunkIdx < totalChunks; chunkIdx++) {
+      final startIdx = chunkIdx * chunkSize;
+      final endIdx = (startIdx + chunkSize > questions.length) ? questions.length : startIdx + chunkSize;
+      final chunkQuestions = questions.isEmpty ? <Map<String, dynamic>>[] : questions.sublist(startIdx, endIdx);
+
+      final chunkLabel = questions.isEmpty
+          ? 'Belum ada data butir soal'
+          : 'Butir Soal No. ${chunkQuestions.first['nomorSoal']} s/d No. ${chunkQuestions.last['nomorSoal']} (Bagian ${chunkIdx + 1} dari $totalChunks)';
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4.landscape,
+          margin: const pw.EdgeInsets.all(20),
+          header: (pw.Context context) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          'ExamGO CBT - Matriks Analisis Butir Soal & Jawaban Siswa',
+                          style: pw.TextStyle(
+                            fontSize: 13,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.green800,
+                          ),
+                        ),
+                        pw.Text(
+                          '$examTitle | $chunkLabel',
+                          style: const pw.TextStyle(fontSize: 9.5, color: PdfColors.grey700),
+                        ),
+                      ],
+                    ),
+                    pw.Row(
+                      children: [
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: pw.BoxDecoration(
+                            color: PdfColors.green50,
+                            borderRadius: pw.BorderRadius.circular(4),
+                            border: pw.Border.all(color: PdfColors.green200),
+                          ),
+                          child: pw.Text(
+                            'TOKEN: $examId',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.green900,
+                            ),
+                          ),
+                        ),
+                        pw.SizedBox(width: 8),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: pw.BoxDecoration(
+                            color: PdfColors.blueGrey50,
+                            borderRadius: pw.BorderRadius.circular(4),
+                            border: pw.Border.all(color: PdfColors.blueGrey200),
+                          ),
+                          child: pw.Text(
+                            'Total: $totalSubmissions Siswa | Rata-rata: $avgScore',
+                            style: const pw.TextStyle(fontSize: 9, color: PdfColors.blueGrey800),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 4),
+                pw.Row(
+                  children: [
+                    pw.Container(width: 10, height: 10, color: PdfColors.green100),
+                    pw.SizedBox(width: 4),
+                    pw.Text('Hijau = Benar', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
+                    pw.SizedBox(width: 12),
+                    pw.Container(width: 10, height: 10, color: PdfColors.red100),
+                    pw.SizedBox(width: 4),
+                    pw.Text('Merah = Salah / Tidak Diisi', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
+                    pw.SizedBox(width: 12),
+                    pw.Container(width: 10, height: 10, color: PdfColors.blueGrey800),
+                    pw.SizedBox(width: 4),
+                    pw.Text('Abu Gelap = Kunci Guru', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
+                  ],
+                ),
+                pw.Divider(color: PdfColors.grey300, thickness: 0.8),
+                pw.SizedBox(height: 2),
+              ],
+            );
+          },
+          footer: (pw.Context context) {
+            return pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text(
+                  'Dicetak: $dateStr | ExamGO Anti-Cheat CBT System',
+                  style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+                ),
+                pw.Text(
+                  'Halaman ${context.pageNumber} dari ${context.pagesCount}',
+                  style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+                ),
+              ],
+            );
+          },
+          build: (pw.Context context) {
+            // Kolom: No, Nama, NIS, Nilai, Benar, Salah, lalu Q1..Qn
+            final headers = ['No', 'Nama Siswa', 'NIS', 'Nilai', 'B', 'S'];
+            for (final q in chunkQuestions) {
+              headers.add('Q${q['nomorSoal']}');
+            }
+
+            // Baris Kunci Jawaban
+            final keyRow = ['KUNCI', 'KUNCI GURU', '-', '-', '-', '-'];
+            for (final q in chunkQuestions) {
+              keyRow.add(q['kunci']?.toString().toUpperCase() ?? '-');
+            }
+
+            return [
+              pw.Table(
+                border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+                columnWidths: {
+                  0: const pw.FixedColumnWidth(20),  // No
+                  1: const pw.FixedColumnWidth(100), // Nama
+                  2: const pw.FixedColumnWidth(48),  // NIS
+                  3: const pw.FixedColumnWidth(28),  // Nilai
+                  4: const pw.FixedColumnWidth(20),  // B
+                  5: const pw.FixedColumnWidth(20),  // S
+                  for (int i = 0; i < chunkQuestions.length; i++)
+                    (6 + i): const pw.FlexColumnWidth(1),
+                },
+                children: [
+                  // 1. Header Tabel
+                  pw.TableRow(
+                    decoration: const pw.BoxDecoration(color: PdfColors.green800),
+                    children: headers.map((h) {
+                      return pw.Container(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                        alignment: pw.Alignment.center,
+                        child: pw.Text(
+                          h,
+                          style: pw.TextStyle(
+                            fontSize: 7.5,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.white,
+                          ),
+                          textAlign: pw.TextAlign.center,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+
+                  // 2. Baris Kunci Jawaban
+                  pw.TableRow(
+                    decoration: const pw.BoxDecoration(color: PdfColors.blueGrey800),
+                    children: keyRow.map((kVal) {
+                      return pw.Container(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 3.5, horizontal: 2),
+                        alignment: pw.Alignment.center,
+                        child: pw.Text(
+                          kVal,
+                          style: pw.TextStyle(
+                            fontSize: 8,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.white,
+                          ),
+                          textAlign: pw.TextAlign.center,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+
+                  // 3. Baris Jawaban Tiap Siswa
+                  ...List.generate(students.length, (sIdx) {
+                    final student = students[sIdx];
+                    final rawAnswers = (student['jawaban'] as Map<String, dynamic>?) ?? {};
+                    final name = student['name']?.toString() ?? '-';
+                    final nis = student['nis']?.toString() ?? '-';
+                    final skor = (student['skor'] as num?)?.toInt() ?? 0;
+                    final benar = (student['benar'] as num?)?.toInt() ?? 0;
+                    final salah = (student['salah'] as num?)?.toInt() ?? 0;
+                    final isEven = sIdx % 2 == 0;
+
+                    return pw.TableRow(
+                      decoration: pw.BoxDecoration(
+                        color: isEven ? PdfColors.white : PdfColors.grey50,
+                      ),
+                      children: [
+                        // No
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                          alignment: pw.Alignment.center,
+                          child: pw.Text('${sIdx + 1}', style: const pw.TextStyle(fontSize: 7.5)),
+                        ),
+                        // Nama
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 3, horizontal: 3),
+                          alignment: pw.Alignment.centerLeft,
+                          child: pw.Text(
+                            name,
+                            maxLines: 1,
+                            style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold),
+                          ),
+                        ),
+                        // NIS
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                          alignment: pw.Alignment.center,
+                          child: pw.Text(nis, style: const pw.TextStyle(fontSize: 7)),
+                        ),
+                        // Nilai
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                          alignment: pw.Alignment.center,
+                          child: pw.Text(
+                            '$skor',
+                            style: pw.TextStyle(
+                              fontSize: 7.5,
+                              fontWeight: pw.FontWeight.bold,
+                              color: skor >= 75 ? PdfColors.green900 : PdfColors.red900,
+                            ),
+                          ),
+                        ),
+                        // Benar
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                          alignment: pw.Alignment.center,
+                          child: pw.Text('$benar', style: const pw.TextStyle(fontSize: 7)),
+                        ),
+                        // Salah
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                          alignment: pw.Alignment.center,
+                          child: pw.Text('$salah', style: const pw.TextStyle(fontSize: 7)),
+                        ),
+
+                        // Butir Soal & Jawaban Siswa
+                        ...chunkQuestions.map((q) {
+                          final soalId = q['soalId']?.toString() ?? '';
+                          final nomor = q['nomorSoal']?.toString() ?? '';
+                          final kunci = (q['kunci']?.toString() ?? '').trim().toUpperCase();
+
+                          // Cari jawaban siswa
+                          final studentAns = (rawAnswers[soalId] ??
+                                  rawAnswers[nomor] ??
+                                  rawAnswers['Q$nomor'] ??
+                                  '-')
+                              .toString()
+                              .trim()
+                              .toUpperCase();
+
+                          final isCorrect = studentAns.isNotEmpty &&
+                              studentAns != '-' &&
+                              kunci.isNotEmpty &&
+                              studentAns == kunci;
+
+                          return pw.Container(
+                            padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                            alignment: pw.Alignment.center,
+                            decoration: pw.BoxDecoration(
+                              color: isCorrect ? PdfColors.green100 : PdfColors.red100,
+                            ),
+                            child: pw.Text(
+                              studentAns.isEmpty ? '-' : studentAns,
+                              style: pw.TextStyle(
+                                fontSize: 7.5,
+                                fontWeight: pw.FontWeight.bold,
+                                color: isCorrect ? PdfColors.green900 : PdfColors.red900,
+                              ),
+                              textAlign: pw.TextAlign.center,
+                            ),
+                          );
+                        }),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+            ];
+          },
+        ),
+      );
+    }
+
+    return pdf.save();
+  }
+
+  /// Membuat berkas PDF Matriks Jawaban dan membagikannya via SharePlus
+  static Future<File> exportAndShareMatrixPdf({
+    required String examTitle,
+    required String examId,
+    required List<Map<String, dynamic>> questions,
+    required List<Map<String, dynamic>> students,
+  }) async {
+    final bytes = await generateMatrixReportBytes(
+      examTitle: examTitle,
+      examId: examId,
+      questions: questions,
+      students: students,
+    );
+
+    final tempDir = await getTemporaryDirectory();
+    final sanitizedTitle = examTitle.replaceAll(RegExp(r'[^\w\s\-]'), '_').trim();
+    final filePath = '${tempDir.path}/Matriks_Jawaban_${sanitizedTitle}_$examId.pdf';
+    final file = File(filePath);
+    await file.writeAsBytes(bytes, flush: true);
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path, mimeType: 'application/pdf')],
+        subject: 'Matriks Analisis Butir Soal PDF - $examTitle',
+        text: 'Laporan Matriks Analisis Butir Soal & Jawaban Siswa Ujian "$examTitle" (Token: $examId).',
+      ),
+    );
+
+    return file;
+  }
 }
