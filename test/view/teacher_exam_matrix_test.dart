@@ -129,5 +129,89 @@ void main() {
       expect(find.text('Salah: 1'), findsOneWidget);
       expect(find.textContaining('TUNTAS'), findsOneWidget);
     });
+
+    testWidgets('search bar filters students, shows count, and clears query', (tester) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final testQuestions = List.generate(3, (i) => {
+        'nomorSoal': i + 1,
+        'soalId': 'Q_${i + 1}',
+        'kunci': 'A',
+      });
+
+      final testStudents = [
+        {
+          'name': 'Budi Santoso',
+          'nis': '101',
+          'skor': 90,
+          'benar': 3,
+          'salah': 0,
+          'totalSoal': 3,
+          'jawaban': {'Q_1': 'A', 'Q_2': 'A', 'Q_3': 'A'},
+        },
+        {
+          'name': 'Siti Rahma',
+          'nis': '102',
+          'skor': 50,
+          'benar': 1,
+          'salah': 2,
+          'totalSoal': 3,
+          'jawaban': {'Q_1': 'A', 'Q_2': 'B', 'Q_3': 'C'},
+        },
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TeacherExamMatrixScreen(
+            examId: 'TEST88',
+            title: 'Penilaian Harian',
+            passingGrade: 75,
+            initialQuestions: testQuestions,
+            initialStudents: testStudents,
+          ),
+        ),
+      );
+
+      await tester.pump();
+
+      // Mulanya ada 2 siswa
+      expect(find.text('2 Siswa'), findsOneWidget);
+      expect(find.text('Budi Santoso'), findsOneWidget);
+      expect(find.text('Siti Rahma'), findsOneWidget);
+
+      // Cari "Budi"
+      await tester.enterText(find.byType(TextField), 'Budi');
+      await tester.pump();
+
+      expect(find.text('1 dari 2 Siswa'), findsOneWidget);
+      expect(find.text('Budi Santoso'), findsOneWidget);
+      expect(find.text('Siti Rahma'), findsNothing);
+
+      // Tap tombol hapus pencarian
+      await tester.tap(find.byTooltip('Hapus Pencarian'));
+      await tester.pump();
+
+      // Kembali menampilkan 2 siswa
+      expect(find.text('2 Siswa'), findsOneWidget);
+      expect(find.text('Budi Santoso'), findsOneWidget);
+      expect(find.text('Siti Rahma'), findsOneWidget);
+
+      // Cari nama tidak dikenal -> Muncul Empty State Elegan
+      await tester.enterText(find.byType(TextField), 'Zulfa');
+      await tester.pump();
+
+      expect(find.textContaining('Zulfa'), findsWidgets);
+      expect(find.text('Reset Pencarian'), findsOneWidget);
+
+      // Tap reset pencarian
+      await tester.tap(find.text('Reset Pencarian'));
+      await tester.pump();
+      expect(find.text('2 Siswa'), findsOneWidget);
+    });
   });
 }

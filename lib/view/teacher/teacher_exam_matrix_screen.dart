@@ -54,7 +54,9 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
   bool _isLandscape = false;
 
   String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
   String _selectedFilter = 'Semua'; // 'Semua', 'Tuntas', 'Remedial'
+  bool _sortByScoreDesc = true; // true = Ranking Nilai, false = Nama A-Z
 
   final ScrollController _horizontalBodyScrollController = ScrollController();
   final ScrollController _horizontalHeaderScrollController = ScrollController();
@@ -73,6 +75,7 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
 
   @override
   void dispose() {
+    _searchController.dispose();
     // Kembalikan orientasi layar ke normal jika sempat diubah
     if (_isLandscape) {
       SystemChrome.setPreferredOrientations([
@@ -771,12 +774,21 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
   /// Membangun seluruh konten toolbar, filter, dan tabel matriks siswa
   Widget _buildMatrixContent(List<Map<String, dynamic>> allStudents) {
     final list = List<Map<String, dynamic>>.from(allStudents);
-    // Urutkan nilai tertinggi ke terendah
-    list.sort(
-      (a, b) => ((b['skor'] as num?)?.toInt() ?? 0).compareTo(
-        (a['skor'] as num?)?.toInt() ?? 0,
-      ),
-    );
+
+    // Pengurutan: Peringkat Skor Tertinggi vs Nama A-Z
+    if (_sortByScoreDesc) {
+      list.sort(
+        (a, b) => ((b['skor'] as num?)?.toInt() ?? 0).compareTo(
+          (a['skor'] as num?)?.toInt() ?? 0,
+        ),
+      );
+    } else {
+      list.sort(
+        (a, b) => (a['name']?.toString() ?? '')
+            .toLowerCase()
+            .compareTo((b['name']?.toString() ?? '').toLowerCase()),
+      );
+    }
 
     // Filter pencarian dan status KKM
     final filteredStudents = list.where((s) {
@@ -798,10 +810,10 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
 
     return Column(
       children: [
-        // ── Toolbar Atas: Action Download & Search ──
-        _buildTopToolbar(list),
+        // ── Toolbar Atas: Action Download & Search Bar Elegan ──
+        _buildTopToolbar(list, filteredStudents),
 
-        // ── Legenda Warna & Filter Status ──
+        // ── Legenda Warna, Filter Status & Sort ──
         _buildLegendAndFilterBar(list),
 
         // ── Tabel Matriks Utama (Anti Overflow) ──
@@ -814,44 +826,68 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
     );
   }
 
-  /// Toolbar atas dengan tombol download Excel & PDF serta kolom pencarian
-  Widget _buildTopToolbar(List<Map<String, dynamic>> allStudents) {
+  /// Toolbar atas: Tombol Download & Baris Pencarian Elegan & User-friendly
+  Widget _buildTopToolbar(
+    List<Map<String, dynamic>> allStudents,
+    List<Map<String, dynamic>> filteredStudents,
+  ) {
+    final bool isSearching = _searchQuery.isNotEmpty;
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.shade200, width: 0.8),
+        ),
+      ),
       child: Column(
         children: [
+          // ── Baris 1: Status Jumlah Siswa & Tombol Aksi Download ──
           Row(
             children: [
-              Expanded(
-                child: Container(
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: TextField(
-                    onChanged: (val) =>
-                        setState(() => _searchQuery = val.trim()),
-                    decoration: InputDecoration(
-                      hintText: 'Cari nama atau NIS siswa...',
-                      hintStyle: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.grey.shade500,
-                      ),
-                      prefixIcon: const Icon(
-                        Icons.search_rounded,
-                        size: 18,
-                        color: Colors.grey,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
+                decoration: BoxDecoration(
+                  color: isSearching
+                      ? const Color(0xFFE0F2FE)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isSearching
+                        ? const Color(0xFF7DD3FC)
+                        : Colors.transparent,
                   ),
                 ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isSearching
+                          ? Icons.person_search_rounded
+                          : Icons.people_alt_rounded,
+                      size: 14,
+                      color: isSearching
+                          ? const Color(0xFF0284C7)
+                          : const Color(0xFF475569),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      isSearching
+                          ? '${filteredStudents.length} dari ${allStudents.length} Siswa'
+                          : '${allStudents.length} Siswa',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: isSearching
+                            ? const Color(0xFF0369A1)
+                            : const Color(0xFF334155),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(width: 8),
+              const Spacer(),
 
               // Tombol Download Excel
               ElevatedButton.icon(
@@ -860,8 +896,8 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                     : () => _exportToExcel(allStudents),
                 icon: _isExportingExcel
                     ? const SizedBox(
-                        width: 14,
-                        height: 14,
+                        width: 13,
+                        height: 13,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: Colors.white,
@@ -869,13 +905,13 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                       )
                     : const Icon(
                         Icons.table_view_rounded,
-                        size: 15,
+                        size: 14,
                         color: Colors.white,
                       ),
                 label: Text(
                   _isExportingExcel ? 'Excel...' : 'Excel',
                   style: GoogleFonts.poppins(
-                    fontSize: 11.5,
+                    fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -885,14 +921,14 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
-                    vertical: 8,
+                    vertical: 7,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
 
               // Tombol Download PDF
               ElevatedButton.icon(
@@ -901,8 +937,8 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                     : () => _exportToPdf(allStudents),
                 icon: _isExportingPdf
                     ? const SizedBox(
-                        width: 14,
-                        height: 14,
+                        width: 13,
+                        height: 13,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           color: Colors.white,
@@ -910,13 +946,13 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                       )
                     : const Icon(
                         Icons.picture_as_pdf_rounded,
-                        size: 15,
+                        size: 14,
                         color: Colors.white,
                       ),
                 label: Text(
                   _isExportingPdf ? 'PDF...' : 'PDF',
                   style: GoogleFonts.poppins(
-                    fontSize: 11.5,
+                    fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -926,7 +962,7 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
-                    vertical: 8,
+                    vertical: 7,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -935,12 +971,87 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
               ),
             ],
           ),
+
+          const SizedBox(height: 10),
+
+          // ── Baris 2: Search Bar Full Width Elegan ──
+          Container(
+            height: 42,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSearching
+                    ? const Color(0xFF0F766E)
+                    : const Color(0xFFE2E8F0),
+                width: isSearching ? 1.4 : 1.0,
+              ),
+              boxShadow: [
+                if (isSearching)
+                  BoxShadow(
+                    color: const Color(0xFF0F766E).withValues(alpha: 0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const SizedBox(width: 12),
+                Icon(
+                  Icons.search_rounded,
+                  size: 20,
+                  color: isSearching
+                      ? const Color(0xFF0F766E)
+                      : Colors.grey.shade400,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (val) =>
+                        setState(() => _searchQuery = val.trim()),
+                    style: GoogleFonts.poppins(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF0F172A),
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Cari nama siswa atau NIS...',
+                      hintStyle: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey.shade400,
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+                if (_searchQuery.isNotEmpty)
+                  IconButton(
+                    icon: Icon(
+                      Icons.cancel_rounded,
+                      size: 18,
+                      color: Colors.grey.shade400,
+                    ),
+                    tooltip: 'Hapus Pencarian',
+                    splashRadius: 18,
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _searchQuery = '');
+                    },
+                  ),
+                const SizedBox(width: 4),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  /// Legenda warna dan filter chip status
+  /// Legenda warna, filter chip status, dan tombol pengurutan (Ranking / A-Z)
   Widget _buildLegendAndFilterBar(List<Map<String, dynamic>> allStudents) {
     final passedCount = allStudents
         .where((s) => (s['skor'] as int) >= widget.passingGrade)
@@ -955,6 +1066,7 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
         child: Row(
           children: [
             // Legenda Warna
@@ -971,16 +1083,57 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
             ),
             const SizedBox(width: 6),
             _buildLegendPill('🔑 Kunci Guru', _kKeyHeaderBg, Colors.white),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             Container(width: 1, height: 16, color: Colors.grey.shade300),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
 
-            // Filter Chips
+            // Filter Chips Status KKM
             _buildFilterChip('Semua (${allStudents.length})', 'Semua'),
             const SizedBox(width: 6),
             _buildFilterChip('Tuntas ($passedCount)', 'Tuntas'),
             const SizedBox(width: 6),
             _buildFilterChip('Remedial ($remedialCount)', 'Remedial'),
+
+            const SizedBox(width: 12),
+            Container(width: 1, height: 16, color: Colors.grey.shade300),
+            const SizedBox(width: 12),
+
+            // Tombol Pengurutan (Ranking vs Nama A-Z)
+            InkWell(
+              onTap: () => setState(() => _sortByScoreDesc = !_sortByScoreDesc),
+              borderRadius: BorderRadius.circular(6),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3.5,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _sortByScoreDesc
+                          ? Icons.trending_down_rounded
+                          : Icons.sort_by_alpha_rounded,
+                      size: 13,
+                      color: const Color(0xFF0F766E),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _sortByScoreDesc ? 'Ranking ↓' : 'Nama A-Z ↑',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF0F766E),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -1384,21 +1537,80 @@ class _TeacherExamMatrixScreenState extends State<TeacherExamMatrixScreen> {
   }
 
   Widget _buildEmptyState() {
+    final bool isSearching = _searchQuery.isNotEmpty;
+
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.search_off_rounded, size: 48, color: Colors.grey.shade400),
-          const SizedBox(height: 12),
-          Text(
-            'Tidak ada data siswa ditemukan',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isSearching
+                    ? Icons.person_search_rounded
+                    : Icons.search_off_rounded,
+                size: 38,
+                color: Colors.grey.shade400,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 14),
+            Text(
+              isSearching
+                  ? 'Siswa "$_searchQuery" Tidak Ditemukan'
+                  : 'Belum Ada Data Siswa',
+              style: GoogleFonts.poppins(
+                fontSize: 14.5,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              isSearching
+                  ? 'Periksa kembali penulisan nama atau nomor induk siswa (NIS).'
+                  : 'Siswa yang telah mengumpulkan jawaban ujian akan otomatis tampil di sini.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            if (isSearching) ...[
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() => _searchQuery = '');
+                },
+                icon: const Icon(Icons.refresh_rounded, size: 16),
+                label: Text(
+                  'Reset Pencarian',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF0F766E),
+                  side: const BorderSide(color: Color(0xFF0F766E)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
