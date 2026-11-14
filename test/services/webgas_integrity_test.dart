@@ -496,5 +496,22 @@ void main() {
       expect(kodeContent, contains('reqAction === \'get_exam_monitoring\''));
       expect(kodeContent, contains('reqAction === \'get_teacher_exams\''));
     });
+
+    test('guru.html embedded JavaScript scripts have zero syntax errors', () {
+      final res = Process.runSync('node', [
+        '-e',
+        '''
+const fs = require('fs');
+const html = fs.readFileSync('lib/gas_fcm/gas/guru.html', 'utf8');
+const scripts = [...html.matchAll(/<script(?:\\s+[^>]*)?>([\\s\\S]*?)<\\/script>/gi)];
+scripts.forEach((s, idx) => {
+  if (s[1].trim()) {
+    new Function(s[1]);
+  }
+});
+'''
+      ]);
+      expect(res.exitCode, equals(0), reason: 'Node detected JavaScript syntax error in guru.html: ${res.stderr}');
+    });
   });
 }
