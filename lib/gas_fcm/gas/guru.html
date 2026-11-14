@@ -676,26 +676,33 @@
     }
 
     .theme-light #main-tab-nav-bar > div:first-child {
-      background-color: #ffffff !important;
-      border-color: #e2e8f0 !important;
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
     }
 
     .theme-light #main-tab-nav-bar button.tab-nav-btn {
-      color: #64748b !important;
+      color: #475569 !important;
+      font-weight: 600 !important;
     }
 
     .theme-light #main-tab-nav-bar button.tab-nav-btn:hover {
-      background-color: #f8fafc !important;
+      background-color: #e2e8f0 !important;
       color: #0f172a !important;
     }
 
-    .theme-light #tab-nav-create.bg-brand-600,
-    .theme-light #tab-nav-monitoring.bg-brand-600,
-    .theme-light #tab-nav-history.bg-brand-600 {
+    .theme-light #main-tab-nav-bar button.tab-nav-btn.bg-brand-600,
+    .theme-light #main-tab-nav-bar button.tab-nav-btn.bg-brand-600 *,
+    .theme-light #main-tab-nav-bar button.tab-nav-btn.bg-brand-600 span {
       background-color: #059669 !important;
       color: #ffffff !important;
-      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+      font-weight: 700 !important;
+      box-shadow: 0 2px 4px 0 rgba(5, 150, 105, 0.25) !important;
+    }
+
+    .theme-light #tab-nav-monitoring.bg-brand-600 .bg-emerald-400,
+    .theme-light #tab-nav-monitoring.bg-brand-600 .bg-emerald-500 {
+      background-color: #ffffff !important;
     }
 
     .theme-light #main-tab-nav-bar button[onclick="refreshCurrentTab()"] {
@@ -847,19 +854,89 @@
       color: #ffffff !important;
     }
 
+    /* ── Light Mode: Exam History Actions (Delete & Clear Cache) ── */
+    .theme-light button[onclick="clearTeacherLocalHistory()"] {
+      background-color: #fff1f2 !important;
+      border-color: #fecdd3 !important;
+      color: #e11d48 !important;
+    }
+
+    .theme-light button[onclick="clearTeacherLocalHistory()"]:hover {
+      background-color: #ffe4e6 !important;
+      color: #be123c !important;
+    }
+
+    .theme-light .exam-history-card button[onclick^="deleteTeacherExam"] {
+      color: #94a3b8 !important;
+    }
+
+    .theme-light .exam-history-card button[onclick^="deleteTeacherExam"]:hover {
+      color: #e11d48 !important;
+      background-color: #ffe4e6 !important;
+    }
+
     /* ── Light Mode: View 2 Live Monitoring ── */
     .theme-light #view-live-monitoring > div:first-child {
+      background-color: #ffffff !important;
       border-color: #e2e8f0 !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .theme-light #view-live-monitoring > div:first-child h2 {
+      color: #0f172a !important;
+    }
+
+    .theme-light #view-live-monitoring > div:first-child p {
+      color: #475569 !important;
+    }
+
+    .theme-light #view-live-monitoring > div:first-child label {
+      color: #334155 !important;
+    }
+
+    .theme-light #select-monitoring-exam {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #065f46 !important;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .theme-light #select-monitoring-exam:focus {
+      border-color: #059669 !important;
+      box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2) !important;
+    }
+
+    .theme-light #view-live-monitoring label.cursor-pointer,
+    .theme-light #view-live-monitoring .bg-slate-950\/80 {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #334155 !important;
+    }
+
+    .theme-light #view-live-monitoring label.cursor-pointer:hover {
+      background-color: #f1f5f9 !important;
+      border-color: #94a3b8 !important;
     }
 
     .theme-light #view-live-monitoring > div.grid > div {
       background-color: #ffffff !important;
       border-color: #e2e8f0 !important;
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
+      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.03) !important;
     }
 
     .theme-light #view-live-monitoring > div.grid > div .text-white {
       color: #0f172a !important;
+    }
+
+    .theme-light #view-live-monitoring > div.grid > div .text-slate-400 {
+      color: #64748b !important;
+    }
+
+    /* Card 1 Total Peserta icon container */
+    .theme-light #view-live-monitoring > div.grid > div .bg-slate-800 {
+      background-color: #f1f5f9 !important;
+      border: 1px solid #e2e8f0 !important;
+      color: #1e293b !important;
     }
 
     .theme-light #view-live-monitoring > div:last-child {
@@ -868,10 +945,22 @@
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04) !important;
     }
 
+    .theme-light #view-live-monitoring > div:last-child > div.border-b {
+      border-color: #e2e8f0 !important;
+    }
+
+    .theme-light #view-live-monitoring .overflow-x-auto {
+      border-color: #e2e8f0 !important;
+    }
+
     .theme-light #search-monitoring-student {
       background-color: #f8fafc !important;
       border-color: #cbd5e1 !important;
       color: #0f172a !important;
+    }
+
+    .theme-light #search-monitoring-student::placeholder {
+      color: #94a3b8 !important;
     }
 
     .theme-light .monitoring-filter-pill:not(.active) {
@@ -1552,15 +1641,21 @@
           </h2>
           <p class="text-xs text-slate-400 mt-1">Daftar seluruh paket soal ujian dan token yang telah dibuat oleh lisensi guru ini. Pantau live, tampilkan QR proyektor, atau lihat matriks rekap nilai siswa.</p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           <div class="relative w-full sm:w-64">
             <input type="text" id="search-history-exam" oninput="filterExamHistoryCards()"
               placeholder="Cari token atau judul ujian..."
               class="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-brand-500">
             <span class="absolute left-3 top-2.5 text-slate-500 text-xs">🔍</span>
           </div>
+          <button type="button" onclick="clearTeacherLocalHistory()"
+            class="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs flex items-center gap-1.5 transition-all shrink-0"
+            title="Bersihkan riwayat ujian lokal di browser laptop ini">
+            <span>🗑️ Bersihkan Cache</span>
+          </button>
           <button type="button" onclick="loadTeacherExamsHistory(true)"
-            class="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all shrink-0">
+            class="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all shrink-0"
+            title="Segarkan daftar ujian dari server">
             <span>🔄 Segarkan</span>
           </button>
         </div>
@@ -4074,7 +4169,10 @@
           if (exams.length === 0) {
             sel.innerHTML = '<option value="">Belum ada ujian dibuat</option>';
           } else {
-            sel.innerHTML = exams.map(e => `<option value="${escapeHtml(e.token)}" ${_currentMonitoringExamId === e.token ? 'selected' : ''}>${escapeHtml(e.title || 'Ujian')} [${escapeHtml(e.token)}]</option>`).join('');
+            sel.innerHTML = exams.map(e => {
+              const displayTitle = (e.title && e.title.includes(e.token)) ? e.title : `${e.title || 'Ujian'} [${e.token}]`;
+              return `<option value="${escapeHtml(e.token)}" ${_currentMonitoringExamId === e.token ? 'selected' : ''}>${escapeHtml(displayTitle)}</option>`;
+            }).join('');
             if (!_currentMonitoringExamId && exams.length > 0) {
               _currentMonitoringExamId = exams[0].token;
             }
@@ -4145,7 +4243,14 @@
             <div>
               <div class="flex items-center justify-between gap-2 mb-2">
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-400 border border-brand-500/30 uppercase tracking-wider">${cat}</span>
-                <span class="text-[11px] text-slate-400 font-medium">${dateStr}</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[11px] text-slate-400 font-medium">${dateStr}</span>
+                  <button type="button" onclick="deleteTeacherExam('${token}')"
+                    class="p-1 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                    title="Hapus Sesi Ujian [${token}]">
+                    🗑️
+                  </button>
+                </div>
               </div>
               <h3 class="text-base font-extrabold text-white line-clamp-1 mb-2" title="${title}">${title}</h3>
 
@@ -4293,6 +4398,66 @@
       openHistoryQrModalByToken(token);
     }
 
+    function clearTeacherLocalHistory() {
+      if (!confirm('Apakah Anda yakin ingin membersihkan riwayat ujian di memori laptop ini? Sesi yang sudah dihapus di server tidak akan muncul kembali.')) {
+        return;
+      }
+      try {
+        localStorage.removeItem('examgo_teacher_published_history');
+      } catch (_) {}
+      loadTeacherExamsHistory(true);
+    }
+
+    async function deleteTeacherExam(token) {
+      if (!token) return;
+      if (!confirm(`Hapus sesi ujian [${token}]?\n\nSesi ini akan dihapus dari server dan memori laptop Anda.`)) {
+        return;
+      }
+
+      // 1. Bersihkan dari cache browser localStorage
+      try {
+        let list = JSON.parse(localStorage.getItem('examgo_teacher_published_history') || '[]');
+        list = list.filter(x => x.token !== token);
+        localStorage.setItem('examgo_teacher_published_history', JSON.stringify(list));
+      } catch (_) {}
+
+      // 2. Hapus langsung dari array memori lokal agar tampilan instan bersih
+      _teacherExamsList = _teacherExamsList.filter(e => e.token !== token);
+      renderExamHistoryGrid();
+      const badge = document.getElementById('history-count-badge');
+      if (badge) badge.innerText = `${_teacherExamsList.length} Ujian`;
+
+      // Update selector monitoring
+      const sel = document.getElementById('select-monitoring-exam');
+      if (sel) {
+        if (_teacherExamsList.length === 0) {
+          sel.innerHTML = '<option value="">Belum ada ujian dibuat</option>';
+        } else {
+          sel.innerHTML = _teacherExamsList.map(e => {
+            const displayTitle = (e.title && e.title.includes(e.token)) ? e.title : `${e.title || 'Ujian'} [${e.token}]`;
+            return `<option value="${escapeHtml(e.token)}" ${_currentMonitoringExamId === e.token ? 'selected' : ''}>${escapeHtml(displayTitle)}</option>`;
+          }).join('');
+        }
+      }
+
+      // 3. Panggil API ke backend server (Firestore: exam_sessions & paket_tryout)
+      if (_teacherToken && _teacherToken.length >= 4) {
+        try {
+          await fetch(getTeacherApiUrl(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'delete_teacher_exam',
+              teacher_token: _teacherToken,
+              exam_id: token
+            })
+          });
+        } catch (err) {
+          console.error('deleteTeacherExam API error:', err);
+        }
+      }
+    }
+
     // ── 13. Live Monitoring Siswa Real-Time ──
     function startMonitoringForExam(token) {
       if (!token) return;
@@ -4303,10 +4468,11 @@
         let opt = Array.from(sel.options).find(o => o.value === token);
         if (!opt) {
           const exam = _teacherExamsList.find(e => e.token === token);
-          const title = exam ? sanitizeExamTitle(exam.title, exam.token, exam.category) : ('Ujian ' + token);
+          const rawTitle = exam ? sanitizeExamTitle(exam.title, exam.token, exam.category) : ('Ujian ' + token);
+          const title = rawTitle.includes(token) ? rawTitle : `${rawTitle} [${token}]`;
           const newOpt = document.createElement('option');
           newOpt.value = token;
-          newOpt.text = `${title} [${token}]`;
+          newOpt.text = title;
           sel.appendChild(newOpt);
         }
         sel.value = token;

@@ -491,10 +491,14 @@ void main() {
 
       // Title sanitation prevents "..." leaks
       expect(guruContent, contains('function sanitizeExamTitle('));
+      expect(guruContent, contains('function deleteTeacherExam('));
+      expect(guruContent, contains('function clearTeacherLocalHistory('));
       expect(kodeContent, contains('function sanitizeExamTitle('));
+      expect(kodeContent, contains('function deleteTeacherExamFromWeb('));
       expect(kodeContent, contains('reqAction === \'get_exam_matrix_results\''));
       expect(kodeContent, contains('reqAction === \'get_exam_monitoring\''));
       expect(kodeContent, contains('reqAction === \'get_teacher_exams\''));
+      expect(kodeContent, contains('reqAction === \'delete_teacher_exam\''));
     });
 
     test('guru.html embedded JavaScript scripts have zero syntax errors', () {
