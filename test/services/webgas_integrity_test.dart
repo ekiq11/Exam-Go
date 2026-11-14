@@ -431,5 +431,31 @@ void main() {
       expect(kodeContent, contains('subtests_meta'));
       expect(kodeContent, contains('data.jenis_waktu'));
     });
+
+    test('admin.html and Kode.js properly support Edit Token modal and updateLicenseToken', () {
+      final adminContent = adminHtmlFile.readAsStringSync();
+      final kodeContent = kodeJsFile.readAsStringSync();
+
+      // Modal elements
+      expect(adminContent, contains('id="edit-token-modal"'));
+      expect(adminContent, contains('id="edit-token-modal-box"'));
+      expect(adminContent, contains('id="edit-token-code"'));
+      expect(adminContent, contains('id="edit-token-type"'));
+      expect(adminContent, contains('id="edit-token-school"'));
+      expect(adminContent, contains('id="edit-token-target"'));
+      expect(adminContent, contains('id="edit-token-reset-status"'));
+      expect(adminContent, contains('id="save-token-btn"'));
+
+      // JS Controller & functions
+      expect(adminContent, contains("const editTokenModal = document.getElementById('edit-token-modal');"));
+      expect(adminContent, contains('function openEditTokenModal('));
+      expect(adminContent, contains('function closeEditTokenModal('));
+      expect(adminContent, contains('function saveTokenData()'));
+
+      // Backend updateLicenseToken
+      expect(kodeContent, contains('function updateLicenseToken('));
+      expect(kodeContent, contains('updateMask.fieldPaths=school'));
+      expect(kodeContent, contains('updateMask.fieldPaths=mobile_device_id'));
+    });
   });
 }

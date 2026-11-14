@@ -2440,10 +2440,16 @@
 
   <!-- Edit Token Modal -->
   <div id="edit-token-modal"
-    class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity opacity-0">
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity opacity-0"
+    onclick="if(event.target === this) closeEditTokenModal()">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 transform transition-transform scale-95"
       id="edit-token-modal-box">
-      <h3 class="text-xl font-bold text-gray-900 mb-4">Edit Token Lisensi</h3>
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-bold text-gray-900">Edit Token Lisensi</h3>
+        <button type="button" onclick="closeEditTokenModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg transition-colors cursor-pointer" title="Tutup">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
       <div class="space-y-4">
         <div>
           <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Kode Token</label>
@@ -2454,14 +2460,18 @@
           <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Peruntukan</label>
           <select id="edit-token-type"
             class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm font-medium">
-            <option value="TEACHER_PREMIUM">Guru Premium</option>
-            <option value="STUDENT_LIFETIME">Siswa Lifetime</option>
+            <option value="TEACHER_PREMIUM">👨‍🏫 Guru Premium (Lynk.id)</option>
+            <option value="STUDENT_LIFETIME">🎓 Siswa Lifetime</option>
             <option value="EVENT">🎯 Peserta Event / Tryout (Lynk.id)</option>
           </select>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Tautan Soal
-            (Opsional)</label>
+          <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Sekolah / Mitra</label>
+          <input type="text" id="edit-token-school" placeholder="Contoh: Lynk.id Store, UMUM, MAN 1..."
+            class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Tautan Soal (Opsional)</label>
           <input type="text" id="edit-token-target" placeholder="Contoh: TONAS2026 (kosongkan jika umum)"
             class="w-full px-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:ring-1 focus:ring-examgo-primary outline-none uppercase font-mono text-sm">
         </div>
@@ -2476,9 +2486,9 @@
       </div>
       <div class="flex space-x-3 mt-6">
         <button onclick="closeEditTokenModal()"
-          class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors">Batal</button>
+          class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors cursor-pointer">Batal</button>
         <button id="save-token-btn" onclick="saveTokenData()"
-          class="flex-1 px-4 py-3 text-white font-medium rounded-xl transition-colors shadow-sm bg-examgo-primary hover:bg-examgo-primaryHover flex justify-center items-center">Simpan</button>
+          class="flex-1 px-4 py-3 text-white font-medium rounded-xl transition-colors shadow-sm bg-examgo-primary hover:bg-examgo-primaryHover flex justify-center items-center cursor-pointer">Simpan</button>
       </div>
     </div>
   </div>
@@ -7341,7 +7351,7 @@
                   <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
                   Salin
                 </button>
-                <button type="button" onclick="openEditTokenModal('${escapeHtml(item.token)}', '${escapeHtml(item.type)}', '${escapeHtml(item.targetExam === '-' ? '' : item.targetExam)}', ${item.isUsed})" class="inline-flex items-center text-blue-600 hover:text-white bg-blue-50 hover:bg-blue-600 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border border-blue-200 cursor-pointer shadow-2xs">
+                <button type="button" onclick="openEditTokenModal('${escapeHtml(item.token)}')" class="inline-flex items-center text-blue-600 hover:text-white bg-blue-50 hover:bg-blue-600 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border border-blue-200 cursor-pointer shadow-2xs">
                   <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                   Edit
                 </button>
@@ -7357,42 +7367,79 @@
       tbody.innerHTML = html;
       updateSelectedLicensesCount();
     }
+    const editTokenModal = document.getElementById('edit-token-modal');
     const editTokenModalBox = document.getElementById('edit-token-modal-box');
 
-    function openEditTokenModal(token, type, targetExam, isUsed) {
-      document.getElementById('edit-token-code').value = token;
-      document.getElementById('edit-token-type').value = type || 'TEACHER_PREMIUM';
-      document.getElementById('edit-token-target').value = (targetExam && targetExam !== '-') ? targetExam : '';
+    function openEditTokenModal(token, type, targetExam, isUsed, school) {
+      const modal = document.getElementById('edit-token-modal');
+      const box = document.getElementById('edit-token-modal-box');
+      if (!modal || !box) return;
 
-      const resetCheckbox = document.getElementById('edit-token-reset-status');
-      resetCheckbox.checked = false;
-      const resetContainer = document.getElementById('edit-token-reset-container');
-      if (isUsed) {
-        resetContainer.classList.remove('hidden');
-      } else {
-        resetContainer.classList.add('hidden');
+      const item = (typeof allLicensesData !== 'undefined' && Array.isArray(allLicensesData))
+        ? allLicensesData.find(x => String(x.token) === String(token))
+        : null;
+
+      const resolvedType = (item && item.type) ? item.type : (type || 'TEACHER_PREMIUM');
+      const resolvedTarget = (item && item.targetExam !== undefined) ? item.targetExam : targetExam;
+      const resolvedSchool = (item && item.school !== undefined) ? item.school : school;
+      const resolvedIsUsed = (item && item.isUsed !== undefined) ? item.isUsed : Boolean(isUsed);
+
+      document.getElementById('edit-token-code').value = token || '';
+      document.getElementById('edit-token-type').value = resolvedType;
+
+      const schoolEl = document.getElementById('edit-token-school');
+      if (schoolEl) {
+        schoolEl.value = (resolvedSchool && resolvedSchool !== 'UMUM') ? resolvedSchool : (resolvedSchool === 'UMUM' ? 'UMUM' : '');
       }
 
-      editTokenModal.classList.replace('hidden', 'flex');
-      void editTokenModal.offsetWidth;
-      editTokenModal.classList.remove('opacity-0');
-      editTokenModalBox.classList.remove('scale-95');
-      editTokenModalBox.classList.add('scale-100');
+      const targetEl = document.getElementById('edit-token-target');
+      if (targetEl) {
+        targetEl.value = (resolvedTarget && resolvedTarget !== '-') ? resolvedTarget : '';
+      }
+
+      const resetCheckbox = document.getElementById('edit-token-reset-status');
+      if (resetCheckbox) resetCheckbox.checked = false;
+
+      const resetContainer = document.getElementById('edit-token-reset-container');
+      if (resetContainer) {
+        if (resolvedIsUsed) {
+          resetContainer.classList.remove('hidden');
+        } else {
+          resetContainer.classList.add('hidden');
+        }
+      }
+
+      modal.classList.replace('hidden', 'flex');
+      void modal.offsetWidth;
+      modal.classList.remove('opacity-0');
+      box.classList.remove('scale-95');
+      box.classList.add('scale-100');
     }
 
     function closeEditTokenModal() {
-      editTokenModal.classList.add('opacity-0');
-      editTokenModalBox.classList.remove('scale-100');
-      editTokenModalBox.classList.add('scale-95');
-      setTimeout(() => editTokenModal.classList.replace('flex', 'hidden'), 300);
+      const modal = document.getElementById('edit-token-modal');
+      const box = document.getElementById('edit-token-modal-box');
+      if (!modal || !box) return;
+
+      modal.classList.add('opacity-0');
+      box.classList.remove('scale-100');
+      box.classList.add('scale-95');
+      setTimeout(() => modal.classList.replace('flex', 'hidden'), 300);
     }
 
     function saveTokenData() {
       const creds = getCredentials();
       if (!creds) return;
 
-      const token = document.getElementById('edit-token-code').value;
+      const token = (document.getElementById('edit-token-code').value || '').trim();
+      if (!token) {
+        showToast('Kode token tidak valid.', 'error');
+        return;
+      }
+
       const type = document.getElementById('edit-token-type').value;
+      const schoolEl = document.getElementById('edit-token-school');
+      const school = schoolEl ? schoolEl.value.trim() : '';
       const targetExam = (document.getElementById('edit-token-target').value || '').trim();
       const resetStatus = document.getElementById('edit-token-reset-status').checked;
 
@@ -7404,7 +7451,8 @@
       const updates = {
         type: type,
         targetExam: targetExam,
-        resetStatus: resetStatus
+        resetStatus: resetStatus,
+        school: school
       };
 
       google.script.run
