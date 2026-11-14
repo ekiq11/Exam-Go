@@ -150,7 +150,12 @@ class ExamQuestionTableWidget extends StatelessWidget {
 
     try {
       final parsedRows = parseTableRows(tabelStr);
-      if (parsedRows.isEmpty) return const SizedBox.shrink();
+      if (parsedRows.isEmpty) {
+        if (tabelStr.contains('<table') || tabelStr.contains('<tr')) {
+          return _buildDirectHtmlTable(tabelStr);
+        }
+        return const SizedBox.shrink();
+      }
 
       if (isReadingPassage(tabelStr, subtestJudul: subtestJudul)) {
         return _buildPassageCard(parsedRows);
@@ -158,8 +163,34 @@ class ExamQuestionTableWidget extends StatelessWidget {
         return _buildDataTable(parsedRows);
       }
     } catch (_) {
+      if (tabelStr.contains('<table') || tabelStr.contains('<tr')) {
+        return _buildDirectHtmlTable(tabelStr);
+      }
       return const SizedBox.shrink();
     }
+  }
+
+  Widget _buildDirectHtmlTable(String rawHtml) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        border: Border.all(color: const Color(0xFFCBD5E1)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: HtmlWidget(
+          MathHtmlFormatter.format(rawHtml),
+          textStyle: GoogleFonts.poppins(
+            fontSize: 12.5 * fontSizeScale,
+            color: const Color(0xFF1E293B),
+          ),
+          factoryBuilder: () => MathWidgetFactory(fontSize: 12.5 * fontSizeScale),
+        ),
+      ),
+    );
   }
 
   /// Merender teks bacaan mengalir alami ke bawah dengan aksen editorial elegan
@@ -283,10 +314,24 @@ class ExamQuestionTableWidget extends StatelessWidget {
 
   /// Merender tabel data angka / statistik sebenarnya secara rapi dan proporsional
   Widget _buildDataTable(List<List<String>> parsedRows) {
+    if (parsedRows.isEmpty) return const SizedBox.shrink();
+
+    // Normalisasi jumlah kolom agar semua baris memiliki panjang yang sama (mencegah error assert Table di Flutter)
+    final maxCols = parsedRows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
+    if (maxCols == 0) return const SizedBox.shrink();
+
+    final normalizedRows = parsedRows.map((r) {
+      final list = List<String>.from(r);
+      while (list.length < maxCols) {
+        list.add('');
+      }
+      return list;
+    }).toList();
+
     final tableRows = <TableRow>[];
 
-    for (int k = 0; k < parsedRows.length; k++) {
-      final cells = parsedRows[k];
+    for (int k = 0; k < normalizedRows.length; k++) {
+      final cells = normalizedRows[k];
       final isHeader = k == 0;
 
       tableRows.add(TableRow(

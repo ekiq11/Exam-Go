@@ -197,10 +197,16 @@ class MathHtmlFormatter {
     html = html.replaceAll('&nbsp;', ' ');
 
     // Normalisasi tag HTML bold & italic standar
-    html = html.replaceAll(RegExp(r'<\/?strong(?:\s+[^>]*)?>', caseSensitive: false), '<b>');
+    html = html.replaceAll(RegExp(r'<strong(?:\s+[^>]*)?>', caseSensitive: false), '<b>');
     html = html.replaceAll(RegExp(r'<\/strong>', caseSensitive: false), '</b>');
-    html = html.replaceAll(RegExp(r'<\/?em(?:\s+[^>]*)?>', caseSensitive: false), '<i>');
+    html = html.replaceAll(RegExp(r'<em(?:\s+[^>]*)?>', caseSensitive: false), '<i>');
     html = html.replaceAll(RegExp(r'<\/em>', caseSensitive: false), '</i>');
+    html = html.replaceAll(RegExp(r'<b(?:\s+[^>]*)?>', caseSensitive: false), '<b>');
+    html = html.replaceAll(RegExp(r'<\/b>', caseSensitive: false), '</b>');
+    html = html.replaceAll(RegExp(r'<i(?:\s+[^>]*)?>', caseSensitive: false), '<i>');
+    html = html.replaceAll(RegExp(r'<\/i>', caseSensitive: false), '</i>');
+    html = html.replaceAll(RegExp(r'<u(?:\s+[^>]*)?>', caseSensitive: false), '<u>');
+    html = html.replaceAll(RegExp(r'<\/u>', caseSensitive: false), '</u>');
 
     // Konversi tabel format Markdown (| Kolom 1 | Kolom 2 |) jika ada di teks soal
     if (html.contains('|') && html.contains('---')) {
@@ -231,11 +237,11 @@ class MathHtmlFormatter {
 
     // Bold (**text**) & Italic (*text*)
     html = html.replaceAllMapped(
-      RegExp(r'\*\*(?!\s)(.*?)(?<!\s)\*\*', dotAll: true),
+      RegExp(r'\*\*([^*]+)\*\*', dotAll: true),
       (match) => '<b>${match.group(1)}</b>',
     );
     html = html.replaceAllMapped(
-      RegExp(r'(?<![A-Za-z0-9_])\*(?!\s)(.*?)(?<!\s)\*(?![A-Za-z0-9_])', dotAll: true),
+      RegExp(r'(?<![A-Za-z0-9_\*])\*([^*\n]+)\*(?![A-Za-z0-9_\*])', dotAll: true),
       (match) => '<i>${match.group(1)}</i>',
     );
 

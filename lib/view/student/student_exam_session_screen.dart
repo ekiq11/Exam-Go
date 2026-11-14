@@ -345,7 +345,8 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
 
       // ── DEFENSE-IN-DEPTH: Cek 1-Device / 1-Attempt langsung di layar ujian ──
       if (!widget.isEvent) {
-        final attempt = await StudentTryoutHistoryService.instance.getLatestAttempt(tokenUpper);
+        final attempt = await StudentTryoutHistoryService.instance
+            .getLatestAttempt(tokenUpper);
 
         // Cek juga ke server monitoring apakah siswa sudah pernah FINISHED
         Map<String, dynamic>? studentServerData;
@@ -365,7 +366,8 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         if (widget.isEvent) {
           final deviceId = await LicenseService.instance.getDeviceId();
           final prefs = await SharedPreferences.getInstance();
-          bool deviceCompleted = prefs.getBool('event_completed_${tokenUpper}_$deviceId') ?? false;
+          bool deviceCompleted =
+              prefs.getBool('event_completed_${tokenUpper}_$deviceId') ?? false;
           if (!deviceCompleted) {
             try {
               final doc = await FirebaseFirestore.instance
@@ -374,7 +376,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                   .get();
               if (doc.exists) {
                 deviceCompleted = true;
-                await prefs.setBool('event_completed_${tokenUpper}_$deviceId', true);
+                await prefs.setBool(
+                  'event_completed_${tokenUpper}_$deviceId',
+                  true,
+                );
               }
             } catch (_) {}
           }
@@ -384,12 +389,20 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                 context: context,
                 barrierDismissible: false,
                 builder: (ctx) => AlertDialog(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   title: const Row(
                     children: [
                       Icon(Icons.block_rounded, color: Colors.red),
                       SizedBox(width: 8),
-                      Text('Event Sudah Dikerjakan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text(
+                        'Event Sudah Dikerjakan',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                   content: const Text(
@@ -399,7 +412,10 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Tutup', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'Tutup',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),
@@ -415,13 +431,16 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
           bool retakePermitted = studentServerData?['allow_retake'] == true;
           if (!retakePermitted && widget.studentNis.isNotEmpty) {
             final prefs = await SharedPreferences.getInstance();
-            retakePermitted = prefs.getBool(
-              'retake_allowed_${tokenUpper}_${widget.studentNis}',
-            ) ?? false;
+            retakePermitted =
+                prefs.getBool(
+                  'retake_allowed_${tokenUpper}_${widget.studentNis}',
+                ) ??
+                false;
           }
 
           // Pembatasan 1x: untuk tryout guru/terkunci atau sesi yang sudah disubmit
-          final isRestricted = (attempt != null && !attempt.allowRetake) ||
+          final isRestricted =
+              (attempt != null && !attempt.allowRetake) ||
               widget.initialSchedule?.allowRetake == false ||
               widget.isEvent ||
               isFinishedOnServer;
@@ -429,8 +448,11 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
           if (isRestricted && (!retakePermitted || widget.isEvent)) {
             // Periksa apakah waktu ujian sudah berakhir
             DateTime? eventEnd;
-            if (widget.isEvent && widget.initialSchedule?.tanggal.isNotEmpty == true) {
-              final dt = IndoDateFormatter.parse(widget.initialSchedule!.tanggal);
+            if (widget.isEvent &&
+                widget.initialSchedule?.tanggal.isNotEmpty == true) {
+              final dt = IndoDateFormatter.parse(
+                widget.initialSchedule!.tanggal,
+              );
               if (dt != null) {
                 final jamP = widget.initialSchedule!.jamSelesai.split(':');
                 final h = int.tryParse(jamP[0]) ?? 23;
@@ -450,7 +472,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                 // Waktu habis → arahkan ke Pembahasan & Kunci
                 List<ExamQuestion> questions = attempt?.questions ?? [];
                 if (questions.isEmpty) {
-                  final cached = await ExamCacheService.instance.loadExam(tokenUpper);
+                  final cached = await ExamCacheService.instance.loadExam(
+                    tokenUpper,
+                  );
                   if (cached != null && cached.questions.isNotEmpty) {
                     questions = cached.questions;
                   }
@@ -460,8 +484,12 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                   context,
                   MaterialPageRoute(
                     builder: (_) => TryoutDiscussionScreen(
-                      title: attempt?.namaPaket.isNotEmpty == true ? attempt!.namaPaket : 'Pembahasan Ujian',
-                      kategori: attempt?.kategori.isNotEmpty == true ? attempt!.kategori : 'CBT Guru',
+                      title: attempt?.namaPaket.isNotEmpty == true
+                          ? attempt!.namaPaket
+                          : 'Pembahasan Ujian',
+                      kategori: attempt?.kategori.isNotEmpty == true
+                          ? attempt!.kategori
+                          : 'CBT Guru',
                       questions: questions,
                       studentAnswers: attempt?.jawaban ?? {},
                       score: attempt?.finalScore ?? 0,
@@ -475,8 +503,12 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                 // Waktu belum habis → tampilkan dialog kunci waktu lalu pop
                 await showExamTimeLockDialog(
                   context,
-                  endTime: targetEndTime ?? DateTime.now().add(const Duration(minutes: 60)),
-                  examTitle: attempt?.namaPaket.isNotEmpty == true ? attempt!.namaPaket : 'Ujian',
+                  endTime:
+                      targetEndTime ??
+                      DateTime.now().add(const Duration(minutes: 60)),
+                  examTitle: attempt?.namaPaket.isNotEmpty == true
+                      ? attempt!.namaPaket
+                      : 'Ujian',
                 );
                 if (mounted) Navigator.pop(context);
               }
@@ -762,11 +794,12 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
 
   // ─── Manajemen Timer Per-Subtest & Global ──────────────────────
   bool get _isPerSubtest {
-    final jw = (_package?.jenisWaktu ?? widget.initialSchedule?.jenisWaktu ?? '')
-        .trim()
-        .toLowerCase()
-        .replaceAll('-', '_')
-        .replaceAll(' ', '_');
+    final jw =
+        (_package?.jenisWaktu ?? widget.initialSchedule?.jenisWaktu ?? '')
+            .trim()
+            .toLowerCase()
+            .replaceAll('-', '_')
+            .replaceAll(' ', '_');
     if (jw == 'per_subtest') return true;
     if (jw == 'per_paket') return false;
 
@@ -820,12 +853,13 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
       if (savedTotalMs != null) {
         _packageEndTime = DateTime.fromMillisecondsSinceEpoch(savedTotalMs);
       } else {
-        final totalMins =
-            _subtests.fold<int>(0, (acc, st) => acc + st.durasiMenit);
+        final totalMins = _subtests.fold<int>(
+          0,
+          (acc, st) => acc + st.durasiMenit,
+        );
         _packageEndTime = now.add(
           Duration(
-            minutes:
-                totalMins > 0 ? totalMins : (_package?.durasiMenit ?? 90),
+            minutes: totalMins > 0 ? totalMins : (_package?.durasiMenit ?? 90),
           ),
         );
         await prefs.setInt(
@@ -1035,14 +1069,15 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                                 ),
                                 if (_isSkd)
                                   Text(
-                                    'Simulasi CAT BKN: Bebas Akses Seluruh Soal',
+                                    'Simulasi CAT BKN',
                                     style: GoogleFonts.poppins(
                                       fontSize: 11,
                                       color: const Color(0xFF2563EB),
                                       fontWeight: FontWeight.w600,
                                     ),
                                   )
-                                else if (_subtests.length > 1 && _currentSubtestIndex < _subtests.length)
+                                else if (_subtests.length > 1 &&
+                                    _currentSubtestIndex < _subtests.length)
                                   Text(
                                     'Subtest ${_currentSubtestIndex + 1}/${_subtests.length}: ${_subtests[_currentSubtestIndex].judul}',
                                     style: GoogleFonts.poppins(
@@ -1431,7 +1466,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
       });
 
       // Catat device_id yang telah menyelesaikan event (mencegah pengerjaan ulang event)
-      if (widget.isEvent || _package?.kategori == 'EVENT' || widget.initialSchedule?.jenisTest == 'EVENT') {
+      if (widget.isEvent ||
+          _package?.kategori == 'EVENT' ||
+          widget.initialSchedule?.jenisTest == 'EVENT') {
         unawaited(
           FirebaseFirestore.instance
               .collection('event_completions')
@@ -1467,9 +1504,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
             .doc(widget.token)
             .collection('students')
             .doc(widget.studentNis)
-            .set({
-              'allow_retake': false,
-            }, SetOptions(merge: true))
+            .set({'allow_retake': false}, SetOptions(merge: true))
             .catchError((_) {}),
       );
       await prefs.remove('retake_allowed_${widget.token}_${widget.studentNis}');
@@ -1489,9 +1524,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
       _effectiveExamEndTime = (widget.isEvent && officialEventEndTime != null)
           ? officialEventEndTime
           : (_packageEndTime ??
-              DateTime.now().add(
-                Duration(minutes: _package?.durasiMenit ?? 90),
-              ));
+                DateTime.now().add(
+                  Duration(minutes: _package?.durasiMenit ?? 90),
+                ));
       final effectiveExamEndTime = _effectiveExamEndTime!;
 
       // Simpan riwayat ujian & butir soal ke lokal agar bisa ditinjau di Pembahasan
@@ -1506,7 +1541,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
         allowRetake: widget.isEvent
             ? false
             : (_package?.allowRetake ??
-                (widget.initialSchedule?.allowRetake ?? false)),
+                  (widget.initialSchedule?.allowRetake ?? false)),
         syncCloud: false,
       );
 
@@ -1821,27 +1856,34 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
               Builder(
                 builder: (context) {
                   DateTime? eventEndTime;
-                  if (widget.isEvent && widget.initialSchedule?.tanggal.isNotEmpty == true) {
-                    final dt = IndoDateFormatter.parse(widget.initialSchedule!.tanggal);
+                  if (widget.isEvent &&
+                      widget.initialSchedule?.tanggal.isNotEmpty == true) {
+                    final dt = IndoDateFormatter.parse(
+                      widget.initialSchedule!.tanggal,
+                    );
                     if (dt != null) {
-                      final jamP = widget.initialSchedule!.jamSelesai.split(':');
+                      final jamP = widget.initialSchedule!.jamSelesai.split(
+                        ':',
+                      );
                       final h = int.tryParse(jamP[0]) ?? 23;
-                      final m = jamP.length > 1 ? (int.tryParse(jamP[1]) ?? 59) : 59;
+                      final m = jamP.length > 1
+                          ? (int.tryParse(jamP[1]) ?? 59)
+                          : 59;
                       eventEndTime = DateTime(dt.year, dt.month, dt.day, h, m);
                     }
                   }
-                  final targetEndTime = eventEndTime ?? _effectiveExamEndTime ?? _packageEndTime;
-                  final isTimeEnded = targetEndTime == null ||
+                  final targetEndTime =
+                      eventEndTime ?? _effectiveExamEndTime ?? _packageEndTime;
+                  final isTimeEnded =
+                      targetEndTime == null ||
                       DateTime.now().isAfter(targetEndTime);
                   return SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton.icon(
                       onPressed: () async {
-                        final isEnded =
-                            await TrustedTimeService.instance.isExamTimeEnded(
-                          examEndTime: targetEndTime,
-                        );
+                        final isEnded = await TrustedTimeService.instance
+                            .isExamTimeEnded(examEndTime: targetEndTime);
                         if (!isEnded && targetEndTime != null) {
                           if (!context.mounted) return;
                           showExamTimeLockDialog(
@@ -2144,7 +2186,9 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
 
     // Sinkronisasi index subtest aktif dengan soal saat mode bebas navigasi (misal CAT BKN SKD)
     if (!_isPerSubtest && _subtests.isNotEmpty) {
-      final sIdx = _subtests.indexWhere((st) => st.subtestId == currentQ.subtestId);
+      final sIdx = _subtests.indexWhere(
+        (st) => st.subtestId == currentQ.subtestId,
+      );
       if (sIdx != -1 && sIdx != _currentSubtestIndex) {
         _currentSubtestIndex = sIdx;
       }
@@ -2286,737 +2330,665 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
           },
           child: Column(
             children: [
-            // ── Baris Navigasi Subtest Ujian Standar Nasional (SKD, SNBT, TKA, UMUM) ──
-            if (_subtests.length > 1)
-              Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Baris Atas: Kategori Pill + Status Babak + Aksi Lanjut
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
-                      child: Row(
-                        children: [
-                          _buildCategoryPill(_cleanCategory),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryGreen.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              _isPerSubtest
-                                  ? 'Babak ${_currentSubtestIndex + 1}/${_subtests.length}'
-                                  : 'Subtest ${_currentSubtestIndex + 1}/${_subtests.length}',
-                              style: GoogleFonts.poppins(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primaryGreen,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _currentSubtestIndex < _subtests.length
-                                  ? _subtests[_currentSubtestIndex].judul
-                                  : (_package?.namaPaket ?? 'Subtest'),
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF0F172A),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (_isPerSubtest && _currentSubtestIndex < _subtests.length - 1)
-                            if (_isSnbt && _package?.isTeacherGenerated != true)
-                              InkWell(
-                                onTap: _showBlockingTimeInfoDialog,
-                                borderRadius: BorderRadius.circular(8),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF1F5F9),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: const Color(0xFFCBD5E1),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(
-                                        Icons.lock_clock_rounded,
-                                        size: 13,
-                                        color: Color(0xFF64748B),
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Text(
-                                        'Blocking Time',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: const Color(0xFF64748B),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            else
-                              InkWell(
-                                onTap: _confirmFinishSubtestDialog,
-                                borderRadius: BorderRadius.circular(8),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFEF3C7),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: const Color(0xFFFDE68A),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        'Lanjut Babak',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 10.5,
-                                          fontWeight: FontWeight.bold,
-                                          color: const Color(0xFF92400E),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 3),
-                                      const Icon(
-                                        Icons.chevron_right_rounded,
-                                        size: 14,
-                                        color: Color(0xFF92400E),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                          else if (!_isPerSubtest)
+              // ── Baris Navigasi Subtest Ujian Standar Nasional (SKD, SNBT, TKA, UMUM) ──
+              if (_subtests.length > 1)
+                Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      bottom: BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Baris Atas: Kategori Pill + Status Babak + Aksi Lanjut
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+                        child: Row(
+                          children: [
+                            _buildCategoryPill(_cleanCategory),
+                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
-                                vertical: 3,
+                                vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFEFF6FF),
+                                color: AppColors.primaryGreen.withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: const Color(0xFFBFDBFE)),
                               ),
                               child: Text(
-                                _isSkd ? 'CAT BKN' : 'Bebas Akses',
+                                _isPerSubtest
+                                    ? 'Babak ${_currentSubtestIndex + 1}/${_subtests.length}'
+                                    : 'Subtest ${_currentSubtestIndex + 1}/${_subtests.length}',
                                 style: GoogleFonts.poppins(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF1D4ED8),
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primaryGreen,
                                 ),
                               ),
                             ),
-                        ],
-                      ),
-                    ),
-
-                    // Baris Bawah: Horizontal Chips Subtest Tabs
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
-                      child: Row(
-                        children: List.generate(_subtests.length, (sIdx) {
-                          final st = _subtests[sIdx];
-                          final isCurrent = sIdx == _currentSubtestIndex;
-                          final isCompleted = _isPerSubtest && sIdx < _currentSubtestIndex;
-                          final isLocked = _isPerSubtest &&
-                              _isSnbt &&
-                              _package?.isTeacherGenerated != true &&
-                              sIdx > _currentSubtestIndex;
-
-                          Color chipBg = const Color(0xFFF8FAFC);
-                          Color chipBorder = const Color(0xFFE2E8F0);
-                          Color chipText = const Color(0xFF475569);
-
-                          if (isCurrent) {
-                            chipBg = AppColors.primaryGreen;
-                            chipBorder = AppColors.primaryGreen;
-                            chipText = Colors.white;
-                          } else if (isCompleted) {
-                            chipBg = const Color(0xFFF0FDF4);
-                            chipBorder = const Color(0xFFBBF7D0);
-                            chipText = const Color(0xFF166534);
-                          } else if (isLocked) {
-                            chipBg = const Color(0xFFF1F5F9);
-                            chipBorder = const Color(0xFFE2E8F0);
-                            chipText = const Color(0xFF94A3B8);
-                          }
-
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: InkWell(
-                              onTap: () {
-                                if (_isPerSubtest) {
-                                  if (isCurrent) return;
-                                  if (isCompleted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Subtest ini sudah selesai dikerjakan.'),
-                                        duration: Duration(seconds: 1),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _currentSubtestIndex < _subtests.length
+                                    ? _subtests[_currentSubtestIndex].judul
+                                    : (_package?.namaPaket ?? 'Subtest'),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (_isPerSubtest &&
+                                _currentSubtestIndex < _subtests.length - 1)
+                              if (_isSnbt &&
+                                  _package?.isTeacherGenerated != true)
+                                InkWell(
+                                  onTap: _showBlockingTimeInfoDialog,
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: const Color(0xFFCBD5E1),
+                                        width: 1,
                                       ),
-                                    );
-                                  } else if (isLocked) {
-                                    _showBlockingTimeInfoDialog();
-                                  } else {
-                                    _confirmFinishSubtestDialog();
-                                  }
-                                } else {
-                                  // Mode CAT BKN / Unified: Langsung lompat ke butir soal pertama subtest ini
-                                  final firstQIndex = _allQuestions.indexWhere(
-                                    (q) => q.subtestId == st.subtestId,
-                                  );
-                                  if (firstQIndex != -1) {
-                                    setState(() {
-                                      _currentIndex = firstQIndex;
-                                      _currentSubtestIndex = sIdx;
-                                    });
-                                    _debouncedSaveCache();
-                                  }
-                                }
-                              },
-                              borderRadius: BorderRadius.circular(8),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.lock_clock_rounded,
+                                          size: 13,
+                                          color: Color(0xFF64748B),
+                                        ),
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          'Blocking Time',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color(0xFF64748B),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              else
+                                InkWell(
+                                  onTap: _confirmFinishSubtestDialog,
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFEF3C7),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: const Color(0xFFFDE68A),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'Lanjut Babak',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10.5,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color(0xFF92400E),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 3),
+                                        const Icon(
+                                          Icons.chevron_right_rounded,
+                                          size: 14,
+                                          color: Color(0xFF92400E),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                            else if (!_isPerSubtest)
+                              Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 5,
+                                  horizontal: 8,
+                                  vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: chipBg,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: chipBorder),
+                                  color: const Color(0xFFEFF6FF),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: const Color(0xFFBFDBFE),
+                                  ),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (isCompleted) ...[
-                                      const Icon(
-                                        Icons.check_circle_rounded,
-                                        size: 13,
-                                        color: Color(0xFF166534),
-                                      ),
-                                      const SizedBox(width: 4),
-                                    ] else if (isLocked) ...[
-                                      const Icon(
-                                        Icons.lock_rounded,
-                                        size: 13,
-                                        color: Color(0xFF94A3B8),
-                                      ),
-                                      const SizedBox(width: 4),
-                                    ],
-                                    Text(
-                                      st.judul,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 11,
-                                        fontWeight: isCurrent
-                                            ? FontWeight.bold
-                                            : FontWeight.w600,
-                                        color: chipText,
-                                      ),
-                                    ),
-                                    if (st.soalList.isNotEmpty) ...[
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '(${st.soalList.length})',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 10,
-                                          fontWeight: isCurrent
-                                              ? FontWeight.w600
-                                              : FontWeight.normal,
-                                          color: isCurrent
-                                              ? Colors.white.withValues(alpha: 0.85)
-                                              : chipText.withValues(alpha: 0.8),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
+                                child: Text(
+                                  _isSkd ? 'CAT BKN' : 'Bebas Akses',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF1D4ED8),
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        }),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
 
-            // Konten Soal Scrollable
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Card Soal (Design Bersih & Responsif myOLCv2)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x06000000),
-                            blurRadius: 10,
-                            offset: Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 28,
-                                    height: 28,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primaryGreen,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        '${currentQ.nomorSoal}',
-                                        style: GoogleFonts.poppins(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold,
+                      // Baris Bawah: Horizontal Chips Subtest Tabs
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
+                        child: Row(
+                          children: List.generate(_subtests.length, (sIdx) {
+                            final st = _subtests[sIdx];
+                            final isCurrent = sIdx == _currentSubtestIndex;
+                            final isCompleted =
+                                _isPerSubtest && sIdx < _currentSubtestIndex;
+                            final isLocked =
+                                _isPerSubtest &&
+                                _isSnbt &&
+                                _package?.isTeacherGenerated != true &&
+                                sIdx > _currentSubtestIndex;
+
+                            Color chipBg = const Color(0xFFF8FAFC);
+                            Color chipBorder = const Color(0xFFE2E8F0);
+                            Color chipText = const Color(0xFF475569);
+
+                            if (isCurrent) {
+                              chipBg = AppColors.primaryGreen;
+                              chipBorder = AppColors.primaryGreen;
+                              chipText = Colors.white;
+                            } else if (isCompleted) {
+                              chipBg = const Color(0xFFF0FDF4);
+                              chipBorder = const Color(0xFFBBF7D0);
+                              chipText = const Color(0xFF166534);
+                            } else if (isLocked) {
+                              chipBg = const Color(0xFFF1F5F9);
+                              chipBorder = const Color(0xFFE2E8F0);
+                              chipText = const Color(0xFF94A3B8);
+                            }
+
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: InkWell(
+                                onTap: () {
+                                  if (_isPerSubtest) {
+                                    if (isCurrent) return;
+                                    if (isCompleted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Subtest ini sudah selesai dikerjakan.',
+                                          ),
+                                          duration: Duration(seconds: 1),
                                         ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Butir Pertanyaan',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      color: const Color(0xFF64748B),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (isRagu)
-                                Container(
+                                      );
+                                    } else if (isLocked) {
+                                      _showBlockingTimeInfoDialog();
+                                    } else {
+                                      _confirmFinishSubtestDialog();
+                                    }
+                                  } else {
+                                    // Mode CAT BKN / Unified: Langsung lompat ke butir soal pertama subtest ini
+                                    final firstQIndex = _allQuestions
+                                        .indexWhere(
+                                          (q) => q.subtestId == st.subtestId,
+                                        );
+                                    if (firstQIndex != -1) {
+                                      setState(() {
+                                        _currentIndex = firstQIndex;
+                                        _currentSubtestIndex = sIdx;
+                                      });
+                                      _debouncedSaveCache();
+                                    }
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(8),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 2,
+                                    horizontal: 10,
+                                    vertical: 5,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFFEF3C7),
-                                    borderRadius: BorderRadius.circular(6),
+                                    color: chipBg,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: chipBorder),
                                   ),
-                                  child: Text(
-                                    'Ragu-Ragu',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF92400E),
-                                    ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (isCompleted) ...[
+                                        const Icon(
+                                          Icons.check_circle_rounded,
+                                          size: 13,
+                                          color: Color(0xFF166534),
+                                        ),
+                                        const SizedBox(width: 4),
+                                      ] else if (isLocked) ...[
+                                        const Icon(
+                                          Icons.lock_rounded,
+                                          size: 13,
+                                          color: Color(0xFF94A3B8),
+                                        ),
+                                        const SizedBox(width: 4),
+                                      ],
+                                      Text(
+                                        st.judul,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11,
+                                          fontWeight: isCurrent
+                                              ? FontWeight.bold
+                                              : FontWeight.w600,
+                                          color: chipText,
+                                        ),
+                                      ),
+                                      if (st.soalList.isNotEmpty) ...[
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '(${st.soalList.length})',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            fontWeight: isCurrent
+                                                ? FontWeight.w600
+                                                : FontWeight.normal,
+                                            color: isCurrent
+                                                ? Colors.white.withValues(
+                                                    alpha: 0.85,
+                                                  )
+                                                : chipText.withValues(
+                                                    alpha: 0.8,
+                                                  ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ),
-                            ],
-                          ),
-                          const SizedBox(height: 14),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
-                          // 1. Stimulus Teks Bacaan (jika soal memiliki bacaan/wacana)
-                          // Ditempatkan DI ATAS pertanyaan agar alur membaca siswa alami dan elegan
-                          if (currentQ.tabel.isNotEmpty &&
-                              ExamQuestionTableWidget.isReadingPassage(
-                                currentQ.tabel,
-                                subtestJudul: _currentSubtest?.judul,
-                              )) ...[
-                            ExamQuestionTableWidget(
-                              tabelStr: currentQ.tabel,
-                              subtestJudul: _currentSubtest?.judul,
-                              fontSizeScale: _fontSizeScale,
-                            ),
-                            const Divider(
-                              height: 20,
-                              thickness: 1,
-                              color: Color(0xFFF1F5F9),
+              // Konten Soal Scrollable
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Card Soal (Design Bersih & Responsif myOLCv2)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x06000000),
+                              blurRadius: 10,
+                              offset: Offset(0, 3),
                             ),
                           ],
-
-                          // 2. Teks Pertanyaan Render LaTeX & HTML
-                          HtmlWidget(
-                            MathHtmlFormatter.format(currentQ.pertanyaan),
-                            textStyle: GoogleFonts.poppins(
-                              fontSize: 14 * _fontSizeScale,
-                              color: const Color(0xFF1E293B),
-                              height: 1.6,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 28,
+                                      height: 28,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryGreen,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '${currentQ.nomorSoal}',
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.white,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Butir Pertanyaan',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        color: const Color(0xFF64748B),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (isRagu)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFEF3C7),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      'Ragu-Ragu',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color(0xFF92400E),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
-                            factoryBuilder: () => MathWidgetFactory(
-                              fontSize: 14 * _fontSizeScale,
-                            ),
-                          ),
-
-                          // 3. Tabel Data Statistik/Numerik (HANYA untuk tabel angka/kuantitatif, BUKAN teks bacaan)
-                          if (currentQ.tabel.isNotEmpty &&
-                              !ExamQuestionTableWidget.isReadingPassage(
-                                currentQ.tabel,
-                                subtestJudul: _currentSubtest?.judul,
-                              )) ...[
-                            const SizedBox(height: 12),
-                            ExamQuestionTableWidget(
-                              tabelStr: currentQ.tabel,
-                              subtestJudul: _currentSubtest?.judul,
-                              fontSizeScale: _fontSizeScale,
-                            ),
-                          ],
-
-                          // Gambar Soal jika ada
-                          if (currentQ.gambar.isNotEmpty) ...[
                             const SizedBox(height: 14),
-                            MathHtmlFormatter.buildQuestionImage(
-                              currentQ.gambar,
-                              borderRadius: BorderRadius.circular(12),
+
+                            // 1. Stimulus Teks Bacaan (jika soal memiliki bacaan/wacana)
+                            // Ditempatkan DI ATAS pertanyaan agar alur membaca siswa alami dan elegan
+                            if (currentQ.tabel.isNotEmpty &&
+                                ExamQuestionTableWidget.isReadingPassage(
+                                  currentQ.tabel,
+                                  subtestJudul: _currentSubtest?.judul,
+                                )) ...[
+                              ExamQuestionTableWidget(
+                                tabelStr: currentQ.tabel,
+                                subtestJudul: _currentSubtest?.judul,
+                                fontSizeScale: _fontSizeScale,
+                              ),
+                              const Divider(
+                                height: 20,
+                                thickness: 1,
+                                color: Color(0xFFF1F5F9),
+                              ),
+                            ],
+
+                            // 2. Teks Pertanyaan Render LaTeX & HTML
+                            HtmlWidget(
+                              MathHtmlFormatter.format(currentQ.pertanyaan),
+                              textStyle: GoogleFonts.poppins(
+                                fontSize: 14 * _fontSizeScale,
+                                color: const Color(0xFF1E293B),
+                                height: 1.6,
+                              ),
+                              factoryBuilder: () => MathWidgetFactory(
+                                fontSize: 14 * _fontSizeScale,
+                              ),
                             ),
+
+                            // 3. Tabel Data Statistik/Numerik (HANYA untuk tabel angka/kuantitatif, BUKAN teks bacaan)
+                            if (currentQ.tabel.isNotEmpty &&
+                                !ExamQuestionTableWidget.isReadingPassage(
+                                  currentQ.tabel,
+                                  subtestJudul: _currentSubtest?.judul,
+                                )) ...[
+                              const SizedBox(height: 12),
+                              ExamQuestionTableWidget(
+                                tabelStr: currentQ.tabel,
+                                subtestJudul: _currentSubtest?.judul,
+                                fontSizeScale: _fontSizeScale,
+                              ),
+                            ],
+
+                            // Gambar Soal jika ada
+                            if (currentQ.gambar.isNotEmpty) ...[
+                              const SizedBox(height: 14),
+                              MathHtmlFormatter.buildQuestionImage(
+                                currentQ.gambar,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
-                    ),
 
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                    // Opsi Pilihan Jawaban
-                    Text(
-                      'Pilihan Jawaban:',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF475569),
+                      // Opsi Pilihan Jawaban
+                      Text(
+                        'Pilihan Jawaban:',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF475569),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
+                      const SizedBox(height: 10),
 
-                    _buildOptionCard(
-                      'A',
-                      currentQ.opsiA,
-                      currentQ.gamA,
-                      selectedAns == 'A',
-                      () {
-                        setState(() => _answers[currentQ.soalId] = 'A');
-                        _debouncedSaveCache();
-                      },
-                    ),
-                    _buildOptionCard(
-                      'B',
-                      currentQ.opsiB,
-                      currentQ.gamB,
-                      selectedAns == 'B',
-                      () {
-                        setState(() => _answers[currentQ.soalId] = 'B');
-                        _debouncedSaveCache();
-                      },
-                    ),
-                    _buildOptionCard(
-                      'C',
-                      currentQ.opsiC,
-                      currentQ.gamC,
-                      selectedAns == 'C',
-                      () {
-                        setState(() => _answers[currentQ.soalId] = 'C');
-                        _debouncedSaveCache();
-                      },
-                    ),
-                    _buildOptionCard(
-                      'D',
-                      currentQ.opsiD,
-                      currentQ.gamD,
-                      selectedAns == 'D',
-                      () {
-                        setState(() => _answers[currentQ.soalId] = 'D');
-                        _debouncedSaveCache();
-                      },
-                    ),
-                    if (currentQ.opsiE.isNotEmpty || currentQ.gamE.isNotEmpty)
                       _buildOptionCard(
-                        'E',
-                        currentQ.opsiE,
-                        currentQ.gamE,
-                        selectedAns == 'E',
+                        'A',
+                        currentQ.opsiA,
+                        currentQ.gamA,
+                        selectedAns == 'A',
                         () {
-                          setState(() => _answers[currentQ.soalId] = 'E');
+                          setState(() => _answers[currentQ.soalId] = 'A');
                           _debouncedSaveCache();
                         },
                       ),
+                      _buildOptionCard(
+                        'B',
+                        currentQ.opsiB,
+                        currentQ.gamB,
+                        selectedAns == 'B',
+                        () {
+                          setState(() => _answers[currentQ.soalId] = 'B');
+                          _debouncedSaveCache();
+                        },
+                      ),
+                      _buildOptionCard(
+                        'C',
+                        currentQ.opsiC,
+                        currentQ.gamC,
+                        selectedAns == 'C',
+                        () {
+                          setState(() => _answers[currentQ.soalId] = 'C');
+                          _debouncedSaveCache();
+                        },
+                      ),
+                      _buildOptionCard(
+                        'D',
+                        currentQ.opsiD,
+                        currentQ.gamD,
+                        selectedAns == 'D',
+                        () {
+                          setState(() => _answers[currentQ.soalId] = 'D');
+                          _debouncedSaveCache();
+                        },
+                      ),
+                      if (currentQ.opsiE.isNotEmpty || currentQ.gamE.isNotEmpty)
+                        _buildOptionCard(
+                          'E',
+                          currentQ.opsiE,
+                          currentQ.gamE,
+                          selectedAns == 'E',
+                          () {
+                            setState(() => _answers[currentQ.soalId] = 'E');
+                            _debouncedSaveCache();
+                          },
+                        ),
 
-                    const SizedBox(height: 30),
-                  ],
+                      const SizedBox(height: 30),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            // Sticky Bottom Navigation Bar Modern & Ergonomis
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: const Border(top: BorderSide(color: Color(0xFFE2E8F0))),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-                    blurRadius: 16,
-                    offset: const Offset(0, -4),
+              // Sticky Bottom Navigation Bar Modern & Ergonomis
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: const Border(
+                    top: BorderSide(color: Color(0xFFE2E8F0)),
                   ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  // 1. Tombol Sebelumnya
-                  InkWell(
-                    onTap: _currentIndex > 0
-                        ? () {
-                            setState(() => _currentIndex--);
-                            _debouncedSaveCache();
-                          }
-                        : null,
-                    borderRadius: BorderRadius.circular(14),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: _currentIndex > 0
-                            ? Colors.white
-                            : const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: _currentIndex > 0
-                              ? const Color(0xFFCBD5E1)
-                              : const Color(0xFFE2E8F0),
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        size: 16,
-                        color: _currentIndex > 0
-                            ? const Color(0xFF334155)
-                            : const Color(0xFF94A3B8),
-                      ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                      blurRadius: 16,
+                      offset: const Offset(0, -4),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-
-                  // 2. Tombol Ragu-Ragu
-                  Expanded(
-                    child: InkWell(
-                      onTap: () {
-                        setState(() {
-                          if (isRagu) {
-                            _raguRagu.remove(currentQ.soalId);
-                          } else {
-                            _raguRagu.add(currentQ.soalId);
-                          }
-                        });
-                        _debouncedSaveCache();
-                      },
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // 1. Tombol Sebelumnya
+                    InkWell(
+                      onTap: _currentIndex > 0
+                          ? () {
+                              setState(() => _currentIndex--);
+                              _debouncedSaveCache();
+                            }
+                          : null,
                       borderRadius: BorderRadius.circular(14),
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
+                        duration: const Duration(milliseconds: 150),
+                        width: 46,
                         height: 46,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: isRagu
-                              ? const Color(0xFFFEF3C7)
+                          color: _currentIndex > 0
+                              ? Colors.white
                               : const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: isRagu
-                                ? const Color(0xFFF59E0B)
-                                : const Color(0xFFCBD5E1),
-                            width: isRagu ? 1.5 : 1.0,
+                            color: _currentIndex > 0
+                                ? const Color(0xFFCBD5E1)
+                                : const Color(0xFFE2E8F0),
                           ),
-                          boxShadow: isRagu
-                              ? [
-                                  BoxShadow(
-                                    color: const Color(
-                                      0xFFD97706,
-                                    ).withValues(alpha: 0.15),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ]
-                              : null,
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              isRagu
-                                  ? Icons.flag_rounded
-                                  : Icons.outlined_flag_rounded,
-                              size: 18,
-                              color: isRagu
-                                  ? const Color(0xFFD97706)
-                                  : const Color(0xFF64748B),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Ragu-Ragu',
-                              style: GoogleFonts.poppins(
-                                fontSize: 12.5,
-                                fontWeight: isRagu
-                                    ? FontWeight.bold
-                                    : FontWeight.w600,
-                                color: isRagu
-                                    ? const Color(0xFF92400E)
-                                    : const Color(0xFF334155),
-                              ),
-                            ),
-                          ],
+                        child: Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          size: 16,
+                          color: _currentIndex > 0
+                              ? const Color(0xFF334155)
+                              : const Color(0xFF94A3B8),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
+                    const SizedBox(width: 8),
 
-                  // 3. Tombol Aksi Utama (Berikutnya / Blocking Time / Lanjut Subtest / Kumpulkan)
-                  if (_currentIndex < activeQuestions.length - 1)
-                    InkWell(
-                      onTap: () {
-                        setState(() => _currentIndex++);
-                        _debouncedSaveCache();
-                      },
-                      borderRadius: BorderRadius.circular(14),
-                      child: Container(
-                        height: 46,
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(
-                                0xFF0F766E,
-                              ).withValues(alpha: 0.25),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Berikutnya',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                fontSize: 12.5,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            const Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              size: 13,
-                              color: Colors.white,
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else if (_isPerSubtest &&
-                      _currentSubtestIndex < _subtests.length - 1)
-                    if (_isSnbt)
-                      InkWell(
-                        onTap: _showBlockingTimeInfoDialog,
+                    // 2. Tombol Ragu-Ragu
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            if (isRagu) {
+                              _raguRagu.remove(currentQ.soalId);
+                            } else {
+                              _raguRagu.add(currentQ.soalId);
+                            }
+                          });
+                          _debouncedSaveCache();
+                        },
                         borderRadius: BorderRadius.circular(14),
-                        child: Container(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
                           height: 46,
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFEF3C7), Color(0xFFFFFBEB)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            color: isRagu
+                                ? const Color(0xFFFEF3C7)
+                                : const Color(0xFFF8FAFC),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: const Color(0xFFFDE68A),
-                              width: 1.2,
+                              color: isRagu
+                                  ? const Color(0xFFF59E0B)
+                                  : const Color(0xFFCBD5E1),
+                              width: isRagu ? 1.5 : 1.0,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(
-                                  0xFFD97706,
-                                ).withValues(alpha: 0.1),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
+                            boxShadow: isRagu
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFFD97706,
+                                      ).withValues(alpha: 0.15),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
                           ),
                           child: Row(
-                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(
-                                Icons.lock_clock_rounded,
-                                size: 16,
-                                color: Color(0xFFB45309),
+                              Icon(
+                                isRagu
+                                    ? Icons.flag_rounded
+                                    : Icons.outlined_flag_rounded,
+                                size: 18,
+                                color: isRagu
+                                    ? const Color(0xFFD97706)
+                                    : const Color(0xFF64748B),
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                'Blocking Time',
+                                'Ragu-Ragu',
                                 style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF92400E),
                                   fontSize: 12.5,
+                                  fontWeight: isRagu
+                                      ? FontWeight.bold
+                                      : FontWeight.w600,
+                                  color: isRagu
+                                      ? const Color(0xFF92400E)
+                                      : const Color(0xFF334155),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      )
-                    else
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // 3. Tombol Aksi Utama (Berikutnya / Blocking Time / Lanjut Subtest / Kumpulkan)
+                    if (_currentIndex < activeQuestions.length - 1)
                       InkWell(
-                        onTap: _confirmFinishSubtestDialog,
+                        onTap: () {
+                          setState(() => _currentIndex++);
+                          _debouncedSaveCache();
+                        },
                         borderRadius: BorderRadius.circular(14),
                         child: Container(
                           height: 46,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 18),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFFD97706), Color(0xFFF59E0B)],
+                              colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -3024,7 +2996,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                             boxShadow: [
                               BoxShadow(
                                 color: const Color(
-                                  0xFFD97706,
+                                  0xFF0F766E,
                                 ).withValues(alpha: 0.25),
                                 blurRadius: 10,
                                 offset: const Offset(0, 3),
@@ -3035,7 +3007,7 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                'Lanjut Subtest',
+                                'Berikutnya',
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -3044,67 +3016,163 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                               ),
                               const SizedBox(width: 6),
                               const Icon(
-                                Icons.arrow_forward_rounded,
-                                size: 16,
+                                Icons.arrow_forward_ios_rounded,
+                                size: 13,
                                 color: Colors.white,
                               ),
                             ],
                           ),
                         ),
                       )
-                  else
-                    InkWell(
-                      onTap: _confirmSubmitDialog,
-                      borderRadius: BorderRadius.circular(14),
-                      child: Container(
-                        height: 46,
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF15803D), Color(0xFF22C55E)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                    else if (_isPerSubtest &&
+                        _currentSubtestIndex < _subtests.length - 1)
+                      if (_isSnbt)
+                        InkWell(
+                          onTap: _showBlockingTimeInfoDialog,
                           borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(
-                                0xFF15803D,
-                              ).withValues(alpha: 0.25),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.send_rounded,
-                              size: 15,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Kumpulkan',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                fontSize: 12.5,
+                          child: Container(
+                            height: 46,
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFEF3C7), Color(0xFFFFFBEB)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                               ),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: const Color(0xFFFDE68A),
+                                width: 1.2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFFD97706,
+                                  ).withValues(alpha: 0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                          ],
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.lock_clock_rounded,
+                                  size: 16,
+                                  color: Color(0xFFB45309),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Blocking Time',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF92400E),
+                                    fontSize: 12.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        InkWell(
+                          onTap: _confirmFinishSubtestDialog,
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            height: 46,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFD97706), Color(0xFFF59E0B)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFFD97706,
+                                  ).withValues(alpha: 0.25),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Lanjut Subtest',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontSize: 12.5,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                    else
+                      InkWell(
+                        onTap: _confirmSubmitDialog,
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          height: 46,
+                          padding: const EdgeInsets.symmetric(horizontal: 18),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF15803D), Color(0xFF22C55E)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFF15803D,
+                                ).withValues(alpha: 0.25),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.send_rounded,
+                                size: 15,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Kumpulkan',
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   Widget _buildOptionCard(
@@ -3274,14 +3342,14 @@ class _StudentExamSessionScreenState extends State<StudentExamSessionScreen>
                     onPressed: () async {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Memeriksa status izin dari pengawas...'),
+                          content: Text(
+                            'Memeriksa status izin dari pengawas...',
+                          ),
                           duration: Duration(seconds: 1),
                         ),
                       );
-                      final data = await MonitoringService.instance.getStudentData(
-                        widget.token,
-                        widget.studentNis,
-                      );
+                      final data = await MonitoringService.instance
+                          .getStudentData(widget.token, widget.studentNis);
                       final status = data?['status']?.toString();
                       final isBlockedInDb =
                           data?['is_blocked'] == true || status == 'BLOCKED';

@@ -116,5 +116,16 @@ void main() {
       expect(output, contains('class="math-tex inline"'));
       expect(output, contains(Uri.encodeComponent(r'\frac{\sqrt{3} + 1}{2}')));
     });
+
+    test('MathHtmlFormatter merender bold dan italic dengan penutup tag yang valid', () {
+      const input = 'Ini soal <strong>penting sekali</strong> dan <em>miring</em> serta **sangat tebal**.';
+      final output = MathHtmlFormatter.format(input);
+
+      expect(output, contains('<b>penting sekali</b>'));
+      expect(output, contains('<i>miring</i>'));
+      expect(output, contains('<b>sangat tebal</b>'));
+      expect(output, isNot(contains('<b>penting sekali<b>')));
+      expect(output, isNot(contains('<i>miring<i>')));
+    });
   });
 }
